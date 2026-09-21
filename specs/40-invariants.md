@@ -2,3 +2,386 @@
 
 `INV-*` — properties that hold at all times, phrased with **shall** / **shall not**.
 `CON-*` — externally imposed constraints: platform limits, legal requirements, protocol versions.
+
+Source: concept §5 (abilities never shoot), §7 (what never breaks), §6 (what scores), §8 (shared archetypes), §9.3 (execution every frame), §10 (platform), §11 (what is not copied), §17 (licensing, identifiers, App Store).
+Frames of the grounds register — F-010, F-020, F-030 — are the boundaries these invariants and constraints enforce inside the specification; the register says why they will not move, the requirements say what holds.
+
+## Invariants
+
+### INV-SNAKE-010 — No ability shoots
+
+```yaml
+status: draft
+verification: I
+derives_from: []
+depends_on: [FR-SNAKE-110]
+refines: []
+conflicts_with: []
+code: []
+tests: []
+created: 2026-09-21
+```
+
+The system **shall not** give the snake any ability, upgrade or item that deals damage to a bot at a distance.
+
+**Rationale.** Concept §5: the moment the snake has firepower the asymmetry collapses, and in the boring direction.
+Destruction of geometry is not an exception to this sentence — it damages modules, not bots.
+Frame F-010.
+
+### INV-SNAKE-020 — The snake is slower than a running bot
+
+```yaml
+status: draft
+verification: T
+derives_from: []
+depends_on: [FR-SNAKE-030]
+refines: []
+conflicts_with: []
+code: []
+tests: []
+created: 2026-09-21
+```
+
+The snake's base speed in the snake configuration **shall** be lower than the run speed of every archetype in the bot configuration.
+
+**Rationale.** Concept §1: the snake is slow, the bots are fast — the asymmetry.
+The dash (FR-SNAKE-130) is the temporary exception the player earns by eating an assault.
+
+### INV-BOT-010 — Execution runs every frame for every bot
+
+```yaml
+status: draft
+verification: T
+derives_from: []
+depends_on: [FR-BOT-150]
+refines: []
+conflicts_with: []
+code: []
+tests: []
+created: 2026-09-21
+```
+
+In every frame, the system **shall** update aim, movement, animation and collision for every living bot, whatever the deliberation rate.
+
+**Rationale.** Concept §9.3: cut execution to 7 Hz and aim steps, movement jerks; a delayed decision goes unnoticed, jerky motion is seen at once.
+
+### INV-BOT-020 — Squads never remove bodies
+
+```yaml
+status: draft
+verification: T
+derives_from: []
+depends_on: [FR-SCORE-110]
+refines: []
+conflicts_with: []
+code: []
+tests: []
+created: 2026-09-21
+```
+
+The system **shall not** let a bot move, carry or remove a body.
+
+**Rationale.** Concept §6.2: the snake consumes bodies, squads do not — a vanished body is therefore only ever the snake's doing, and the whole awareness mechanism rests on that.
+
+### INV-BOT-030 — Both squads share one archetype set
+
+```yaml
+status: draft
+verification: I
+derives_from: []
+depends_on: [FR-BOT-010, FR-BOT-020]
+refines: []
+conflicts_with: []
+code: []
+tests: []
+created: 2026-09-21
+```
+
+The two squads **shall** differ only in colour and in their commander, never in the set of archetypes available to them.
+
+**Rationale.** Concept §8: the player learns six silhouettes, not twelve; asymmetry, if wanted, comes from the proportions of a squad, not from unique classes.
+
+### INV-SCORE-010 — Nothing but consumption scores
+
+```yaml
+status: draft
+verification: T
+derives_from: []
+depends_on: [FR-SCORE-010]
+refines: []
+conflicts_with: []
+code: []
+tests: []
+created: 2026-09-21
+```
+
+The system **shall not** change the score on any event other than the snake finishing a consumption.
+
+**Rationale.** Concept §6: a bot killed by the enemy squad brings the snake nothing by itself; specific trick bonuses were rejected because they get farmed (ADR-0006).
+Watching is useful, doing nothing is not.
+
+### INV-MAP-010 — The load-bearing frame never breaks
+
+```yaml
+status: draft
+verification: T
+derives_from: []
+depends_on: [FR-MAP-060]
+refines: []
+conflicts_with: []
+code: []
+tests: []
+created: 2026-09-21
+```
+
+The system **shall not** change the state of a module declared load-bearing, whatever the source of damage — bot weapon, snake body or sapper ability.
+
+**Rationale.** Concept §7: walls, stairs and floor slabs never break, or the navmesh falls apart and with it the verticality that is the reason the map is multi-level.
+
+### INV-MAP-020 — Destruction never disconnects floors
+
+```yaml
+status: draft
+verification: T
+derives_from: [INV-MAP-010]
+depends_on: [FR-MAP-050]
+refines: []
+conflicts_with: []
+code: []
+tests: []
+created: 2026-09-21
+```
+
+After any change of a module's state, every floor of the map **shall** remain reachable from every other floor over the navigation mesh.
+
+**Rationale.** Concept §7: destructible is everything that can be removed without changing the connectivity between floors.
+Stated separately from INV-MAP-010 because it is the property, and INV-MAP-010 the mechanism meant to guarantee it; a kit that declared a stair destructible would pass one and fail the other.
+
+## Constraints
+
+### CON-PUB-010 — Platforms
+
+```yaml
+status: draft
+verification: I
+derives_from: []
+depends_on: []
+refines: []
+conflicts_with: []
+code: []
+tests: []
+created: 2026-09-21
+```
+
+The game **shall** target iOS 27 and macOS 27 or later, on Apple silicon, from one code base.
+
+**Rationale.** Concept preamble and §10: iOS 27+ / macOS 27+, one build for every Apple platform; iPhone is the primary target, the Mac the development environment (concept §15).
+Older devices are out, knowingly.
+
+### CON-PUB-020 — Source under the MIT licence
+
+```yaml
+status: draft
+verification: I
+derives_from: []
+depends_on: []
+refines: []
+conflicts_with: []
+code: []
+tests: []
+created: 2026-09-21
+```
+
+The repository's own code, specification and assets **shall** be published under the MIT licence with the company as copyright holder.
+
+**Rationale.** Concept §17.2: the same licence as SRS-DD, one policy for the company; GPL rejected because contributors' GPL code cannot ship in the App Store without their consent (ADR-0007).
+Closed clones are permitted and that is accepted knowingly (§17.3).
+
+### CON-PUB-030 — Third-party assets keep their licences
+
+```yaml
+status: draft
+verification: I
+derives_from: [CON-PUB-020]
+depends_on: []
+refines: []
+conflicts_with: []
+code: []
+tests: []
+created: 2026-09-21
+```
+
+Every third-party asset in the repository **shall** be listed in the attribution file with its source and a licence that permits commercial redistribution.
+
+**Rationale.** Concept §17.2: kits like Kenney or Quaternius keep their own licences, recorded in the attributions file.
+The listing and the licence it lists are one act of admitting an asset; an asset whose licence does not permit redistribution is not admitted.
+
+### CON-PUB-040 — Signing identifiers stay out of the repository
+
+```yaml
+status: draft
+verification: I
+derives_from: [CON-PUB-060]
+depends_on: []
+refines: []
+conflicts_with: []
+code: []
+tests: []
+created: 2026-09-21
+```
+
+The repository **shall** carry the bundle identifier and development team only as placeholders in `Signing.example.xcconfig`, the real values living in a `Signing.xcconfig` that is ignored by git.
+
+**Rationale.** Concept §17.4: the bundle ID is public but the repository ships a placeholder of the form `com.example.chompcompany`; the Team ID belongs to the company; forks need their own bundle ID anyway.
+
+### CON-PUB-050 — No Team ID in the project file
+
+```yaml
+status: draft
+verification: T
+derives_from: [CON-PUB-040]
+depends_on: []
+refines: []
+conflicts_with: []
+code: []
+tests: []
+created: 2026-09-21
+```
+
+The Xcode project file **shall not** contain a development team identifier.
+
+**Rationale.** Concept §17.4: the Xcode trap — picking a team writes the Team ID into `project.pbxproj` behind the config's back.
+Enforced by FR-TOOL-140.
+
+### CON-PUB-060 — No secrets in the repository or its history
+
+```yaml
+status: draft
+verification: I
+derives_from: []
+depends_on: []
+refines: []
+conflicts_with: []
+code: []
+tests: []
+created: 2026-09-21
+```
+
+Before the repository is made public, its full history **shall** have been scanned for certificates, private keys, App Store Connect keys and provisioning profiles, and found clean.
+
+**Rationale.** Concept §17.4: deletion in the last commit does not help — the file stays in history; if a secret got in, the history is rewritten and the key reissued.
+A scanner such as gitleaks is the concept's example; the requirement is the clean result.
+
+### CON-PUB-070 — Nothing from another game is named
+
+```yaml
+status: draft
+verification: I
+derives_from: []
+depends_on: []
+refines: []
+conflicts_with: []
+code: []
+tests: []
+created: 2026-09-21
+```
+
+The store listing, the devlog, the pitch and the game itself **shall not** name any existing game franchise, map or studio.
+
+**Rationale.** Concept §11: the names of specific maps and franchises appear nowhere — not in the store, not in the devlog, not in the pitch; §17.6 rejected "Call of Chomp" on exactly this ground.
+Frame F-020.
+
+### CON-PUB-080 — Generated speech is treated as user-generated content
+
+```yaml
+status: draft
+verification: I
+derives_from: []
+depends_on: [FR-CMD-140]
+refines: []
+conflicts_with: []
+code: []
+tests: []
+created: 2026-09-21
+```
+
+The game **shall** meet App Store guideline 1.2 for content generated at run time: a filter before display and an age rating that accounts for generated speech.
+
+**Rationale.** Concept §14: the App Store treats real-time generated content as user-generated.
+The filter is FR-CMD-160; the rating is Q-110.
+
+### CON-PUB-090 — The working title is not the released name
+
+```yaml
+status: draft
+verification: I
+derives_from: [CON-PUB-070]
+depends_on: []
+refines: []
+conflicts_with: []
+code: []
+tests: []
+created: 2026-09-21
+```
+
+The name "Chomp Company" **shall** appear only in the repository, code, documentation and identifiers until a professional trademark search in classes 9 and 41 has cleared a final name.
+
+**Rationale.** Concept §17.6: "Chomp" is taken in apps; the working title is technical, and the search — EU first — decides whether it becomes final (Q-120).
+
+### CON-MAP-010 — No existing map is reproduced
+
+```yaml
+status: draft
+verification: I
+derives_from: [CON-PUB-070]
+depends_on: [FR-MAP-100]
+refines: []
+conflicts_with: []
+code: []
+tests: []
+created: 2026-09-21
+```
+
+No map **shall** reproduce the layout, silhouette or landmarks of a map from an existing game, whether redrawn or assembled from modules.
+
+**Rationale.** Concept §11: the layout is what is protected, not the material it is built from; fan remakes fell on recognisability, not on stolen files.
+The practical test: could a player with a hundred hours in the original name the map?
+Frame F-020.
+
+### CON-PUB-100 — Commit authorship exposes no personal address
+
+```yaml
+status: draft
+verification: I
+derives_from: [CON-PUB-060]
+depends_on: []
+refines: []
+conflicts_with: []
+code: []
+tests: []
+created: 2026-09-21
+```
+
+Before the repository is made public, every commit in its history **shall** carry a company or no-reply author address.
+
+**Rationale.** Concept §17.4: check the email in commits; use an anonymous no-reply address where needed.
+The history is rewritten once, before publication, rather than policed afterwards.
+
+### CON-PUB-110 — The company is the seller
+
+```yaml
+status: draft
+verification: I
+derives_from: [CON-PUB-020]
+depends_on: []
+refines: []
+conflicts_with: []
+code: []
+tests: []
+created: 2026-09-21
+```
+
+The App Store listing **shall** name the company as seller and trader, with the company's business contact details.
+
+**Rationale.** Concept §17.5: under the Digital Services Act Apple shows a paid app's trader details publicly; for a company those are business details, not the developer's home address.
+Registering as an organisation needs a D-U-N-S number, which takes time and is started early; the Team ID then belongs to the company.

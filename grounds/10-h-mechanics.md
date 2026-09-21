@@ -39,7 +39,7 @@ At least one of five players, describing the game afterwards without a leading q
 ### H-030 — Watching someone else's fight beats chasing
 
 ```yaml
-status: untested
+status: assumed
 class: III
 population: playtesters of the stage-3 build (two squads, archetypes, abilities, destruction)
 refuted_if: count < 1 at n >= 5
@@ -55,7 +55,7 @@ At least one of five players, unprompted, spends part of a session waiting and c
 ### H-040 — An LLM commander makes a difference the player can see
 
 ```yaml
-status: untested
+status: assumed
 class: II
 population: playtesters shown two stage-4 builds blind — commander on, commander off
 refuted_if: proportion <= 0.50 at n >= 10
@@ -71,7 +71,7 @@ More than half of players correctly identify which build had the commander. Blin
 ### H-050 — Bot lines are worth replaying for
 
 ```yaml
-status: untested
+status: assumed
 class: III
 population: playtesters of the stage-5 build
 refuted_if: count < 1 at n >= 5

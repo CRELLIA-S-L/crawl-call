@@ -1,6 +1,270 @@
 # Functional requirements — tooling
 
-Map parser and validator, navmesh generation, the 2D floor-plan renderer, the in-build debug mode, Blender render scripts.
-Source: concept §11.2–11.3 (method, viewers), §12 (division of labour), §2.1 (how visuals are produced).
+The map pipeline from text to scene, the 2D plan, the in-build debug mode, the render scripts, the repository guards.
+Source: concept §11.2 (method), §11.3 (viewers), §12 (division of labour), §2.1 (how visuals are produced), §17.4 (identifiers in the repository).
+Tools are code like any other: each is a requirement with `code` and `tests` when built.
 
-*No requirements yet.*
+## Map pipeline
+
+### FR-TOOL-010 — Parse a map specification
+
+```yaml
+status: draft
+verification: T
+derives_from: []
+depends_on: [IF-MAP-010]
+refines: []
+conflicts_with: []
+code: []
+tests: []
+created: 2026-09-21
+```
+
+When given a map specification file, the map tool **shall** produce the placement of every module per floor, or reject the file naming the line and the reason.
+
+**Rationale.** Concept §11.2: the map lives in a text file — iterations take seconds, versions go into git, the agent generates variants in batches.
+
+### FR-TOOL-020 — Assemble the scene from the kit
+
+```yaml
+status: draft
+verification: T
+derives_from: [FR-TOOL-010]
+depends_on: [FR-MAP-100]
+refines: []
+conflicts_with: []
+code: []
+tests: []
+created: 2026-09-21
+```
+
+When given a parsed map, the map tool **shall** assemble the scene by placing the kit's module for each cell at the coordinates the specification gives it.
+
+**Rationale.** Concept §12: assembling a map to an exact specification in coordinates is what the agent does reliably.
+
+### FR-TOOL-030 — Generate the navigation mesh
+
+```yaml
+status: draft
+verification: T
+derives_from: [FR-TOOL-020]
+depends_on: []
+refines: []
+conflicts_with: []
+code: []
+tests: []
+created: 2026-09-21
+```
+
+When given an assembled scene, the map tool **shall** generate the navigation mesh over its walkable surfaces and vertical transitions.
+
+**Rationale.** Concept §11.2 step 3.
+
+### FR-TOOL-040 — Validate the map
+
+```yaml
+status: draft
+verification: T
+derives_from: [FR-TOOL-030]
+depends_on: [FR-MAP-010, FR-MAP-070, FR-MAP-080, FR-MAP-090]
+refines: []
+conflicts_with: []
+code: []
+tests: []
+created: 2026-09-21
+```
+
+When given an assembled scene and its navigation mesh, the map tool **shall** report every floor unreachable from another, every disconnected region of the mesh, every seam between modules the mesh does not cross, and every requirement of the MAP area the map fails to meet.
+
+**Rationale.** Concept §11.2 step 3 (the validator), §11.3 (disconnected zones and seams).
+One act — a report — over an enumerated set of findings.
+
+### FR-TOOL-050 — Export to the level editor
+
+```yaml
+status: draft
+verification: T
+derives_from: [FR-TOOL-020]
+depends_on: []
+refines: []
+conflicts_with: []
+code: []
+tests: []
+created: 2026-09-21
+```
+
+When asked, the map tool **shall** export the assembled scene in the format the level editor of ADR-0001 opens.
+
+**Rationale.** Concept §12: export to RCP is on the agent's list; the editor is the stack's and follows the engine decision.
+
+### FR-TOOL-060 — Render a 2D plan per floor
+
+```yaml
+status: draft
+verification: T
+derives_from: [FR-TOOL-010]
+depends_on: []
+refines: []
+conflicts_with: []
+code: []
+tests: []
+created: 2026-09-21
+```
+
+When given a map specification, the plan tool **shall** render one image per floor showing walls, passages, stairs and the zones of visibility.
+
+**Rationale.** Concept §11.3: the best value for effort early on — 3D checks that modules fit, the plan tells whether the map is any good.
+
+## Debug mode
+
+### FR-TOOL-070 — Free camera
+
+```yaml
+status: draft
+verification: D
+derives_from: []
+depends_on: [FR-VIEW-010]
+refines: []
+conflicts_with: []
+code: []
+tests: []
+created: 2026-09-21
+```
+
+Where debug mode is enabled, the system **shall** let the user detach the camera from the snake and move it freely.
+
+**Rationale.** Concept §11.3: an external viewer cannot answer "does the tail fit", "where does it catch"; the debug build can.
+One requirement per debug facility because each can be built and used without the others.
+
+### FR-TOOL-080 — Navigation mesh overlay
+
+```yaml
+status: draft
+verification: D
+derives_from: []
+depends_on: [FR-MAP-020]
+refines: []
+conflicts_with: []
+code: []
+tests: []
+created: 2026-09-21
+```
+
+Where debug mode is enabled, the system **shall** draw the navigation mesh over the geometry on request.
+
+**Rationale.** Concept §11.3.
+
+### FR-TOOL-090 — Disconnected regions and seams highlighted
+
+```yaml
+status: draft
+verification: D
+derives_from: [FR-TOOL-080]
+depends_on: [FR-TOOL-040]
+refines: []
+conflicts_with: []
+code: []
+tests: []
+created: 2026-09-21
+```
+
+Where debug mode is enabled, the system **shall** highlight in the overlay every disconnected region of the mesh and every seam the validator reported.
+
+**Rationale.** Concept §11.3.
+
+### FR-TOOL-100 — Teleport by pointing
+
+```yaml
+status: draft
+verification: D
+derives_from: []
+depends_on: [FR-SNAKE-010]
+refines: []
+conflicts_with: []
+code: []
+tests: []
+created: 2026-09-21
+```
+
+Where debug mode is enabled, when the user points at a navigation-mesh position, the system **shall** move the snake's head there.
+
+**Rationale.** Concept §11.3.
+
+### FR-TOOL-110 — Snake length slider
+
+```yaml
+status: draft
+verification: D
+derives_from: []
+depends_on: [FR-SNAKE-060]
+refines: []
+conflicts_with: []
+code: []
+tests: []
+created: 2026-09-21
+```
+
+Where debug mode is enabled, the system **shall** let the user set the snake's segment count directly.
+
+**Rationale.** Concept §11.3: "which corridor becomes a trap at 15 segments" is answered by crawling it at 15 segments.
+
+### FR-TOOL-120 — Bot sight lines drawn
+
+```yaml
+status: draft
+verification: D
+derives_from: []
+depends_on: [FR-BOT-050]
+refines: []
+conflicts_with: []
+code: []
+tests: []
+created: 2026-09-21
+```
+
+Where debug mode is enabled, the system **shall** draw each bot's current line of sight, coloured by whether it reaches the snake.
+
+**Rationale.** Concept §11.3; also the only way to see witnessing (FR-SCORE-070) happen.
+
+## Render scripts
+
+### FR-TOOL-130 — Concept renders are built by script
+
+```yaml
+status: draft
+verification: I
+derives_from: []
+depends_on: []
+refines: []
+conflicts_with: []
+code: []
+tests: []
+exempt: [unlinked]
+created: 2026-09-21
+```
+
+The repository **shall** hold, under `materials/render/`, the scripts that assemble the concept scene in Blender and render the concept images.
+
+**Rationale.** Concept §2.1: the visual is assembled by script as a 3D scene, not drawn; the renders of §2.2 were made this way and the scripts stay the tool for concept renders and possibly for generating models.
+The three renders are in the repository; the scripts that made them are not yet, which is why this is a draft.
+Exempt from `unlinked`: the scripts serve the concept document, not another requirement, and a link invented to satisfy the rule would say otherwise.
+
+## Repository guards
+
+### FR-TOOL-140 — Pre-commit check for a Team ID in the project file
+
+```yaml
+status: draft
+verification: T
+derives_from: [CON-PUB-050]
+depends_on: []
+refines: []
+conflicts_with: []
+code: []
+tests: []
+created: 2026-09-21
+```
+
+When a commit stages the Xcode project file, the pre-commit hook **shall** reject the commit if the file contains a development team identifier.
+
+**Rationale.** Concept §17.4: choosing a team in Xcode silently writes the Team ID into `project.pbxproj`, bypassing the config; the diff is checked before every commit — a job for the hook.
