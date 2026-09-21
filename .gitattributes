@@ -1,0 +1,4 @@
+# SRS-DD-0.19.0: the traceability matrix is generated with LF endings and
+# compared byte-for-byte by the CI freshness gate; autocrlf must not
+# rewrite it.
+specs/90-traceability.md text eol=lf

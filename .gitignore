@@ -1,0 +1,25 @@
+# Signing — concept §17.4: Team ID and bundle ID live in a local config,
+# the repository ships Signing.example.xcconfig with placeholders.
+Signing.xcconfig
+*.p12
+*.p8
+*.mobileprovision
+*.provisionprofile
+
+# Xcode / Swift
+.build/
+DerivedData/
+xcuserdata/
+*.xcuserstate
+*.xcscmblueprint
+.swiftpm/xcode/
+
+# Python (SRS-DD tooling, Blender scripts)
+__pycache__/
+*.pyc
+
+# macOS
+.DS_Store
+
+# Blender
+*.blend1

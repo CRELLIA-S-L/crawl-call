@@ -1,0 +1,39 @@
+{
+  "areas": [
+    "SNAKE",
+    "BOT",
+    "CMD",
+    "SCORE",
+    "MAP",
+    "VIEW",
+    "TOOL",
+    "PERF",
+    "PUB"
+  ],
+  "code_roots": [
+    "Sources",
+    "materials/render"
+  ],
+  "test_roots": [
+    "Tests"
+  ],
+  "code_extensions": [
+    ".swift",
+    ".py",
+    ".metal"
+  ],
+  "modal_verbs": [
+    "shall",
+    "must",
+    "should",
+    "may"
+  ],
+  "negation_words": [
+    "not"
+  ],
+  "rationale_markers": [
+    "Rationale"
+  ],
+  "framework_url": "https://github.com/CRELLIA-S-L/srs-dd.git",
+  "project_name": "Chomp Company"
+}
