@@ -56,7 +56,7 @@ The convention of this project:
 | **map specification** | The text file a map is authored in — an ASCII grid per floor — from which the tooling assembles modules, derives the navigation graph and runs the validator. |
 | **debug mode** | The in-build viewer: free camera, navigation-graph overlay, disconnected zones and seams, teleport, snake-length slider, bot sight lines. |
 | **vertical slice** | The five-stage plan in which each stage answers one question that can kill the project: hunting (1), verticality (2), two squads (3), commanders (4), voices (5). |
-| **technical spike** | The 2–3 day check of the RealityKit 5 stack (ADR-0001, `spike/`): a steered snake with a `LowLevelMesh` tail over a ramp, a step and a drop; eight utility-AI entities on a real iPhone; one Foundation Models call beside rendering. Its first run (2026-09-22) ruled out RealityKit's navmesh queries (ADR-0016). |
+| **technical spike** | The 2–3 day check of the RealityKit 5 stack (ADR-0001, `materials/spike/README.md`): a steered snake with a `LowLevelMesh` tail over a ramp, a step and a drop; eight utility-AI entities on a real iPhone; one Foundation Models call beside rendering. It ran on 2026-09-22: all three passed, ruling out RealityKit's navmesh queries along the way (ADR-0016) and settling ADR-0001. |
 | **thermal budget** | The limit set by iPhone throttling after 10–15 minutes of rendering plus on-device inference; the reason for 4v4, staggered commander phases and a degradation path. |
 | **AFM** | Apple Foundation Models — the on-device system language model called through guided generation (`@Generable`). |
 | **RCP** | Reality Composer Pro, the level editor. |

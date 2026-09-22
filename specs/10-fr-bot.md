@@ -350,6 +350,27 @@ When choosing which bot deliberates next, the system **shall** take the bot with
 **Rationale.** Concept §9.2: a bot in combat or near the snake gets a slot 3–4 times more often than one patrolling an empty floor; the same rule gives AI level-of-detail for free — distant bots think about once a second.
 The per-frame budget that bounds how many slots a frame hands out is NFR-PERF-020.
 
+### FR-BOT-167 — An unreachable target sends the bot back to deliberation
+
+```yaml
+status: deferred
+verification: T
+derives_from: [FR-BOT-165]
+depends_on: [FR-BOT-080, FR-SNAKE-040]
+refines: []
+conflicts_with: []
+code: []
+tests: []
+created: 2026-09-22
+```
+
+When the navigation graph holds no route to the target of a bot's chosen action, the system **shall** give that bot a deliberation slot with that action excluded until its next slot after.
+
+**Rationale.** Being cut off is a designed event, not an edge case: the snake's tail makes a passage impassable (FR-SNAKE-040) precisely so that a squad loses its way out.
+A bot that keeps asking for the route it cannot have is the "signature stupidity" concept §9.2 names — it must pick something else and pick it now.
+Excluding only the failed action, and only until the slot after, keeps the choice honest when the tail moves away a second later.
+Measured on the spike in its worst-case mode, about one path request in a hundred found no route — a rate that belongs to that arena's random targets rather than to the search, but enough to settle that this is an ordinary path and not an error path.
+
 ### FR-BOT-165 — At most one path is computed per frame
 
 ```yaml
@@ -366,7 +387,7 @@ created: 2026-09-22
 
 When more than one bot needs a new path in the same frame, the system **shall** compute one path per frame in the order of the deliberation priority of FR-BOT-160 and leave the others on their current path until their turn.
 
-**Rationale.** Measured on the spike (`spike/README.md`): one A* path over a 48×32 grid costs 2–120 µs typically and up to ~1 ms for a far or unreachable target, so eight bots re-pathing in one frame — all fleeing the snake at once — cost 5 ms and the budget of NFR-PERF-020 is 0.5 ms.
+**Rationale.** Measured on the spike (`materials/spike/README.md`): one A* path over a 48×32 grid costs 2–120 µs typically and up to ~1 ms for a far or unreachable target, so eight bots re-pathing in one frame — all fleeing the snake at once — cost 5 ms and the budget of NFR-PERF-020 is 0.5 ms.
 The budget is met by spreading the requests, not by a faster search; eight frames of latency for the last bot is 133 ms, under a deliberation period.
 
 ### FR-BOT-170 — Interrupts grant a slot at once

@@ -42,7 +42,7 @@ tests: []
 created: 2026-09-21
 ```
 
-When the game starts, the system **shall** read from the tuning configuration — the JSON file `config/tuning.json` (ADR-0012) — the damage thresholds of each module type per state; the destruction damage of each bot weapon and its destruction ammunition; the destruction damage of the snake's body per segment of length; the trap width, trap length and tail-gap tolerance; the maximum drop height; the navigation-graph cell size.
+When the game starts, the system **shall** read from the tuning configuration — the JSON file `config/tuning.json` (ADR-0012) — the damage thresholds of each module type per state; the destruction damage of each bot weapon and its destruction ammunition; the destruction damage of the snake's body per segment of length; the trap width, trap length and tail-gap tolerance; the maximum drop height; the navigation-graph cell size; and the step height, slope angle and body radius that FR-MAP-025 makes common to the snake and the bots.
 
 **Rationale.** Concept §7: strength thresholds by module type, damage by source, the destroying weapons' ammunition, the snake's weight — all in a separate config, tuned experimentally; the risk it guards against is a map turned to wasteland by mid-match.
 
@@ -78,9 +78,11 @@ tests: []
 created: 2026-09-21
 ```
 
-When the game starts, the system **shall** read from the bot configuration — `config/bot.json` (ADR-0012) — per archetype its base personality weights, their allowed ranges, run speed, weapon damage and detection range; the override, interrupt and grouping distances; the hysteresis margin; the deliberation period and per-frame slot maximum; the collapse panic increment; and from the match configuration — `config/match.json` — the squad size, the archetypes eligible for the commander role, the commander interval, the truce switch and truce-break threshold, the state token budget and the maximum response tokens, and the thermal degradation threshold and factor.
+When the game starts, the system **shall** read from the bot configuration — `config/bot.json` (ADR-0012) — per archetype its base personality weights, their allowed ranges, run speed, weapon damage and detection range; the override, interrupt and grouping distances; the hysteresis margin; the deliberation period and per-frame slot maximum; the collapse panic increment; and from the match configuration — `config/match.json` — the squad size, the archetypes eligible for the commander role, the commander interval, the truce switch and truce-break threshold, the state token budget and the maximum response tokens, and the thermal degradation threshold and factor — the threshold `serious` by default.
 
 **Rationale.** Concept §8 (base weights), §9.2 (thresholds, scheduling), §14 (squad size), §15 (degradation).
+The degradation threshold defaults to `serious` on the spike's measurement (ADR-0001): a twenty-minute run on the iPhone 16 Pro reached `fair` at fourteen minutes and never `serious`, holding 60 fps and a 2.7 s mean commander latency throughout — so `fair` as the threshold would stretch the intervals of a session that was losing nothing, while `serious` is the first state the spike never reached and therefore the first whose cost is unmeasured.
+The factor has no default yet (Q-180).
 Two files named in one requirement because they are read in the same act at the same moment; splitting the keys across two requirements would give a reader two places to look for one thing.
 
 ## Commander I/O
@@ -144,7 +146,7 @@ created: 2026-09-21
 
 When the game starts, the system **shall** read from the speech configuration — the JSON file `config/speech.json` (ADR-0012) — the list of speech events, "order issued" among them; the rate cap, queue length and line length; and the pre-written line set with at least one line per event and speaker.
 
-**Rationale.** Concept §15: the frequency ceiling, the queue, the pre-generated set for degradation; FR-CMD-160 needs a fallback line for every event the filter can reject, and FR-CMD-165 for every call the model refuses — which it does for about one call in ten (CON-CMD-020), so the set is the game's second voice and not a spare.
+**Rationale.** Concept §15: the frequency ceiling, the queue, the pre-generated set for degradation; FR-CMD-160 needs a fallback line for every event the filter can reject, and FR-CMD-165 for every call the model refuses — which the measured configuration did not do in a hundred bench calls or a twenty-minute session, while the game's first one did in one call in ten — the bound the game is built to survive is one in five (CON-CMD-020), so the set is the game's second voice and not a spare.
 
 ## Map format
 
@@ -250,6 +252,7 @@ The speech instructions **shall** open with the writer's role in a cartoon game 
 Naming the crew is what makes "IT ATE DAVIS" possible at all.
 The role comes first because Apple's guidance says so — "the very beginning of an Instructions string is an effective place to give the model a clear role with permission to work in a domain" — and the measurement agrees: the instructions decide the outcome on their own, blocking a harmless situation 5 times in 5 in the control and none in the shipping text.
 What the line reacts to is not in the instructions but in the state (IF-CMD-010), which changes every call; and the references of ADR-0002 are not named in the text, because naming them costs tokens and changed nothing.
+Instructions are judged in the whole prompt they ship in, never on their own: a shorter text than the one in use passed 150 calls beside one schema and was blocked 6 times in 100 beside another.
 
 ### IF-CMD-060 — What a generated line may and may not contain
 

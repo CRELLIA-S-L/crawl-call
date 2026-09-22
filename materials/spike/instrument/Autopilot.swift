@@ -1,7 +1,7 @@
 // Unattended runs: launched with `--autopilot`, the app drives the snake around a
 // fixed route (ramp, upper floor, the drop, between the boxes), switches the
 // checks' toggles on a timeline, keeps the screen awake and exits when the run is
-// over, so that the CSV in Documents is the whole story. Throwaway code (spike/README.md).
+// over, so that the CSV in Documents is the whole story. Kept as a record (README.md beside this file).
 import Foundation
 import RealityKit
 import UIKit

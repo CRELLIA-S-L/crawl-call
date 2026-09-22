@@ -27,7 +27,7 @@ Greed is punished by the situation, not by rules.
 
 ## 2.4 Assumptions and dependencies
 
-- **The technical spike is in progress** (`spike/`). Every stack decision assumes it passes. Three checks, two to three days: (1) a spline snake through `LowLevelMesh`, steered, over a ramp, a step and a drop — its first form, on RealityKit's navmesh, was abandoned on 2026-09-22 (ADR-0016); (2) eight navmesh entities with utility-AI action choice, frame time measured on a real iPhone at the worst case; (3) one Foundation Models call in parallel with rendering — frame drop and heating. If (1) or (3) fails, the project moves to SwiftGodot.
+- **The technical spike passed on 2026-09-22** (`materials/spike/README.md`, ADR-0001 accepted): a steered snake with a `LowLevelMesh` tail over a ramp, a step and a drop; eight bots deliberating every frame at 60 fps on an iPhone 16 Pro; 121 commander calls in twenty minutes with no failure and no frame missed while an inference ran. Its first form, on RealityKit's navigation mesh, was abandoned along the way (ADR-0016), and the fallback to SwiftGodot is no longer on the table.
 - RealityKit 5 shipped in June 2026 and is absent from the training data of coding agents; current SDK documentation has to be supplied to them by hand.
 - Toolchain: Xcode 27 with the iOS 27 / macOS 27 SDK is the minimum supported version (CON-PUB-120); the concept's "Xcode 18" came from independent sources and was wrong.
 - Thermal throttling on iPhone shows only on sessions of 10–15 minutes and longer; every performance claim is measured on a real device over a long session.

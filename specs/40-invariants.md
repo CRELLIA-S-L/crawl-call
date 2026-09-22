@@ -440,7 +440,7 @@ created: 2026-09-22
 
 Every call to the system language model **shall** fit its instructions, transcript and prompt within the model's context window of 4096 tokens.
 
-**Rationale.** Measured in the spike on iOS 27.0 (`spike/README.md`): the context is 4096 tokens; a `LanguageModelSession` keeps every exchange, so a session called every 7 s with a ~540-token exchange overflows on the seventh call; the model's prefix cache belongs to the session object — a rebuilt session starts uncached — and is evicted above roughly 3000 tokens of transcript; an uncached prefill of 1.6–3.3 k tokens dropped 9–25 display frames, one of ~600 tokens dropped none.
+**Rationale.** Measured in the spike on iOS 27.0 (`materials/spike/README.md`): the context is 4096 tokens; a `LanguageModelSession` keeps every exchange, so a session called every 7 s with a ~540-token exchange overflows on the seventh call; the model's prefix cache belongs to the session object — a rebuilt session starts uncached — and is evicted above roughly 3000 tokens of transcript; an uncached prefill of 1.6–3.3 k tokens dropped 9–25 display frames, one of ~600 tokens dropped none.
 FR-CMD-025 says how the commander lives within this.
 
 ### CON-CMD-020 — The model refuses a share of calls
@@ -459,7 +459,7 @@ created: 2026-09-22
 
 The game **shall** keep working, with no voice missing and no order lost, when up to one call in five is refused.
 
-**Rationale.** Measured in the spike on iOS 27.0 (`spike/README.md`, ADR-0017).
+**Rationale.** Measured in the spike on iOS 27.0 (`materials/spike/README.md`, ADR-0017).
 The rate is a property of the wording, not a constant: the same hundred-call bench gave 10 blocked with the game's first instructions and 0 with the measured ones, and every block fell on the one situation whose state was written as wounds and bodies.
 `permissiveContentTransformations` does not apply — the documentation states that guided generation runs the default guardrails whatever the mode says.
 The subject — soldiers being swallowed — is what the model objects to, so the rate is a property of the game, not of a prompt to be fixed.

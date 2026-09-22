@@ -786,3 +786,39 @@ all_of: [H-040]
 FR-TOOL-160 — The bench carries a control that must be blocked — is worth building only if H-040 holds.
 
 **Rationale.** Concept §16.2 H4: a refutation removes all LLM tactics, leaving utility AI — a saving, not a loss.
+
+### B-660 — FR-MAP-025 stands on verticality mattering
+
+```yaml
+status: active
+requirement: FR-MAP-025
+all_of: [H-020]
+```
+
+FR-MAP-025 — The snake and the bots agree on what is climbable — is worth building only if H-020 holds.
+
+**Rationale.** Concept §16.2 H2: a refutation removes verticality, the spline on the navmesh and part of the map requirements.
+
+### B-670 — FR-BOT-167 stands on verticality mattering
+
+```yaml
+status: active
+requirement: FR-BOT-167
+all_of: [H-020]
+```
+
+FR-BOT-167 — An unreachable target sends the bot back to deliberation — is worth building only if H-020 holds.
+
+**Rationale.** Concept §16.2 H2: a refutation removes verticality, the spline on the navmesh and part of the map requirements.
+
+### B-680 — FR-TOOL-170 stands on the commander making a visible difference
+
+```yaml
+status: active
+requirement: FR-TOOL-170
+all_of: [H-040]
+```
+
+FR-TOOL-170 — A bench measurement names the configuration it covers — is worth building only if H-040 holds.
+
+**Rationale.** Concept §16.2 H4: a refutation removes all LLM tactics, leaving utility AI — a saving, not a loss.

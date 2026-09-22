@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Reads a spike CSV (and its console log) and prints the checks' verdicts.
 
-Thresholds are those of spike/README.md: 60 fps by vsync, a frame budget of
+Thresholds are those of materials/spike/README.md: 60 fps by vsync, a frame budget of
 16.6 ms with a 20 % margin on the iPhone 16 Pro (13.3 ms), a commander answer
 within its 7 s interval, no dropped frames worth mentioning over the run.
 Standard library only, as every tool in this repository.

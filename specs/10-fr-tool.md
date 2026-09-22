@@ -274,13 +274,13 @@ When a commit stages the Xcode project file, the pre-commit hook **shall** rejec
 ### FR-TOOL-150 — The prompt bench
 
 ```yaml
-status: deferred
+status: implemented
 verification: T
 derives_from: []
 depends_on: [IF-CMD-040, IF-CMD-050, IF-CMD-060, CON-CMD-020]
 refines: []
 conflicts_with: []
-code: []
+code: [Sources/PromptBench/PromptBench.swift, Sources/PromptBench/main.swift]
 tests: []
 created: 2026-09-22
 ```
@@ -294,13 +294,13 @@ The bench calls the model directly and does not render, so a hundred calls take 
 ### FR-TOOL-160 — The bench carries a control that must be blocked
 
 ```yaml
-status: deferred
+status: implemented
 verification: T
 derives_from: [FR-TOOL-150]
 depends_on: []
 refines: [FR-TOOL-150]
 conflicts_with: []
-code: []
+code: [Sources/PromptBench/PromptBench.swift, Sources/PromptBench/PromptVariants.swift]
 tests: []
 created: 2026-09-22
 ```
@@ -309,3 +309,24 @@ The prompt bench **shall** report every run in which its deliberately blocked co
 
 **Rationale.** A bench that cannot detect a block reports zero blocks for every configuration, which is the same reading as success.
 The control used in the spike — a squad dying in described agony — was blocked in 50 of 50 calls while the game's own configurations were blocked in 0 (ADR-0017).
+
+### FR-TOOL-170 — A bench measurement names the configuration it covers
+
+```yaml
+status: deferred
+verification: T
+derives_from: [FR-TOOL-150]
+depends_on: [IF-CMD-010, IF-CMD-020, IF-CMD-040, IF-CMD-050, IF-CMD-060, CON-CMD-020]
+refines: []
+conflicts_with: []
+code: []
+tests: []
+created: 2026-09-22
+```
+
+Every measurement the prompt bench records **shall** name the four things it was taken under — the instructions, the response schema, the vocabulary of the world state, and the model version — so that a configuration differing from the latest record in any of them is read as unmeasured until the bench has been run over it again.
+
+**Rationale.** Safety is a property of the whole configuration, not of the instructions alone: the shortest instruction variant passed 150 calls with the shipping schema and was blocked 6 times in 100 with the previous one, every block on the same situation, while the shipping instructions were never blocked in either (ADR-0017).
+The two axes also act independently — the same situation written as wounds and bodies was blocked 10 of 10 under the old instructions and 0 of 10 under the new ones — so a change to either invalidates the other's reading.
+Apple asks for the same on the model axis: "When any model you use updates, it's important to re-run all of your prompt tests", and the system model ships with the OS rather than with the game (CON-CMD-020).
+What the record obliges is a re-run before the change ships, and the cost of one is minutes on a Mac (FR-TOOL-150), which is what makes the rule affordable rather than aspirational.

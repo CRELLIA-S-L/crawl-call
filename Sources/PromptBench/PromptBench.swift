@@ -3,7 +3,8 @@
 // Apple's "Improving the safety of generative model output" asks for ("Create a list of
 // potentially harmful prompt inputs that you can run as part of your app's tests… log the
 // timestamp, full input prompt, the model's response, and whether it activates any
-// built-in safety"). Throwaway code (spike/README.md).
+// built-in safety").
+// implements: FR-TOOL-150, FR-TOOL-160
 import FoundationModels
 import Foundation
 
@@ -132,6 +133,7 @@ enum PromptBench {
                         case .described:
                             let r = try await session.respond(to: prompt, generating: BenchOrder.self, includeSchemaInPrompt: includeSchema, options: opts)
                             ins = r.usage.input.totalTokenCount; outs = r.usage.output.totalTokenCount
+                            if maxOutput != nil { log("  usage: output total \(r.usage.output.totalTokenCount), reasoning \(r.usage.output.reasoningTokenCount), cap \(maxOutput!)") }
                             line = "\(r.content.speaker): \(r.content.line)"
                             threat = r.content.threat.rawValue; order = r.content.order.rawValue; panic = r.content.panic
                         case .lean:

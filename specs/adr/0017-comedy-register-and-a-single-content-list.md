@@ -7,7 +7,7 @@
 ## Context and problem statement
 
 The instructions sent to the on-device model decide what the bots sound like, and the spike showed they decide more than tone.
-Two ten-minute unattended runs on the iPhone 16 Pro, same arena, same route, same schedule (`spike/README.md`):
+Two ten-minute unattended runs on the iPhone 16 Pro, same arena, same route, same schedule (`materials/spike/README.md`):
 
 | | military register | comedy register |
 |---|---|---|
@@ -45,7 +45,7 @@ Option 3 was rejected because a prompt is tuned against a model version: the tex
 ## What the measurements settled afterwards
 
 The register decision above was taken on two ten-minute runs of eight calls apiece.
-A bench that calls the model directly, with no rendering, made a hundred calls per configuration affordable, and it changed three things (`spike/bench/`, `spike/PromptBench.swift`):
+A bench that calls the model directly, with no rendering, made a hundred calls per configuration affordable, and it changed three things (`Sources/PromptBench/`):
 
 | | the game's first configuration | the measured one |
 |---|---|---|
@@ -56,6 +56,9 @@ A bench that calls the model directly, with no rendering, made a hundred calls p
 **The state, not the instructions, is what the guardrail blocks.** The same situation in violent words was blocked in 10 of 10 calls under the old instructions and 0 of 10 under the new ones; written in the game's own words it was never blocked under either.
 A returned line also echoed the state's vocabulary back, wounds included.
 So IF-CMD-010 now carries the content rules of IF-CMD-060, which is where that vocabulary is defined.
+
+**A variant is safe only in the configuration it was measured in.** The shortest instructions tried — 28 input tokens cheaper than the ones that ship — passed 150 calls under the shipping schema and were blocked 6 times in 100 under the schema that preceded it, every block on the same situation, while the shipping instructions were never blocked under either.
+The 28 tokens are therefore not taken, and FR-TOOL-170 makes every recorded measurement name the configuration it covers so that a reading is never carried across a change to one.
 
 **`permissiveContentTransformations` does nothing here.** The documentation is explicit: "This mode only works for generating a string value. When you use guided generation, the framework runs the default guardrails against model input and output as usual."
 The commander uses guided generation, so the mode this project set after the first refusal was never in effect; what removed the refusals was the register and the state's vocabulary.

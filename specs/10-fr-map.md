@@ -27,6 +27,26 @@ Every map **shall** contain at least two floors joined by at least one vertical 
 **Rationale.** Concept §3, §13 stage 2: multi-level maps are the thing verticality is measured on (H-020).
 Checked by the validator (FR-TOOL-040).
 
+### FR-MAP-025 — The snake and the bots agree on what is climbable
+
+```yaml
+status: deferred
+verification: T
+derives_from: [FR-MAP-020]
+depends_on: [FR-SNAKE-010, IF-MAP-020]
+refines: []
+conflicts_with: []
+code: []
+tests: []
+created: 2026-09-22
+```
+
+The step height, slope angle and body radius that decide where the snake's head may go **shall** be the same values the navigation graph uses to decide where a bot may go, both read from the tuning configuration.
+
+**Rationale.** Two models of the same map that disagree produce a map with two shapes: a step the snake climbs and the bots path around, or a ledge the bots walk off and the snake cannot follow.
+The tail blocking a passage (FR-SNAKE-040) only means something if both sides agree the passage exists.
+The spike keeps one constant for both, which is what this requires of the game; the values belong in configuration because they are tuning (concept §12).
+
 ### FR-MAP-020 — The navigation graph covers every walkable cell
 
 ```yaml

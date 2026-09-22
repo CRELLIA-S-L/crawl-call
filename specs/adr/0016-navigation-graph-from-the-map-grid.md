@@ -7,7 +7,7 @@
 ## Context and problem statement
 
 The concept and the first decomposition assumed RealityKit 5's navigation mesh for both the bots' pathfinding and the snake's movement (concept §4, §10; ADR-0001 check 1).
-The technical spike of 2026-09-22 (`spike/README.md`) showed that `NavigationController` resolves a position to a polygon by its XZ column alone, taking the first polygon it finds and ignoring height: two points on the same floor, requested at y=0 and at y=3, return the same path, and which floor that path lies on depends on polygon order.
+The technical spike of 2026-09-22 (`materials/spike/README.md`) showed that `NavigationController` resolves a position to a polygon by its XZ column alone, taking the first polygon it finds and ignoring height: two points on the same floor, requested at y=0 and at y=3, return the same path, and which floor that path lies on depends on polygon order.
 Neither layers nor geometry thickness change this, and the API offers no nearest-point query.
 On a map with floors above floors — the map the concept is about — the built-in pathfinder cannot be used as it is.
 

@@ -1,7 +1,8 @@
 // The instruction variants under test. Each is one hypothesis about what makes the
 // on-device model refuse, written against Apple's guidance in "Improving the safety of
 // generative model output": a clear role and domain at the very beginning, uppercase for
-// emphasis, safety in the instructions rather than the prompt. Throwaway code.
+// emphasis, safety in the instructions rather than the prompt.
+// implements: FR-TOOL-160
 import Foundation
 
 enum PromptVariants {

@@ -1,7 +1,7 @@
-# ADR-0001 — RealityKit 5 is the engine, pending the technical spike
+# ADR-0001 — RealityKit 5 is the engine
 
-- **Status:** proposed
-- **Date:** 2026-09-21
+- **Status:** accepted
+- **Date:** 2026-09-21, accepted 2026-09-22 when the spike passed
 - **Related requirements:** FR-SNAKE-010, FR-SNAKE-020, FR-MAP-020, FR-TOOL-050, NFR-PERF-010, NFR-PERF-030, CON-PUB-010
 
 ## Context and problem statement
@@ -22,6 +22,15 @@ A year ago RealityKit had no navigation; RealityKit 5 (WWDC26) added it, which r
 Option 1, on the assumption that a two-to-three-day spike passes three checks: (1) a spline snake through `LowLevelMesh`, its head a character controller steered by the player, crossing a ramp, a step and a drop, looks and feels right — originally "crawling a navmesh", redefined by ADR-0016 after the spike found RealityKit's navmesh queries unusable on overlapping floors; (2) eight navmesh entities with utility-AI action choice fit the frame on a real iPhone at the worst case, every bot every frame; (3) one Foundation Models call beside rendering neither drops the frame nor heats the device unduly.
 All three green — this ADR becomes *accepted*.
 Check 1 or 3 fails — option 2, at the cost of three days rather than six months, and this ADR is superseded.
+
+**The spike ran on 2026-09-22 and all three passed** (`materials/spike/README.md`), on an iPhone 16 Pro with iOS 27.0 and Xcode 27.0:
+
+1. The head is a `CharacterControllerComponent` steered by a joystick and the tail a `LowLevelMesh` tube rebuilt every frame; it climbs the ramp, drops off the ledge with the tail following unbroken, and holds at a hundred segments.
+2. Eight bots choosing an action every frame cost 0.05–0.15 ms on average and 3.5 ms at worst, at 60 fps with one missed frame in 71,820 over twenty minutes.
+3. 121 commander calls in twenty minutes with no failure, 2.7 s on average against a 5–10 s interval, no frame missed while an inference ran, and the device reached `fair` at fourteen minutes without ever reaching `serious`.
+
+Two parts of RealityKit 5 did not survive the spike and are not used: its navigation mesh, whose queries ignore height (ADR-0016), and `deltaTime` as a frame-time measure, which jitters against `CADisplayLink`.
+What the decision rests on — `LowLevelMesh`, the character controller, ECS, one code base, Foundation Models in-process — did.
 
 ### Consequences
 

@@ -80,10 +80,11 @@ tests: []
 created: 2026-09-22
 ```
 
-When calling the model, the system **shall** pass the maximum response tokens of the match configuration, 80 by default.
+When calling the model, the system **shall** pass the maximum response tokens of the match configuration — 80 by default, and never below what the answer's own structure needs.
 
 **Rationale.** A generation without a ceiling ran past 40 seconds in the spike, in both runs, when the schema was left out of the prompt (ADR-0017).
 The ceiling costs nothing when the answer is the usual fifty tokens and bounds the one that is not; NFR-PERF-040 gives the commander one interval to answer, and this is what keeps a single call from spending it.
+The floor is not a formality: measured at a ceiling of 20 the answer was cut off mid-structure and every call failed with a missing field, while at 80 the ceiling was never reached (47–55 tokens).
 
 
 ### FR-CMD-030 — The commander sets the threat priority
@@ -409,7 +410,8 @@ tests: []
 created: 2026-09-22
 ```
 
-When a generation fails — the model refuses it, a guardrail stops it, or it times out — the system **shall** play a pre-written line for the same event and speaker, and start the next call from a session that does not carry the failed exchange.
+When a generation does not return a complete answer, whatever the reason, the system **shall** play a pre-written line for the same event and speaker, and start the next call from a session that does not carry the failed exchange.
 
 **Rationale.** CON-CMD-020: the model refuses about one call in ten about this game's own subject, and a failed exchange left in the session's transcript makes every later call fail too — in the spike one refusal was followed by eighty-four failed calls, to the end of the run.
 So a refusal is an ordinary event with an ordinary answer, not an error path.
+"Whatever the reason" rather than a list, because the list was wrong: a response ceiling set too low truncates the answer and the framework reports a missing field — neither a refusal nor a guardrail nor a timeout (`materials/spike/README.md`), and a fallback that enumerated the three would have let it through.
