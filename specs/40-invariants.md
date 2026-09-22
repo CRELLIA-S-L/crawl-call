@@ -155,7 +155,7 @@ created: 2026-09-21
 
 The system **shall not** change the state of a module declared load-bearing, whatever the source of damage — bot weapon, snake body or sapper ability.
 
-**Rationale.** Concept §7: walls, stairs and floor slabs never break, or the navmesh falls apart and with it the verticality that is the reason the map is multi-level.
+**Rationale.** Concept §7: walls, stairs and floor slabs never break, or the navigation graph falls apart and with it the verticality that is the reason the map is multi-level.
 
 ### INV-MAP-020 — Destruction never disconnects floors
 
@@ -171,7 +171,7 @@ tests: []
 created: 2026-09-21
 ```
 
-After any change of a module's state, every floor of the map **shall** remain reachable from every other floor over the navigation mesh.
+After any change of a module's state, every floor of the map **shall** remain reachable from every other floor over the navigation graph.
 
 **Rationale.** Concept §7: destructible is everything that can be removed without changing the connectivity between floors.
 Stated separately from INV-MAP-010 because it is the property, and INV-MAP-010 the mechanism meant to guarantee it; a kit that declared a stair destructible would pass one and fail the other.

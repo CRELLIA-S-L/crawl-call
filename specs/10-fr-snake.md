@@ -1,12 +1,12 @@
 # Functional requirements — snake
 
-Movement over the navigation mesh, the tail spline, growth, eating, abilities gained from prey.
+Movement over the map's walkable surfaces under the player's control, the tail spline, growth, eating, abilities gained from prey.
 Source: concept §4 (snake mechanics), §5 (abilities from eating), §6.2 (eating takes time), §7 (destruction by the body).
 Tunable numbers — speeds, durations, growth, damage-to-segments — are read from the snake configuration (IF-SNAKE-010) and are named here only where the concept fixes a relation between them.
 
 ## Movement
 
-### FR-SNAKE-010 — Head moves on the navigation mesh
+### FR-SNAKE-010 — Head stays on the map's walkable surfaces
 
 ```yaml
 status: deferred
@@ -20,10 +20,10 @@ tests: []
 created: 2026-09-21
 ```
 
-While a match is running, the snake's head **shall** move only along the navigation mesh of the map, including its vertical transitions — stairs, descents and drops from ledges.
+While a match is running, the snake's head **shall** move in the direction the player holds, staying on the map's walkable surfaces — over ramps, stairs and drops from ledges — and never passing through walls or load-bearing geometry.
 
-**Rationale.** The snake lives on the surface graph of the map, not in free space: it crawls over geometry.
-Everything the tail does for free — blocking corridors and stairs, becoming a liability in narrow passages, vertical play in both directions — follows from the head being bound to the mesh.
+**Rationale.** The snake lives on the map's surfaces, not in free space: it crawls over geometry, steered rather than pathfound (concept §3, ADR-0016).
+Everything the tail does for free — blocking corridors and stairs, becoming a liability in narrow passages, vertical play in both directions — follows from the head being bound to the surfaces.
 Free flight was never on the table.
 
 ### FR-SNAKE-020 — Tail follows the head's path
@@ -80,10 +80,11 @@ tests: []
 created: 2026-09-21
 ```
 
-While a tail segment occupies a navigation-mesh passage, the system **shall** treat that passage as impassable for bots.
+While a tail segment occupies a cell of the navigation graph, the system **shall** treat that cell as impassable for bots.
 
 **Rationale.** Concept §4: a long snake can cut off a squad's retreat.
-A stair or corridor held by the body is the main spatial weapon the snake has, and the reason maps carry stairs the snake can block (FR-MAP-120).
+A stair or corridor held by the body is the main spatial weapon the snake has, and the reason maps carry stairs the snake can block (FR-MAP-070).
+On the grid this is a per-cell mark that follows the segments (ADR-0016).
 
 ### FR-SNAKE-050 — Tail blocks the snake's own head
 
@@ -99,10 +100,11 @@ tests: []
 created: 2026-09-21
 ```
 
-While a tail segment occupies a navigation-mesh passage, the system **shall** treat that passage as impassable for the snake's own head.
+While a tail segment lies in the head's way, the system **shall** stop the head at the segment as at a wall.
 
 **Rationale.** Concept §4: the snake can lock itself in.
 Split from FR-SNAKE-040 because blocking bots and blocking oneself can each be built and observed without the other, and the second is the one that makes narrow corridors a risk rather than only an advantage.
+For the head this is collision, not the graph (ADR-0016): the head is steered, and what it runs into is geometry.
 
 ## Growth and damage
 
@@ -427,7 +429,7 @@ tests: []
 created: 2026-09-21
 ```
 
-When the head drops from a ledge no higher than the maximum drop of the tuning configuration, the system **shall** lay the tail down the drop as a vertical portion of the path, with no damage and no break in the tail.
+When the head is steered off a ledge no higher than the maximum drop of the tuning configuration, the system **shall** let it fall to the surface below and lay the tail down the drop as a vertical portion of the path, with no damage and no break in the tail.
 
 **Rationale.** Concept §4: verticality works both ways — the snake cuts through drops the bots will not jump; a drop that hurt or severed the tail would take that away (Q-040, closed 2026-09-21).
-A ledge higher than the maximum drop is simply not a navigation-mesh transition, so the head never goes over it; the tail's sag is rendering.
+A ledge higher than the maximum drop is fenced by geometry the head cannot pass, so it never goes over one; the tail's sag is rendering.

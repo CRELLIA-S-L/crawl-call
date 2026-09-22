@@ -15,7 +15,7 @@ Test files may additionally carry `verifies:` annotations — see the Annotation
 
 ## What the technical spike verifies
 
-The spike (concept preamble, ADR-0001) is an `A` over three requirements before any of them is built for real: FR-SNAKE-020 with a vertical transition, NFR-PERF-020 at the worst case — every bot every frame — and NFR-PERF-030.
+The spike (concept preamble, ADR-0001, `spike/`) is an `A` over three requirements before any of them is built for real: FR-SNAKE-010 and FR-SNAKE-020 over a ramp, a step and a drop, NFR-PERF-020 at the worst case — every bot every frame — and NFR-PERF-030.
 Its numbers are recorded as the first `A` write-ups of the project and settle ADR-0001 either way.
 
 ## Hypotheses are not verification

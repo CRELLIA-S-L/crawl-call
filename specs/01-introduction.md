@@ -13,11 +13,11 @@ The design intent behind it lives in the concept document, `materials/concept/co
 
 Inside the boundary:
 
-- the snake — movement over the navigation mesh, the tail spline, growth, eating, abilities gained from prey;
+- the snake — steered movement over the map's surfaces, the tail spline, growth, eating, abilities gained from prey;
 - the bots — six archetypes, utility-AI deliberation, per-frame execution;
 - the commanders — one LLM-driven commander per squad, issuing threat priority, orders, roles and personality weights; bot speech;
 - scoring — three multiplying axes (stealth, balance of power, target value), witnessing, bodies, the squad awareness scale;
-- maps — multi-level layouts on a navigation mesh, pre-destructed cover, a text map specification and its tooling;
+- maps — multi-level layouts with a navigation graph from the map grid, pre-destructed cover, a text map specification and its tooling;
 - view and input — a fixed-angle chase camera; separate input schemes for iOS (touch) and macOS (keyboard and mouse);
 - performance and thermal budget on iPhone;
 - licensing, identifiers and publication.

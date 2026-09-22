@@ -250,7 +250,7 @@ tests: []
 created: 2026-09-21
 ```
 
-When scoring a position, the system **shall** raise the score with the length of the navigation-mesh path the snake's head would need to reach it.
+When scoring a position, the system **shall** raise the score with the length of the shortest navigation-graph path from the snake's head to it.
 
 **Rationale.** Concept §13 stage 2: bots retreat to floors the snake takes long to reach — a different thing from being above it, since a balcony over the snake may be one ramp away.
 

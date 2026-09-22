@@ -72,10 +72,10 @@ Total requirements: 155.
 | **FR-CMD-150** Speech is rate-limited and queued | `deferred` | T | — | — |
 | **FR-CMD-160** Every line passes a content filter | `deferred` | T | — | — |
 | **FR-MAP-010** A map has more than one floor | `deferred` | I | — | — |
-| **FR-MAP-020** The navigation mesh covers every walkable surface | `deferred` | T | — | — |
+| **FR-MAP-020** The navigation graph covers every walkable cell | `deferred` | T | — | — |
 | **FR-MAP-030** Destructible modules have three states | `deferred` | T | — | — |
 | **FR-MAP-040** Debris stops blocking sight and fire | `deferred` | T | — | — |
-| **FR-MAP-050** The navigation mesh follows destruction | `deferred` | T | — | — |
+| **FR-MAP-050** The navigation graph follows destruction | `deferred` | T | — | — |
 | **FR-MAP-060** What can and cannot be destroyed is declared per module type | `deferred` | I | — | — |
 | **FR-MAP-070** Stairs the snake can block | `deferred` | I | — | — |
 | **FR-MAP-080** Trap corridors | `deferred` | I | — | — |
@@ -97,7 +97,7 @@ Total requirements: 155.
 | **FR-SCORE-130** Each squad has an awareness state | `deferred` | T | — | — |
 | **FR-SCORE-140** The match ends when the snake dies | `deferred` | T | — | — |
 | **FR-SCORE-150** The match ends when no bot is left | `deferred` | T | — | — |
-| **FR-SNAKE-010** Head moves on the navigation mesh | `deferred` | D | — | — |
+| **FR-SNAKE-010** Head stays on the map's walkable surfaces | `deferred` | D | — | — |
 | **FR-SNAKE-020** Tail follows the head's path | `deferred` | D | — | — |
 | **FR-SNAKE-030** Head speed comes from configuration | `deferred` | T | — | — |
 | **FR-SNAKE-040** Tail blocks bots | `deferred` | T | — | — |
@@ -121,12 +121,12 @@ Total requirements: 155.
 | **FR-SNAKE-220** A drop is a path, not a fall | `deferred` | D | — | — |
 | **FR-TOOL-010** Parse a map specification | `deferred` | T | — | — |
 | **FR-TOOL-020** Assemble the scene from the kit | `deferred` | T | — | — |
-| **FR-TOOL-030** Generate the navigation mesh | `deferred` | T | — | — |
+| **FR-TOOL-030** Derive the navigation graph | `deferred` | T | — | — |
 | **FR-TOOL-040** Validate the map | `deferred` | T | — | — |
 | **FR-TOOL-050** Export to the level editor | `deferred` | T | — | — |
 | **FR-TOOL-060** Render a 2D plan per floor | `deferred` | T | — | — |
 | **FR-TOOL-070** Free camera | `deferred` | D | — | — |
-| **FR-TOOL-080** Navigation mesh overlay | `deferred` | D | — | — |
+| **FR-TOOL-080** Navigation graph overlay | `deferred` | D | — | — |
 | **FR-TOOL-090** Disconnected regions and seams highlighted | `deferred` | D | — | — |
 | **FR-TOOL-100** Teleport by pointing | `deferred` | D | — | — |
 | **FR-TOOL-110** Snake length slider | `deferred` | D | — | — |

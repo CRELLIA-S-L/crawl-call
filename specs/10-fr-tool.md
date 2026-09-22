@@ -42,7 +42,7 @@ When given a parsed map, the map tool **shall** assemble the scene by placing th
 
 **Rationale.** Concept §12: assembling a map to an exact specification in coordinates is what the agent does reliably.
 
-### FR-TOOL-030 — Generate the navigation mesh
+### FR-TOOL-030 — Derive the navigation graph
 
 ```yaml
 status: deferred
@@ -56,9 +56,9 @@ tests: []
 created: 2026-09-21
 ```
 
-When given an assembled scene, the map tool **shall** generate the navigation mesh over its walkable surfaces and vertical transitions.
+When given a parsed map, the map tool **shall** derive the navigation graph from its grids and transitions, one node per walkable cell and floor.
 
-**Rationale.** Concept §11.2 step 3.
+**Rationale.** Concept §11.2 step 3, with the graph in place of the navmesh (ADR-0016): the grid the map is written in is the graph the bots walk.
 
 ### FR-TOOL-040 — Validate the map
 
@@ -74,7 +74,7 @@ tests: []
 created: 2026-09-21
 ```
 
-When given an assembled scene and its navigation mesh, the map tool **shall** report every floor unreachable from another, every disconnected region of the mesh, every seam between modules the mesh does not cross, and every requirement of the MAP area the map fails to meet.
+When given a map and its navigation graph, the map tool **shall** report every floor unreachable from another, every disconnected region of the graph, every transition whose cells are not walkable at both ends, and every requirement of the MAP area the map fails to meet.
 
 **Rationale.** Concept §11.2 step 3 (the validator), §11.3 (disconnected zones and seams).
 One act — a report — over an enumerated set of findings.
@@ -136,7 +136,7 @@ Where debug mode is enabled, the system **shall** let the user detach the camera
 **Rationale.** Concept §11.3: an external viewer cannot answer "does the tail fit", "where does it catch"; the debug build can.
 One requirement per debug facility because each can be built and used without the others.
 
-### FR-TOOL-080 — Navigation mesh overlay
+### FR-TOOL-080 — Navigation graph overlay
 
 ```yaml
 status: deferred
@@ -150,7 +150,7 @@ tests: []
 created: 2026-09-21
 ```
 
-Where debug mode is enabled, the system **shall** draw the navigation mesh over the geometry on request.
+Where debug mode is enabled, the system **shall** draw the navigation graph's walkable cells over the geometry on request, blocked cells marked.
 
 **Rationale.** Concept §11.3.
 
@@ -168,7 +168,7 @@ tests: []
 created: 2026-09-21
 ```
 
-Where debug mode is enabled, the system **shall** highlight in the overlay every disconnected region of the mesh and every seam the validator reported.
+Where debug mode is enabled, the system **shall** highlight in the overlay every disconnected region of the graph and every broken transition the validator reported.
 
 **Rationale.** Concept §11.3.
 
@@ -186,7 +186,7 @@ tests: []
 created: 2026-09-21
 ```
 
-Where debug mode is enabled, when the user points at a navigation-mesh position, the system **shall** move the snake's head there.
+Where debug mode is enabled, when the user points at a walkable cell, the system **shall** move the snake's head there.
 
 **Rationale.** Concept §11.3.
 

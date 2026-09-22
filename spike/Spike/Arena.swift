@@ -38,7 +38,8 @@ enum ArenaBuilder {
 
     static func build() throws -> Built {
         var descriptors: [MeshDescriptor] = []
-        descriptors.append(quad(name: "ground", ArenaLayout.groundMin, ArenaLayout.groundMax))
+        // Ground as a 0.4 m slab too (the maintainer's request), its top face at y = 0.
+        descriptors.append(box(name: "ground", center: [0, -0.2, 0], size: [24, 0.4, 16]))
         // Upper floor and ramp as 0.4 m slabs, not zero-thickness quads (the maintainer's hypothesis).
         descriptors.append(box(name: "upper", center: [8, ArenaLayout.upperY - 0.2, 0], size: [8, 0.4, 16]))
         descriptors.append(slopedSlab(name: "ramp",

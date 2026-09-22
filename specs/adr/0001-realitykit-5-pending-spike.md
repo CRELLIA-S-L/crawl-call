@@ -6,12 +6,12 @@
 
 ## Context and problem statement
 
-The game needs navigation-mesh pathfinding for eight entities and a snake, a procedurally rebuilt tail mesh every frame, an entity-component structure for the three-tier AI, and on-device language-model calls from the same process as the game loop — on iPhone, in one code base for every Apple platform.
+The game needs pathfinding for eight bots and a steerable snake, a procedurally rebuilt tail mesh every frame, an entity-component structure for the three-tier AI, and on-device language-model calls from the same process as the game loop — on iPhone, in one code base for every Apple platform.
 A year ago RealityKit had no navigation; RealityKit 5 (WWDC26) added it, which removes the main argument against.
 
 ## Considered options
 
-1. RealityKit 5 — native, navmesh, ECS, `LowLevelMesh` for the tail, Foundation Models in-process, one build for iOS/iPadOS/macOS/tvOS/visionOS.
+1. RealityKit 5 — native, ECS, `LowLevelMesh` for the tail, a kinematic character controller, Foundation Models in-process, one build for iOS/iPadOS/macOS/tvOS/visionOS.
 2. SwiftGodot — Swift bindings to Godot 4 via GDExtension; mature engine, all logic in Swift, direct Core AI access; non-native rendering and bindings kept by a small team.
 3. SceneKit — wound down by Apple.
 4. Unity — vendor lock-in the project does not want.
@@ -19,7 +19,7 @@ A year ago RealityKit had no navigation; RealityKit 5 (WWDC26) added it, which r
 
 ## Decision outcome
 
-Option 1, on the assumption that a two-to-three-day spike passes three checks: (1) a spline snake through `LowLevelMesh` crawling a navmesh across a vertical transition looks and feels right; (2) eight navmesh entities with utility-AI action choice fit the frame on a real iPhone at the worst case, every bot every frame; (3) one Foundation Models call beside rendering neither drops the frame nor heats the device unduly.
+Option 1, on the assumption that a two-to-three-day spike passes three checks: (1) a spline snake through `LowLevelMesh`, its head a character controller steered by the player, crossing a ramp, a step and a drop, looks and feels right — originally "crawling a navmesh", redefined by ADR-0016 after the spike found RealityKit's navmesh queries unusable on overlapping floors; (2) eight navmesh entities with utility-AI action choice fit the frame on a real iPhone at the worst case, every bot every frame; (3) one Foundation Models call beside rendering neither drops the frame nor heats the device unduly.
 All three green — this ADR becomes *accepted*.
 Check 1 or 3 fails — option 2, at the cost of three days rather than six months, and this ADR is superseded.
 

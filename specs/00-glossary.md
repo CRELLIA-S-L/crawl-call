@@ -19,10 +19,10 @@ The convention of this project:
 
 | Term | Meaning |
 |---|---|
-| **snake** | The player's avatar: a head that moves on the navigation mesh and a tail that follows the head's path as a spline. It has no ranged weapon. |
+| **snake** | The player's avatar: a head the player steers over the map's walkable surfaces and a tail that follows the head's path as a spline. It has no ranged weapon. |
 | **segment** | A unit of the snake's tail. Growth adds segments; damage removes them from the end. Abilities are attached to segments. |
-| **navigation mesh (navmesh)** | The walkable-surface graph of a map. Both the snake's head and the bots move on it; it is the ground truth for "where one can be". |
-| **vertical transition** | A navmesh edge that changes level: stairs, a descent, a drop from a ledge. |
+| **navigation graph** | The bots' model of the map, derived from the map grid: one node per walkable cell and floor, edges between neighbours and along floor transitions. Cells carry passability and cost; the tail and destruction change them (ADR-0016). RealityKit's navigation mesh is not used. |
+| **vertical transition** | A way between floors: stairs, a ramp, a drop from a ledge. For the bots an edge of the graph; for the snake, geometry its controller climbs or falls down. |
 | **eating** | The act by which the snake consumes a bot, alive or dead. It takes time, during which the snake is exposed. Eating — not killing — is what scores. |
 | **live prey** | A bot eaten while alive. Resists, takes longer, scores more than a body. |
 | **body** | A dead bot left on the map. Squads do not remove bodies; only the snake does. |
@@ -51,12 +51,12 @@ The convention of this project:
 | **attribution file** | The repository file listing every third-party asset with its source and licence (CON-PUB-030). |
 | **speech event** | An occurrence the speech configuration names as worth a line — witnessing an eating, a squadmate vanishing, a truce proposed or broken, a body found (FR-CMD-140). |
 | **cover** | Map geometry that blocks line of sight and fire — for and against everyone, snake included. |
-| **pre-destructed cover** | Destruction as mesh states — intact → damaged → debris — switched by damage threshold, never simulated. Keeps the navmesh rebuild cheap and destruction predictable for the AI. |
-| **load-bearing geometry** | Walls, stairs and floors that never break, because breaking them would break the navmesh and with it the verticality. |
-| **map specification** | The text file a map is authored in — an ASCII grid per floor — from which the tooling assembles modules, builds the navmesh and runs the validator. |
-| **debug mode** | The in-build viewer: free camera, navmesh overlay, disconnected zones and seams, teleport, snake-length slider, bot sight lines. |
+| **pre-destructed cover** | Destruction as mesh states — intact → damaged → debris — switched by damage threshold, never simulated. Keeps the graph update to a cell and destruction predictable for the AI. |
+| **load-bearing geometry** | Walls, stairs and floors that never break, because breaking them would break the navigation graph and with it the verticality. |
+| **map specification** | The text file a map is authored in — an ASCII grid per floor — from which the tooling assembles modules, derives the navigation graph and runs the validator. |
+| **debug mode** | The in-build viewer: free camera, navigation-graph overlay, disconnected zones and seams, teleport, snake-length slider, bot sight lines. |
 | **vertical slice** | The five-stage plan in which each stage answers one question that can kill the project: hunting (1), verticality (2), two squads (3), commanders (4), voices (5). |
-| **technical spike** | The unrun 2–3 day check of the RealityKit 5 stack: tail spline on a navmesh with a vertical transition; eight utility-AI entities on a real iPhone; one Foundation Models call beside rendering. |
+| **technical spike** | The 2–3 day check of the RealityKit 5 stack (ADR-0001, `spike/`): a steered snake with a `LowLevelMesh` tail over a ramp, a step and a drop; eight utility-AI entities on a real iPhone; one Foundation Models call beside rendering. Its first run (2026-09-22) ruled out RealityKit's navmesh queries (ADR-0016). |
 | **thermal budget** | The limit set by iPhone throttling after 10–15 minutes of rendering plus on-device inference; the reason for 4v4, staggered commander phases and a degradation path. |
 | **AFM** | Apple Foundation Models — the on-device system language model called through guided generation (`@Generable`). |
 | **RCP** | Reality Composer Pro, the level editor. |
