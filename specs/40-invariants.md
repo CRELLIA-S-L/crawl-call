@@ -329,7 +329,7 @@ The game **shall** be submitted at the 13+ age rating with the user-generated-co
 **Rationale.** Concept §14: the App Store treats real-time generated content as user-generated.
 The filter is FR-CMD-160; the rating and what the filter rejects are ADR-0014.
 
-### CON-PUB-090 — The working title is not the released name
+### CON-PUB-090 — The name stays inside the repository until the search clears it
 
 ```yaml
 status: deferred
@@ -343,9 +343,11 @@ tests: []
 created: 2026-09-21
 ```
 
-The name "Chomp Company" **shall** appear only in the repository, code, documentation and identifiers until a professional trademark search in classes 9 and 41 has cleared a final name.
+The name "Crawl Call: Chomp Company" **shall** appear only in the repository, code, documentation and identifiers until a professional trademark search in classes 9 and 41 has cleared it.
 
-**Rationale.** Concept §17.6: "Chomp" is taken in apps; the working title is technical, and the search — EU first — decides whether it becomes final (Q-120).
+**Rationale.** The maintainer settled the name on 2026-09-22, ahead of the search rather than after it, so what this constrains is no longer a working title but the intended one.
+The reason to hold it back is unchanged: concept §17.6 records that "Chomp" is taken in apps — a children's app, a Google Play game and a UK studio — and a name spoken publicly before a search in classes 9 and 41 is a name that cannot be quietly changed afterwards.
+"Crawl Call" is the half the search has to clear first, since it carries the mark; the subtitle rides with it (Q-120).
 
 ### CON-MAP-010 — No existing map is reproduced
 

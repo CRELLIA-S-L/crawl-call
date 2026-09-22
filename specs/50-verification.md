@@ -13,6 +13,14 @@ Implemented or partially implemented requirements with an empty `tests` field ap
 
 Test files may additionally carry `verifies:` annotations — see the Annotations section of `README.md`.
 
+## Every run ends with the app closed
+
+A run is over when the app is terminated on the device, not when the numbers have been read. Whoever started it closes it — a person by hand, a script as its last step before it reports, which FR-TOOL-180 requires of the tool.
+
+The reason is the next measurement rather than tidiness. NFR-PERF-010 asks for 60 frames per second *cold*, and thermal requirements are read against a device that started cool (NFR-PERF-050, NFR-PERF-060): an app left rendering in the background keeps the GPU busy and the device warm, so the following run begins somewhere in the middle of its own thermal curve and reports a number nobody can reproduce. An inference left running warms the device the same way rendering does, so a run with a commander in it is closed no differently.
+
+This holds for every run — a two-minute check by eye as much as a twenty-minute unattended one — and for runs that failed or were interrupted, which are the ones most likely to be left behind.
+
 ## How the frame rate is measured
 
 A frame-rate claim is only as good as its instrument, and two instruments that look right are not:

@@ -123,11 +123,11 @@ Counted by quarter, which is what `period` says in the register's configuration.
 
 | quarter | arrived unclaimed | areas |
 |---|---|---|
-| 2026-Q3 | 101 | BOT 20, MAP 10, PERF 4, PUB 12, SCORE 7, SNAKE 20, TOOL 14, VIEW 14 |
+| 2026-Q3 | 102 | BOT 20, MAP 10, PERF 4, PUB 12, SCORE 7, SNAKE 20, TOOL 15, VIEW 14 |
 
 ## Requirements resting on no hypothesis
 
-101 of 172 requirements. Weight is what stands on them: how many
+102 of 173 requirements. Weight is what stands on them: how many
 requirements link to them, plus how many files their `code` field names.
 
 | Requirement | Incoming | Code files | Weight |
@@ -147,12 +147,12 @@ requirements link to them, plus how many files their `code` field names.
 | IF-BOT-010 | 4 | 0 | 4 |
 | IF-MAP-010 | 4 | 0 | 4 |
 | IF-VIEW-020 | 4 | 0 | 4 |
+| NFR-PERF-010 | 4 | 0 | 4 |
+| NFR-PERF-050 | 4 | 0 | 4 |
 | CON-PUB-010 | 3 | 0 | 3 |
 | FR-BOT-150 | 3 | 0 | 3 |
 | FR-SNAKE-060 | 3 | 0 | 3 |
 | FR-SNAKE-070 | 3 | 0 | 3 |
-| NFR-PERF-010 | 3 | 0 | 3 |
-| NFR-PERF-050 | 3 | 0 | 3 |
 | CON-PUB-020 | 2 | 0 | 2 |
 | CON-PUB-060 | 2 | 0 | 2 |
 | CON-PUB-070 | 2 | 0 | 2 |
@@ -219,6 +219,7 @@ requirements link to them, plus how many files their `code` field names.
 | FR-TOOL-120 | 0 | 0 | 0 |
 | FR-TOOL-130 | 0 | 0 | 0 |
 | FR-TOOL-140 | 0 | 0 | 0 |
+| FR-TOOL-180 | 0 | 0 | 0 |
 | FR-VIEW-020 | 0 | 0 | 0 |
 | FR-VIEW-040 | 0 | 0 | 0 |
 | FR-VIEW-050 | 0 | 0 | 0 |

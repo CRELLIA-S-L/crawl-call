@@ -1,4 +1,4 @@
-# Chomp Company
+# Crawl Call: Chomp Company
 
 Working title. A predator snake in a shooter arena: the classic snake, moved into a three-dimensional multi-level arena where two squads of bots wage war on each other — and the snake hunts them both.
 

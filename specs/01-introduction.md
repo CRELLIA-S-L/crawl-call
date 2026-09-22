@@ -2,7 +2,7 @@
 
 ## 1.1 Purpose
 
-Chomp Company (working title) is a single-player game: the classic snake transplanted into a three-dimensional, multi-level military-shooter arena.
+Crawl Call: Chomp Company is a single-player game: the classic snake transplanted into a three-dimensional, multi-level military-shooter arena.
 The player steers a snake that crawls over the map geometry and hunts two warring squads of bots.
 The bots are not scenery — they fight each other, see the snake, react to it, retreat, coordinate and deal damage.
 

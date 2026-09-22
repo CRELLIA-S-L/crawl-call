@@ -330,3 +330,23 @@ Every measurement the prompt bench records **shall** name the four things it was
 The two axes also act independently — the same situation written as wounds and bodies was blocked 10 of 10 under the old instructions and 0 of 10 under the new ones — so a change to either invalidates the other's reading.
 Apple asks for the same on the model axis: "When any model you use updates, it's important to re-run all of your prompt tests", and the system model ships with the OS rather than with the game (CON-CMD-020).
 What the record obliges is a re-run before the change ships, and the cost of one is minutes on a Mac (FR-TOOL-150), which is what makes the rule affordable rather than aspirational.
+
+### FR-TOOL-180 — An unattended run closes the app it started
+
+```yaml
+status: deferred
+verification: T
+derives_from: []
+depends_on: [NFR-PERF-010, NFR-PERF-050]
+refines: []
+conflicts_with: []
+code: []
+tests: []
+created: 2026-09-22
+```
+
+When an unattended run ends, whether it finished its route or stopped early, the run tool **shall** terminate on the device the app it launched before it reports.
+
+**Rationale.** The next measurement is the reason, not tidiness: NFR-PERF-010 asks for 60 frames per second *cold*, and the thermal requirements are read against a device that started cool (NFR-PERF-050), so an app left rendering in the background puts the following run somewhere in the middle of its own thermal curve and produces a number nobody can reproduce (`specs/50-verification.md`).
+The spike's own instrument is the evidence that this does not happen by itself: `materials/spike/instrument/run-autopilot.sh` terminates any *previous* instance when it launches, and never terminates the one it started — not on the path that succeeds, and not on the two paths that abort, which are the runs most likely to be left behind.
+"Before it reports" rather than "afterwards" because a report is where a run ends for whoever reads it, and a step after the report is a step that gets skipped.
