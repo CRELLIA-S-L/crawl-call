@@ -75,7 +75,9 @@ final class Telemetry {
             let d = (l.timestamp - lastVsync) * 1000
             vsyncFrames += 1
             vsyncMaxThisSecond = max(vsyncMaxThisSecond, d)
-            if d > l.duration * 1000 * 1.5 { vsyncDroppedThisSecond += 1 }
+            // A fixed 60 Hz reference: `l.duration` reports the display's nominal interval,
+            // which on ProMotion flips to 8.3 ms and turned honest 16.67 ms frames into "drops".
+            if d > 1000.0 / 60.0 * 1.5 { vsyncDroppedThisSecond += 1 }
             // The worst display interval while an inference runs — the number NFR-PERF-030 asks for.
             if inferenceActive { inferenceFrameMaxMs = max(inferenceFrameMaxMs, d); inferFrameMaxThisSecond = max(inferFrameMaxThisSecond, d) }
         }

@@ -119,10 +119,11 @@ tests: []
 created: 2026-09-21
 ```
 
-When a commander responds, the system **shall** accept only a structured response carrying: a threat priority from {enemy, snake, withdraw}; an order from {hold, flank, withdraw-to-zone, disperse, destroy-cover}; a role or none per bot; personality weights per bot; and a truce action from {none, propose, accept, reject}; rejecting any response that does not parse into this shape.
+When a commander responds, the system **shall** accept only a structured response carrying: a threat priority from {enemy, snake, withdraw}; an order from {hold, flank, withdraw-to-zone, disperse, destroy-cover}; a role or none per bot; personality weights per bot; a truce action from {none, propose, accept, reject}; and, for a speech call, the speaker's name and one line of at most the line length of the speech configuration; rejecting any response that does not parse into this shape.
 
 **Rationale.** Concept §9.1: guided generation, structured, not free text.
 Rejection rather than repair: an unparseable response is a missed cycle, which the squad survives; a repaired one is an order nobody gave.
+The line's shape is part of the contract because the model, asked for one shout, returned six-speaker scenes of up to 235 characters (ADR-0017).
 
 ### IF-CMD-030 — Speech configuration
 
@@ -138,9 +139,9 @@ tests: []
 created: 2026-09-21
 ```
 
-When the game starts, the system **shall** read from the speech configuration — the JSON file `config/speech.json` (ADR-0012) — the list of speech events, "order issued" among them; the rate cap and queue length; and the pre-written line set with at least one line per event.
+When the game starts, the system **shall** read from the speech configuration — the JSON file `config/speech.json` (ADR-0012) — the list of speech events, "order issued" among them; the rate cap, queue length and line length; and the pre-written line set with at least one line per event and speaker.
 
-**Rationale.** Concept §15: the frequency ceiling, the queue, the pre-generated set for degradation; FR-CMD-160 needs a fallback line for every event the filter can reject.
+**Rationale.** Concept §15: the frequency ceiling, the queue, the pre-generated set for degradation; FR-CMD-160 needs a fallback line for every event the filter can reject, and FR-CMD-165 for every call the model refuses — which it does for about one call in ten (CON-CMD-020), so the set is the game's second voice and not a spare.
 
 ## Map format
 
@@ -201,3 +202,65 @@ created: 2026-09-21
 When the game starts, the system **shall** read from the view configuration — the JSON file `config/view.json` (ADR-0012) — the camera pitch within the range FR-VIEW-010 allows; the central region the head is kept in; the straggler distance; and the visible-panic threshold.
 
 **Rationale.** The three VIEW requirements that name a number name it here; the camera pitch is a number the maintainer settles by eye (concept §12), inside the range the concept fixes.
+
+## Model instructions
+
+The instructions the game sends the on-device model are its own interface to it: their wording is tuning, what they must establish is a contract (ADR-0017).
+Both requirements below are verified by inspecting the instructions in configuration against their list.
+
+### IF-CMD-040 — Instructions for a commander's decision
+
+```yaml
+status: deferred
+verification: I
+derives_from: []
+depends_on: [IF-CMD-020, CON-CMD-010]
+refines: []
+conflicts_with: []
+code: []
+tests: []
+created: 2026-09-22
+```
+
+The commander instructions **shall** establish: that the reader commands one squad in an arena where a rival squad and a snake are also present; that the answer is a decision and not prose; the meaning of each field of IF-CMD-020, including the range and effect of the personality weights; that nothing outside the squad's own knowledge may be assumed; and the content rules of IF-CMD-060.
+
+**Rationale.** ADR-0017: the instructions are specified by what they must establish, not by their words.
+The weights are the commander's only channel into behaviour (FR-CMD-060), so a reader that does not know what they do returns numbers that mean nothing.
+
+### IF-CMD-050 — Instructions for a bot's line
+
+```yaml
+status: deferred
+verification: I
+derives_from: []
+depends_on: [IF-CMD-060, FR-CMD-140]
+refines: []
+conflicts_with: []
+code: []
+tests: []
+created: 2026-09-22
+```
+
+The speech instructions **shall** establish: the comedy register of F-030 and ADR-0002, naming its references; that the speakers are the named soldiers of the squad; that the answer is one short line somebody shouts, in the shape IF-CMD-020 defines; the event the line reacts to and the speaker's current panic; and the content rules of IF-CMD-060.
+
+**Rationale.** ADR-0017, measured: without the register the model produced sixty-three restatements of one tactical order with no names and no panic; with it, named soldiers blaming each other, which is what §1 says sells the game.
+Naming the soldiers is what makes "IT ATE DAVIS" possible at all.
+
+### IF-CMD-060 — What a generated line may and may not contain
+
+```yaml
+status: deferred
+verification: T
+derives_from: [CON-PUB-080]
+depends_on: []
+refines: []
+conflicts_with: []
+code: []
+tests: []
+created: 2026-09-22
+```
+
+A generated line **shall** be admissible only when it is one utterance of at most the line length of the speech configuration, spoken by a named soldier of the speaking squad, about what just happened — and contains none of: a slur against any group; sexual content; a real person, organisation, nation or conflict; an instruction for harm outside the game; profanity beyond what the 13+ rating of ADR-0014 admits; a wound, blood, a weapon by name, or a death described as a death rather than as a disappearance or a gulp.
+
+**Rationale.** ADR-0017: one list, read by the instructions that ask for a line (IF-CMD-050) and by the filter that judges the one that came back (FR-CMD-160), because two lists drift apart.
+The first five entries follow the rating (ADR-0014); the last is the comedy frame F-030 — and it is also what the model itself refuses over, so the instructions and the filter agree with the model's own limits instead of fighting them.

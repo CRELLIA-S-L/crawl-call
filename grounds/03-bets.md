@@ -690,3 +690,63 @@ all_of: [H-040]
 CON-CMD-010 — The system language model's context and cache — is worth building only if H-040 holds.
 
 **Rationale.** Concept §16.2 H4: a refutation removes all LLM tactics, leaving utility AI — a saving, not a loss.
+
+### B-580 — IF-CMD-040 stands on the commander making a visible difference
+
+```yaml
+status: active
+requirement: IF-CMD-040
+all_of: [H-040]
+```
+
+IF-CMD-040 — Instructions for a commander's decision — is worth building only if H-040 holds.
+
+**Rationale.** Concept §16.2 H4: a refutation removes all LLM tactics, leaving utility AI — a saving, not a loss.
+
+### B-590 — IF-CMD-050 stands on bot lines being worth replaying for
+
+```yaml
+status: active
+requirement: IF-CMD-050
+all_of: [H-050]
+```
+
+IF-CMD-050 — Instructions for a bot's line — is worth building only if H-050 holds.
+
+**Rationale.** Concept §16.2 H5: a refutation removes the product's main selling argument.
+
+### B-600 — IF-CMD-060 stands on bot lines being worth replaying for
+
+```yaml
+status: active
+requirement: IF-CMD-060
+all_of: [H-050]
+```
+
+IF-CMD-060 — What a generated line may and may not contain — is worth building only if H-050 holds.
+
+**Rationale.** Concept §16.2 H5: a refutation removes the product's main selling argument.
+
+### B-610 — FR-CMD-165 stands on bot lines being worth replaying for
+
+```yaml
+status: active
+requirement: FR-CMD-165
+all_of: [H-050]
+```
+
+FR-CMD-165 — A refused generation falls back to a pre-written line — is worth building only if H-050 holds.
+
+**Rationale.** Concept §16.2 H5: a refutation removes the product's main selling argument.
+
+### B-620 — CON-CMD-020 stands on bot lines being worth replaying for
+
+```yaml
+status: active
+requirement: CON-CMD-020
+all_of: [H-050]
+```
+
+CON-CMD-020 — The model refuses a share of calls — is worth building only if H-050 holds.
+
+**Rationale.** Concept §16.2 H5: a refutation removes the product's main selling argument.

@@ -34,6 +34,7 @@ final class Autopilot {
         if let t = value("--tail").flatMap(Int.init) { tailLength = t }
         if let b = value("--context-budget").flatMap(Int.init) { CommanderLoop.contextBudget = b }
         if let k = value("--keep-exchanges").flatMap(Int.init) { CommanderLoop.keepExchanges = k }
+        if let r = value("--register").flatMap(CommanderLoop.Register.init(rawValue:)) { CommanderLoop.register = r }
         // The route, at foot level: up the ramp, across the upper floor, off the ledge, between the boxes, back.
         route = [
             [-6, 0, 0], [-4.6, 0, 1.5], [-4.6, 0, 4], [-3, 0.4, 4], [0, 1.5, 4], [3.5, 2.8, 4],   // up the ramp, clear of the box at (-6, 3)
@@ -51,7 +52,7 @@ final class Autopilot {
         UIApplication.shared.isIdleTimerDisabled = true
         world.setTailLength(tailLength)
         BotSystem.repathEveryFrame = repathWindow > 0
-        Telemetry.shared.note("autopilot: \(minutes) min, commander \(commander ? "on" : "off"), repath every frame for \(repathWindow) s, tail \(tailLength)")
+        Telemetry.shared.note("autopilot: \(minutes) min, register \(CommanderLoop.register.rawValue), commander \(commander ? "on" : "off"), repath every frame for \(repathWindow) s, tail \(tailLength)")
         if commander { world.commander.start(worldState: { world.worldState() }) }
         Task { @MainActor in
             if repathWindow > 0 {

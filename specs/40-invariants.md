@@ -442,3 +442,23 @@ Every call to the system language model **shall** fit its instructions, transcri
 
 **Rationale.** Measured in the spike on iOS 27.0 (`spike/README.md`): the context is 4096 tokens; a `LanguageModelSession` keeps every exchange, so a session called every 7 s with a ~540-token exchange overflows on the seventh call; the model's prefix cache belongs to the session object — a rebuilt session starts uncached — and is evicted above roughly 3000 tokens of transcript; an uncached prefill of 1.6–3.3 k tokens dropped 9–25 display frames, one of ~600 tokens dropped none.
 FR-CMD-025 says how the commander lives within this.
+
+### CON-CMD-020 — The model refuses a share of calls
+
+```yaml
+status: deferred
+verification: A
+derives_from: [CON-CMD-010]
+depends_on: [FR-CMD-140]
+refines: []
+conflicts_with: []
+code: []
+tests: []
+created: 2026-09-22
+```
+
+The game **shall** keep working, with no voice missing and no order lost, when up to one call in five is refused.
+
+**Rationale.** Measured in the spike on iOS 27.0 (`spike/README.md`, ADR-0017): under the default guardrails one call in sixty-three was refused as a `guardrailViolation`; under `permissiveContentTransformations`, with the comedy register, six in sixty as a `refusal`.
+The subject — soldiers being swallowed — is what the model objects to, so the rate is a property of the game, not of a prompt to be fixed.
+One in five is the bound the game is built to survive; FR-CMD-165 is how.

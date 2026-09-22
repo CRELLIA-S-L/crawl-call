@@ -50,7 +50,7 @@ The interval stretches under thermal load (NFR-PERF-060), which is why it is con
 ```yaml
 status: deferred
 verification: T
-derives_from: [FR-CMD-020, CON-CMD-010]
+derives_from: [FR-CMD-020, CON-CMD-010, CON-CMD-020]
 depends_on: [IF-CMD-010]
 refines: [FR-CMD-020]
 conflicts_with: []
@@ -59,10 +59,11 @@ tests: []
 created: 2026-09-22
 ```
 
-While a squad's commander is being called, the system **shall** keep one model session per commander, rebuilding it from its instructions alone before the transcript exceeds the session budget of the match configuration, and carrying the commander's previous decision to the next call inside the world state rather than in the transcript.
+While a squad's commander is being called, the system **shall** keep one model session per commander, rebuilding it from its instructions alone before the transcript exceeds the session budget of the match configuration and after any call that fails, and carrying the commander's previous decision to the next call inside the world state rather than in the transcript.
 
 **Rationale.** CON-CMD-010: a session that grows overflows the context and, before that, loses its cache and stalls the frame; a session rebuilt every call never benefits from the cache.
 Measured on the spike: with a 2000-token budget the calls stay at 2.2–2.6 s with no dropped frames after warm-up; the previous decision in the state keeps the commander's continuity at ~20 tokens instead of a transcript.
+Rebuilding after a failure as well, because a refused exchange left in the transcript fails every later call (CON-CMD-020) — FR-CMD-165 says the same for the speech session, and this squad's orders would otherwise stop arriving for the rest of the match.
 
 ### FR-CMD-030 — The commander sets the threat priority
 
@@ -330,7 +331,7 @@ tests: []
 created: 2026-09-21
 ```
 
-When a speech event of the speech configuration occurs for a bot — among them an order issued, spoken by the role-holder; witnessing an eating; a squadmate vanishing; a truce being proposed or broken; the enemy being blamed; a body being found — the system **shall** generate and play a line for that bot from the event and the bot's current weights.
+When a speech event of the speech configuration occurs for a bot — among them an order issued, spoken by the role-holder; witnessing an eating; a squadmate vanishing; a truce being proposed or broken; the enemy being blamed; a body being found — the system **shall** generate and play a line for that bot from the event, the bot's current weights and the instructions of IF-CMD-050.
 
 **Rationale.** Concept §1: the voices are what sells the game; §13 stage 5 lists the material two squads add — cross-squad bickering, truce offers aloud, accusations that the enemy "set that thing on us".
 The event list lives in configuration because the concept's list is illustrative, not closed; "order issued" is the one event that must be there, because it is how the player finds the commander (ADR-0011).
@@ -368,7 +369,26 @@ tests: []
 created: 2026-09-21
 ```
 
-When a line has been generated, the system **shall** pass it through the content filter set to the 13+ rating of ADR-0014 before playing it, replacing a line the filter rejects with a pre-written line for the same event.
+When a line has been generated, the system **shall** pass it through the content filter of IF-CMD-060 before playing it, replacing a line the filter rejects with a pre-written line for the same event.
 
-**Rationale.** Concept §14: App Store guideline 1.2 treats real-time generated content as user-generated — filtering is required, and the rating that sets its strictness is ADR-0014.
+**Rationale.** Concept §14: App Store guideline 1.2 treats real-time generated content as user-generated — filtering is required; what it admits is IF-CMD-060, the same list the instructions carry (ADR-0017).
 Replacement rather than silence: a bot that says nothing at the moment it was eaten is the one bug the player will notice.
+
+### FR-CMD-165 — A refused generation falls back to a pre-written line
+
+```yaml
+status: deferred
+verification: T
+derives_from: [FR-CMD-140, CON-CMD-020]
+depends_on: [IF-CMD-030]
+refines: [FR-CMD-140]
+conflicts_with: []
+code: []
+tests: []
+created: 2026-09-22
+```
+
+When a generation fails — the model refuses it, a guardrail stops it, or it times out — the system **shall** play a pre-written line for the same event and speaker, and start the next call from a session that does not carry the failed exchange.
+
+**Rationale.** CON-CMD-020: the model refuses about one call in ten about this game's own subject, and a failed exchange left in the session's transcript makes every later call fail too — in the spike one refusal was followed by eighty-four failed calls, to the end of the run.
+So a refusal is an ordinary event with an ordinary answer, not an error path.

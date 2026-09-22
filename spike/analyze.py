@@ -10,7 +10,8 @@ import csv
 import re
 import sys
 
-FRAME_BUDGET_MS = 16.6 * 0.8   # the iPhone 16 Pro margin against the 15 Pro baseline (ADR-0015)
+CPU_BUDGET_MS = 16.6 * 0.8      # CPU work per frame: the iPhone 16 Pro margin against the 15 Pro baseline (ADR-0015)
+DROPPED_INTERVAL_MS = 1000 / 60 * 1.5   # a display interval this long means a frame was missed
 COMMANDER_INTERVAL_MS = 7000
 
 
@@ -85,10 +86,10 @@ def main(csv_path, log_path=None):
     verdict = []
     verdict.append(("check 2: 60 fps, ≤ %d dropped frames after warm-up" % max(3, n // 100),
                     sum(vs) / n >= 59.5 and dropped_play <= max(3, n // 100)))
-    verdict.append(("check 2: deliberation worst frame ≤ %.1f ms" % FRAME_BUDGET_MS, delib_max <= FRAME_BUDGET_MS))
+    verdict.append(("check 2: deliberation worst frame ≤ %.1f ms" % CPU_BUDGET_MS, delib_max <= CPU_BUDGET_MS))
     if work:
-        verdict.append(("check 3: worst display interval during inference after warm-up ≤ %.1f ms" % FRAME_BUDGET_MS,
-                        infer_frame_max <= FRAME_BUDGET_MS))
+        verdict.append(("check 3: no frame missed during inference after warm-up (interval ≤ %.1f ms)" % DROPPED_INTERVAL_MS,
+                        infer_frame_max <= DROPPED_INTERVAL_MS))
         verdict.append(("check 3: commander latency < %d ms" % COMMANDER_INTERVAL_MS, max(lat) < COMMANDER_INTERVAL_MS))
         verdict.append(("check 3: no failed calls", failures == 0))
     if n >= 15 * 60:
