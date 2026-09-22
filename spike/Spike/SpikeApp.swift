@@ -65,6 +65,11 @@ final class SpikeWorld {
             ("ramp mid→upper far", [0, 1.5, 4], [9, 3, 0]),
             ("upper→upper", [6, 3, -6], [11, 3, 6]),
             ("upper→ground via drop", [5, 3, -4], [1, 0, -4]),
+            // Same XZ, different heights, where a floor lies under the upper floor:
+            ("A upper→upper (wall half)", [6, 3, -6], [10, 3, -2]),
+            ("A ground→ground (wall half)", [6, 0, -6], [10, 0, -2]),
+            ("B upper→upper (ramp half)", [6, 3, 6], [10, 3, 3]),
+            ("B ground→ground (ramp half)", [6, 0, 6], [10, 0, 3]),
         ]
         Task { @MainActor in
             for (name, a, b) in probes {

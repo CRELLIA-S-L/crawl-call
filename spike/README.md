@@ -68,6 +68,7 @@ Two things do not:
 
 1. `NavigationMeshResource(mesh:)` given a multi-part `MeshResource` built the navmesh from part of the geometry (the upper floor was missing). Building from one merged `MeshDescriptor` gives the whole mesh.
 2. `NavigationController` resolves a position — target *and* start — to a polygon by XZ, taking the polygon with the lowest index among those overlapping the column, ignoring height. Shown by polygon indices (24 < 25 → upper floor wins on that half; 56 < 62 → ground wins on the other; 58 < 67 → ground under the ramp wins), by tapping, and by the startup probes. Splitting the mesh into per-level resources does not help: an agent with `layer: nil` sees only the first resource. Giving the floor and ramp thickness changes nothing. On a map with balconies this makes the built-in queries unusable as they are.
+   The decisive probes use no seam at all — two points on one plane, requested at y=0 and at y=3 with the same XZ: on one half of the upper floor both requests return a path at y=3, on the other half both return a path at y=0. Slabs instead of zero-thickness quads change nothing. Apple's own Chaparral Village sample calls `computePath(from:to:)` the same way; the documentation states no further condition.
 
 Decision pending: own polygon A* over the resource's `vertices`/`polygonIndices`/`heightData` (keeping RealityKit for navmesh generation, rendering, ECS and the model) versus the SwiftGodot fallback of ADR-0001.
 
