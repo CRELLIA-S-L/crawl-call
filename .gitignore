@@ -23,3 +23,6 @@ __pycache__/
 
 # Blender
 *.blend1
+
+# Xcode workspace state the project file does not need
+*.xcodeproj/project.xcworkspace/

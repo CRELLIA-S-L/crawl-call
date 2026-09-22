@@ -1,0 +1,4 @@
+// Copy to Signing.xcconfig (git-ignored, CON-PUB-040) and fill in your own values.
+// The bundle identifier prefix is yours; forks need their own (concept §17.4).
+DEVELOPMENT_TEAM = XXXXXXXXXX
+BUNDLE_ID_PREFIX = com.example
