@@ -59,19 +59,25 @@ All three pass — ADR-0001 becomes `accepted`, the CSVs go under `materials/spi
 Check 1 or 3 fails — SwiftGodot, per ADR-0001.
 Check 2 fails — first Q-140 (60 fps) and Q-020 (4v4) are revisited, then the stack.
 
-## Findings so far (2026-09-22, iPhone 16 Pro, iOS 27.0 24A437, Xcode 27.0 27A5218g)
+## Findings (2026-09-22, iPhone 16 Pro, iOS 27.0 24A437, Xcode 27.0 27A5218g)
 
-**Check 1 — mixed.**
+### First form — RealityKit's navigation mesh — abandoned (ADR-0016)
+
 The tail through `LowLevelMesh` is fine by eye at 10, 40 and 100 segments; 60 fps by `CADisplayLink`, no dropped frames; RealityKit's own `deltaTime` jitters and must not be used as a frame-time measure.
-The navigation mesh builds correctly from the arena geometry — the ramp ↔ upper floor seam holds (`ramp mid → upper far: REACHED 1.5 → 3.0`) and the one-way `OffMeshConnection` drop works, ignored by the bots through a flag.
-Two things do not:
+The navigation mesh builds correctly from the arena geometry (from one merged `MeshDescriptor` — `NavigationMeshResource(mesh:)` given a multi-part `MeshResource` lost the upper floor), the ramp ↔ upper floor seam holds and the one-way `OffMeshConnection` drop works.
+But `NavigationController` resolves a position — target *and* start — to a polygon by XZ, taking the polygon with the lowest index among those overlapping the column, ignoring height: two points on one plane, requested at y=0 and at y=3 with the same XZ, return the same path, and which floor it lies on depends on polygon order.
+Per-level resources do not help (an agent with `layer: nil` sees only the first), thickness changes nothing, Apple's Chaparral Village sample calls the API the same way, and the documentation states no further condition.
+On a map with balconies this makes the built-in queries unusable; the maintainer chose to drop the navmesh altogether.
 
-1. `NavigationMeshResource(mesh:)` given a multi-part `MeshResource` built the navmesh from part of the geometry (the upper floor was missing). Building from one merged `MeshDescriptor` gives the whole mesh.
-2. `NavigationController` resolves a position — target *and* start — to a polygon by XZ, taking the polygon with the lowest index among those overlapping the column, ignoring height. Shown by polygon indices (24 < 25 → upper floor wins on that half; 56 < 62 → ground wins on the other; 58 < 67 → ground under the ramp wins), by tapping, and by the startup probes. Splitting the mesh into per-level resources does not help: an agent with `layer: nil` sees only the first resource. Giving the floor and ramp thickness changes nothing. On a map with balconies this makes the built-in queries unusable as they are.
-   The decisive probes use no seam at all — two points on one plane, requested at y=0 and at y=3 with the same XZ: on one half of the upper floor both requests return a path at y=3, on the other half both return a path at y=0. Slabs instead of zero-thickness quads change nothing. Apple's own Chaparral Village sample calls `computePath(from:to:)` the same way; the documentation states no further condition.
+### Second form — steered snake, grid graph — the checks
 
-Decision pending: own polygon A* over the resource's `vertices`/`polygonIndices`/`heightData` (keeping RealityKit for navmesh generation, rendering, ECS and the model) versus the SwiftGodot fallback of ADR-0001.
+**Check 1 — passed.** The head is a `CharacterControllerComponent` (radius 0.3, height 0.6, slope 50°, step 0.4) driven by a virtual joystick; the arena's slabs are static collision shapes.
+By the maintainer's eye: climbs the ramp, drops off the ledge with the tail following down the drop unbroken, wraps around cover, tail length 100 without tearing or lag.
+The bots path over the grid graph (`Grid.swift`, ADR-0016): cell 0.5 m, 48×32 cells, 1990 walkable surfaces, 616 cells with two levels; all ten startup probes reach the right floor, including the two same-XZ pairs that broke the navmesh.
 
-**Check 2 — preliminary.** Eight bots deliberating every frame: 0.08–0.11 ms average, 0.6 ms worst, at 60 fps with 0 dropped frames; path requests ~30/s after fixing the arrival loop. Not yet run with `repath every frame` or for two minutes with the snake among the bots.
+**Check 2 — preliminary, without the two-minute run.** Eight bots deliberating every frame: 0.05–0.15 ms average, ~1 ms worst per frame; 60 fps, 0 dropped frames by vsync; ~30 path requests/s.
+One A* path costs 2–120 µs in the probes and up to ~1 ms in play for a far or unreachable target (a full search of 1990 nodes at ~0.5 µs per node), after the open list became a heap, the search state flat arrays and the smoothing bounded.
+So a single path can exceed the 0.5 ms per-frame budget of NFR-PERF-020 on its own; the budget is met by handing out at most one path request per frame, which is what the concept's slot scheduling does, not by a faster A*.
+Still to run: two minutes with `repath every frame` on.
 
-**Check 3 — not run.**
+**Check 3 — not run.** Needs 15–20 minutes with `commander` on and the phone unlocked.

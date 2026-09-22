@@ -1,6 +1,7 @@
-// Spike check 2 — eight bots on the navigation mesh with a utility choice of
-// action on EVERY frame (the worst case the concept asks to measure), path
-// requests on a switch, and path following. Throwaway code (spike/README.md).
+// Spike check 2 — eight bots on the navigation grid (ADR-0016) with a utility choice
+// of action on EVERY frame (the worst case the concept asks to measure), A* path
+// requests on a change of action or, on a switch, every frame; path following.
+// Throwaway code (spike/README.md).
 import RealityKit
 import UIKit
 
@@ -9,11 +10,9 @@ enum BotAction: String, CaseIterable {
 }
 
 struct BotComponent: Component {
-    var controller: NavigationController?
     var action: BotAction = .hold
     var path: [SIMD3<Float>] = []
     var nextNode = 0
-    var waitingForPath = false
     var target: SIMD3<Float>?
     var repathClock: Float = 0
     var speed: Float = 3.0
@@ -35,18 +34,12 @@ enum BotFactory {
             let x = Float(-6 + i * 2)
             let z: Float = squad == 0 ? -5 : 5
             bot.position = [x, 0.8, z]
-            var filter = NavigationComponent.Filter()
-            filter.ignoreFlags.setFlag(ArenaLayout.dropFlag)  // bots do not jump off the ledge
-            bot.components.set(NavigationComponent(layer: nil, filter: filter))
             var c = BotComponent()
             c.panic = 0.3 + Float(i % 4) * 0.2
             c.aggression = 0.2 + Float((i + 1) % 3) * 0.3
             c.seed = UInt64(1000 + i)
             bot.components.set(c)
             root.addChild(bot)
-            // The controller needs the entity in the scene; attach it now that it is.
-            c.controller = try NavigationController(entity: bot)
-            bot.components.set(c)
         }
     }
 }
@@ -57,6 +50,7 @@ final class BotSystem: System {
     static let snakeQuery = EntityQuery(where: .has(SnakeComponent.self))
     static var repathEveryFrame = false
     static var frozen = false
+    static var grid: NavGrid?
 
     init(scene: RealityKit.Scene) {}
 
@@ -105,12 +99,12 @@ final class BotSystem: System {
 
         b.repathClock -= dt
         let changed = best != b.action
-        if !b.path.isEmpty && b.nextNode >= b.path.count && !b.waitingForPath {
+        if !b.path.isEmpty && b.nextNode >= b.path.count {
             // Arrived: drop the path and think again after a short pause, not every frame.
             b.path = []
             b.repathClock = 0.5
         }
-        let idle = b.path.isEmpty && !b.waitingForPath && b.repathClock <= 0
+        let idle = b.path.isEmpty && b.repathClock <= 0
         if changed || idle || Self.repathEveryFrame || (b.repathClock <= 0 && best == .chase) {
             b.action = best
             let target: SIMD3<Float>
@@ -127,9 +121,17 @@ final class BotSystem: System {
             case .hold:
                 target = pos
             }
-            if best != .hold, let c = b.controller {
-                c.requestPath(to: target + [0, 0.5, 0])
-                b.waitingForPath = true
+            if best != .hold, let grid = Self.grid {
+                let foot = pos - SIMD3<Float>(0, 0.8, 0)
+                let t0 = ContinuousClock().now
+                let found = grid.path(from: foot, to: target, ignoreFlag: ArenaLayout.dropFlag)
+                Telemetry.shared.recordPathTime(ContinuousClock().now - t0)
+                if let p = found {
+                    b.path = p; b.nextNode = 0
+                } else {
+                    b.path = []
+                    Telemetry.shared.recordPathFailure()
+                }
                 b.target = target
                 requests += 1
             }
@@ -140,20 +142,6 @@ final class BotSystem: System {
     // MARK: execution — movement along the current path
 
     private func execute(bot: Entity, b: inout BotComponent, dt: Float) {
-        if b.waitingForPath, let c = b.controller {
-            switch c.pathfindStatus {
-            case .succeeded:
-                b.path = c.currentPath.map(\.position)
-                b.nextNode = 0
-                b.waitingForPath = false
-            case .failed:
-                b.waitingForPath = false
-                b.path = []
-                b.repathClock = 0.5   // do not hammer the pathfinder after a failure
-                Telemetry.shared.recordPathFailure()
-            default: break
-            }
-        }
         var pos = bot.position - SIMD3<Float>(0, 0.8, 0)
         var budget = b.speed * dt
         while budget > 0, b.nextNode < b.path.count {
@@ -178,7 +166,7 @@ final class BotSystem: System {
         }
         // Half the time aim for the upper floor so the ramp gets used.
         if next() < 0.4 {
-            return [ArenaLayout.upperMin.x + 0.5 + next() * 7, ArenaLayout.upperY,
+            return [ArenaLayout.upperMin.x + 1 + next() * 6.5, ArenaLayout.upperY,
                     ArenaLayout.upperMin.z + 0.5 + next() * 15]
         }
         return [ArenaLayout.groundMin.x + 0.5 + next() * 15, 0, ArenaLayout.groundMin.z + 0.5 + next() * 15]

@@ -1,20 +1,25 @@
-// Spike check 1 — the snake: a head that walks navigation-mesh paths (tap to go),
-// a tail of position samples behind it, and a tube mesh rebuilt every frame
-// through LowLevelMesh. Throwaway code (spike/README.md).
+// Spike check 1 — the snake: a head steered by the joystick through RealityKit's
+// character controller (ramps, steps and drops come from the geometry), a tail of
+// position samples behind it, and a tube mesh rebuilt every frame through LowLevelMesh.
+// Throwaway code (spike/README.md).
 import RealityKit
 import Metal
 import UIKit
 
 struct SnakeComponent: Component {
-    var controller: NavigationController?
-    var path: [SIMD3<Float>] = []
-    var nextNode = 0
-    var waitingForPath = false
     var speed: Float = 2.5
-    var samples: [SIMD3<Float>] = []     // tail positions, newest last
+    var verticalVelocity: Float = 0
+    var samples: [SIMD3<Float>] = []     // tail positions (foot level), newest last
     var maxSegments = 40
     var spacing: Float = 0.25
     var radius: Float = 0.3
+}
+
+/// The player's held direction, written by the joystick, read by SnakeSystem.
+@MainActor
+final class SnakeInput {
+    static let shared = SnakeInput()
+    var direction = SIMD2<Float>(0, 0)   // screen-space: x right, y up; zero when not held
 }
 
 /// Owns the LowLevelMesh the tail is drawn with.
@@ -126,41 +131,23 @@ final class SnakeSystem: System {
     }
 
     private func step(head: Entity, snake s: inout SnakeComponent, dt: Float) {
-        // Path arrives asynchronously after requestPath; copy it once it succeeds.
-        if s.waitingForPath, let c = s.controller {
-            switch c.pathfindStatus {
-            case .succeeded:
-                s.path = c.currentPath.map(\.position)
-                s.nextNode = 0
-                s.waitingForPath = false
-                let ys = s.path.map { String(format: "%.1f", $0.y) }.joined(separator: " ")
-                Telemetry.shared.note("path \(s.path.count) nodes, y: \(ys)")
-            case .failed:
-                s.waitingForPath = false
-                Telemetry.shared.note("path failed")
-            default:
-                break
-            }
+        // Screen up is world -z, screen right is world +x for the fixed camera.
+        let d = SnakeInput.shared.direction
+        var move = SIMD3<Float>(d.x, 0, -d.y)
+        if simd_length(move) > 1 { move = simd_normalize(move) }
+        move *= s.speed * dt
+        // Gravity through the controller: fall when not on the ground.
+        let onGround = head.characterControllerState?.isOnGround ?? false
+        s.verticalVelocity = onGround ? -0.5 : s.verticalVelocity - 9.8 * dt
+        move.y = s.verticalVelocity * dt
+        _ = head.moveCharacter(by: move, deltaTime: dt, relativeTo: nil)
+        if simd_length(SIMD2<Float>(move.x, move.z)) > 1e-4 {
+            let yaw = atan2(move.x, move.z)
+            head.orientation = simd_quatf(angle: yaw, axis: [0, 1, 0])
         }
-        // Follow the path: the head sits on the mesh surface; the visual is lifted by its radius.
-        var pos = head.position - SIMD3<Float>(0, s.radius, 0)
-        var budget = s.speed * dt
-        while budget > 0, s.nextNode < s.path.count {
-            let target = s.path[s.nextNode]
-            let d = target - pos
-            let dist = simd_length(d)
-            if dist <= budget {
-                pos = target
-                budget -= dist
-                s.nextNode += 1
-            } else {
-                pos += d / dist * budget
-                budget = 0
-            }
-        }
-        head.position = pos + SIMD3<Float>(0, s.radius, 0)
 
-        // Tail samples at fixed spacing along the head's actual path.
+        // Tail samples at fixed spacing along the head's actual path, at foot level.
+        let pos = head.position - SIMD3<Float>(0, s.radius, 0)
         if let last = s.samples.last {
             var gap = simd_length(pos - last)
             var from = last

@@ -25,6 +25,7 @@ final class Telemetry {
     var inferenceFailures = 0
     var inferenceFrameMaxMs: Double = 0   // worst frame while an inference was running
     var pathFailures = 0        // bot path requests that failed, last second
+    var pathMaxMs: Double = 0    // slowest single path request, last second
     var vsyncFps: Double = 0     // from CADisplayLink timestamps
     var vsyncMaxMs: Double = 0
     var vsyncDropped = 0         // display-link intervals longer than 1.5× the target
@@ -44,6 +45,7 @@ final class Telemetry {
     private var delibCount = 0
     private var pathRequests = 0
     private var pathFails = 0
+    private var pathMaxThisSecond: Double = 0
     private var link: CADisplayLink?
     private var lastVsync: CFTimeInterval = 0
     private var vsyncFrames = 0
@@ -57,7 +59,7 @@ final class Telemetry {
         let dir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
         let f = DateFormatter(); f.dateFormat = "yyyyMMdd-HHmmss"
         let url = dir.appendingPathComponent("spike-\(f.string(from: Date())).csv")
-        let header = "t,fps,frame_max_ms,slow_frames,vsync_fps,vsync_max_ms,vsync_dropped,delib_avg_ms,delib_max_ms,path_requests,path_failures,infer_last_ms,infer_max_ms,infer_frame_max_ms,infer_active,thermal\n"
+        let header = "t,fps,frame_max_ms,slow_frames,vsync_fps,vsync_max_ms,vsync_dropped,delib_avg_ms,delib_max_ms,path_requests,path_failures,path_max_ms,infer_last_ms,infer_max_ms,infer_frame_max_ms,infer_active,thermal\n"
         try? header.write(to: url, atomically: true, encoding: .utf8)
         csv = try? FileHandle(forWritingTo: url)
         csv?.seekToEndOfFile()
@@ -93,6 +95,7 @@ final class Telemetry {
             deliberationMaxMs = delibMax
             pathRequestsPerSecond = pathRequests
             pathFailures = pathFails
+            pathMaxMs = pathMaxThisSecond
             vsyncFps = Double(vsyncFrames) / secondAccum
             vsyncMaxMs = vsyncMaxThisSecond
             vsyncDropped = vsyncDroppedThisSecond
@@ -100,14 +103,14 @@ final class Telemetry {
             elapsed = Int(Date().timeIntervalSince(startDate))
             let state = ProcessInfo.processInfo.thermalState
             thermal = ["nominal", "fair", "serious", "critical"][min(state.rawValue, 3)]
-            let row = String(format: "%d,%.1f,%.2f,%d,%.1f,%.2f,%d,%.3f,%.3f,%d,%d,%.0f,%.0f,%.2f,%d,%@\n",
+            let row = String(format: "%d,%.1f,%.2f,%d,%.1f,%.2f,%d,%.3f,%.3f,%d,%d,%.3f,%.0f,%.0f,%.2f,%d,%@\n",
                              elapsed, fps, frameMaxMs, slowFrames, vsyncFps, vsyncMaxMs, vsyncDropped,
-                             deliberationAvgMs, deliberationMaxMs, pathRequestsPerSecond, pathFailures,
+                             deliberationAvgMs, deliberationMaxMs, pathRequestsPerSecond, pathFailures, pathMaxMs,
                              inferenceLastMs, inferenceMaxMs, inferenceFrameMaxMs, inferenceActive ? 1 : 0, thermal)
             csv?.write(row.data(using: .utf8)!)
             print("[spike] " + row, terminator: "")
             frames = 0; secondAccum = 0; frameMaxThisSecond = 0; slowThisSecond = 0
-            delibSum = 0; delibMax = 0; delibCount = 0; pathRequests = 0; pathFails = 0
+            delibSum = 0; delibMax = 0; delibCount = 0; pathRequests = 0; pathFails = 0; pathMaxThisSecond = 0
             vsyncFrames = 0; vsyncMaxThisSecond = 0; vsyncDroppedThisSecond = 0
         }
     }
@@ -119,6 +122,11 @@ final class Telemetry {
     }
 
     func recordPathFailure() { pathFails += 1 }
+
+    func recordPathTime(_ d: Duration) {
+        let ms = Double(d.components.seconds) * 1000 + Double(d.components.attoseconds) / 1e15
+        pathMaxThisSecond = max(pathMaxThisSecond, ms)
+    }
 
     func inferenceBegan() { inferenceActive = true }
 

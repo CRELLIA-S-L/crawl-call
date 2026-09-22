@@ -15,6 +15,7 @@ final class SpikeWorld {
     var head = Entity()
     var commander = CommanderLoop()
     var bots: [Entity] = []
+    var grid: NavGrid?
 
     func build() throws {
         SnakeComponent.registerComponent()
@@ -25,21 +26,21 @@ final class SpikeWorld {
 
         let arena = try ArenaBuilder.build()
         root = arena.root
+        BotSystem.grid = arena.grid
+        grid = arena.grid
 
-        // Snake head
+        // Snake head: a character controller capsule, steered by the joystick.
         let headMesh = MeshResource.generateSphere(radius: 0.35)
         let headEntity = ModelEntity(mesh: headMesh, materials: [SimpleMaterial(color: .init(red: 0.8, green: 0.3, blue: 0.05, alpha: 1), isMetallic: false)])
         headEntity.name = "head"
-        headEntity.position = ArenaLayout.snakeStart + [0, 0.35, 0]
-        headEntity.components.set(NavigationComponent(layer: nil, filter: nil))
+        headEntity.position = ArenaLayout.snakeStart + [0, 0.5, 0]
+        headEntity.components.set(CharacterControllerComponent(radius: 0.3, height: 0.6, slopeLimit: 50 * .pi / 180, stepLimit: ArenaLayout.stepLimit))
         var snake = SnakeComponent()
         snake.radius = 0.3
         headEntity.components.set(snake)
         root.addChild(headEntity)
-        snake.controller = try NavigationController(entity: headEntity)
-        headEntity.components.set(snake)
         head = headEntity
-        probeSeams()
+        probeGraph()
 
         let tail = try TailMesh(capacitySamples: 120)
         root.addChild(tail.entity)
@@ -56,31 +57,33 @@ final class SpikeWorld {
         root.addChild(sun)
     }
 
-    /// Startup probe: paths across the seams, logged with node heights, to see which joins hold.
-    func probeSeams() {
-        guard let c = head.components[SnakeComponent.self]?.controller else { return }
-        let probes: [(String, SIMD3<Float>, SIMD3<Float>)] = [
-            ("ground→ramp top", [-6, 0, 4], [3.5, 2.8, 4]),
-            ("ramp top→upper near seam", [3.5, 2.8, 4], [4.8, 3, 4]),
-            ("ramp mid→upper far", [0, 1.5, 4], [9, 3, 0]),
-            ("upper→upper", [6, 3, -6], [11, 3, 6]),
-            ("upper→ground via drop", [5, 3, -4], [1, 0, -4]),
-            // Same XZ, different heights, where a floor lies under the upper floor:
-            ("A upper→upper (wall half)", [6, 3, -6], [10, 3, -2]),
-            ("A ground→ground (wall half)", [6, 0, -6], [10, 0, -2]),
-            ("B upper→upper (ramp half)", [6, 3, 6], [10, 3, 3]),
-            ("B ground→ground (ramp half)", [6, 0, 6], [10, 0, 3]),
+    /// Startup probe: the same paths that broke on RealityKit's navmesh, now over the grid.
+    func probeGraph() {
+        guard let grid else { return }
+        let probes: [(String, SIMD3<Float>, SIMD3<Float>, Int?)] = [
+            ("ground→ramp top", [-6, 0, 4], [3.5, 2.8, 4], ArenaLayout.dropFlag),
+            ("ramp top→upper near seam", [3.5, 2.8, 4], [4.8, 3, 4], ArenaLayout.dropFlag),
+            ("ramp mid→upper far", [0, 1.5, 4], [9, 3, 0], ArenaLayout.dropFlag),
+            ("upper→upper", [6, 3, -6], [11, 3, 6], ArenaLayout.dropFlag),
+            ("upper→ground (bot, drop ignored)", [5, 3, -4], [1, 0, -4], ArenaLayout.dropFlag),
+            ("upper→ground (snake, drop allowed)", [5, 3, -4], [1, 0, -4], nil),
+            ("A upper→upper (wall half)", [6, 3, -6], [10, 3, -2], ArenaLayout.dropFlag),
+            ("A ground→ground (wall half)", [6, 0, -6], [10, 0, -2], ArenaLayout.dropFlag),
+            ("B upper→upper (ramp half)", [6, 3, 6], [10, 3, 3], ArenaLayout.dropFlag),
+            ("B ground→ground (ramp half)", [6, 0, 6], [10, 0, 3], ArenaLayout.dropFlag),
         ]
-        Task { @MainActor in
-            for (name, a, b) in probes {
-                if let path = await c.computePath(from: a, to: b) {
-                    let ys = path.map { String(format: "%.1f", $0.position.y) }.joined(separator: " ")
-                    let end = path.last?.position ?? a
-                    let reached = simd_length(end - b) < 0.6
-                    Telemetry.shared.note("probe \(name): \(path.count) nodes \(reached ? "REACHED" : "PARTIAL") y: \(ys)")
-                } else {
-                    Telemetry.shared.note("probe \(name): nil")
-                }
+        let clock = ContinuousClock()
+        for (name, a, b, flag) in probes {
+            let t0 = clock.now
+            let path = grid.path(from: a, to: b, ignoreFlag: flag)
+            let us = Double((clock.now - t0).components.attoseconds) / 1e12
+            if let path {
+                let ys = path.map { String(format: "%.1f", $0.y) }.joined(separator: " ")
+                let end = path.last ?? a
+                let reached = simd_length(SIMD2<Float>(end.x - b.x, end.z - b.z)) < ArenaLayout.cellSize && abs(end.y - b.y) < 0.5
+                Telemetry.shared.note(String(format: "probe %@: %d nodes %@ %.0f µs y: %@", name, path.count, reached ? "REACHED" : "SHORT", us, ys))
+            } else {
+                Telemetry.shared.note("probe \(name): unreachable")
             }
         }
     }
@@ -91,16 +94,6 @@ final class SpikeWorld {
         // 55° below the horizontal, the middle of FR-VIEW-010's range.
         cam.look(at: [0, 0, 0], from: [0, 24, 16.8], relativeTo: nil)
         return cam
-    }
-
-    func sendSnake(to point: SIMD3<Float>) {
-        guard var s = head.components[SnakeComponent.self], let c = s.controller else { return }
-        // Ask for a point half a metre above the tap: the target is resolved downward
-        // onto the mesh, and a rasterised surface can sit a cell above the tapped one.
-        c.requestPath(to: point + [0, 0.5, 0])
-        s.waitingForPath = true
-        head.components.set(s)
-        Telemetry.shared.note(String(format: "tap → (%.1f, %.1f, %.1f)", point.x, point.y, point.z))
     }
 
     func setTailLength(_ n: Int) {
@@ -146,18 +139,42 @@ struct ContentView: View {
                 }
             }
             .realityViewCameraControls(inspect ? .orbit : .none)
-            .gesture(
-                SpatialTapGesture()
-                    .targetedToAnyEntity()
-                    .onEnded { value in
-                        if let p = value.unproject(\.location, to: .scene) {
-                            world.sendSnake(to: p)
-                        }
-                    }
-            )
             .ignoresSafeArea()
 
             hud
+            if !inspect { joystick }
+        }
+    }
+
+    @State private var stickOffset = CGSize.zero
+    private let stickRadius: CGFloat = 60
+
+    /// A virtual joystick bottom-left: the held direction, normalised to the ring.
+    private var joystick: some View {
+        VStack {
+            Spacer()
+            HStack {
+                ZStack {
+                    Circle().fill(.white.opacity(0.15)).frame(width: stickRadius * 2 + 40, height: stickRadius * 2 + 40)
+                    Circle().fill(.white.opacity(0.5)).frame(width: 56, height: 56).offset(stickOffset)
+                }
+                .padding(28)
+                .gesture(
+                    DragGesture(minimumDistance: 0)
+                        .onChanged { g in
+                            var v = SIMD2<Float>(Float(g.translation.width), Float(-g.translation.height))
+                            let len = simd_length(v)
+                            if len > Float(stickRadius) { v = v / len * Float(stickRadius) }
+                            stickOffset = CGSize(width: CGFloat(v.x), height: CGFloat(-v.y))
+                            SnakeInput.shared.direction = len < 8 ? .zero : v / Float(stickRadius)
+                        }
+                        .onEnded { _ in
+                            stickOffset = .zero
+                            SnakeInput.shared.direction = .zero
+                        }
+                )
+                Spacer()
+            }
         }
     }
 
@@ -167,8 +184,8 @@ struct ContentView: View {
             Text(String(format: "t %ds   fps %.1f   frame max %.1f ms   slow %d (total %d)   thermal %@",
                         t.elapsed, t.fps, t.frameMaxMs, t.slowFrames, t.slowFramesTotal, t.thermal))
             Text(String(format: "vsync fps %.1f   vsync max %.1f ms   dropped %d (total %d)", t.vsyncFps, t.vsyncMaxMs, t.vsyncDropped, t.vsyncDroppedTotal))
-            Text(String(format: "deliberation avg %.3f ms  max %.3f ms   path requests/s %d  failures/s %d",
-                        t.deliberationAvgMs, t.deliberationMaxMs, t.pathRequestsPerSecond, t.pathFailures))
+            Text(String(format: "deliberation avg %.3f ms  max %.3f ms   path requests/s %d  failures/s %d  slowest path %.2f ms",
+                        t.deliberationAvgMs, t.deliberationMaxMs, t.pathRequestsPerSecond, t.pathFailures, t.pathMaxMs))
             Text(String(format: "inference last %.0f ms  max %.0f ms  n=%d fail=%d   worst frame during inference %.1f ms",
                         t.inferenceLastMs, t.inferenceMaxMs, t.inferenceCount, t.inferenceFailures, t.inferenceFrameMaxMs))
             Text(t.lastNote).lineLimit(1)
