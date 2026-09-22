@@ -102,17 +102,20 @@ final class SpikeWorld {
         head.components.set(s)
     }
 
+    /// The state the model reads. Its vocabulary is part of the contract (IF-CMD-010,
+    /// IF-CMD-060): the guardrail checks this text too, and the words come back out in the
+    /// line. "figures", not "soldiers"; "gone", not "dead" (ADR-0017).
     func worldState() -> String {
         var lines: [String] = []
         let h = head.position
-        lines.append(String(format: "snake at (%.0f, %.0f, %.0f)", h.x, h.y, h.z))
+        lines.append(String(format: "snake puppet at (%.0f, %.0f, %.0f)", h.x, h.y, h.z))
         for (i, b) in bots.enumerated() {
             let p = b.position
             let a = b.components[BotComponent.self]?.action.rawValue ?? "?"
-            lines.append(String(format: "soldier %d squad %d at (%.0f, %.0f, %.0f) doing %@", i, i % 2, p.x, p.y, p.z, a))
+            lines.append(String(format: "figure %d, crew %d, at (%.0f, %.0f, %.0f), %@", i, i % 2, p.x, p.y, p.z, a))
         }
-        lines.append("awareness: alarm — two soldiers vanished without a trace")
-        lines.append("your previous decision: \(commander.lastOrder)")
+        lines.append("two of the crew have gone missing, nobody saw where")
+        lines.append("your last call: \(commander.lastOrder)")
         return lines.joined(separator: "\n")
     }
 }

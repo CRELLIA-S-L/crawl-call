@@ -32,9 +32,12 @@ final class Autopilot {
         if let c = value("--commander") { commander = c != "off" }
         if let r = value("--repath-window").flatMap(Int.init) { repathWindow = r }
         if let t = value("--tail").flatMap(Int.init) { tailLength = t }
-        if let b = value("--context-budget").flatMap(Int.init) { CommanderLoop.contextBudget = b }
-        if let k = value("--keep-exchanges").flatMap(Int.init) { CommanderLoop.keepExchanges = k }
+        if let m = value("--max-out").flatMap(Int.init) { CommanderLoop.maxOutputTokens = m }
         if let r = value("--register").flatMap(CommanderLoop.Register.init(rawValue:)) { CommanderLoop.register = r }
+        bench = value("--bench")
+        if let n = value("--bench-repeats").flatMap(Int.init) { benchRepeats = n }
+        if let e = value("--explain") { explainRefusals = e != "off" }
+        if let s = value("--bench-schema").flatMap(SchemaFlavour.init(rawValue:)) { benchSchema = s }
         // The route, at foot level: up the ramp, across the upper floor, off the ledge, between the boxes, back.
         route = [
             [-6, 0, 0], [-4.6, 0, 1.5], [-4.6, 0, 4], [-3, 0.4, 4], [0, 1.5, 4], [3.5, 2.8, 4],   // up the ramp, clear of the box at (-6, 3)
@@ -46,10 +49,28 @@ final class Autopilot {
         return true
     }
 
+    /// Bench mode: no rendering timeline, just the prompt bench, then exit.
+    var bench: String? = nil
+    var benchRepeats = 1
+    var explainRefusals = true
+    var benchSchema: SchemaFlavour = .ranged   // what the game ships (ADR-0017)
+
     /// Starts the timeline. `world` provides the toggles.
     func start(world: SpikeWorld) {
         guard enabled else { return }
         UIApplication.shared.isIdleTimerDisabled = true
+        if let bench {
+            let variants = PromptVariants.named(bench)
+            Telemetry.shared.note("bench: \(variants.count) variants × \(PromptBench.scenarios.count) scenarios × \(benchRepeats)")
+            Task { @MainActor in
+                _ = await PromptBench.run(variants: variants, repeats: benchRepeats, explainRefusals: explainRefusals, schema: benchSchema, maxOutput: CommanderLoop.maxOutputTokens) { Telemetry.shared.note($0) }
+                Telemetry.shared.note("bench complete")
+                Telemetry.shared.flush()
+                try? await Task.sleep(for: .milliseconds(300))
+                exit(0)
+            }
+            return
+        }
         world.setTailLength(tailLength)
         BotSystem.repathEveryFrame = repathWindow > 0
         Telemetry.shared.note("autopilot: \(minutes) min, register \(CommanderLoop.register.rawValue), commander \(commander ? "on" : "off"), repath every frame for \(repathWindow) s, tail \(tailLength)")

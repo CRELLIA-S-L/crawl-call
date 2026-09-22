@@ -459,6 +459,9 @@ created: 2026-09-22
 
 The game **shall** keep working, with no voice missing and no order lost, when up to one call in five is refused.
 
-**Rationale.** Measured in the spike on iOS 27.0 (`spike/README.md`, ADR-0017): under the default guardrails one call in sixty-three was refused as a `guardrailViolation`; under `permissiveContentTransformations`, with the comedy register, six in sixty as a `refusal`.
+**Rationale.** Measured in the spike on iOS 27.0 (`spike/README.md`, ADR-0017).
+The rate is a property of the wording, not a constant: the same hundred-call bench gave 10 blocked with the game's first instructions and 0 with the measured ones, and every block fell on the one situation whose state was written as wounds and bodies.
+`permissiveContentTransformations` does not apply — the documentation states that guided generation runs the default guardrails whatever the mode says.
 The subject — soldiers being swallowed — is what the model objects to, so the rate is a property of the game, not of a prompt to be fixed.
-One in five is the bound the game is built to survive; FR-CMD-165 is how.
+One in five is the bound the game is built to survive, well above anything measured; FR-CMD-165 is how.
+The bound is kept generous on purpose: Apple ships new models with OS updates and asks that every prompt test be re-run against them, so the rate this project measured is a reading of one model version.

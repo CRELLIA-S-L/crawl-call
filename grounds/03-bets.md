@@ -750,3 +750,39 @@ all_of: [H-050]
 CON-CMD-020 — The model refuses a share of calls — is worth building only if H-050 holds.
 
 **Rationale.** Concept §16.2 H5: a refutation removes the product's main selling argument.
+
+### B-630 — FR-CMD-027 stands on bot lines being worth replaying for
+
+```yaml
+status: active
+requirement: FR-CMD-027
+all_of: [H-050]
+```
+
+FR-CMD-027 — Every generation carries a response ceiling — is worth building only if H-050 holds.
+
+**Rationale.** Concept §16.2 H5: a refutation removes the product's main selling argument.
+
+### B-640 — FR-TOOL-150 stands on the commander making a visible difference
+
+```yaml
+status: active
+requirement: FR-TOOL-150
+all_of: [H-040]
+```
+
+FR-TOOL-150 — The prompt bench — is worth building only if H-040 holds.
+
+**Rationale.** Concept §16.2 H4: a refutation removes all LLM tactics, leaving utility AI — a saving, not a loss.
+
+### B-650 — FR-TOOL-160 stands on the commander making a visible difference
+
+```yaml
+status: active
+requirement: FR-TOOL-160
+all_of: [H-040]
+```
+
+FR-TOOL-160 — The bench carries a control that must be blocked — is worth building only if H-040 holds.
+
+**Rationale.** Concept §16.2 H4: a refutation removes all LLM tactics, leaving utility AI — a saving, not a loss.

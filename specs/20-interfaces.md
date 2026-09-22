@@ -78,7 +78,7 @@ tests: []
 created: 2026-09-21
 ```
 
-When the game starts, the system **shall** read from the bot configuration — `config/bot.json` (ADR-0012) — per archetype its base personality weights, their allowed ranges, run speed, weapon damage and detection range; the override, interrupt and grouping distances; the hysteresis margin; the deliberation period and per-frame slot maximum; the collapse panic increment; and from the match configuration — `config/match.json` — the squad size, the archetypes eligible for the commander role, the commander interval, the truce switch and truce-break threshold, the commander session budget and state token budget, and the thermal degradation threshold and factor.
+When the game starts, the system **shall** read from the bot configuration — `config/bot.json` (ADR-0012) — per archetype its base personality weights, their allowed ranges, run speed, weapon damage and detection range; the override, interrupt and grouping distances; the hysteresis margin; the deliberation period and per-frame slot maximum; the collapse panic increment; and from the match configuration — `config/match.json` — the squad size, the archetypes eligible for the commander role, the commander interval, the truce switch and truce-break threshold, the state token budget and the maximum response tokens, and the thermal degradation threshold and factor.
 
 **Rationale.** Concept §8 (base weights), §9.2 (thresholds, scheduling), §14 (squad size), §15 (degradation).
 Two files named in one requirement because they are read in the same act at the same moment; splitting the keys across two requirements would give a reader two places to look for one thing.
@@ -99,11 +99,13 @@ tests: []
 created: 2026-09-21
 ```
 
-When calling a commander, the system **shall** pass a structured world state from that squad's point of view carrying: its bots' positions, health, ammunition and roles; what the squad knows of the enemy; the squad's awareness state; the snake's last known position where awareness is not *calm*; the squad's current order and the commander's previous decision; any pending truce proposal; and the events since the previous call — the whole state within the state token budget of the match configuration, 1000 tokens by default.
+When calling a commander, the system **shall** pass a structured world state from that squad's point of view carrying: its bots' positions, health, ammunition and roles; what the squad knows of the enemy; the squad's awareness state; the snake's last known position where awareness is not *calm*; the squad's current order and the commander's previous decision; any pending truce proposal; and the events since the previous call — the whole state within the state token budget of the match configuration, 1000 tokens by default, and written in the vocabulary IF-CMD-060 allows.
 
 **Rationale.** Concept §9.1: a compressed state from its own point of view — own positions, what is known of the enemy, where the snake is, what is happening.
 "From its own point of view" is the whole design: the commander is never told what it has not seen.
 The token budget follows from CON-CMD-010: eight soldiers, the snake, the awareness state and the previous decision measured 583 tokens with the instructions in the spike.
+The vocabulary is not a matter of taste: the state is the model's input and is checked by the same guardrail as the instructions.
+Measured (ADR-0017): the same situation written as wounds and bodies was blocked in 10 of 10 calls, and in the game's own words in 0 of 10; a line the model did return echoed the state's vocabulary back — "I'm bleeding — also, why is this snake doing interpretive dance?"
 
 ### IF-CMD-020 — Commander output
 
@@ -119,11 +121,12 @@ tests: []
 created: 2026-09-21
 ```
 
-When a commander responds, the system **shall** accept only a structured response carrying: a threat priority from {enemy, snake, withdraw}; an order from {hold, flank, withdraw-to-zone, disperse, destroy-cover}; a role or none per bot; personality weights per bot; a truce action from {none, propose, accept, reject}; and, for a speech call, the speaker's name and one line of at most the line length of the speech configuration; rejecting any response that does not parse into this shape.
+When a commander responds, the system **shall** accept only a structured response carrying: a threat priority from {enemy, snake, withdraw}; an order from {hold, flank, withdraw-to-zone, disperse, destroy-cover}; a role or none per bot; personality weights per bot; a truce action from {none, propose, accept, reject}; and, for a speech call, the speaker's name and one line of at most the line length of the speech configuration; rejecting any response that does not parse into this shape; every numeric field carrying its permitted range as a generation constraint.
 
 **Rationale.** Concept §9.1: guided generation, structured, not free text.
 Rejection rather than repair: an unparseable response is a missed cycle, which the squad survives; a repaired one is an order nobody gave.
 The line's shape is part of the contract because the model, asked for one shout, returned six-speaker scenes of up to 235 characters (ADR-0017).
+The ranges are constraints rather than descriptions because the measurement separated the two: dropping the prose saved 72 tokens a call and cost nothing, while dropping the range produced weights of 0.8 to 8.0 for a field documented as 0 to 1.
 
 ### IF-CMD-030 — Speech configuration
 
@@ -241,10 +244,12 @@ tests: []
 created: 2026-09-22
 ```
 
-The speech instructions **shall** establish: the comedy register of F-030 and ADR-0002, naming its references; that the speakers are the named soldiers of the squad; that the answer is one short line somebody shouts, in the shape IF-CMD-020 defines; the event the line reacts to and the speaker's current panic; and the content rules of IF-CMD-060.
+The speech instructions **shall** open with the writer's role in a cartoon game and permission to work in it, and then establish that the crew are named figures, that the answer is one short line somebody shouts in the shape IF-CMD-020 defines, and the content rules of IF-CMD-060.
 
 **Rationale.** ADR-0017, measured: without the register the model produced sixty-three restatements of one tactical order with no names and no panic; with it, named soldiers blaming each other, which is what §1 says sells the game.
-Naming the soldiers is what makes "IT ATE DAVIS" possible at all.
+Naming the crew is what makes "IT ATE DAVIS" possible at all.
+The role comes first because Apple's guidance says so — "the very beginning of an Instructions string is an effective place to give the model a clear role with permission to work in a domain" — and the measurement agrees: the instructions decide the outcome on their own, blocking a harmless situation 5 times in 5 in the control and none in the shipping text.
+What the line reacts to is not in the instructions but in the state (IF-CMD-010), which changes every call; and the references of ADR-0002 are not named in the text, because naming them costs tokens and changed nothing.
 
 ### IF-CMD-060 — What a generated line may and may not contain
 

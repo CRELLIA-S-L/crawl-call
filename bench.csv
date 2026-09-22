@@ -1,0 +1,11 @@
+variant,scenario,ok,kind,ms,input_tokens,output_tokens,threat,order,panic,line,detail
+v2-soft,calm,true,ok,2034,403,45,enemy,flank,0.2,"Davis: No more hiding—we’re going sideways!",""
+v2-soft,alarm,true,ok,1571,405,45,enemy,flank,0.5,"Davis: No way—those rivals are sneaking up again!",""
+v2-soft,snake-close,true,ok,1529,409,47,enemy,flank,0.8,"Davis: No more hiding—let’s zig like spaghetti!",""
+v2-soft,body-found,true,ok,1516,399,49,enemy,disperse,0.3,"Davis: I've got a plan—let's bounce!",""
+v2-soft,last-two,true,ok,1592,396,53,snake,withdrawToZone,0.3,"Davis: I'm not getting swallowed—I'm getting scooped!",""
+v2-soft,truce,true,ok,1634,401,51,snake,disperse,0.5,"Davis: No more sneaky slithering, we’re splitting up!",""
+v2-soft,nonsense,true,ok,1489,398,47,snake,disperse,0.7,"Davis: He's got sticky fingers and a bad attitude!",""
+v2-soft,grim,true,ok,1864,400,51,enemy,hold,0.2,"Davis: I’m not getting squished—I’m getting *squeezed*!",""
+v2-soft,grim-soft,true,ok,1436,406,43,snake,disperse,0.3,"Davis: He's got a sock puppet army!",""
+v2-soft,gulped-live,true,ok,1768,410,53,snake,disperse,0.5,"Davis: Whoa, that snake’s got a bad case of hiccups!",""

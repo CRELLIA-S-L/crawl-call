@@ -42,6 +42,32 @@ Two lists would drift, and the drift would show as lines that pass the filter bu
 
 Option 3 was rejected because a prompt is tuned against a model version: the text would be stale by the first OS update, and a specification that goes stale teaches everyone to ignore it.
 
+## What the measurements settled afterwards
+
+The register decision above was taken on two ten-minute runs of eight calls apiece.
+A bench that calls the model directly, with no rendering, made a hundred calls per configuration affordable, and it changed three things (`spike/bench/`, `spike/PromptBench.swift`):
+
+| | the game's first configuration | the measured one |
+|---|---|---|
+| blocked calls | 10 of 100 | 0 of 100 |
+| input tokens per call | 453–467 | 324–338 |
+| where the blocks fell | every one on the state written as wounds and bodies | — |
+
+**The state, not the instructions, is what the guardrail blocks.** The same situation in violent words was blocked in 10 of 10 calls under the old instructions and 0 of 10 under the new ones; written in the game's own words it was never blocked under either.
+A returned line also echoed the state's vocabulary back, wounds included.
+So IF-CMD-010 now carries the content rules of IF-CMD-060, which is where that vocabulary is defined.
+
+**`permissiveContentTransformations` does nothing here.** The documentation is explicit: "This mode only works for generating a string value. When you use guided generation, the framework runs the default guardrails against model input and output as usual."
+The commander uses guided generation, so the mode this project set after the first refusal was never in effect; what removed the refusals was the register and the state's vocabulary.
+
+**A session of one call beats a session that is kept.** Thirty calls each, twice: kept cost a mean of about 1150 input tokens against 402 and answered in about 1.9 s against 1.6 s, and it needed a rebuild rule to stay inside the context.
+FR-CMD-025 says the shorter thing instead.
+
+**A guide's range is worth keeping and its prose is not.** Dropping the description text saved 72 tokens a call and cost nothing measurable; dropping the range as well produced weights of 0.8 to 8.0 where the field is documented 0 to 1.
+
+**Leaving the schema out of the prompt is a false economy.** It saved 206 input tokens and tripled the output — about 130 tokens against 50 — with one call running past 40 seconds in each of two runs.
+FR-CMD-027 caps the response instead.
+
 ### Consequences
 
 The register decides the vocabulary, so it decides the refusal rate: CON-CMD-020 records that refusals are normal and bounded, and FR-CMD-165 makes a refused generation fall back to a pre-written line — which turns the set of IF-CMD-030 from a thermal fallback into the game's ordinary second voice.

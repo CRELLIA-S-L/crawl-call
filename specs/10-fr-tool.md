@@ -268,3 +268,44 @@ created: 2026-09-21
 When a commit stages the Xcode project file, the pre-commit hook **shall** reject the commit if the file contains a development team identifier.
 
 **Rationale.** Concept §17.4: choosing a team in Xcode silently writes the Team ID into `project.pbxproj`, bypassing the config; the diff is checked before every commit — a job for the hook.
+
+## Prompt tests
+
+### FR-TOOL-150 — The prompt bench
+
+```yaml
+status: deferred
+verification: T
+derives_from: []
+depends_on: [IF-CMD-040, IF-CMD-050, IF-CMD-060, CON-CMD-020]
+refines: []
+conflicts_with: []
+code: []
+tests: []
+created: 2026-09-22
+```
+
+When run over a set of instructions and a set of world states, the prompt bench **shall** report, per configuration, how many calls the model blocked, the input and output tokens, the latency, and the text of every line it returned.
+
+**Rationale.** Apple asks for exactly this: "Create a list of potentially harmful prompt inputs that you can run as part of your app's tests… log the timestamp, full input prompt, the model's response, and whether it activates any built-in safety", and "When any model you use updates, it's important to re-run all of your prompt tests".
+Without it the refusal rate is anecdote: the difference between 10 blocked in 100 and 0 in 100 (ADR-0017) is invisible in a ten-minute play session, which is how the first configuration shipped into the spike.
+The bench calls the model directly and does not render, so a hundred calls take minutes on any machine that runs the model — the Mac included, which is where it is used.
+
+### FR-TOOL-160 — The bench carries a control that must be blocked
+
+```yaml
+status: deferred
+verification: T
+derives_from: [FR-TOOL-150]
+depends_on: []
+refines: [FR-TOOL-150]
+conflicts_with: []
+code: []
+tests: []
+created: 2026-09-22
+```
+
+The prompt bench **shall** report every run in which its deliberately blocked control was not blocked as void rather than as a measurement.
+
+**Rationale.** A bench that cannot detect a block reports zero blocks for every configuration, which is the same reading as success.
+The control used in the spike — a squad dying in described agony — was blocked in 50 of 50 calls while the game's own configurations were blocked in 0 (ADR-0017).

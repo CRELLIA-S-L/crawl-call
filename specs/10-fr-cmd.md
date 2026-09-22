@@ -45,7 +45,7 @@ While a squad has a living role-holder, the system **shall** call its commander 
 **Rationale.** Concept §9.1: every 5–10 seconds, a compressed state from the squad's point of view.
 The interval stretches under thermal load (NFR-PERF-060), which is why it is configuration and not a constant.
 
-### FR-CMD-025 — The commander's session stays small and cached
+### FR-CMD-025 — Each commander call is its own session
 
 ```yaml
 status: deferred
@@ -59,11 +59,32 @@ tests: []
 created: 2026-09-22
 ```
 
-While a squad's commander is being called, the system **shall** keep one model session per commander, rebuilding it from its instructions alone before the transcript exceeds the session budget of the match configuration and after any call that fails, and carrying the commander's previous decision to the next call inside the world state rather than in the transcript.
+When a commander is called, the system **shall** open a session carrying the instructions alone, use it for that one call, and carry the commander's previous decision to the next call inside the world state.
 
-**Rationale.** CON-CMD-010: a session that grows overflows the context and, before that, loses its cache and stalls the frame; a session rebuilt every call never benefits from the cache.
-Measured on the spike: with a 2000-token budget the calls stay at 2.2–2.6 s with no dropped frames after warm-up; the previous decision in the state keeps the commander's continuity at ~20 tokens instead of a transcript.
-Rebuilding after a failure as well, because a refused exchange left in the transcript fails every later call (CON-CMD-020) — FR-CMD-165 says the same for the speech session, and this squad's orders would otherwise stop arriving for the rest of the match.
+**Rationale.** A kept session was measured against a fresh one over thirty calls each, twice (ADR-0017): keeping it cost a mean of about 1150 input tokens against 402, answered in about 1.9 s against 1.6 s, and needed a rebuild rule to stay inside the 4096-token context of CON-CMD-010.
+The cache a kept session earns does not pay for the transcript it carries.
+A session of one call also cannot carry a refused exchange into the next one, which is what turned a single refusal into eighty-four consecutive failures (CON-CMD-020) — there is nothing to rebuild and nothing to poison.
+Continuity costs about twenty tokens in the state (IF-CMD-010) instead of a transcript.
+
+### FR-CMD-027 — Every generation carries a response ceiling
+
+```yaml
+status: deferred
+verification: T
+derives_from: [FR-CMD-025]
+depends_on: [IF-BOT-010]
+refines: []
+conflicts_with: []
+code: []
+tests: []
+created: 2026-09-22
+```
+
+When calling the model, the system **shall** pass the maximum response tokens of the match configuration, 80 by default.
+
+**Rationale.** A generation without a ceiling ran past 40 seconds in the spike, in both runs, when the schema was left out of the prompt (ADR-0017).
+The ceiling costs nothing when the answer is the usual fifty tokens and bounds the one that is not; NFR-PERF-040 gives the commander one interval to answer, and this is what keeps a single call from spending it.
+
 
 ### FR-CMD-030 — The commander sets the threat priority
 

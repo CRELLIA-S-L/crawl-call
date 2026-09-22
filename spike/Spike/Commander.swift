@@ -4,30 +4,32 @@
 import FoundationModels
 import Foundation
 
-@Generable(description: "A squad commander's tactical decision")
+// Guides carry constraints, not prose: the bench measured the description text at about
+// 72 tokens per call with no benefit — the bare `.range` tracked the situation better
+// (spike/README.md, ADR-0017).
+@Generable
 struct CommanderOrder {
     @Generable enum Threat: String { case enemy, snake, withdraw }
     @Generable enum Order: String { case hold, flank, withdrawToZone, disperse, destroyCover }
 
-    @Guide(description: "What the squad treats as the main threat right now")
     var threat: Threat
-    @Guide(description: "The order for the whole squad")
     var order: Order
-    @Guide(description: "Aggression weight for the squad, 0 to 1", .range(0...1))
-    var aggression: Double
-    @Guide(description: "Discipline weight for the squad, 0 to 1", .range(0...1))
-    var discipline: Double
-    @Guide(description: "Panic weight for the squad, 0 to 1", .range(0...1))
-    var panic: Double
-    @Guide(description: "One short line the commander shouts to the squad, in English")
+    @Guide(.range(0...1)) var aggression: Double
+    @Guide(.range(0...1)) var discipline: Double
+    @Guide(.range(0...1)) var panic: Double
+    var speaker: String
     var callout: String
 }
+
 
 @MainActor
 final class CommanderLoop {
     private(set) var running = false
     private var task: Task<Void, Never>?
     var interval: Duration = .seconds(7)
+    /// The commander's continuity lives here, not in a transcript: it goes back into the
+    /// world state on the next call (FR-CMD-025).
+    private(set) var lastOrder: String = "none yet"
 
     var availabilityDescription: String {
         switch Self.model.availability {
@@ -43,31 +45,28 @@ final class CommanderLoop {
         }
         running = true
         task = Task { @MainActor in
-            // One session for the whole run, so the prefix (instructions, recent exchanges)
-            // stays in the model's cache — `usage.input.cachedTokenCount` shows how much.
-            // The context is 4096 tokens: when the transcript nears it, the session is
-            // rebuilt from a trimmed transcript (instructions + the last two exchanges).
-            var session = LanguageModelSession(model: Self.model, instructions: Self.instructions)
-            // Warm-up: the first call pays for loading; measured separately.
-            await self.call(session: &session, state: worldState(), label: "warmup")
+            // A fresh session per call: measured against a kept session it costs a third of
+            // the tokens (402 against a mean of 1156), answers faster (1.6 s against 2.0 s),
+            // and cannot carry a refused exchange into the next call at all (ADR-0017).
+            await self.call(state: worldState(), label: "warmup")
             while self.running {
                 try? await Task.sleep(for: self.interval)
                 guard self.running else { break }
-                await self.call(session: &session, state: worldState(), label: "call")
+                await self.call(state: worldState(), label: "call")
             }
         }
     }
 
-    // The game is soldiers under attack: the default guardrails refused a callout after
-    // ten minutes of play and then every following call, since the refusal stayed in the
-    // transcript. `permissiveContentTransformations` is the setting Apple provides for
-    // content the app itself is responsible for (our own filter stays: CON-PUB-080).
-    static let model = SystemLanguageModel(useCase: .general, guardrails: .permissiveContentTransformations)
+    // The default guardrails, deliberately: `permissiveContentTransformations` is documented
+    // as applying to string generation only — "when you use guided generation, the framework
+    // runs the default guardrails against model input and output as usual" — and this call is
+    // guided. What removed the blocks was the register and the state's vocabulary (ADR-0017).
+    static let model = SystemLanguageModel.default
 
     /// Two registers, to be compared: the military one this spike started with, and the
     /// comedy one the concept asks for (§2, F-030, ADR-0002 — Overcooked, not a war film).
     enum Register: String { case military, comedy }
-    static var register: Register = .comedy   // the register ADR-0017 chose; --register military replays the comparison
+    static var register: Register = .comedy   // ADR-0017; --register military replays the comparison
 
     static var instructions: String {
         switch register {
@@ -78,15 +77,16 @@ final class CommanderLoop {
             personality weights for your soldiers from the state you are given. Be terse.
             """
         case .comedy:
+            // The measured instructions (ADR-0017): a role and its domain first, as Apple's
+            // guidance for reducing over-blocking asks, uppercase for the one phrase that
+            // matters, and no vocabulary the guardrail reads as violence. 0 blocked calls in
+            // 100 against 10 in 100 for the text this replaced, at 91 tokens instead of 148.
             return """
-            You are in charge of six clumsy toy soldiers in a bright cluttered arena, like a \
-            kitchen in a cartoon. A rival crew is making a mess of the same place. A huge \
-            googly-eyed snake is swallowing people whole — boots sticking out, no blood, \
-            nothing gruesome, pure slapstick. Your crew has names: Davis, Pike, Marsh, Otto, \
-            Beans and Kit. Pick what to worry about, what the crew should do, and how rattled \
-            each of them is. The callout is one short line somebody yells in a panic — name \
-            people, blame the other crew, react to how ridiculous this is. Never describe \
-            weapons, wounds or dying; people get gulped, bounced, or vanish with a yelp.
+            You write dialogue for a silly cartoon game. Toy figures scurry around a playroom \
+            while a googly-eyed snake puppet chases them. It is HARMLESS SLAPSTICK: figures get \
+            scooped up and pop back out, like a cartoon. Choose what the crew worries about, \
+            what they do, how flustered they are, and one short funny line somebody yells. \
+            The crew are Davis, Pike, Marsh, Otto, Beans and Kit.
             """
         }
     }
@@ -95,17 +95,7 @@ final class CommanderLoop {
     // and is evicted somewhere above ~3000 tokens; an uncached prefill of 1.6–3.3k tokens
     // dropped 9–25 frames, one of ~600 tokens dropped none. So the session is kept while its
     // transcript is small and rebuilt to instructions only before eviction (CON-CMD-010).
-    static var contextBudget = 2000
-    static var keepExchanges = 0
-    private(set) var lastOrder: String = "none yet"
-
-    /// Instructions plus the last `keepExchanges` prompt/response pairs.
-    static func trimmed(_ t: Transcript, keepExchanges: Int = 2) -> Transcript {
-        var entries: [Transcript.Entry] = t.filter { if case .instructions = $0 { return true } else { return false } }
-        let tail = t.filter { if case .instructions = $0 { return false } else { return true } }
-        entries += tail.suffix(keepExchanges * 2)
-        return Transcript(entries: entries)
-    }
+    static var maxOutputTokens = 80
 
     func stop() {
         running = false
@@ -113,27 +103,26 @@ final class CommanderLoop {
         task = nil
     }
 
-    private func call(session: inout LanguageModelSession, state: String, label: String) async {
+    private func call(state: String, label: String) async {
         let clock = ContinuousClock()
         Telemetry.shared.inferenceBegan()
         let start = clock.now
+        let session = LanguageModelSession(model: Self.model, instructions: Self.instructions)
         do {
-            let response = try await session.respond(to: "Current state:\n\(state)\nDecide.", generating: CommanderOrder.self)
+            // The schema stays in the prompt: dropping it saved 206 input tokens but tripled
+            // the output and produced a 43-second call — and the documented default is `true`.
+            let response = try await session.respond(to: "Situation:\n\(state)\nDecide.",
+                                                     generating: CommanderOrder.self,
+                                                     options: GenerationOptions(maximumResponseTokens: Self.maxOutputTokens))
             let elapsed = clock.now - start
             Telemetry.shared.inferenceEnded(seconds: elapsed, ok: true)
             let o = response.content
             let u = response.usage
             lastOrder = "\(o.threat.rawValue)/\(o.order.rawValue)"
-            Telemetry.shared.note("\(label) \(fmt(elapsed)) in \(u.input.totalTokenCount) tok (cached \(u.input.cachedTokenCount)) out \(u.output.totalTokenCount) \(o.threat.rawValue)/\(o.order.rawValue) a\(o.aggression) d\(o.discipline) p\(o.panic) \"\(o.callout)\"")
-            if u.input.totalTokenCount > Self.contextBudget {
-                session = LanguageModelSession(model: Self.model, transcript: Self.trimmed(session.transcript, keepExchanges: Self.keepExchanges))
-            }
+            Telemetry.shared.note("\(label) \(fmt(elapsed)) in \(u.input.totalTokenCount) tok (cached \(u.input.cachedTokenCount)) out \(u.output.totalTokenCount) \(lastOrder) a\(o.aggression) d\(o.discipline) p\(o.panic) \"\(o.speaker): \(o.callout)\"")
         } catch let error as LanguageModelError {
             let elapsed = clock.now - start
             Telemetry.shared.inferenceEnded(seconds: elapsed, ok: false)
-            // Any failure poisons the transcript: the refused prompt stays in it and every
-            // later call re-sends it, which is how one guardrail trip became 84 in a row.
-            // Rebuild from the instructions and carry on.
             let kind: String
             switch error {
             case .guardrailViolation(let v): kind = "guardrail: \(v.debugDescription)"
@@ -143,8 +132,9 @@ final class CommanderLoop {
             case .timeout: kind = "timeout"
             default: kind = "\(error)"
             }
-            session = LanguageModelSession(model: Self.model, instructions: Self.instructions)
-            Telemetry.shared.note("\(label) failed after \(fmt(elapsed)) — \(kind); session rebuilt")
+            // Nothing to rebuild: the session belonged to this call. The game plays a
+            // pre-written line instead (FR-CMD-165).
+            Telemetry.shared.note("\(label) failed after \(fmt(elapsed)) — \(kind)")
         } catch {
             let elapsed = clock.now - start
             Telemetry.shared.inferenceEnded(seconds: elapsed, ok: false)

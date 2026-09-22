@@ -59,6 +59,29 @@ All three pass — ADR-0001 becomes `accepted`, the CSVs go under `materials/spi
 Check 1 or 3 fails — SwiftGodot, per ADR-0001.
 Check 2 fails — first Q-140 (60 fps) and Q-020 (4v4) are revisited, then the stack.
 
+## The prompt bench
+
+The commander's prompt is measured, not argued about (FR-TOOL-150). The bench calls the
+model directly with no rendering, so a hundred calls take minutes:
+
+```
+swiftc -O -target arm64-apple-macos27.0 -parse-as-library \
+    Spike/PromptBench.swift Spike/PromptVariants.swift bench/main.swift -o bench
+./bench all 5                 # every instruction variant, 5 calls per scenario
+./bench v2-soft 10            # one variant
+./bench patterns 30           # kept session vs fresh vs fresh-without-schema
+./bench anatomy               # where the input tokens go
+BENCH_SCHEMA=ranged BENCH_MAX_OUT=80 ./bench v2-soft 10
+BENCH_SCENARIOS=grim,grim-soft ./bench v0-baseline,v2-soft 10
+```
+
+Every run must include `v4-provocative`, the control written to be blocked (FR-TOOL-160):
+a bench that cannot detect a block reads the same as one that found none. It was blocked
+in 50 of 50 calls while the game's own configurations were blocked in 0 of 100.
+
+The same bench runs on the phone (`--autopilot --bench all --bench-repeats 5`); the Mac
+and the phone gave the same counts, so the Mac is where the work is done.
+
 ## Findings (2026-09-22, iPhone 16 Pro, iOS 27.0 24A437, Xcode 27.0 27A5218g)
 
 ### First form — RealityKit's navigation mesh — abandoned (ADR-0016)
@@ -75,9 +98,29 @@ On a map with balconies this makes the built-in queries unusable; the maintainer
 By the maintainer's eye: climbs the ramp, drops off the ledge with the tail following down the drop unbroken, wraps around cover, tail length 100 without tearing or lag.
 The bots path over the grid graph (`Grid.swift`, ADR-0016): cell 0.5 m, 48×32 cells, 1990 walkable surfaces, 616 cells with two levels; all ten startup probes reach the right floor, including the two same-XZ pairs that broke the navmesh.
 
-**Check 2 — preliminary, without the two-minute run.** Eight bots deliberating every frame: 0.05–0.15 ms average, ~1 ms worst per frame; 60 fps, 0 dropped frames by vsync; ~30 path requests/s.
+**Check 2 — passed.** Eight bots deliberating every frame: 0.05–0.15 ms average, ~1 ms worst per frame; 60 fps, 0 dropped frames by vsync; ~30 path requests/s.
 One A* path costs 2–120 µs in the probes and up to ~1 ms in play for a far or unreachable target (a full search of 1990 nodes at ~0.5 µs per node), after the open list became a heap, the search state flat arrays and the smoothing bounded.
 So a single path can exceed the 0.5 ms per-frame budget of NFR-PERF-020 on its own; the budget is met by handing out at most one path request per frame, which is what the concept's slot scheduling does, not by a faster A*.
-Still to run: two minutes with `repath every frame` on.
+Confirmed over ten minutes with the autopilot: 60 fps, two missed frames in the whole run, deliberation worst frame 1.9 ms.
 
-**Check 3 — not run.** Needs 15–20 minutes with `commander` on and the phone unlocked.
+**Check 3 — passed, and the prompt measured with it.** A commander call answers in 2.6 s on average and 3.2 s at worst, far inside its 5–10 s interval; the device reached `fair` and came back to `nominal` over a twenty-minute run without losing frame rate.
+
+The same ten-minute route, before and after the prompt work:
+
+| | before | after |
+|---|---|---|
+| commander calls answered | 48 of 62 | 61 of 61 |
+| blocked | 14 (23 %) | 0 |
+| input tokens | 586–590 | 531–537 |
+| latency avg / max | 2936 / 3567 ms | 2619 / 3167 ms |
+
+What the bench settled (ADR-0017 carries the reasoning):
+
+- the state's vocabulary and the instructions each block on their own: the same situation written as wounds and bodies was blocked 10 of 10 under the old instructions and 0 of 10 under the new ones, while the control's instructions block even the calmest state, and the old instructions block `./bench anatomy`'s trivial one-character prompt;
+- the game's first configuration was blocked in 10 of 100 bench calls, the measured one in 0 of 100, at 324–338 input tokens against 453–467, repeated three times with the same counts;
+- `permissiveContentTransformations` does nothing under guided generation, which is what the commander uses;
+- one session per call beats a kept session on tokens (402 against about 1150), latency (about 1.6 s against 1.9 s) and robustness — there is no transcript to poison;
+- a guide's `.range` is worth its tokens and its description prose is not: dropping the prose saved 72 tokens a call and cost nothing, dropping the range produced 0.8 to 8.0 where the field is 0 to 1;
+- leaving the schema out of the prompt saves 206 input tokens and triples the output, with one call past 40 seconds in each of two runs; `maximumResponseTokens` bounds that instead.
+
+**What is still not met.** NFR-PERF-030 asks for every frame under budget while an inference runs. Measured over nine minutes and 61 calls: two missed frames, one at app start and one during the second call — about one frame per sixty calls. Small, real, and not a prompt problem: the fix belongs where the inference is scheduled.
