@@ -12,23 +12,23 @@ import SwiftUI
 struct CrawlCallApp: App {
     /// Read once, at start, because that is the moment the interface requirements name.
     /// Not private: a test constructs the app to check that starting it reads them.
-    let configurations = Launch.load()
+    let world = Launch.world()
 
     // `Scene` is qualified: SwiftUI and RealityKit both export that name, and
     // App.Body is constrained to SwiftUI's (App, SwiftUI documentation).
     var body: some SwiftUI.Scene {
         WindowGroup {
-            switch configurations {
-            case .success:
-                RealityView { _ in
-                    // Empty on purpose: nothing is placed in the scene until the
-                    // requirement that puts it there is built.
+            switch world {
+            case .success(let world):
+                RealityView { content in
+                    content.add(SceneBuilder.scene(for: world.plan,
+                                                   pitchDegrees: world.configurations.view.cameraPitch))
                 }
                 .ignoresSafeArea()
             case .failure(let error):
-                // A launch that cannot read its tuning says so instead of running on
-                // numbers nobody chose.
-                Text(error.description)
+                // A launch that cannot read its tuning or its map says so instead of
+                // running on numbers nobody chose.
+                Text(String(describing: error))
                     .font(.system(.body, design: .monospaced))
                     .padding()
             }

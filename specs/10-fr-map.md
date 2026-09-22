@@ -11,14 +11,14 @@ The tools that assemble, validate and render a map are in the TOOL area.
 ### FR-MAP-010 — A map has more than one floor
 
 ```yaml
-status: deferred
+status: implemented
 verification: I
 derives_from: []
 depends_on: [IF-MAP-010]
 refines: []
 conflicts_with: []
-code: []
-tests: []
+code: [maps/blockout.map]
+tests: [Tests/CrawlCallTests/MapParserTests.swift, Tests/CrawlCallTests/LaunchTests.swift]
 created: 2026-09-21
 ```
 
@@ -50,14 +50,14 @@ The spike keeps one constant for both, which is what this requires of the game; 
 ### FR-MAP-020 — The navigation graph covers every walkable cell
 
 ```yaml
-status: deferred
+status: implemented
 verification: T
 derives_from: []
 depends_on: [FR-TOOL-030]
 refines: []
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Map/NavigationGraph.swift, Sources/CrawlCall/Launch.swift]
+tests: [Tests/CrawlCallTests/NavigationGraphTests.swift, Tests/CrawlCallTests/LaunchTests.swift, Tests/CrawlCallTests/MapParserTests.swift]
 created: 2026-09-21
 ```
 
@@ -205,14 +205,14 @@ Every map **shall** present, along every walkable route, a continuous surface fo
 ### FR-MAP-100 — Maps are assembled from a modular kit
 
 ```yaml
-status: deferred
+status: implemented
 verification: I
 derives_from: []
 depends_on: [IF-MAP-010]
 refines: []
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Map/Kit.swift, ATTRIBUTION.md]
+tests: [Tests/CrawlCallTests/MapParserTests.swift, Tests/CrawlCallTests/ScenePlanTests.swift]
 created: 2026-09-21
 ```
 
@@ -221,3 +221,23 @@ Every map **shall** be assembled from modules of one kit listed in the attributi
 **Rationale.** Concept §11.1: modular kits instead of ready maps — the layout is ours, the licence is clean; Kenney and Quaternius (CC0) for blockouts, Synty for quality.
 The trap the concept names: an open engine is not free content.
 That a listed kit's licence permits commercial redistribution is CON-PUB-030's obligation, not restated here.
+
+### FR-MAP-110 — A cell can declare that it has no floor
+
+```yaml
+status: draft
+verification: T
+derives_from: [IF-MAP-010]
+depends_on: [FR-TOOL-020, FR-MAP-020]
+refines: [FR-TOOL-020]
+conflicts_with: []
+code: []
+tests: []
+created: 2026-09-22
+```
+
+When a map declares a cell to have no floor, the system **shall** place no floor module there and hold no navigation node for it, whatever module stands on the cell.
+
+**Rationale.** The floor under a standing module is implied (FR-TOOL-020) because a cell holds one module and a person should not have to spell out the obvious. A hole is the case where the obvious is wrong, and it is worth the exception because it is tactical: a gap under a crate is a way down the snake can take and a bot cannot, a shaft behind a partition is a route that exists only while the partition stands, and both stop being possible the moment "something stands here" silently means "the floor is here".
+Marked `draft` because what it does not yet settle is how a map says it — a header list of cells like the transitions, a legend character that means the absence of a floor, or a second grid per floor — and that choice belongs to the maintainer, not to the first person who needs a hole.
+The graph half is not decoration: a hole nobody can path through is a hole the bots walk over.

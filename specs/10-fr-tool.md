@@ -9,14 +9,14 @@ Tools are code like any other: each is a requirement with `code` and `tests` whe
 ### FR-TOOL-010 — Parse a map specification
 
 ```yaml
-status: deferred
+status: implemented
 verification: T
 derives_from: []
 depends_on: [IF-MAP-010]
 refines: []
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Map/MapSpecification.swift]
+tests: [Tests/CrawlCallTests/MapParserTests.swift]
 created: 2026-09-21
 ```
 
@@ -27,32 +27,36 @@ When given a map specification file, the map tool **shall** produce the placemen
 ### FR-TOOL-020 — Assemble the scene from the kit
 
 ```yaml
-status: deferred
+status: implemented
 verification: T
 derives_from: [FR-TOOL-010]
 depends_on: [FR-MAP-100]
 refines: []
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Map/ScenePlan.swift, Sources/CrawlCall/Map/SceneBuilder.swift]
+tests: [Tests/CrawlCallTests/ScenePlanTests.swift, Tests/CrawlCallTests/MapParserTests.swift, Tests/CrawlCallTests/LaunchTests.swift]
 created: 2026-09-21
 ```
 
-When given a parsed map, the map tool **shall** assemble the scene by placing the kit's module for each cell at the coordinates the specification gives it.
+When given a parsed map, the map tool **shall** assemble the scene by placing the kit's module for each cell at the coordinates the specification gives it, and, under every cell whose module is not walkable, the kit's floor module as well.
+
+**Rationale on the implied floor.** A grid cell holds one module (IF-MAP-010), so a cell holding a wall holds no floor, and a scene built literally has a hole under every wall, crate and partition — measured on the device on 2026-09-22, where the pixels at the foot of a partition read `0, 0, 0` against a floor of `133, 140, 151`.
+The floor is implied rather than written into each cell because a map is a drawing a person edits, and making them spell out the floor under every wall would be the kind of bookkeeping the text format exists to avoid (concept §11.2).
+Deliberate holes are a different thing and are not this: FR-MAP-110 is where a cell says it has none, so that a hole is something a map states rather than something a wall causes by accident.
 
 **Rationale.** Concept §12: assembling a map to an exact specification in coordinates is what the agent does reliably.
 
 ### FR-TOOL-030 — Derive the navigation graph
 
 ```yaml
-status: deferred
+status: implemented
 verification: T
 derives_from: [FR-TOOL-020]
 depends_on: []
 refines: []
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Map/NavigationGraph.swift]
+tests: [Tests/CrawlCallTests/NavigationGraphTests.swift, Tests/CrawlCallTests/LaunchTests.swift, Tests/CrawlCallTests/MapParserTests.swift]
 created: 2026-09-21
 ```
 

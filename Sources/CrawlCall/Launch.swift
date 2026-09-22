@@ -7,10 +7,47 @@
 // is not something the specification settles yet; what it must not do — carry on with
 // defaults — it does settle, by ADR-0012's rule that a typo is an error.
 //
-// implements: IF-SNAKE-010, IF-MAP-020, IF-VIEW-020, IF-BOT-010
+// implements: IF-SNAKE-010, IF-MAP-020, IF-VIEW-020, IF-BOT-010, FR-MAP-020
 import Foundation
 
+/// Everything a match runs on, read once at start: the tuning, the kit, the map as
+/// parsed, the graph the bots path over and the geometry the player sees. Assembled
+/// in one place so that the scene and the graph cannot come from different files.
+struct World {
+    let configurations: Configurations
+    let kit: Kit
+    let map: MapSpecification
+    let graph: NavigationGraph
+    let plan: ScenePlan
+}
+
 enum Launch {
+    /// Reads everything the game starts on: the configurations, then the kit the map
+    /// names, then the map itself, then what is derived from them.
+    static func world(from bundle: Bundle = .main,
+                      map name: String = "blockout") -> Result<World, Error> {
+        do {
+            let configurations = try Configurations.load(from: bundle)
+            guard let url = bundle.url(forResource: name, withExtension: "map", subdirectory: "maps") else {
+                throw MapLoadError.missing(name: name)
+            }
+            let text = try String(contentsOf: url, encoding: .utf8)
+            // The kit is read first because the map cannot be read without it: which
+            // characters are legal is the kit's legend (ADR-0012).
+            let header = try MapParser.kitName(in: text)
+            let kit = try Kit.load(named: header, from: bundle)
+            let map = try MapParser.parse(text, kit: kit)
+            return .success(World(configurations: configurations,
+                                  kit: kit,
+                                  map: map,
+                                  graph: NavigationGraph.derive(from: map),
+                                  plan: ScenePlan.make(map: map, kit: kit,
+                                                       cellSize: configurations.tuning.navigationGraphCellSize)))
+        } catch {
+            return .failure(error)
+        }
+    }
+
     /// Reads every configuration the game needs, in the order a reader would expect
     /// to hear about a failure: the first file that is wrong is the one reported.
     static func load(from bundle: Bundle = .main) -> Result<Configurations, ConfigurationError> {
@@ -22,6 +59,17 @@ enum Launch {
             // Configurations.load throws nothing else; this keeps that a fact rather
             // than an assumption, and says so if it ever stops being true.
             return .failure(.undecodable(name: "unknown", underlying: error))
+        }
+    }
+}
+
+
+enum MapLoadError: Error, CustomStringConvertible, Equatable {
+    case missing(name: String)
+
+    var description: String { 
+        switch self {
+        case .missing(let n): return "maps/\(n).map is missing from the bundle"
         }
     }
 }

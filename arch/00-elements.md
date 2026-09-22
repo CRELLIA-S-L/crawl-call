@@ -54,3 +54,35 @@ The intents the input schemes produce and the game logic consumes.
 
 **Rationale.** Separate from start-up because it is the other place a boundary can be crossed quietly: a scheme that reached past the intents into the logic, or logic that read a touch event, would leave the abstraction intact on paper and gone in fact (FR-VIEW-030).
 One file today, and the element is what keeps the fifth intent a change to IF-VIEW-010 rather than an addition somebody makes in passing.
+
+### E-040 — The map layer
+
+```yaml
+status: built
+carries: [Sources/CrawlCall/Map, maps/blockout.map, ATTRIBUTION.md]
+requirements: [IF-MAP-010, FR-TOOL-010, FR-TOOL-020, FR-TOOL-030, FR-MAP-010, FR-MAP-020, FR-MAP-100]
+depends_on: [E-020]
+interface: a map file and its kit in; the placements, the navigation graph and the scene geometry out
+```
+
+Turns one text file into the two models the game runs on: what the bots path over and what the player sees.
+
+**Rationale.** The boundary that matters here is between the two models, and it is kept by making them one part rather than two: the graph and the geometry are derived from the same parse, in the same place, so a bot cannot path over a cell where no floor was placed.
+Splitting parsing from geometry would look tidier and would let exactly that drift in, which is the failure the spike's navigation mesh made expensive (ADR-0016).
+It depends on start-up because the cell size it measures in is tuning (IF-MAP-020), read by E-020.
+`ATTRIBUTION.md` sits here for want of a better home rather than by right: it is a repository-wide document, and today the only requirement that reads it is FR-MAP-100's "a kit listed in the attribution file". When CON-PUB-030 has third-party assets to list, the file belongs to whatever owns the repository's guards, and this line moves with it.
+
+### E-050 — The view
+
+```yaml
+status: built
+carries: [Sources/CrawlCall/View]
+requirements: [FR-VIEW-010, FR-VIEW-130]
+depends_on: [E-040]
+interface: a scene plan in; the camera it is seen through and the light it is read by, out
+```
+
+Decides how the arena reaches the player: one camera at a fixed pitch, one daylight source with the ambient that keeps shadows readable.
+
+**Rationale.** Split from the map layer because the two answer different questions and change for different reasons: the map changes when a level does, the view when the game's look does, and a file holding both invites a camera decision to be made while editing geometry.
+The boundary is also where the specification puts it — the VIEW area owns the angle and the light, the MAP and TOOL areas own what is placed and where.

@@ -153,14 +153,14 @@ When the game starts, the system **shall** read from the speech configuration â€
 ### IF-MAP-010 â€” The map specification file
 
 ```yaml
-status: deferred
+status: implemented
 verification: T
 derives_from: []
 depends_on: []
 refines: []
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Map/MapSpecification.swift]
+tests: [Tests/CrawlCallTests/MapParserTests.swift]
 created: 2026-09-21
 ```
 

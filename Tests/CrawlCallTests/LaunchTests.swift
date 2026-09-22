@@ -54,9 +54,34 @@ final class AppStartTests: XCTestCase {
     @MainActor
     func testStartingTheAppReadsTheConfigurations() {
         let app = CrawlCallApp()
-        guard case .success(let all) = app.configurations else {
-            return XCTFail("the app did not read its configurations at start: \(app.configurations)")
+        guard case .success(let world) = app.world else {
+            return XCTFail("the app did not read its world at start: \(app.world)")
         }
-        XCTAssertGreaterThan(all.snake.baseSpeed, 0)
+        XCTAssertGreaterThan(world.configurations.snake.baseSpeed, 0)
+        XCTAssertEqual(world.map.kit, "blockout")
+        XCTAssertGreaterThan(world.graph.nodeCount, 0)
+        XCTAssertFalse(world.plan.pieces.isEmpty)
+    }
+}
+
+/// The whole chain with nothing stubbed: files on disk, through the parser and the
+/// kit, into a graph and a plan that agree with each other.
+///
+/// verifies: FR-MAP-010, FR-MAP-020, FR-TOOL-020, FR-TOOL-030
+final class WorldTests: XCTestCase {
+    func testTheWorldIsAssembledFromTheShippedFiles() throws {
+        let world = try Launch.world().get()
+        XCTAssertEqual(world.map.floors.count, 2)
+        XCTAssertEqual(world.kit.floorHeight, 3.0)
+        XCTAssertEqual(world.plan.cellSize, world.configurations.tuning.navigationGraphCellSize)
+        XCTAssertEqual(world.graph.floorsReachable(from: try XCTUnwrap(world.graph.nodes.first { $0.floor == 0 })),
+                       [0, 1])
+    }
+
+    func testAMapThatIsNotThereIsNamedRatherThanCrashing() {
+        switch Launch.world(map: "nosuchmap") {
+        case .success: XCTFail("a map that is not in the bundle must not start")
+        case .failure(let error): XCTAssertEqual(error as? MapLoadError, .missing(name: "nosuchmap"))
+        }
     }
 }

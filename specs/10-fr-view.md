@@ -10,14 +10,14 @@ First-person view is out of the vertical slice (concept §3) and has no requirem
 ### FR-VIEW-010 — A perspective camera pitched between 50 and 60 degrees
 
 ```yaml
-status: deferred
+status: implemented
 verification: D
 derives_from: []
 depends_on: [IF-VIEW-020]
 refines: []
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/View/SceneView.swift]
+tests: [Tests/CrawlCallTests/ScenePlanTests.swift]
 created: 2026-09-21
 ```
 
@@ -234,3 +234,23 @@ Every HUD element **shall** be drawn as a rounded, light-coloured plate carrying
 
 **Rationale.** Concept §2: the interface in the same aesthetic as the world — rounded light plates, a bold rounded typeface, large readable icons; a military HUD with slanted plates argues with the style (ADR-0002).
 Inspected against these four properties; a separate style guide was considered and not written, since the properties are the guide (Q-160, closed 2026-09-21).
+
+### FR-VIEW-130 — The arena is lit as bright daylight
+
+```yaml
+status: implemented
+verification: D
+derives_from: []
+depends_on: [FR-VIEW-010]
+refines: []
+conflicts_with: []
+code: [Sources/CrawlCall/View/SceneView.swift]
+tests: [Tests/CrawlCallTests/ScenePlanTests.swift]
+created: 2026-09-22
+```
+
+While a match is running, the system **shall** light the arena with a single bright daylight source casting soft shadows, with enough ambient light that no surface facing away from it reads as black.
+
+**Rationale.** Concept §2 names the light as part of the style, not as a technical detail: "bright daylight, soft shadows, a saturated palette. No gloom." A diorama is read by its shapes, and shapes are read by their shading.
+It is also what makes a blockout judgeable at all: an unlit scene renders as flat fields of one colour, so a floor, a wall and a crate become indistinguishable and every `D` judgement about a map — whether a corridor is a trap, whether a balcony overlooks the room — has nothing to look at.
+The number of lights is one on purpose: a single source is what casts a readable shadow direction, and the thermal budget of a phone rendering a match is not the place to discover that three were affordable (NFR-PERF-010).
