@@ -26,3 +26,4 @@ __pycache__/
 
 # Xcode workspace state the project file does not need
 *.xcodeproj/project.xcworkspace/
+runs/

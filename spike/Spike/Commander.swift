@@ -43,19 +43,41 @@ final class CommanderLoop {
         }
         running = true
         task = Task { @MainActor in
-            let session = LanguageModelSession(instructions: """
-            You command a squad of six soldiers in a small arena. Another squad fights you. \
-            A giant snake may be hunting both squads. Decide the threat, the order and the \
-            personality weights for your soldiers from the state you are given. Be terse.
-            """)
+            // One session for the whole run, so the prefix (instructions, recent exchanges)
+            // stays in the model's cache — `usage.input.cachedTokenCount` shows how much.
+            // The context is 4096 tokens: when the transcript nears it, the session is
+            // rebuilt from a trimmed transcript (instructions + the last two exchanges).
+            var session = LanguageModelSession(instructions: Self.instructions)
             // Warm-up: the first call pays for loading; measured separately.
-            await self.call(session: session, state: worldState(), label: "warmup")
+            await self.call(session: &session, state: worldState(), label: "warmup")
             while self.running {
                 try? await Task.sleep(for: self.interval)
                 guard self.running else { break }
-                await self.call(session: session, state: worldState(), label: "call")
+                await self.call(session: &session, state: worldState(), label: "call")
             }
         }
+    }
+
+    static let instructions = """
+    You command a squad of six soldiers in a small arena. Another squad fights you. \
+    A giant snake may be hunting both squads. Decide the threat, the order and the \
+    personality weights for your soldiers from the state you are given. Be terse.
+    """
+    // The model's cache belongs to the session object (a rebuilt session starts at cached 0),
+    // and it is evicted somewhere above ~3000 tokens; an uncached prefill of 1.6–3.3k tokens
+    // dropped 9–25 frames, one of ~600 tokens dropped none. So: keep the session while the
+    // transcript is small, rebuild to instructions only before eviction, and pass what the
+    // commander needs to remember in the state text (the previous order).
+    static var contextBudget = 2000
+    static var keepExchanges = 0
+    private(set) var lastOrder: String = "none yet"
+
+    /// Instructions plus the last `keepExchanges` prompt/response pairs.
+    static func trimmed(_ t: Transcript, keepExchanges: Int = 2) -> Transcript {
+        var entries: [Transcript.Entry] = t.filter { if case .instructions = $0 { return true } else { return false } }
+        let tail = t.filter { if case .instructions = $0 { return false } else { return true } }
+        entries += tail.suffix(keepExchanges * 2)
+        return Transcript(entries: entries)
     }
 
     func stop() {
@@ -64,7 +86,7 @@ final class CommanderLoop {
         task = nil
     }
 
-    private func call(session: LanguageModelSession, state: String, label: String) async {
+    private func call(session: inout LanguageModelSession, state: String, label: String) async {
         let clock = ContinuousClock()
         Telemetry.shared.inferenceBegan()
         let start = clock.now
@@ -73,7 +95,21 @@ final class CommanderLoop {
             let elapsed = clock.now - start
             Telemetry.shared.inferenceEnded(seconds: elapsed, ok: true)
             let o = response.content
-            Telemetry.shared.note("\(label) \(fmt(elapsed)) \(o.threat.rawValue)/\(o.order.rawValue) a\(o.aggression) d\(o.discipline) p\(o.panic) \"\(o.callout)\"")
+            let u = response.usage
+            lastOrder = "\(o.threat.rawValue)/\(o.order.rawValue)"
+            Telemetry.shared.note("\(label) \(fmt(elapsed)) in \(u.input.totalTokenCount) tok (cached \(u.input.cachedTokenCount)) out \(u.output.totalTokenCount) \(o.threat.rawValue)/\(o.order.rawValue) a\(o.aggression) d\(o.discipline) p\(o.panic) \"\(o.callout)\"")
+            if u.input.totalTokenCount > Self.contextBudget {
+                session = LanguageModelSession(transcript: Self.trimmed(session.transcript, keepExchanges: Self.keepExchanges))
+            }
+        } catch let error as LanguageModelSession.GenerationError {
+            let elapsed = clock.now - start
+            Telemetry.shared.inferenceEnded(seconds: elapsed, ok: false)
+            if case .exceededContextWindowSize = error {
+                session = LanguageModelSession(transcript: Self.trimmed(session.transcript))
+                Telemetry.shared.note("\(label) context exceeded after \(fmt(elapsed)); session rebuilt")
+            } else {
+                Telemetry.shared.note("\(label) failed after \(fmt(elapsed)): \(error)")
+            }
         } catch {
             let elapsed = clock.now - start
             Telemetry.shared.inferenceEnded(seconds: elapsed, ok: false)

@@ -51,6 +51,7 @@ final class Telemetry {
     private var vsyncFrames = 0
     private var vsyncMaxThisSecond: Double = 0
     private var vsyncDroppedThisSecond = 0
+    private var inferFrameMaxThisSecond: Double = 0
     private var inferenceActive = false
     private var startDate = Date()
     private var csv: FileHandle?
@@ -75,6 +76,8 @@ final class Telemetry {
             vsyncFrames += 1
             vsyncMaxThisSecond = max(vsyncMaxThisSecond, d)
             if d > l.duration * 1000 * 1.5 { vsyncDroppedThisSecond += 1 }
+            // The worst display interval while an inference runs — the number NFR-PERF-030 asks for.
+            if inferenceActive { inferenceFrameMaxMs = max(inferenceFrameMaxMs, d); inferFrameMaxThisSecond = max(inferFrameMaxThisSecond, d) }
         }
         lastVsync = l.timestamp
     }
@@ -85,7 +88,6 @@ final class Telemetry {
         let ms = dt * 1000
         frameMaxThisSecond = max(frameMaxThisSecond, ms)
         if ms > 16.7 { slowThisSecond += 1 }
-        if inferenceActive { inferenceFrameMaxMs = max(inferenceFrameMaxMs, ms) }
         if secondAccum >= 1 {
             fps = Double(frames) / secondAccum
             frameMaxMs = frameMaxThisSecond
@@ -106,12 +108,12 @@ final class Telemetry {
             let row = String(format: "%d,%.1f,%.2f,%d,%.1f,%.2f,%d,%.3f,%.3f,%d,%d,%.3f,%.0f,%.0f,%.2f,%d,%@\n",
                              elapsed, fps, frameMaxMs, slowFrames, vsyncFps, vsyncMaxMs, vsyncDropped,
                              deliberationAvgMs, deliberationMaxMs, pathRequestsPerSecond, pathFailures, pathMaxMs,
-                             inferenceLastMs, inferenceMaxMs, inferenceFrameMaxMs, inferenceActive ? 1 : 0, thermal)
+                             inferenceLastMs, inferenceMaxMs, inferFrameMaxThisSecond, inferenceActive ? 1 : 0, thermal)
             csv?.write(row.data(using: .utf8)!)
             print("[spike] " + row, terminator: "")
             frames = 0; secondAccum = 0; frameMaxThisSecond = 0; slowThisSecond = 0
             delibSum = 0; delibMax = 0; delibCount = 0; pathRequests = 0; pathFails = 0; pathMaxThisSecond = 0
-            vsyncFrames = 0; vsyncMaxThisSecond = 0; vsyncDroppedThisSecond = 0
+            vsyncFrames = 0; vsyncMaxThisSecond = 0; vsyncDroppedThisSecond = 0; inferFrameMaxThisSecond = 0
         }
     }
 
@@ -138,6 +140,8 @@ final class Telemetry {
         inferenceCount += 1
         if !ok { inferenceFailures += 1 }
     }
+
+    func flush() { try? csv?.synchronize() }
 
     func note(_ s: String) {
         lastNote = s

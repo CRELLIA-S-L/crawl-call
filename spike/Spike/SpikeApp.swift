@@ -112,6 +112,7 @@ final class SpikeWorld {
             lines.append(String(format: "soldier %d squad %d at (%.0f, %.0f, %.0f) doing %@", i, i % 2, p.x, p.y, p.z, a))
         }
         lines.append("awareness: alarm — two soldiers vanished without a trace")
+        lines.append("your previous decision: \(commander.lastOrder)")
         return lines.joined(separator: "\n")
     }
 }
@@ -134,6 +135,9 @@ struct ContentView: View {
                     content.add(world.makeCamera())
                     content.camera = .virtual
                     content.cameraTarget = world.root
+                    if Autopilot.shared.configure(arguments: ProcessInfo.processInfo.arguments) {
+                        Autopilot.shared.start(world: world)
+                    }
                 } catch {
                     buildError = "\(error)"
                 }
@@ -142,7 +146,7 @@ struct ContentView: View {
             .ignoresSafeArea()
 
             hud
-            if !inspect { joystick }
+            if !inspect && !Autopilot.shared.enabled { joystick }
         }
     }
 

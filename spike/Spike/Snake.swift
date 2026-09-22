@@ -131,6 +131,7 @@ final class SnakeSystem: System {
     }
 
     private func step(head: Entity, snake s: inout SnakeComponent, dt: Float) {
+        Autopilot.shared.steer(headFoot: head.position - SIMD3<Float>(0, s.radius, 0), dt: dt)
         // Screen up is world -z, screen right is world +x for the fixed camera.
         let d = SnakeInput.shared.direction
         var move = SIMD3<Float>(d.x, 0, -d.y)
