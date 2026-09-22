@@ -350,6 +350,25 @@ When choosing which bot deliberates next, the system **shall** take the bot with
 **Rationale.** Concept §9.2: a bot in combat or near the snake gets a slot 3–4 times more often than one patrolling an empty floor; the same rule gives AI level-of-detail for free — distant bots think about once a second.
 The per-frame budget that bounds how many slots a frame hands out is NFR-PERF-020.
 
+### FR-BOT-165 — At most one path is computed per frame
+
+```yaml
+status: deferred
+verification: T
+derives_from: [FR-BOT-160, NFR-PERF-020]
+depends_on: [FR-MAP-020]
+refines: [FR-BOT-160]
+conflicts_with: []
+code: []
+tests: []
+created: 2026-09-22
+```
+
+When more than one bot needs a new path in the same frame, the system **shall** compute one path per frame in the order of the deliberation priority of FR-BOT-160 and leave the others on their current path until their turn.
+
+**Rationale.** Measured on the spike (`spike/README.md`): one A* path over a 48×32 grid costs 2–120 µs typically and up to ~1 ms for a far or unreachable target, so eight bots re-pathing in one frame — all fleeing the snake at once — cost 5 ms and the budget of NFR-PERF-020 is 0.5 ms.
+The budget is met by spreading the requests, not by a faster search; eight frames of latency for the last bot is 133 ms, under a deliberation period.
+
 ### FR-BOT-170 — Interrupts grant a slot at once
 
 ```yaml

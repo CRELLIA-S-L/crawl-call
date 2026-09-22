@@ -666,3 +666,27 @@ all_of: [H-020]
 FR-SNAKE-220 — A drop is a path, not a fall — is worth building only if H-020 holds.
 
 **Rationale.** Concept §16.2 H2: a refutation removes verticality, the spline on the navmesh and part of the map requirements.
+
+### B-560 — FR-CMD-025 stands on the commander making a visible difference
+
+```yaml
+status: active
+requirement: FR-CMD-025
+all_of: [H-040]
+```
+
+FR-CMD-025 — The commander's session stays small and cached — is worth building only if H-040 holds.
+
+**Rationale.** Concept §16.2 H4: a refutation removes all LLM tactics, leaving utility AI — a saving, not a loss.
+
+### B-570 — CON-CMD-010 stands on the commander making a visible difference
+
+```yaml
+status: active
+requirement: CON-CMD-010
+all_of: [H-040]
+```
+
+CON-CMD-010 — The system language model's context and cache — is worth building only if H-040 holds.
+
+**Rationale.** Concept §16.2 H4: a refutation removes all LLM tactics, leaving utility AI — a saving, not a loss.

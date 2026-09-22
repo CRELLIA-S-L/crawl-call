@@ -78,7 +78,7 @@ tests: []
 created: 2026-09-21
 ```
 
-When the game starts, the system **shall** read from the bot configuration — `config/bot.json` (ADR-0012) — per archetype its base personality weights, their allowed ranges, run speed, weapon damage and detection range; the override, interrupt and grouping distances; the hysteresis margin; the deliberation period and per-frame slot maximum; the collapse panic increment; and from the match configuration — `config/match.json` — the squad size, the archetypes eligible for the commander role, the commander interval, the truce switch and truce-break threshold, and the thermal degradation threshold and factor.
+When the game starts, the system **shall** read from the bot configuration — `config/bot.json` (ADR-0012) — per archetype its base personality weights, their allowed ranges, run speed, weapon damage and detection range; the override, interrupt and grouping distances; the hysteresis margin; the deliberation period and per-frame slot maximum; the collapse panic increment; and from the match configuration — `config/match.json` — the squad size, the archetypes eligible for the commander role, the commander interval, the truce switch and truce-break threshold, the commander session budget and state token budget, and the thermal degradation threshold and factor.
 
 **Rationale.** Concept §8 (base weights), §9.2 (thresholds, scheduling), §14 (squad size), §15 (degradation).
 Two files named in one requirement because they are read in the same act at the same moment; splitting the keys across two requirements would give a reader two places to look for one thing.
@@ -99,10 +99,11 @@ tests: []
 created: 2026-09-21
 ```
 
-When calling a commander, the system **shall** pass a structured world state from that squad's point of view carrying: its bots' positions, health, ammunition and roles; what the squad knows of the enemy; the squad's awareness state; the snake's last known position where awareness is not *calm*; the squad's current order; any pending truce proposal; and the events since the previous call.
+When calling a commander, the system **shall** pass a structured world state from that squad's point of view carrying: its bots' positions, health, ammunition and roles; what the squad knows of the enemy; the squad's awareness state; the snake's last known position where awareness is not *calm*; the squad's current order and the commander's previous decision; any pending truce proposal; and the events since the previous call — the whole state within the state token budget of the match configuration, 1000 tokens by default.
 
 **Rationale.** Concept §9.1: a compressed state from its own point of view — own positions, what is known of the enemy, where the snake is, what is happening.
 "From its own point of view" is the whole design: the commander is never told what it has not seen.
+The token budget follows from CON-CMD-010: eight soldiers, the snake, the awareness state and the previous decision measured 583 tokens with the instructions in the spike.
 
 ### IF-CMD-020 — Commander output
 

@@ -45,6 +45,25 @@ While a squad has a living role-holder, the system **shall** call its commander 
 **Rationale.** Concept §9.1: every 5–10 seconds, a compressed state from the squad's point of view.
 The interval stretches under thermal load (NFR-PERF-060), which is why it is configuration and not a constant.
 
+### FR-CMD-025 — The commander's session stays small and cached
+
+```yaml
+status: deferred
+verification: T
+derives_from: [FR-CMD-020, CON-CMD-010]
+depends_on: [IF-CMD-010]
+refines: [FR-CMD-020]
+conflicts_with: []
+code: []
+tests: []
+created: 2026-09-22
+```
+
+While a squad's commander is being called, the system **shall** keep one model session per commander, rebuilding it from its instructions alone before the transcript exceeds the session budget of the match configuration, and carrying the commander's previous decision to the next call inside the world state rather than in the transcript.
+
+**Rationale.** CON-CMD-010: a session that grows overflows the context and, before that, loses its cache and stalls the frame; a session rebuilt every call never benefits from the cache.
+Measured on the spike: with a 2000-token budget the calls stay at 2.2–2.6 s with no dropped frames after warm-up; the previous decision in the state keeps the commander's continuity at ~20 tokens instead of a transcript.
+
 ### FR-CMD-030 — The commander sets the threat priority
 
 ```yaml

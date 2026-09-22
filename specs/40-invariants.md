@@ -423,3 +423,22 @@ The project **shall** build with Xcode 27 and the iOS 27 / macOS 27 SDK, using n
 
 **Rationale.** The maintainer's decision of 2026-09-22: development is done in Xcode 27 and that version is the minimum supported one, so a contributor with Xcode 27 can always build.
 The concept named "Xcode 18" from independent sources without verification; the SDK the engine decision needs (ADR-0001) ships with Xcode 27.
+
+### CON-CMD-010 — The system language model's context and cache
+
+```yaml
+status: deferred
+verification: A
+derives_from: []
+depends_on: [NFR-PERF-080]
+refines: []
+conflicts_with: []
+code: []
+tests: []
+created: 2026-09-22
+```
+
+Every call to the system language model **shall** fit its instructions, transcript and prompt within the model's context window of 4096 tokens.
+
+**Rationale.** Measured in the spike on iOS 27.0 (`spike/README.md`): the context is 4096 tokens; a `LanguageModelSession` keeps every exchange, so a session called every 7 s with a ~540-token exchange overflows on the seventh call; the model's prefix cache belongs to the session object — a rebuilt session starts uncached — and is evicted above roughly 3000 tokens of transcript; an uncached prefill of 1.6–3.3 k tokens dropped 9–25 display frames, one of ~600 tokens dropped none.
+FR-CMD-025 says how the commander lives within this.

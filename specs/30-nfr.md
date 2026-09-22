@@ -46,6 +46,7 @@ created: 2026-09-21
 In any frame, the system **shall** hand out deliberation slots only while the frame's deliberation time is under 0.5 ms and the slot count is under the per-frame maximum of the bot configuration, deferring the rest to later frames.
 
 **Rationale.** Concept §9.2: a budget — as many bots as fit in ~0.5 ms or up to N — and graceful degradation under overload rather than a frame drop.
+A path computation is the one deliberation step that can exceed the budget by itself (about 1 ms worst on the spike's grid); FR-BOT-165 serialises those.
 
 ### NFR-PERF-030 — A commander inference does not break the frame budget
 
