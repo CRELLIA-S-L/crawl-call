@@ -27,4 +27,4 @@ Check 1 or 3 fails — option 2, at the cost of three days rather than six month
 
 Easier: no runtime bridges, one build, the editor (Reality Composer Pro 3) is Apple's.
 Harder: RealityKit 5 shipped in June 2026 and is absent from coding agents' training data, so SDK documentation is supplied to them by hand; the ecosystem is thin — no character controllers, no asset store, everything is written; profiling for games is weaker than Unity's; devices without Apple Intelligence are out (ADR-0015).
-Toolchain versions (Xcode 18 for the iOS 27 SDK) are reported by independent sources and not yet verified against Apple's documentation.
+The toolchain is Xcode 27 with the iOS 27 SDK, the minimum the project supports (CON-PUB-120); the concept's "Xcode 18" was a guess from independent sources, settled by the maintainer on 2026-09-22.

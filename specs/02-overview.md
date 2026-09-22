@@ -29,7 +29,7 @@ Greed is punished by the situation, not by rules.
 
 - **The technical spike has not been run.** Every stack decision assumes it passes. Three checks, two to three days: (1) a spline snake through `LowLevelMesh` crawling a navmesh with a vertical transition; (2) eight navmesh entities with utility-AI action choice, frame time measured on a real iPhone at the worst case; (3) one Foundation Models call in parallel with rendering — frame drop and heating. If (1) or (3) fails, the project moves to SwiftGodot.
 - RealityKit 5 shipped in June 2026 and is absent from the training data of coding agents; current SDK documentation has to be supplied to them by hand.
-- Toolchain versions (Xcode 18 for the iOS 27 SDK) were reported by independent sources and not verified against Apple's documentation.
+- Toolchain: Xcode 27 with the iOS 27 / macOS 27 SDK is the minimum supported version (CON-PUB-120); the concept's "Xcode 18" came from independent sources and was wrong.
 - Thermal throttling on iPhone shows only on sessions of 10–15 minutes and longer; every performance claim is measured on a real device over a long session.
 - App Store treats runtime-generated speech as user-generated content (guideline 1.2): bot speech passes a content filter set to the 13+ rating (ADR-0014).
 - The working title has not passed a trademark search (classes 9 and 41, EU first); it is used in the repository, code and identifiers only.

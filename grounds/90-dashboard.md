@@ -107,11 +107,11 @@ Counted by quarter, which is what `period` says in the register's configuration.
 
 | quarter | arrived unclaimed | areas |
 |---|---|---|
-| 2026-Q3 | 99 | BOT 19, MAP 10, PERF 4, PUB 11, SCORE 7, SNAKE 20, TOOL 14, VIEW 14 |
+| 2026-Q3 | 100 | BOT 19, MAP 10, PERF 4, PUB 12, SCORE 7, SNAKE 20, TOOL 14, VIEW 14 |
 
 ## Requirements resting on no hypothesis
 
-99 of 154 requirements. Weight is what stands on them: how many
+100 of 155 requirements. Weight is what stands on them: how many
 requirements link to them, plus how many files their `code` field names.
 
 | Requirement | Incoming | Code files | Weight |
@@ -128,12 +128,12 @@ requirements link to them, plus how many files their `code` field names.
 | IF-MAP-020 | 4 | 0 | 4 |
 | IF-VIEW-010 | 4 | 0 | 4 |
 | IF-VIEW-020 | 4 | 0 | 4 |
+| CON-PUB-010 | 3 | 0 | 3 |
 | FR-BOT-150 | 3 | 0 | 3 |
 | FR-MAP-020 | 3 | 0 | 3 |
 | IF-BOT-010 | 3 | 0 | 3 |
 | NFR-PERF-010 | 3 | 0 | 3 |
 | NFR-PERF-050 | 3 | 0 | 3 |
-| CON-PUB-010 | 2 | 0 | 2 |
 | CON-PUB-020 | 2 | 0 | 2 |
 | CON-PUB-060 | 2 | 0 | 2 |
 | CON-PUB-070 | 2 | 0 | 2 |
@@ -171,6 +171,7 @@ requirements link to them, plus how many files their `code` field names.
 | CON-PUB-090 | 0 | 0 | 0 |
 | CON-PUB-100 | 0 | 0 | 0 |
 | CON-PUB-110 | 0 | 0 | 0 |
+| CON-PUB-120 | 0 | 0 | 0 |
 | FR-BOT-105 | 0 | 0 | 0 |
 | FR-BOT-130 | 0 | 0 | 0 |
 | FR-BOT-140 | 0 | 0 | 0 |

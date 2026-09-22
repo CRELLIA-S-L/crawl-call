@@ -404,3 +404,22 @@ The App Store listing **shall** name the company as seller and trader, with the 
 
 **Rationale.** Concept §17.5: under the Digital Services Act Apple shows a paid app's trader details publicly; for a company those are business details, not the developer's home address.
 Registering as an organisation needs a D-U-N-S number, which takes time and is started early; the Team ID then belongs to the company.
+
+### CON-PUB-120 — Xcode 27 is the minimum toolchain
+
+```yaml
+status: deferred
+verification: I
+derives_from: [CON-PUB-010]
+depends_on: []
+refines: []
+conflicts_with: []
+code: []
+tests: []
+created: 2026-09-22
+```
+
+The project **shall** build with Xcode 27 and the iOS 27 / macOS 27 SDK, using nothing a newer Xcode alone provides.
+
+**Rationale.** The maintainer's decision of 2026-09-22: development is done in Xcode 27 and that version is the minimum supported one, so a contributor with Xcode 27 can always build.
+The concept named "Xcode 18" from independent sources without verification; the SDK the engine decision needs (ADR-0001) ships with Xcode 27.
