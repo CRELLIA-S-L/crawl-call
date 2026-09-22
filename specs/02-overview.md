@@ -18,7 +18,7 @@ Greed is punished by the situation, not by rules.
 
 ## 2.3 Operating environment
 
-- Platforms: iOS 27+ / macOS 27+ on Apple silicon; devices older than iOS 27 are out.
+- Platforms: iOS 27+ / macOS 27+ on devices with Apple Intelligence — iPhone 15 Pro and later, Apple silicon Macs (ADR-0015); everything older is out.
 - Engine: RealityKit 5 (iOS 27 / macOS 27 SDK) — navigation mesh pathfinding, ECS, `LowLevelMesh` for the per-frame tail mesh.
 - On-device language model: the system Foundation Models (AFM 3 Core, 3B) via guided generation; a custom Core AI model only if measurements force it.
 - Level editor: Reality Composer Pro 3.
@@ -31,5 +31,5 @@ Greed is punished by the situation, not by rules.
 - RealityKit 5 shipped in June 2026 and is absent from the training data of coding agents; current SDK documentation has to be supplied to them by hand.
 - Toolchain versions (Xcode 18 for the iOS 27 SDK) were reported by independent sources and not verified against Apple's documentation.
 - Thermal throttling on iPhone shows only on sessions of 10–15 minutes and longer; every performance claim is measured on a real device over a long session.
-- App Store treats runtime-generated speech as user-generated content (guideline 1.2): bot speech needs filtering and a deliberate age-rating decision.
+- App Store treats runtime-generated speech as user-generated content (guideline 1.2): bot speech passes a content filter set to the 13+ rating (ADR-0014).
 - The working title has not passed a trademark search (classes 9 and 41, EU first); it is used in the repository, code and identifiers only.

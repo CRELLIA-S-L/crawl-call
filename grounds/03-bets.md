@@ -654,3 +654,15 @@ all_of: [H-040]
 NFR-PERF-055 — Commander latency holds over a long session — is worth building only if H-040 holds.
 
 **Rationale.** Concept §16.2 H4: a refutation removes all LLM tactics, leaving utility AI — a saving, not a loss.
+
+### B-550 — FR-SNAKE-220 stands on verticality mattering
+
+```yaml
+status: active
+requirement: FR-SNAKE-220
+all_of: [H-020]
+```
+
+FR-SNAKE-220 — A drop is a path, not a fall — is worth building only if H-020 holds.
+
+**Rationale.** Concept §16.2 H2: a refutation removes verticality, the spline on the navmesh and part of the map requirements.

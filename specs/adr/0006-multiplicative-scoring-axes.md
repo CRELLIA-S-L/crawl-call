@@ -23,4 +23,4 @@ Points come from eating, never from a death (INV-SCORE-010); a body scores at a 
 ### Consequences
 
 Every axis needs its own observable input: witnessing (FR-SCORE-070), a definition of the leading squad (FR-SCORE-040), the role-holder (FR-BOT-040).
-Whether pure stealth needs a counterweight — a decaying multiplier or a timer — is Q-060.
+There is no artificial counterweight to stealth; the erosion of cover while the snake waits is the pressure (ADR-0010).

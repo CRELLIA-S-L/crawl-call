@@ -4,7 +4,7 @@
 Every statement still needs a measurable bound: “within 200 ms”, not “fast”.
 
 Source: concept §15 (thermal budget), §9.2 (time-based scheduling), the technical spike in the preamble, the maintainer's decision of 2026-09-21 on the frame rate.
-**Baseline device**: the oldest iPhone that runs iOS 27.
+**Baseline device**: the iPhone 15 Pro — the oldest iPhone that runs the system language model (ADR-0015).
 Every number below is measured on it, in a 4v4 match, on the device and never in the simulator (concept §15).
 
 ## Frame time
@@ -27,6 +27,7 @@ While a 4v4 match is running on the baseline device, the system **shall** render
 
 **Rationale.** The concept sets no target; the maintainer chose 60 on 2026-09-21 because the concept's 0.5 ms deliberation budget was sized for it and because the reference games' readability depends on smooth motion.
 "Cold" — the first five minutes — separates this from the thermal requirement NFR-PERF-050.
+The number is the maintainer's decision of 2026-09-21, not the concept's, and is revisited after the spike's second check.
 
 ### NFR-PERF-020 — Deliberation costs at most 0.5 ms per frame
 

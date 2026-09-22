@@ -213,3 +213,24 @@ While the snake moves, the system **shall** deform its body — flattening in a 
 
 **Rationale.** Concept §2: squash and stretch is the snake's home ground.
 Three deformations, one continuous act of drawing the body; a test of "the body deforms" that checked only one would not be this requirement.
+
+## Interface
+
+### FR-VIEW-120 — The HUD is drawn in the diorama style
+
+```yaml
+status: draft
+verification: I
+derives_from: []
+depends_on: [IF-VIEW-010]
+refines: []
+conflicts_with: []
+code: []
+tests: []
+created: 2026-09-21
+```
+
+Every HUD element **shall** be drawn as a rounded, light-coloured plate carrying a bold rounded typeface or an icon legible at phone size, with no slanted, bevelled or military-styled plate anywhere in the interface.
+
+**Rationale.** Concept §2: the interface in the same aesthetic as the world — rounded light plates, a bold rounded typeface, large readable icons; a military HUD with slanted plates argues with the style (ADR-0002).
+Inspected against these four properties; a separate style guide was considered and not written, since the properties are the guide (Q-160, closed 2026-09-21).

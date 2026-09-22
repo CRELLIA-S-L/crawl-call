@@ -120,6 +120,25 @@ The system **shall not** change the score on any event other than the snake fini
 **Rationale.** Concept §6: a bot killed by the enemy squad brings the snake nothing by itself; specific trick bonuses were rejected because they get farmed (ADR-0006).
 Watching is useful, doing nothing is not.
 
+### INV-SCORE-020 — A body stays until the snake consumes it
+
+```yaml
+status: draft
+verification: T
+derives_from: []
+depends_on: [FR-SCORE-110, INV-BOT-020]
+refines: []
+conflicts_with: []
+code: []
+tests: []
+created: 2026-09-21
+```
+
+The system **shall not** remove a body from the map by any means other than the snake consuming it.
+
+**Rationale.** ADR-0013: decay would make a rotted body look, to FR-SCORE-125, like one the snake ate, and would let evidence fade; a body is map state for the whole match.
+INV-BOT-020 says squads do not move bodies; this says nothing else does either.
+
 ### INV-MAP-010 — The load-bearing frame never breaks
 
 ```yaml
@@ -173,10 +192,10 @@ tests: []
 created: 2026-09-21
 ```
 
-The game **shall** target iOS 27 and macOS 27 or later, on Apple silicon, from one code base.
+The game **shall** target iOS 27 and macOS 27 or later on devices that support Apple Intelligence — iPhone 15 Pro and later, Apple silicon Macs — from one code base.
 
 **Rationale.** Concept preamble and §10: iOS 27+ / macOS 27+, one build for every Apple platform; iPhone is the primary target, the Mac the development environment (concept §15).
-Older devices are out, knowingly.
+Older devices are out, knowingly; the line sits at the iPhone 15 Pro rather than at iOS 27's own floor because the system language model is not available below it (ADR-0015).
 
 ### CON-PUB-020 — Source under the MIT licence
 
@@ -305,10 +324,10 @@ tests: []
 created: 2026-09-21
 ```
 
-The game **shall** meet App Store guideline 1.2 for content generated at run time: a filter before display and an age rating that accounts for generated speech.
+The game **shall** be submitted at the 13+ age rating with the user-generated-content capability declared, every generated line having passed the content filter before display.
 
 **Rationale.** Concept §14: the App Store treats real-time generated content as user-generated.
-The filter is FR-CMD-160; the rating is Q-110.
+The filter is FR-CMD-160; the rating and what the filter rejects are ADR-0014.
 
 ### CON-PUB-090 — The working title is not the released name
 

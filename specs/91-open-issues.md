@@ -5,101 +5,19 @@ Each entry states what diverged, where it was found, and what decision is needed
 Entries are removed once the maintainer decides which side is right and the fix lands.
 
 Entries are numbered `Q-NNN` in tens so that a requirement's rationale can name one; a number is never reused.
-Where the concept (`materials/concept/concept-v0.11.md`) gives a working default, the specification uses it and the entry says so — the question is still open, the work is not blocked.
-Concept §14 lists twelve questions; all are here — the end of a match and a squad wiped out share Q-050 — together with what the decomposition of 2026-09-21 found the concept silent on.
-
-### Q-010 — What kills the snake, and what is its "health"?
-
-- **Found:** decomposing concept §5 into FR-SNAKE-070 (damage removes segments), FR-SNAKE-170 (medic heals "health"), FR-SNAKE-180 (armour reduces "damage").
-- **What diverged:** the concept takes damage in segments off the tail and never says what happens when no segments remain, whether the head has its own health, or what the medic's ability restores.
-- **Decision needed:** one model — (a) head health points, tail segments as a buffer shot off first, snake dies at zero head health; (b) no separate health, the snake dies when a hit lands with no segments left; (c) the snake cannot die and the match ends by score or timer (see Q-050). The choice rewrites the three requirements above and adds one for death.
-
-### Q-020 — Squad size
-
-- **Found:** concept §14; FR-BOT-020 uses four per squad, the concept's "start with 4v4", from the match configuration.
-- **What diverged:** 4v4, 5v5 or 6v6 affects the performance budget (NFR-PERF-010, NFR-PERF-050), heat and the readability of the fight.
-- **Decision needed:** the final size, after the spike and the first thermal measurements. Not blocking: it is one number in configuration.
-
-### Q-030 — Reinforcements
-
-- **Found:** concept §14.
-- **What diverged:** without reinforcements the war is finite and the match ends when prey runs out; with them a source and a limiter are needed, and FR-BOT-020 gains a sibling.
-- **Decision needed:** whether reinforcements exist, and if so from where and capped how. Tied to Q-050.
-
-### Q-040 — The tail on a long drop
-
-- **Found:** concept §14; FR-MAP-090 admits gaps up to a tolerance and says nothing about height.
-- **What diverged:** whether the tail stretches, breaks or takes damage when the head drops from a height, and whether a drop is a vertical transition FR-SNAKE-010 allows at any height.
-- **Decision needed:** the rule; the spike's first check (a drop from a balcony) is where it will be seen first.
-
-### Q-050 — How a match ends
-
-- **Found:** concept §14; no requirement states an end condition.
-- **What diverged:** extermination of both squads, a timer, a score threshold — and what happens when one squad is wiped out entirely: does the match continue against the survivors or end. With two squads "prey ran out" happens by itself and may happen too early.
-- **Decision needed:** the end condition and the one-squad-left rule. Blocks a requirement in the SCORE area; nothing else waits on it.
-
-### Q-060 — A counterweight to pure stealth
-
-- **Found:** concept §14; ADR-0006.
-- **What diverged:** nothing stops the optimal strategy from being twenty minutes in a corner. The concept offers a decaying multiplier for inaction or timer pressure.
-- **Decision needed:** whether a counterweight exists and which. This is the one §14 question the concept itself marks as a hypothesis about player behaviour rather than a design choice; if it is written down, it is the maintainer's to write in the grounds register.
-
-### Q-070 — Do bodies decay?
-
-- **Found:** concept §14; FR-SCORE-130 makes awareness monotonic on that assumption.
-- **What diverged:** a body that decays removes the evidence and makes "leave it and go" a full third strategy; it would also allow awareness to fall, which FR-SCORE-130 forbids.
-- **Decision needed:** decay or not; if yes, the timing and whether awareness can drop.
-
-### Q-080 — Awareness from destruction nobody did
-
-- **Found:** concept §14.
-- **What diverged:** a squad might suspect the snake from cover destroyed by neither side — a potential fourth source of awareness beside witnesses, inspected bodies and vanished bodies (FR-SCORE-090, FR-SCORE-120, FR-SCORE-125).
-- **Decision needed:** whether to add it. Not blocking.
-
-### Q-090 — A ceiling on abilities carried
-
-- **Found:** concept §14; FR-SNAKE-110 attaches one ability per consumed bot, FR-SNAKE-120 consumes them on use.
-- **What diverged:** at great length a snake may hold too many abilities; the concept asks whether a cap beyond one-per-segment is needed.
-- **Decision needed:** cap or no cap; the number if yes.
-
-### Q-100 — Is the commander an archetype or a role?
-
-- **Found:** concept §14; FR-BOT-040 designates one bot per squad, FR-VIEW-070 makes archetypes readable by silhouette.
-- **What diverged:** a seventh silhouette makes the commander easy to spot and eat; a role on any bot makes finding him part of the hunt. INV-BOT-030's "six" and FR-BOT-010 change under the first option.
-- **Decision needed:** which; and if a role, whether it is visible at all.
-
-### Q-110 — Age rating and speech moderation
-
-- **Found:** concept §14; CON-PUB-080, FR-CMD-160.
-- **What diverged:** the App Store treats generated speech as user-generated content (guideline 1.2); the filter is specified, the rating is not, and the filter's strictness follows from the rating.
-- **Decision needed:** the target age rating, which sets what the filter rejects.
+Sixteen questions were opened on 2026-09-21 by the decomposition of the concept and fourteen were settled the same day; each settlement is an ADR, so a closed number is found by searching `specs/adr/` for it: Q-010 and Q-090 in ADR-0009, Q-020 and Q-030 and Q-050 and Q-060 in ADR-0010, Q-070 and Q-080 in ADR-0013, Q-100 in ADR-0011, Q-110 in ADR-0014, Q-130 in ADR-0012, Q-150 in ADR-0015; Q-040 became FR-SNAKE-220, Q-140 a sentence in NFR-PERF-010's rationale and Q-160 FR-VIEW-120.
+What remains is what a decision inside the repository cannot close.
 
 ### Q-120 — The final name
 
 - **Found:** concept §14, §17.6; CON-PUB-090.
-- **What diverged:** "Chomp Company" is a working title; "Chomp" is taken in apps (a children's app, a Google Play game, a UK studio). A professional trademark search in classes 9 and 41, EU first, decides.
-- **Decision needed:** commission the search; then the name. Not blocking anything in the repository.
+- **What diverged:** "Chomp Company" is a working title; "Chomp" is taken in apps (a children's app, a Google Play game, a UK studio).
+- **Decided:** a professional trademark search in classes 9 and 41, EU first, is commissioned before any public announcement, and the name becomes final only if it clears; until then the working title appears nowhere outside the repository (CON-PUB-090). Registration, if it clears, is by the company (ADR-0007).
+- **Still needed:** the search itself — an action outside the repository. The entry closes when the result is recorded here.
 
-### Q-130 — The grammar of the configuration and map files
+### Q-170 — A hypothesis on bounded waiting, for the maintainer to write
 
-- **Found:** IF-SNAKE-010, IF-BOT-010, IF-SCORE-010, IF-MAP-010, IF-MAP-020, IF-CMD-030 name what each file carries and not how it is spelled.
-- **What diverged:** the concept says "an ASCII grid per floor" and "a separate config" and no more; the file formats, the kit legend, and whether the configurations are one file or several are undecided.
-- **Decision needed:** a format — the specification's requirements would then gain a `refines` each. A plausible default is one JSON file per interface and a plain-text grid for maps; not blocking until code starts.
-
-### Q-140 — Target frame rate is a decision of 2026-09-21, not the concept's
-
-- **Found:** NFR-PERF-010, NFR-PERF-050.
-- **What diverged:** the concept names no frame rate; the maintainer chose 60 fps on the baseline device when the decomposition began. Recorded here so that the number is known to be a decision and not a derivation, and revisited after the spike's second check.
-- **Decision needed:** none now; confirm or lower after the first measurement on the device.
-
-### Q-150 — The baseline device
-
-- **Found:** `30-nfr.md` defines it as "the oldest iPhone that runs iOS 27".
-- **What diverged:** the concept says "a real iPhone" and never which; every performance number depends on the answer.
-- **Decision needed:** name the device model the numbers are measured on.
-
-### Q-160 — The interface style guide
-
-- **Found:** concept §2 asks for an interface in the diorama aesthetic — rounded light plates, a bold rounded typeface, large icons — and rejects a military HUD; no requirement covers it because "in the same aesthetic" is not verifiable without a style guide to inspect against.
-- **What diverged:** the requirement is absent, not wrong.
-- **Decision needed:** whether a style guide is written (then a `FR-VIEW` requirement with verification `I` against it) or the HUD stays a design matter outside the specification.
+- **Found:** ADR-0010 declines an artificial counterweight to stealth and relies on cover erosion (concept §7) to bound how long a player waits.
+- **What diverged:** whether waiting stays bounded in play is a claim about players, and the grounds register's standard reserves writing a hypothesis — population, threshold, owner — to the person who will measure it.
+- **Proposed text, not written:** *H-060 — Waiting stays bounded without a timer.* Class III; population: playtesters of the stage-3 build; refuted if `proportion > 0.40 at n >= 5` of sessions contain a single stretch of inaction longer than three minutes while prey is reachable; expires with the stage-3 playtest; impact: if refuted, ADR-0010 gains the decaying multiplier it declined.
+- **Still needed:** the maintainer writes it into `grounds/10-h-mechanics.md`, or declines it and says so here.

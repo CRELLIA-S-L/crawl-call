@@ -5,7 +5,7 @@ Same requirement format as everywhere; the subject is the interface contract, no
 
 Source: concept §7 (parameters in a separate config), §9.1 (structured commander output), §11.2 (the map as a text file), §3 (the input abstraction).
 Configurations are the concept's "numbers to be tuned experimentally": each is a file the game reads at start, so that tuning is a diff and not a rebuild.
-The exact grammar of each file is not in the concept and is Q-130; the requirements below fix what a file must carry, not how it spells it.
+The files are JSON, one per interface, and the map a text file with a grid per floor (ADR-0012); the requirements below fix what each carries.
 
 ## Configuration files
 
@@ -23,7 +23,7 @@ tests: []
 created: 2026-09-21
 ```
 
-When the game starts, the system **shall** read from the snake configuration: the base speed; segments gained per archetype consumed; damage per segment; the body and live-prey eating durations; and per ability its speed, factor, amount or duration as FR-SNAKE-130 to FR-SNAKE-190 name them.
+When the game starts, the system **shall** read from the snake configuration — the JSON file `config/snake.json` (ADR-0012) — the base speed; the starting segment count; segments gained per archetype consumed; segments regrown by the medic ability; damage per segment; the body and live-prey eating durations; and per ability its speed, factor, amount or duration as FR-SNAKE-130 to FR-SNAKE-190 name them.
 
 **Rationale.** Concept §12: the final feel — snake speed, reaction distances, thresholds — stays with the human, and the agent takes corrections as numbers (§11.2).
 One act — reading one file — over an enumerated set of keys.
@@ -42,7 +42,7 @@ tests: []
 created: 2026-09-21
 ```
 
-When the game starts, the system **shall** read from the tuning configuration: the damage thresholds of each module type per state; the destruction damage of each bot weapon and its destruction ammunition; the destruction damage of the snake's body per segment of length; the trap width, trap length and tail-gap tolerance.
+When the game starts, the system **shall** read from the tuning configuration — the JSON file `config/tuning.json` (ADR-0012) — the damage thresholds of each module type per state; the destruction damage of each bot weapon and its destruction ammunition; the destruction damage of the snake's body per segment of length; the trap width, trap length and tail-gap tolerance; the maximum drop height.
 
 **Rationale.** Concept §7: strength thresholds by module type, damage by source, the destroying weapons' ammunition, the snake's weight — all in a separate config, tuned experimentally; the risk it guards against is a map turned to wasteland by mid-match.
 
@@ -60,7 +60,7 @@ tests: []
 created: 2026-09-21
 ```
 
-When the game starts, the system **shall** read from the scoring configuration: the body and live-prey base values; the stealth multipliers for open, hidden and perfect; the balance multiplier; the target-value multipliers for commander, heavy and medic; the witness window, the late-arrival window, the report delay and the inspection distance.
+When the game starts, the system **shall** read from the scoring configuration — the JSON file `config/scoring.json` (ADR-0012) — the body and live-prey base values; the stealth multipliers for open, hidden and perfect; the balance multiplier; the target-value multipliers for commander, heavy and medic; the witness window, the late-arrival window, the report delay and the inspection distance.
 
 **Rationale.** Concept §6: the axes are the design; their weights are tuning.
 
@@ -78,7 +78,7 @@ tests: []
 created: 2026-09-21
 ```
 
-When the game starts, the system **shall** read from the bot configuration: per archetype its base personality weights, their allowed ranges, run speed, weapon damage and detection range; the override, interrupt and grouping distances; the hysteresis margin; the deliberation period and per-frame slot maximum; the collapse panic increment; and from the match configuration the squad size, the commander interval, the truce switch and truce-break threshold, and the thermal degradation threshold and factor.
+When the game starts, the system **shall** read from the bot configuration — `config/bot.json` (ADR-0012) — per archetype its base personality weights, their allowed ranges, run speed, weapon damage and detection range; the override, interrupt and grouping distances; the hysteresis margin; the deliberation period and per-frame slot maximum; the collapse panic increment; and from the match configuration — `config/match.json` — the squad size, the archetypes eligible for the commander role, the commander interval, the truce switch and truce-break threshold, and the thermal degradation threshold and factor.
 
 **Rationale.** Concept §8 (base weights), §9.2 (thresholds, scheduling), §14 (squad size), §15 (degradation).
 Two files named in one requirement because they are read in the same act at the same moment; splitting the keys across two requirements would give a reader two places to look for one thing.
@@ -137,7 +137,7 @@ tests: []
 created: 2026-09-21
 ```
 
-When the game starts, the system **shall** read from the speech configuration: the list of speech events; the rate cap and queue length; and the pre-written line set with at least one line per event.
+When the game starts, the system **shall** read from the speech configuration — the JSON file `config/speech.json` (ADR-0012) — the list of speech events, "order issued" among them; the rate cap and queue length; and the pre-written line set with at least one line per event.
 
 **Rationale.** Concept §15: the frequency ceiling, the queue, the pre-generated set for degradation; FR-CMD-160 needs a fallback line for every event the filter can reject.
 
@@ -157,10 +157,10 @@ tests: []
 created: 2026-09-21
 ```
 
-A map **shall** be described by one text file holding, per floor, a character grid in which each cell names a module of the kit or empty space, plus the transitions between floors and the module kit it is built from.
+A map **shall** be described by one UTF-8 text file holding a header that names the module kit and the transitions between floors, followed by one character grid per floor in which each cell names a module of the kit, by the kit's legend, or empty space.
 
 **Rationale.** Concept §11.2: "translated into a text specification — an ASCII grid per floor"; the map lives in a text file so that iterations are seconds and versions go into git.
-Which characters mean which modules is the kit's legend and part of Q-130.
+Which characters mean which modules is the kit's own `legend.json` (ADR-0012), so that a map and its kit cannot disagree.
 
 ## Input
 
@@ -197,6 +197,6 @@ tests: []
 created: 2026-09-21
 ```
 
-When the game starts, the system **shall** read from the view configuration: the camera pitch within the range FR-VIEW-010 allows; the central region the head is kept in; the straggler distance; and the visible-panic threshold.
+When the game starts, the system **shall** read from the view configuration — the JSON file `config/view.json` (ADR-0012) — the camera pitch within the range FR-VIEW-010 allows; the central region the head is kept in; the straggler distance; and the visible-panic threshold.
 
 **Rationale.** The three VIEW requirements that name a number name it here; the camera pitch is a number the maintainer settles by eye (concept §12), inside the range the concept fixes.

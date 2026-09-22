@@ -42,7 +42,7 @@ created: 2026-09-21
 When a match starts, the system **shall** spawn two squads hostile to each other, each with the number of bots the match configuration sets, four by default.
 
 **Rationale.** Concept §1: two warring squads are the strategic layer; §14: start with 4v4 because of thermal budget and readability.
-The final squad size is Q-020; whether reinforcements arrive is Q-030.
+Four per squad is the size of the vertical slice and there are no reinforcements (ADR-0010).
 
 ### FR-BOT-030 — Archetype sets base personality weights
 
@@ -77,10 +77,10 @@ tests: []
 created: 2026-09-21
 ```
 
-When a match starts, the system **shall** designate exactly one bot in each squad as the holder of the commander role.
+When a match starts, the system **shall** designate exactly one bot in each squad, of any archetype the match configuration allows, as the holder of the commander role, without marking it visually.
 
 **Rationale.** Concept §9.4 and §14: eating the bot that holds the role collapses the squad (FR-CMD-120), and it is the player's main lever on the balance of the war.
-Whether the role is its own archetype or is assigned to any bot is Q-100; this requirement holds either way.
+A role rather than a seventh archetype, and no marker: the role-holder is found by listening — he is the one who speaks the orders (ADR-0011, FR-CMD-140).
 
 ## Perception and fire
 

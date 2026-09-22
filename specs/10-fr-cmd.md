@@ -311,10 +311,10 @@ tests: []
 created: 2026-09-21
 ```
 
-When a speech event of the speech configuration occurs for a bot — among them witnessing an eating, a squadmate vanishing, a truce being proposed or broken, the enemy being blamed, a body being found — the system **shall** generate and play a line for that bot from the event and the bot's current weights.
+When a speech event of the speech configuration occurs for a bot — among them an order issued, spoken by the role-holder; witnessing an eating; a squadmate vanishing; a truce being proposed or broken; the enemy being blamed; a body being found — the system **shall** generate and play a line for that bot from the event and the bot's current weights.
 
 **Rationale.** Concept §1: the voices are what sells the game; §13 stage 5 lists the material two squads add — cross-squad bickering, truce offers aloud, accusations that the enemy "set that thing on us".
-The event list lives in configuration because the concept's list is illustrative, not closed.
+The event list lives in configuration because the concept's list is illustrative, not closed; "order issued" is the one event that must be there, because it is how the player finds the commander (ADR-0011).
 
 ### FR-CMD-150 — Speech is rate-limited and queued
 
@@ -349,7 +349,7 @@ tests: []
 created: 2026-09-21
 ```
 
-When a line has been generated, the system **shall** pass it through the content filter before playing it and replace a line the filter rejects with a pre-written line for the same event.
+When a line has been generated, the system **shall** pass it through the content filter set to the 13+ rating of ADR-0014 before playing it, replacing a line the filter rejects with a pre-written line for the same event.
 
-**Rationale.** Concept §14: App Store guideline 1.2 treats real-time generated content as user-generated — filtering is required, and the age rating is a deliberate decision (Q-110).
+**Rationale.** Concept §14: App Store guideline 1.2 treats real-time generated content as user-generated — filtering is required, and the rating that sets its strictness is ADR-0014.
 Replacement rather than silence: a bot that says nothing at the moment it was eaten is the one bug the player will notice.

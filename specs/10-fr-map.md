@@ -177,7 +177,7 @@ created: 2026-09-21
 
 Every map **shall** present, along every navigation-mesh path, a continuous surface for the tail to rest on, with no gap wider than the tail-gap tolerance of the tuning configuration.
 
-**Rationale.** Concept §11: "solid surfaces for the tail" is the first requirement a snake map has and a shooter map does not; the tolerance is what a jump across a gap needs, and what happens to the tail on a long drop is Q-040.
+**Rationale.** Concept §11: "solid surfaces for the tail" is the first requirement a snake map has and a shooter map does not; the tolerance is what a jump across a gap needs; a drop is FR-SNAKE-220.
 
 ## Modular kits
 

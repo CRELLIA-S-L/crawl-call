@@ -271,4 +271,43 @@ created: 2026-09-21
 The system **shall** keep for each squad one awareness state — *calm*, *alarm* or *confirmed* — starting at *calm* and moving only upward within a match.
 
 **Rationale.** Concept §6.3: a state instead of a boolean, fed to the commander (FR-CMD-070) and read by deliberation (FR-BOT-180, FR-BOT-190).
-Monotonic because nothing in the concept lowers it; whether bodies decay and evidence fades is Q-070 and would change this.
+Monotonic because nothing lowers it: bodies do not decay (ADR-0013), so evidence never fades within a match.
+
+## End of a match
+
+### FR-SCORE-140 — The match ends when the snake dies
+
+```yaml
+status: draft
+verification: T
+derives_from: []
+depends_on: [FR-SNAKE-210]
+refines: []
+conflicts_with: []
+code: []
+tests: []
+created: 2026-09-21
+```
+
+When the snake dies, the system **shall** end the match with the score accumulated so far as its result.
+
+**Rationale.** ADR-0010: the score is the result, not the goal.
+No timer and no score threshold end a match; the only two ends are this one and FR-SCORE-150.
+
+### FR-SCORE-150 — The match ends when no bot is left
+
+```yaml
+status: draft
+verification: T
+derives_from: []
+depends_on: [FR-BOT-020]
+refines: []
+conflicts_with: []
+code: []
+tests: []
+created: 2026-09-21
+```
+
+When the last living bot of either squad dies or is consumed, the system **shall** end the match with the score accumulated so far as its result.
+
+**Rationale.** ADR-0010: prey is finite and there are no reinforcements; a wiped-out squad does not end the match — the other one is still there — and the arena being empty does.

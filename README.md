@@ -2,7 +2,7 @@
 
 Working title. A predator snake in a shooter arena: the classic snake, moved into a three-dimensional multi-level arena where two squads of bots wage war on each other — and the snake hunts them both.
 
-iOS 27+ / macOS 27+ (Apple silicon), iPhone first. Pre-production; the technical spike is not yet run.
+iOS 27+ / macOS 27+ on devices with Apple Intelligence (iPhone 15 Pro and later, Apple silicon Macs), iPhone first. Pre-production; the technical spike is not yet run.
 
 | Where | What |
 |---|---|

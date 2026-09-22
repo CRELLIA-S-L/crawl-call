@@ -42,8 +42,8 @@ The convention of this project:
 | **squad collapse** | What happens when the bot holding the commander role is eaten: coordination ends, the last known weights stay, panic rises, any truce lapses. |
 | **role-holder** | The bot of a squad that currently holds the commander role (FR-BOT-040). Eating or killing it collapses the squad. |
 | **deliberation slot** | One turn of the utility-AI layer for one bot. Handed out on a fixed step, by priority, within a per-frame budget; an interrupt grants one at once. |
-| **baseline device** | The oldest iPhone that runs iOS 27 — the device every performance number is measured on (see Q-150). |
-| **configuration** | A file read at start that carries tuning numbers: the *snake*, *bot*, *match*, *scoring*, *tuning* (destruction and maps), *speech* and *view* configurations, each an `IF-*` requirement. Their spelling is Q-130. |
+| **baseline device** | The iPhone 15 Pro — the oldest iPhone that runs the system language model, and the device every performance number is measured on (ADR-0015). |
+| **configuration** | A file read at start that carries tuning numbers: the *snake*, *bot*, *match*, *scoring*, *tuning* (destruction and maps), *speech* and *view* configurations, each an `IF-*` requirement. JSON, one file per interface under `config/` (ADR-0012). |
 | **trap width / trap length** | The corridor width, and the snake length, at which a snake locks itself in (FR-MAP-080); both in the tuning configuration. |
 | **inspection distance** | How close a bot must come to a body to read its cause of death (FR-SCORE-120); in the scoring configuration. |
 | **override distance** | How close the snake's head must be for a bot to treat it as the top threat regardless of orders (FR-BOT-120); in the bot configuration. |

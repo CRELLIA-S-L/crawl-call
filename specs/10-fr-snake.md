@@ -142,7 +142,7 @@ created: 2026-09-21
 When the snake takes damage, the system **shall** remove segments from the end of the tail, the number being the damage divided by the damage-per-segment value of the snake configuration, rounded down.
 
 **Rationale.** Concept §5: damage shoots the tail off from the end, so losing length is losing concrete abilities, and shooting at the tail is a meaningful thing for a bot to do.
-What happens when the tail has no segments left is not in the concept — see Q-010 in `91-open-issues.md`.
+What happens when the tail has no segments left is FR-SNAKE-210 (ADR-0009).
 
 ### FR-SNAKE-080 — A removed segment takes its ability with it
 
@@ -240,7 +240,7 @@ created: 2026-09-21
 When the player activates an ability, the system **shall** remove that ability from its segment.
 
 **Rationale.** Concept §5: charges are single-use.
-Whether the count of abilities carried at once needs a ceiling beyond one-per-segment is Q-090.
+No ceiling beyond one per segment: the tail's exposure to fire is the cap (Q-090, closed 2026-09-21).
 
 ### FR-SNAKE-130 — Assault: dash
 
@@ -316,7 +316,7 @@ When the player activates the sniper ability, the system **shall** slow game tim
 **Rationale.** Concept §5: "highlight, slow time — a precise lunge at distance".
 Two effects, one activation, one duration: the highlight without the slowdown is not the ability the concept describes, so this is one obligation rather than two — noted because the standard's singularity test was applied and answered.
 
-### FR-SNAKE-170 — Medic: heal
+### FR-SNAKE-170 — Medic: regrow
 
 ```yaml
 status: draft
@@ -330,10 +330,10 @@ tests: []
 created: 2026-09-21
 ```
 
-When the player activates the medic ability, the system **shall** restore the snake's health by the amount the snake configuration sets.
+When the player activates the medic ability, the system **shall** append to the tail the number of segments the snake configuration sets for the medic ability, carrying no ability.
 
 **Rationale.** Concept §5: surviving a bad encounter.
-What "health" is for a snake whose damage is taken in segments is part of Q-010; until it is settled, "health" here means whatever the answer to Q-010 defines.
+The snake has no health apart from its tail (ADR-0009), so healing is regrowth; the regrown segments carry nothing, or eating a medic would be worth two abilities.
 
 ### FR-SNAKE-180 — Heavy: temporary armour
 
@@ -391,3 +391,43 @@ created: 2026-09-21
 When the snake's body passes through a destructible module, the system **shall** deal that module the destruction damage the tuning configuration sets for the snake's current length.
 
 **Rationale.** Concept §7: the snake breaks cover with the weight and motion of its body, not with a button — crawled through a barricade, took it down; longer and heavier breaks more.
+
+## Life
+
+### FR-SNAKE-210 — The snake dies when hit with no tail left
+
+```yaml
+status: draft
+verification: T
+derives_from: [FR-SNAKE-070]
+depends_on: [IF-SNAKE-010]
+refines: []
+conflicts_with: []
+code: []
+tests: []
+created: 2026-09-21
+```
+
+When the snake takes damage while its tail has no segments, the system **shall** kill the snake.
+
+**Rationale.** ADR-0009: the snake's life is its tail — one currency for growth, abilities, blocking and survival.
+The match starts with the segment count the snake configuration sets (IF-SNAKE-010), so the first bullet is never the last.
+
+### FR-SNAKE-220 — A drop is a path, not a fall
+
+```yaml
+status: draft
+verification: D
+derives_from: [FR-SNAKE-010, FR-SNAKE-020]
+depends_on: [IF-MAP-020]
+refines: [FR-SNAKE-020]
+conflicts_with: []
+code: []
+tests: []
+created: 2026-09-21
+```
+
+When the head drops from a ledge no higher than the maximum drop of the tuning configuration, the system **shall** lay the tail down the drop as a vertical portion of the path, with no damage and no break in the tail.
+
+**Rationale.** Concept §4: verticality works both ways — the snake cuts through drops the bots will not jump; a drop that hurt or severed the tail would take that away (Q-040, closed 2026-09-21).
+A ledge higher than the maximum drop is simply not a navigation-mesh transition, so the head never goes over it; the tail's sag is rendering.
