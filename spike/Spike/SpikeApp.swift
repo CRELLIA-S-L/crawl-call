@@ -39,6 +39,7 @@ final class SpikeWorld {
         snake.controller = try NavigationController(entity: headEntity)
         headEntity.components.set(snake)
         head = headEntity
+        probeSeams()
 
         let tail = try TailMesh(capacitySamples: 120)
         root.addChild(tail.entity)
@@ -55,6 +56,30 @@ final class SpikeWorld {
         root.addChild(sun)
     }
 
+    /// Startup probe: paths across the seams, logged with node heights, to see which joins hold.
+    func probeSeams() {
+        guard let c = head.components[SnakeComponent.self]?.controller else { return }
+        let probes: [(String, SIMD3<Float>, SIMD3<Float>)] = [
+            ("ground→ramp top", [-6, 0, 4], [3.5, 2.8, 4]),
+            ("ramp top→upper near seam", [3.5, 2.8, 4], [4.8, 3, 4]),
+            ("ramp mid→upper far", [0, 1.5, 4], [9, 3, 0]),
+            ("upper→upper", [6, 3, -6], [11, 3, 6]),
+            ("upper→ground via drop", [5, 3, -4], [1, 0, -4]),
+        ]
+        Task { @MainActor in
+            for (name, a, b) in probes {
+                if let path = await c.computePath(from: a, to: b) {
+                    let ys = path.map { String(format: "%.1f", $0.position.y) }.joined(separator: " ")
+                    let end = path.last?.position ?? a
+                    let reached = simd_length(end - b) < 0.6
+                    Telemetry.shared.note("probe \(name): \(path.count) nodes \(reached ? "REACHED" : "PARTIAL") y: \(ys)")
+                } else {
+                    Telemetry.shared.note("probe \(name): nil")
+                }
+            }
+        }
+    }
+
     func makeCamera() -> Entity {
         let cam = PerspectiveCamera()
         cam.camera.fieldOfViewInDegrees = 45
@@ -65,7 +90,9 @@ final class SpikeWorld {
 
     func sendSnake(to point: SIMD3<Float>) {
         guard var s = head.components[SnakeComponent.self], let c = s.controller else { return }
-        c.requestPath(to: point)
+        // Ask for a point half a metre above the tap: the target is resolved downward
+        // onto the mesh, and a rasterised surface can sit a cell above the tapped one.
+        c.requestPath(to: point + [0, 0.5, 0])
         s.waitingForPath = true
         head.components.set(s)
         Telemetry.shared.note(String(format: "tap → (%.1f, %.1f, %.1f)", point.x, point.y, point.z))
@@ -97,6 +124,7 @@ struct ContentView: View {
     @State private var repathEveryFrame = false
     @State private var commanderOn = false
     @State private var tailLength = 40
+    @State private var inspect = false
     private var t: Telemetry { Telemetry.shared }
 
     var body: some View {
@@ -107,10 +135,12 @@ struct ContentView: View {
                     content.add(world.root)
                     content.add(world.makeCamera())
                     content.camera = .virtual
+                    content.cameraTarget = world.root
                 } catch {
                     buildError = "\(error)"
                 }
             }
+            .realityViewCameraControls(inspect ? .orbit : .none)
             .gesture(
                 SpatialTapGesture()
                     .targetedToAnyEntity()
@@ -131,14 +161,16 @@ struct ContentView: View {
             if let e = buildError { Text("BUILD ERROR: \(e)").foregroundStyle(.red) }
             Text(String(format: "t %ds   fps %.1f   frame max %.1f ms   slow %d (total %d)   thermal %@",
                         t.elapsed, t.fps, t.frameMaxMs, t.slowFrames, t.slowFramesTotal, t.thermal))
-            Text(String(format: "deliberation avg %.3f ms  max %.3f ms   path requests/s %d",
-                        t.deliberationAvgMs, t.deliberationMaxMs, t.pathRequestsPerSecond))
+            Text(String(format: "vsync fps %.1f   vsync max %.1f ms   dropped %d (total %d)", t.vsyncFps, t.vsyncMaxMs, t.vsyncDropped, t.vsyncDroppedTotal))
+            Text(String(format: "deliberation avg %.3f ms  max %.3f ms   path requests/s %d  failures/s %d",
+                        t.deliberationAvgMs, t.deliberationMaxMs, t.pathRequestsPerSecond, t.pathFailures))
             Text(String(format: "inference last %.0f ms  max %.0f ms  n=%d fail=%d   worst frame during inference %.1f ms",
                         t.inferenceLastMs, t.inferenceMaxMs, t.inferenceCount, t.inferenceFailures, t.inferenceFrameMaxMs))
             Text(t.lastNote).lineLimit(1)
             HStack(spacing: 12) {
                 Toggle("repath every frame", isOn: $repathEveryFrame)
                     .onChange(of: repathEveryFrame) { _, v in BotSystem.repathEveryFrame = v }
+                Toggle("inspect", isOn: $inspect)
                 Toggle("commander", isOn: $commanderOn)
                     .onChange(of: commanderOn) { _, v in
                         if v { world.commander.start(worldState: { world.worldState() }) } else { world.commander.stop() }

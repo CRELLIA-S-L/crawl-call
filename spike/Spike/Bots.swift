@@ -105,8 +105,13 @@ final class BotSystem: System {
 
         b.repathClock -= dt
         let changed = best != b.action
-        let arrived = b.nextNode >= b.path.count && !b.waitingForPath
-        if changed || arrived || Self.repathEveryFrame || (b.repathClock <= 0 && best == .chase) {
+        if !b.path.isEmpty && b.nextNode >= b.path.count && !b.waitingForPath {
+            // Arrived: drop the path and think again after a short pause, not every frame.
+            b.path = []
+            b.repathClock = 0.5
+        }
+        let idle = b.path.isEmpty && !b.waitingForPath && b.repathClock <= 0
+        if changed || idle || Self.repathEveryFrame || (b.repathClock <= 0 && best == .chase) {
             b.action = best
             let target: SIMD3<Float>
             switch best {
@@ -123,7 +128,7 @@ final class BotSystem: System {
                 target = pos
             }
             if best != .hold, let c = b.controller {
-                c.requestPath(to: target)
+                c.requestPath(to: target + [0, 0.5, 0])
                 b.waitingForPath = true
                 b.target = target
                 requests += 1
@@ -144,6 +149,8 @@ final class BotSystem: System {
             case .failed:
                 b.waitingForPath = false
                 b.path = []
+                b.repathClock = 0.5   // do not hammer the pathfinder after a failure
+                Telemetry.shared.recordPathFailure()
             default: break
             }
         }

@@ -133,7 +133,8 @@ final class SnakeSystem: System {
                 s.path = c.currentPath.map(\.position)
                 s.nextNode = 0
                 s.waitingForPath = false
-                Telemetry.shared.note("path \(s.path.count) nodes")
+                let ys = s.path.map { String(format: "%.1f", $0.y) }.joined(separator: " ")
+                Telemetry.shared.note("path \(s.path.count) nodes, y: \(ys)")
             case .failed:
                 s.waitingForPath = false
                 Telemetry.shared.note("path failed")
