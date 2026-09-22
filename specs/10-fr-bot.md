@@ -9,7 +9,7 @@ Per-frame execution for every bot is INV-BOT-010; that squads never remove bodie
 ### FR-BOT-010 — Six archetypes
 
 ```yaml
-status: draft
+status: deferred
 verification: I
 derives_from: []
 depends_on: []
@@ -28,7 +28,7 @@ Six is a number the player can learn; the set is the obligation, so this is one 
 ### FR-BOT-020 — Two squads at war
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: []
 depends_on: [FR-BOT-010, IF-BOT-010]
@@ -47,7 +47,7 @@ Four per squad is the size of the vertical slice and there are no reinforcements
 ### FR-BOT-030 — Archetype sets base personality weights
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: [FR-BOT-010]
 depends_on: [IF-BOT-010]
@@ -66,7 +66,7 @@ The commander later adjusts these (FR-CMD-060); the archetype is where they star
 ### FR-BOT-040 — One bot per squad holds the commander role
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: []
 depends_on: [FR-BOT-020]
@@ -87,7 +87,7 @@ A role rather than a seventh archetype, and no marker: the role-holder is found 
 ### FR-BOT-050 — A bot notices the snake in view
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: []
 depends_on: []
@@ -106,7 +106,7 @@ Known-to-a-bot is what deliberation (FR-BOT-080) and the interrupt on sight (FR-
 ### FR-BOT-060 — A bot fires at its target
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: []
 depends_on: [FR-BOT-080]
@@ -125,7 +125,7 @@ A target may be an enemy bot or any segment of the snake — shooting at the tai
 ### FR-BOT-070 — Heavy and sapper weapons destroy cover
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: [FR-BOT-060]
 depends_on: [FR-MAP-030, IF-MAP-020]
@@ -146,7 +146,7 @@ Ammunition is the regulator the concept names against a map that turns into wast
 ### FR-BOT-080 — Action chosen by maximum utility
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: []
 depends_on: []
@@ -165,7 +165,7 @@ The inputs are named so that a test can vary each and observe the choice move; t
 ### FR-BOT-090 — Personality weights multiply utility
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: [FR-BOT-080]
 depends_on: [FR-BOT-030]
@@ -184,7 +184,7 @@ This is the only channel through which the commander's LLM output reaches per-fr
 ### FR-BOT-100 — Cover is valued by what is left of it
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: [FR-BOT-080]
 depends_on: [FR-MAP-030]
@@ -202,7 +202,7 @@ When scoring the action of taking a cover position, the system **shall** lower t
 ### FR-BOT-105 — Cover is worth less against a wrecking weapon
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: [FR-BOT-100]
 depends_on: [FR-BOT-070]
@@ -220,7 +220,7 @@ When scoring the action of taking a cover position, the system **shall** lower t
 ### FR-BOT-110 — Height advantage enters position scoring
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: [FR-BOT-080]
 depends_on: []
@@ -239,7 +239,7 @@ Without this term the verticality of a map is decoration, which is what H-020 me
 ### FR-BOT-115 — Distance along the snake's path enters position scoring
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: [FR-BOT-080]
 depends_on: [FR-SNAKE-010]
@@ -257,7 +257,7 @@ When scoring a position, the system **shall** raise the score with the length of
 ### FR-BOT-120 — Nearby snake overrides the commander's priority
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: [FR-BOT-080]
 depends_on: [FR-CMD-030]
@@ -275,7 +275,7 @@ When the snake's head is within the override distance of the bot configuration f
 ### FR-BOT-130 — Discipline decides how far an order is kept
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: [FR-BOT-090]
 depends_on: [FR-CMD-040]
@@ -294,7 +294,7 @@ The formula is the simplest one that makes discipline 1.0 mean "always the order
 ### FR-BOT-140 — Target choice has hysteresis
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: [FR-BOT-080]
 depends_on: []
@@ -315,7 +315,7 @@ Written as behaviour — no flapping under a margin — so that a test can show 
 ### FR-BOT-150 — Deliberation runs on a fixed step, not per frame
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: []
 depends_on: []
@@ -334,7 +334,7 @@ Verifiable by running the same scenario at two frame rates and counting slots.
 ### FR-BOT-160 — Slots go by priority, not round-robin
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: [FR-BOT-150]
 depends_on: []
@@ -353,7 +353,7 @@ The per-frame budget that bounds how many slots a frame hands out is NFR-PERF-02
 ### FR-BOT-170 — Interrupts grant a slot at once
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: [FR-BOT-160]
 depends_on: [FR-BOT-050]
@@ -374,7 +374,7 @@ One act over an enumerated set of triggers, as the standard's exit-code example:
 ### FR-BOT-180 — Calm squads do not hunt the snake
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: [FR-BOT-080]
 depends_on: [FR-SCORE-130, FR-BOT-120]
@@ -392,7 +392,7 @@ While a squad's awareness is *calm*, the system **shall** exclude the snake from
 ### FR-BOT-190 — Alarmed squads keep together
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: [FR-BOT-080]
 depends_on: [FR-SCORE-130]
@@ -413,7 +413,7 @@ Corner-checking is left to the commander's orders; keeping together is the obser
 ### FR-BOT-200 — The actions a bot can choose from
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: [FR-BOT-080]
 depends_on: [FR-BOT-010]

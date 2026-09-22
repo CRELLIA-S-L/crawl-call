@@ -12,7 +12,7 @@ Every number below is measured on it, in a 4v4 match, on the device and never in
 ### NFR-PERF-010 — 60 frames per second on the baseline device
 
 ```yaml
-status: draft
+status: deferred
 verification: A
 derives_from: []
 depends_on: [FR-BOT-020]
@@ -32,7 +32,7 @@ The number is the maintainer's decision of 2026-09-21, not the concept's, and is
 ### NFR-PERF-020 — Deliberation costs at most 0.5 ms per frame
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: [NFR-PERF-010]
 depends_on: [FR-BOT-150, FR-BOT-160]
@@ -50,7 +50,7 @@ In any frame, the system **shall** hand out deliberation slots only while the fr
 ### NFR-PERF-030 — A commander inference does not break the frame budget
 
 ```yaml
-status: draft
+status: deferred
 verification: A
 derives_from: [NFR-PERF-010]
 depends_on: [FR-CMD-020]
@@ -69,7 +69,7 @@ If it does, the stack decision ADR-0001 falls with it.
 ### NFR-PERF-040 — Commander answers within its interval
 
 ```yaml
-status: draft
+status: deferred
 verification: A
 derives_from: []
 depends_on: [FR-CMD-020]
@@ -90,7 +90,7 @@ The bound is the interval itself rather than a number so that stretching the int
 ### NFR-PERF-050 — Sustained performance over a long session
 
 ```yaml
-status: draft
+status: deferred
 verification: A
 derives_from: [NFR-PERF-010]
 depends_on: []
@@ -109,7 +109,7 @@ Twenty minutes is past the onset the concept names; the test is always on a real
 ### NFR-PERF-055 — Commander latency holds over a long session
 
 ```yaml
-status: draft
+status: deferred
 verification: A
 derives_from: [NFR-PERF-040]
 depends_on: [NFR-PERF-050]
@@ -127,7 +127,7 @@ While a 4v4 match on the baseline device runs for 20 minutes, the system **shall
 ### NFR-PERF-060 — Under thermal pressure the commander interval stretches
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: [NFR-PERF-050]
 depends_on: [FR-CMD-020]
@@ -145,7 +145,7 @@ When the device reports a thermal state at or above the degradation threshold of
 ### NFR-PERF-070 — Under thermal pressure speech falls back to pre-written lines
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: [NFR-PERF-050]
 depends_on: [FR-CMD-140]
@@ -166,7 +166,7 @@ The same pre-written set is the fallback of the content filter (FR-CMD-160), so 
 ### NFR-PERF-080 — The language model costs the app no memory or download size
 
 ```yaml
-status: draft
+status: deferred
 verification: I
 derives_from: []
 depends_on: [FR-CMD-020]

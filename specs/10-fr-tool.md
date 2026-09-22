@@ -9,7 +9,7 @@ Tools are code like any other: each is a requirement with `code` and `tests` whe
 ### FR-TOOL-010 — Parse a map specification
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: []
 depends_on: [IF-MAP-010]
@@ -27,7 +27,7 @@ When given a map specification file, the map tool **shall** produce the placemen
 ### FR-TOOL-020 — Assemble the scene from the kit
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: [FR-TOOL-010]
 depends_on: [FR-MAP-100]
@@ -45,7 +45,7 @@ When given a parsed map, the map tool **shall** assemble the scene by placing th
 ### FR-TOOL-030 — Generate the navigation mesh
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: [FR-TOOL-020]
 depends_on: []
@@ -63,7 +63,7 @@ When given an assembled scene, the map tool **shall** generate the navigation me
 ### FR-TOOL-040 — Validate the map
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: [FR-TOOL-030]
 depends_on: [FR-MAP-010, FR-MAP-070, FR-MAP-080, FR-MAP-090]
@@ -82,7 +82,7 @@ One act — a report — over an enumerated set of findings.
 ### FR-TOOL-050 — Export to the level editor
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: [FR-TOOL-020]
 depends_on: []
@@ -100,7 +100,7 @@ When asked, the map tool **shall** export the assembled scene in the format the 
 ### FR-TOOL-060 — Render a 2D plan per floor
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: [FR-TOOL-010]
 depends_on: []
@@ -120,7 +120,7 @@ When given a map specification, the plan tool **shall** render one image per flo
 ### FR-TOOL-070 — Free camera
 
 ```yaml
-status: draft
+status: deferred
 verification: D
 derives_from: []
 depends_on: [FR-VIEW-010]
@@ -139,7 +139,7 @@ One requirement per debug facility because each can be built and used without th
 ### FR-TOOL-080 — Navigation mesh overlay
 
 ```yaml
-status: draft
+status: deferred
 verification: D
 derives_from: []
 depends_on: [FR-MAP-020]
@@ -157,7 +157,7 @@ Where debug mode is enabled, the system **shall** draw the navigation mesh over 
 ### FR-TOOL-090 — Disconnected regions and seams highlighted
 
 ```yaml
-status: draft
+status: deferred
 verification: D
 derives_from: [FR-TOOL-080]
 depends_on: [FR-TOOL-040]
@@ -175,7 +175,7 @@ Where debug mode is enabled, the system **shall** highlight in the overlay every
 ### FR-TOOL-100 — Teleport by pointing
 
 ```yaml
-status: draft
+status: deferred
 verification: D
 derives_from: []
 depends_on: [FR-SNAKE-010]
@@ -193,7 +193,7 @@ Where debug mode is enabled, when the user points at a navigation-mesh position,
 ### FR-TOOL-110 — Snake length slider
 
 ```yaml
-status: draft
+status: deferred
 verification: D
 derives_from: []
 depends_on: [FR-SNAKE-060]
@@ -211,7 +211,7 @@ Where debug mode is enabled, the system **shall** let the user set the snake's s
 ### FR-TOOL-120 — Bot sight lines drawn
 
 ```yaml
-status: draft
+status: deferred
 verification: D
 derives_from: []
 depends_on: [FR-BOT-050]
@@ -231,7 +231,7 @@ Where debug mode is enabled, the system **shall** draw each bot's current line o
 ### FR-TOOL-130 — Concept renders are built by script
 
 ```yaml
-status: draft
+status: deferred
 verification: I
 derives_from: []
 depends_on: []
@@ -254,7 +254,7 @@ Exempt from `unlinked`: the scripts serve the concept document, not another requ
 ### FR-TOOL-140 — Pre-commit check for a Team ID in the project file
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: [CON-PUB-050]
 depends_on: []

@@ -10,7 +10,7 @@ That the LLM never drives per-frame execution is ADR-0003, not a requirement.
 ### FR-CMD-010 — One commander per squad
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: []
 depends_on: [FR-BOT-020]
@@ -29,7 +29,7 @@ Independence is what lets one commander wrongly blame the enemy while the other 
 ### FR-CMD-020 — The commander is called on an interval
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: [FR-CMD-010]
 depends_on: [IF-CMD-010, IF-BOT-010]
@@ -48,7 +48,7 @@ The interval stretches under thermal load (NFR-PERF-060), which is why it is con
 ### FR-CMD-030 — The commander sets the threat priority
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: [FR-CMD-020]
 depends_on: [IF-CMD-020]
@@ -67,7 +67,7 @@ The local override near the snake is FR-BOT-120.
 ### FR-CMD-040 — The commander issues an order
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: [FR-CMD-020]
 depends_on: [IF-CMD-020]
@@ -86,7 +86,7 @@ Setting the order is the "new order" event of FR-BOT-170; how much a bot obeys i
 ### FR-CMD-050 — The commander assigns roles
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: [FR-CMD-020]
 depends_on: [IF-CMD-020]
@@ -105,7 +105,7 @@ A role is a bias in that bot's utility, the mechanism being tuning.
 ### FR-CMD-060 — The commander sets personality weights
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: [FR-CMD-020]
 depends_on: [IF-CMD-020, FR-BOT-030]
@@ -124,7 +124,7 @@ Clamping keeps a commander from turning a heavy into a coward outright; the rang
 ### FR-CMD-070 — Awareness gates what the commander is told
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: [FR-CMD-020]
 depends_on: [FR-SCORE-130, IF-CMD-010]
@@ -143,7 +143,7 @@ On *alarm* the input carries the disappearances and not the snake; on *confirmed
 ### FR-CMD-080 — The two commanders run out of phase
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: [FR-CMD-020]
 depends_on: []
@@ -164,7 +164,7 @@ Half the interval is the largest separation two periodic calls can keep.
 ### FR-CMD-090 — A commander may propose a truce
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: [FR-CMD-020]
 depends_on: [IF-CMD-020]
@@ -183,7 +183,7 @@ Behind a feature switch because the concept enables it after stage 4 on live pla
 ### FR-CMD-100 — A truce stops fire between the squads
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: [FR-CMD-090]
 depends_on: []
@@ -201,7 +201,7 @@ When a commander's response accepts a pending truce proposal, the system **shall
 ### FR-CMD-105 — A truce turns both squads on the snake
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: [FR-CMD-090]
 depends_on: [FR-CMD-100, FR-CMD-030]
@@ -220,7 +220,7 @@ Split from FR-CMD-100 because a ceasefire and a shared target can each be built 
 ### FR-CMD-110 — A truce is fragile
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: [FR-CMD-100]
 depends_on: []
@@ -241,7 +241,7 @@ One act over an enumerated set of triggers.
 ### FR-CMD-120 — Losing the role-holder silences the commander
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: []
 depends_on: [FR-BOT-040]
@@ -260,7 +260,7 @@ A free consequence of the architecture and the player's main lever on the balanc
 ### FR-CMD-125 — Losing the role-holder voids orders and roles
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: [FR-CMD-120]
 depends_on: [FR-CMD-040, FR-CMD-050]
@@ -279,7 +279,7 @@ Split from FR-CMD-120 because a squad could stop receiving new orders and still 
 ### FR-CMD-130 — Collapsed bots keep their last weights, with more panic
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: [FR-CMD-120]
 depends_on: [FR-BOT-030]
@@ -300,7 +300,7 @@ A commander's last mood outlives him, which is why eating a commander mid-retrea
 ### FR-CMD-140 — Bots speak on events
 
 ```yaml
-status: draft
+status: deferred
 verification: D
 derives_from: []
 depends_on: [IF-CMD-030]
@@ -319,7 +319,7 @@ The event list lives in configuration because the concept's list is illustrative
 ### FR-CMD-150 — Speech is rate-limited and queued
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: [FR-CMD-140]
 depends_on: []
@@ -338,7 +338,7 @@ Dropping the oldest rather than the newest keeps a line about what just happened
 ### FR-CMD-160 — Every line passes a content filter
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: [CON-PUB-080]
 depends_on: [FR-CMD-140]

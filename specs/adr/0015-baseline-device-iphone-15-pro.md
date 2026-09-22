@@ -27,5 +27,6 @@ The concept already accepted that "devices older than iOS 27 are out"; this move
 
 CON-PUB-010 requires an Apple Intelligence-capable device: iPhone 15 Pro or later, and on the Mac, Apple silicon.
 The baseline device for every `A` measurement is the iPhone 15 Pro; the thermal budget (NFR-PERF-050) is measured on it.
+Until one is at hand, measurements are taken on the maintainer's iPhone 16 Pro and pass only with a 20 % margin (`50-verification.md`); a result inside the margin is not a pass, it is a reason to borrow a 15 Pro.
 The App Store listing declares the device requirement, and the store's compatibility filter keeps the game off devices that cannot run it.
 If Apple widens the model's availability, the baseline can move back; nothing in the specification names a chip.

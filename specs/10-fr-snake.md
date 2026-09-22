@@ -9,7 +9,7 @@ Tunable numbers — speeds, durations, growth, damage-to-segments — are read f
 ### FR-SNAKE-010 — Head moves on the navigation mesh
 
 ```yaml
-status: draft
+status: deferred
 verification: D
 derives_from: []
 depends_on: []
@@ -29,7 +29,7 @@ Free flight was never on the table.
 ### FR-SNAKE-020 — Tail follows the head's path
 
 ```yaml
-status: draft
+status: deferred
 verification: D
 derives_from: [FR-SNAKE-010]
 depends_on: []
@@ -48,7 +48,7 @@ That the tail's mesh is regenerated every frame is how, not what, and is left to
 ### FR-SNAKE-030 — Head speed comes from configuration
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: [FR-SNAKE-010]
 depends_on: [IF-SNAKE-010]
@@ -69,7 +69,7 @@ That the base speed is lower than a bot's run speed is INV-SNAKE-020.
 ### FR-SNAKE-040 — Tail blocks bots
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: [FR-SNAKE-020]
 depends_on: []
@@ -88,7 +88,7 @@ A stair or corridor held by the body is the main spatial weapon the snake has, a
 ### FR-SNAKE-050 — Tail blocks the snake's own head
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: [FR-SNAKE-020]
 depends_on: []
@@ -109,7 +109,7 @@ Split from FR-SNAKE-040 because blocking bots and blocking oneself can each be b
 ### FR-SNAKE-060 — Eating extends the tail
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: []
 depends_on: [FR-SNAKE-100, IF-SNAKE-010]
@@ -128,7 +128,7 @@ Growth per archetype rather than a flat number keeps the heavy the "fattest" tar
 ### FR-SNAKE-070 — Damage removes segments from the end
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: []
 depends_on: [IF-SNAKE-010]
@@ -147,7 +147,7 @@ What happens when the tail has no segments left is FR-SNAKE-210 (ADR-0009).
 ### FR-SNAKE-080 — A removed segment takes its ability with it
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: [FR-SNAKE-070]
 depends_on: [FR-SNAKE-110]
@@ -167,7 +167,7 @@ When a tail segment is removed, the system **shall** discard the ability attache
 ### FR-SNAKE-090 — Eating takes time and holds the snake in place
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: []
 depends_on: [IF-SNAKE-010]
@@ -186,7 +186,7 @@ A stationary snake is a visible and damageable one, which is the exposure the co
 ### FR-SNAKE-100 — Live prey takes longer than a body
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: [FR-SNAKE-090]
 depends_on: [IF-SNAKE-010]
@@ -207,7 +207,7 @@ The relation "greater than" is the concept's; the two numbers are tuning.
 ### FR-SNAKE-110 — Consuming a bot attaches its archetype's ability to a segment
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: []
 depends_on: [FR-SNAKE-060, FR-BOT-010]
@@ -226,7 +226,7 @@ One ability per bot, on one segment, is what makes FR-SNAKE-080 meaningful.
 ### FR-SNAKE-120 — An ability is consumed on use
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: [FR-SNAKE-110]
 depends_on: []
@@ -245,7 +245,7 @@ No ceiling beyond one per segment: the tail's exposure to fire is the cap (Q-090
 ### FR-SNAKE-130 — Assault: dash
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: [FR-SNAKE-110]
 depends_on: [IF-SNAKE-010]
@@ -263,7 +263,7 @@ When the player activates the assault ability, the system **shall** move the hea
 ### FR-SNAKE-140 — Sapper: breach a partition
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: [FR-SNAKE-110]
 depends_on: [FR-MAP-030]
@@ -282,7 +282,7 @@ When the player activates the sapper ability against a non-load-bearing partitio
 ### FR-SNAKE-150 — Scout: see bots through walls
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: [FR-SNAKE-110]
 depends_on: [IF-SNAKE-010]
@@ -300,7 +300,7 @@ When the player activates the scout ability, the system **shall** display the po
 ### FR-SNAKE-160 — Sniper: focus
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: [FR-SNAKE-110]
 depends_on: [IF-SNAKE-010]
@@ -319,7 +319,7 @@ Two effects, one activation, one duration: the highlight without the slowdown is
 ### FR-SNAKE-170 — Medic: regrow
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: [FR-SNAKE-110]
 depends_on: [IF-SNAKE-010]
@@ -338,7 +338,7 @@ The snake has no health apart from its tail (ADR-0009), so healing is regrowth; 
 ### FR-SNAKE-180 — Heavy: temporary armour
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: [FR-SNAKE-110]
 depends_on: [IF-SNAKE-010]
@@ -356,7 +356,7 @@ When the player activates the heavy ability, the system **shall** reduce damage 
 ### FR-SNAKE-190 — Heavy: faster destruction
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: [FR-SNAKE-110]
 depends_on: [FR-SNAKE-200]
@@ -377,7 +377,7 @@ Split from FR-SNAKE-180 because armour and destruction speed can each be built a
 ### FR-SNAKE-200 — The body destroys what it crosses
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: []
 depends_on: [FR-MAP-030, IF-MAP-020]
@@ -397,7 +397,7 @@ When the snake's body passes through a destructible module, the system **shall**
 ### FR-SNAKE-210 — The snake dies when hit with no tail left
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: [FR-SNAKE-070]
 depends_on: [IF-SNAKE-010]
@@ -416,7 +416,7 @@ The match starts with the segment count the snake configuration sets (IF-SNAKE-0
 ### FR-SNAKE-220 — A drop is a path, not a fall
 
 ```yaml
-status: draft
+status: deferred
 verification: D
 derives_from: [FR-SNAKE-010, FR-SNAKE-020]
 depends_on: [IF-MAP-020]

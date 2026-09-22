@@ -10,7 +10,7 @@ First-person view is out of the vertical slice (concept §3) and has no requirem
 ### FR-VIEW-010 — A perspective camera pitched between 50 and 60 degrees
 
 ```yaml
-status: draft
+status: deferred
 verification: D
 derives_from: []
 depends_on: [IF-VIEW-020]
@@ -29,7 +29,7 @@ A fixed yaw is what lets height and sight lines be learnt once (concept §2, "sp
 ### FR-VIEW-020 — The camera follows the head
 
 ```yaml
-status: draft
+status: deferred
 verification: D
 derives_from: [FR-VIEW-010]
 depends_on: [FR-SNAKE-010, IF-VIEW-020]
@@ -49,7 +49,7 @@ While a match is running, the system **shall** keep the snake's head within the 
 ### FR-VIEW-030 — Game logic reads intents, not device events
 
 ```yaml
-status: draft
+status: deferred
 verification: I
 derives_from: []
 depends_on: [IF-VIEW-010]
@@ -67,7 +67,7 @@ The game logic **shall** consume only the input intents IF-VIEW-010 defines, nev
 ### FR-VIEW-040 — macOS scheme: keyboard and mouse
 
 ```yaml
-status: draft
+status: deferred
 verification: D
 derives_from: [FR-VIEW-030, CON-PUB-010]
 depends_on: [IF-VIEW-010]
@@ -86,7 +86,7 @@ Direction and ability activation from keys, the pointed position from the mouse;
 ### FR-VIEW-050 — iOS scheme: touch
 
 ```yaml
-status: draft
+status: deferred
 verification: D
 derives_from: [FR-VIEW-030, CON-PUB-010]
 depends_on: [IF-VIEW-010]
@@ -107,7 +107,7 @@ iPhone is the primary target (concept §15), so this scheme is not the port of t
 ### FR-VIEW-060 — Squad affiliation is readable at a glance
 
 ```yaml
-status: draft
+status: deferred
 verification: D
 derives_from: []
 depends_on: [FR-BOT-020]
@@ -125,7 +125,7 @@ While a bot is on screen, the system **shall** show its squad through its body c
 ### FR-VIEW-070 — Archetype is readable from the silhouette
 
 ```yaml
-status: draft
+status: deferred
 verification: D
 derives_from: []
 depends_on: [FR-BOT-010]
@@ -144,7 +144,7 @@ The player chooses whom to eat by archetype (FR-SNAKE-110), so this has to be re
 ### FR-VIEW-080 — Wounded and separated bots stand out
 
 ```yaml
-status: draft
+status: deferred
 verification: D
 derives_from: [FR-VIEW-060]
 depends_on: [FR-BOT-020, IF-VIEW-020]
@@ -162,7 +162,7 @@ While a bot is wounded or farther from every squadmate than the straggler distan
 ### FR-VIEW-090 — Panic is visible on the bot
 
 ```yaml
-status: draft
+status: deferred
 verification: D
 derives_from: []
 depends_on: [FR-BOT-030, IF-VIEW-020]
@@ -180,7 +180,7 @@ While a bot's panic weight exceeds the visible-panic threshold of the view confi
 ### FR-VIEW-100 — Eating is staged as comedy
 
 ```yaml
-status: draft
+status: deferred
 verification: D
 derives_from: []
 depends_on: [FR-SNAKE-090]
@@ -198,7 +198,7 @@ While the snake is consuming a bot, the system **shall** show the bot swallowed 
 ### FR-VIEW-110 — The snake squashes and stretches
 
 ```yaml
-status: draft
+status: deferred
 verification: D
 derives_from: []
 depends_on: [FR-SNAKE-020]
@@ -219,7 +219,7 @@ Three deformations, one continuous act of drawing the body; a test of "the body 
 ### FR-VIEW-120 — The HUD is drawn in the diorama style
 
 ```yaml
-status: draft
+status: deferred
 verification: I
 derives_from: []
 depends_on: [IF-VIEW-010]

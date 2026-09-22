@@ -11,7 +11,7 @@ The tools that assemble, validate and render a map are in the TOOL area.
 ### FR-MAP-010 — A map has more than one floor
 
 ```yaml
-status: draft
+status: deferred
 verification: I
 derives_from: []
 depends_on: [IF-MAP-010]
@@ -30,7 +30,7 @@ Checked by the validator (FR-TOOL-040).
 ### FR-MAP-020 — The navigation mesh covers every walkable surface
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: []
 depends_on: [FR-TOOL-030]
@@ -50,7 +50,7 @@ When a map is loaded, the system **shall** have a navigation mesh that covers ev
 ### FR-MAP-030 — Destructible modules have three states
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: []
 depends_on: [IF-MAP-020]
@@ -68,7 +68,7 @@ When a destructible module's accumulated damage crosses a threshold of the tunin
 ### FR-MAP-040 — Debris stops blocking sight and fire
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: [FR-MAP-030]
 depends_on: []
@@ -87,7 +87,7 @@ That is the natural arc from a hunt in a maze to an open slaughter.
 ### FR-MAP-050 — The navigation mesh follows destruction
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: [FR-MAP-030]
 depends_on: [FR-MAP-020]
@@ -106,7 +106,7 @@ When a module changes state, the system **shall** update the navigation mesh to 
 ### FR-MAP-060 — What can and cannot be destroyed is declared per module type
 
 ```yaml
-status: draft
+status: deferred
 verification: I
 derives_from: []
 depends_on: [IF-MAP-010]
@@ -127,7 +127,7 @@ INV-MAP-010 is the promise the declaration serves.
 ### FR-MAP-070 — Stairs the snake can block
 
 ```yaml
-status: draft
+status: deferred
 verification: I
 derives_from: [FR-MAP-010]
 depends_on: [FR-SNAKE-040]
@@ -146,7 +146,7 @@ A map without one has no use for FR-SNAKE-040.
 ### FR-MAP-080 — Trap corridors
 
 ```yaml
-status: draft
+status: deferred
 verification: I
 derives_from: [FR-MAP-010]
 depends_on: [FR-SNAKE-050]
@@ -164,7 +164,7 @@ Every map **shall** contain at least two corridors narrower than the trap width 
 ### FR-MAP-090 — Every reachable surface is continuous for the tail
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: [FR-MAP-020]
 depends_on: [FR-SNAKE-020]
@@ -184,7 +184,7 @@ Every map **shall** present, along every navigation-mesh path, a continuous surf
 ### FR-MAP-100 — Maps are assembled from a modular kit
 
 ```yaml
-status: draft
+status: deferred
 verification: I
 derives_from: []
 depends_on: [IF-MAP-010]

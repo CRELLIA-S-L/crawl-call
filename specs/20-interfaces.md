@@ -12,7 +12,7 @@ The files are JSON, one per interface, and the map a text file with a grid per f
 ### IF-SNAKE-010 — Snake configuration
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: []
 depends_on: []
@@ -31,7 +31,7 @@ One act — reading one file — over an enumerated set of keys.
 ### IF-MAP-020 — Tuning configuration for destruction and maps
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: []
 depends_on: []
@@ -49,7 +49,7 @@ When the game starts, the system **shall** read from the tuning configuration �
 ### IF-SCORE-010 — Scoring configuration
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: []
 depends_on: []
@@ -67,7 +67,7 @@ When the game starts, the system **shall** read from the scoring configuration �
 ### IF-BOT-010 — Bot and match configuration
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: []
 depends_on: []
@@ -88,7 +88,7 @@ Two files named in one requirement because they are read in the same act at the 
 ### IF-CMD-010 — Commander input
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: []
 depends_on: [FR-SCORE-130]
@@ -107,7 +107,7 @@ When calling a commander, the system **shall** pass a structured world state fro
 ### IF-CMD-020 — Commander output
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: []
 depends_on: [IF-CMD-010]
@@ -126,7 +126,7 @@ Rejection rather than repair: an unparseable response is a missed cycle, which t
 ### IF-CMD-030 — Speech configuration
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: []
 depends_on: []
@@ -146,7 +146,7 @@ When the game starts, the system **shall** read from the speech configuration �
 ### IF-MAP-010 — The map specification file
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: []
 depends_on: []
@@ -167,7 +167,7 @@ Which characters mean which modules is the kit's own `legend.json` (ADR-0012), s
 ### IF-VIEW-010 — Input intents
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: []
 depends_on: []
@@ -186,7 +186,7 @@ The input layer **shall** deliver to the game logic exactly these intents: a mov
 ### IF-VIEW-020 — View configuration
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: []
 depends_on: []

@@ -10,7 +10,7 @@ Base values and multipliers are read from the scoring configuration (IF-SCORE-01
 ### FR-SCORE-010 — Consuming a bot awards points
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: []
 depends_on: [FR-SNAKE-090, IF-SCORE-010]
@@ -28,7 +28,7 @@ When the snake finishes consuming a bot, the system **shall** add to the score t
 ### FR-SCORE-020 — Live prey has the higher base value
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: [FR-SCORE-010]
 depends_on: [FR-SNAKE-100]
@@ -49,7 +49,7 @@ The multipliers apply the same way to a body — a body eaten unseen is still a 
 ### FR-SCORE-030 — Stealth multiplier by who saw
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: [FR-SCORE-010]
 depends_on: [FR-SCORE-070]
@@ -67,7 +67,7 @@ When scoring a consumption, the system **shall** apply the stealth multiplier fo
 ### FR-SCORE-040 — The leading squad is the one with more living bots
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: []
 depends_on: [FR-BOT-020]
@@ -86,7 +86,7 @@ Whether a richer measure is wanted is a tuning question, not an open one.
 ### FR-SCORE-050 — Balance multiplier for prey from the leading squad
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: [FR-SCORE-010]
 depends_on: [FR-SCORE-040]
@@ -104,7 +104,7 @@ When the consumed bot belonged to the leading squad, the system **shall** apply 
 ### FR-SCORE-060 — Target-value multiplier for commander, heavy and medic
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: [FR-SCORE-010]
 depends_on: [FR-BOT-010, FR-BOT-040]
@@ -124,7 +124,7 @@ When the consumed bot held the commander role or was a heavy or a medic, the sys
 ### FR-SCORE-070 — A witness is a bot with line of sight during the window
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: []
 depends_on: [FR-SNAKE-090]
@@ -142,7 +142,7 @@ When an eating is in progress, the system **shall** record as its witness every 
 ### FR-SCORE-080 — Arriving right after counts as witnessing
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: [FR-SCORE-070]
 depends_on: []
@@ -160,7 +160,7 @@ When a living bot gains line of sight to the eating point within the late-arriva
 ### FR-SCORE-090 — A witness reports after a delay
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: [FR-SCORE-070]
 depends_on: [FR-SCORE-130]
@@ -179,7 +179,7 @@ The delay is what creates the task of silencing the only witness before the repo
 ### FR-SCORE-100 — A consumed witness never reports
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: [FR-SCORE-090]
 depends_on: []
@@ -199,7 +199,7 @@ If a witness is consumed before its report delay elapses, the system **shall not
 ### FR-SCORE-110 — A body carries its cause of death
 
 ```yaml
-status: draft
+status: deferred
 verification: D
 derives_from: []
 depends_on: []
@@ -217,7 +217,7 @@ When a bot dies, the system **shall** leave a body whose appearance distinguishe
 ### FR-SCORE-120 — Finding a body is one thing, inspecting it another
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: [FR-SCORE-110]
 depends_on: [FR-SCORE-130]
@@ -236,7 +236,7 @@ A body seen from beyond the inspection distance changes nothing, and no requirem
 ### FR-SCORE-125 — A vanished body raises the alarm
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: []
 depends_on: [FR-SCORE-130, INV-BOT-020]
@@ -257,7 +257,7 @@ Numbered between 120 and 130 because it belongs beside the body rules and the aw
 ### FR-SCORE-130 — Each squad has an awareness state
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: []
 depends_on: [FR-BOT-020]
@@ -278,7 +278,7 @@ Monotonic because nothing lowers it: bodies do not decay (ADR-0013), so evidence
 ### FR-SCORE-140 — The match ends when the snake dies
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: []
 depends_on: [FR-SNAKE-210]
@@ -297,7 +297,7 @@ No timer and no score threshold end a match; the only two ends are this one and 
 ### FR-SCORE-150 — The match ends when no bot is left
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: []
 depends_on: [FR-BOT-020]

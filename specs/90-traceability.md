@@ -7,8 +7,8 @@ Total requirements: 154.
 
 | Status | Requirements |
 |---|---|
-| `draft` | 154 |
-| `deferred` | 0 |
+| `draft` | 0 |
+| `deferred` | 154 |
 | `partial` | 0 |
 | `implemented` | 0 |
 | `superseded` | 0 |
@@ -18,160 +18,160 @@ Total requirements: 154.
 
 | Requirement | Status | Method | Code | Tests |
 |---|---|---|---|---|
-| **CON-MAP-010** No existing map is reproduced | `draft` | I | — | — |
-| **CON-PUB-010** Platforms | `draft` | I | — | — |
-| **CON-PUB-020** Source under the MIT licence | `draft` | I | — | — |
-| **CON-PUB-030** Third-party assets keep their licences | `draft` | I | — | — |
-| **CON-PUB-040** Signing identifiers stay out of the repository | `draft` | I | — | — |
-| **CON-PUB-050** No Team ID in the project file | `draft` | T | — | — |
-| **CON-PUB-060** No secrets in the repository or its history | `draft` | I | — | — |
-| **CON-PUB-070** Nothing from another game is named | `draft` | I | — | — |
-| **CON-PUB-080** Generated speech is treated as user-generated content | `draft` | I | — | — |
-| **CON-PUB-090** The working title is not the released name | `draft` | I | — | — |
-| **CON-PUB-100** Commit authorship exposes no personal address | `draft` | I | — | — |
-| **CON-PUB-110** The company is the seller | `draft` | I | — | — |
-| **FR-BOT-010** Six archetypes | `draft` | I | — | — |
-| **FR-BOT-020** Two squads at war | `draft` | T | — | — |
-| **FR-BOT-030** Archetype sets base personality weights | `draft` | T | — | — |
-| **FR-BOT-040** One bot per squad holds the commander role | `draft` | T | — | — |
-| **FR-BOT-050** A bot notices the snake in view | `draft` | T | — | — |
-| **FR-BOT-060** A bot fires at its target | `draft` | T | — | — |
-| **FR-BOT-070** Heavy and sapper weapons destroy cover | `draft` | T | — | — |
-| **FR-BOT-080** Action chosen by maximum utility | `draft` | T | — | — |
-| **FR-BOT-090** Personality weights multiply utility | `draft` | T | — | — |
-| **FR-BOT-100** Cover is valued by what is left of it | `draft` | T | — | — |
-| **FR-BOT-105** Cover is worth less against a wrecking weapon | `draft` | T | — | — |
-| **FR-BOT-110** Height advantage enters position scoring | `draft` | T | — | — |
-| **FR-BOT-115** Distance along the snake's path enters position scoring | `draft` | T | — | — |
-| **FR-BOT-120** Nearby snake overrides the commander's priority | `draft` | T | — | — |
-| **FR-BOT-130** Discipline decides how far an order is kept | `draft` | T | — | — |
-| **FR-BOT-140** Target choice has hysteresis | `draft` | T | — | — |
-| **FR-BOT-150** Deliberation runs on a fixed step, not per frame | `draft` | T | — | — |
-| **FR-BOT-160** Slots go by priority, not round-robin | `draft` | T | — | — |
-| **FR-BOT-170** Interrupts grant a slot at once | `draft` | T | — | — |
-| **FR-BOT-180** Calm squads do not hunt the snake | `draft` | T | — | — |
-| **FR-BOT-190** Alarmed squads keep together | `draft` | T | — | — |
-| **FR-BOT-200** The actions a bot can choose from | `draft` | T | — | — |
-| **FR-CMD-010** One commander per squad | `draft` | T | — | — |
-| **FR-CMD-020** The commander is called on an interval | `draft` | T | — | — |
-| **FR-CMD-030** The commander sets the threat priority | `draft` | T | — | — |
-| **FR-CMD-040** The commander issues an order | `draft` | T | — | — |
-| **FR-CMD-050** The commander assigns roles | `draft` | T | — | — |
-| **FR-CMD-060** The commander sets personality weights | `draft` | T | — | — |
-| **FR-CMD-070** Awareness gates what the commander is told | `draft` | T | — | — |
-| **FR-CMD-080** The two commanders run out of phase | `draft` | T | — | — |
-| **FR-CMD-090** A commander may propose a truce | `draft` | T | — | — |
-| **FR-CMD-100** A truce stops fire between the squads | `draft` | T | — | — |
-| **FR-CMD-105** A truce turns both squads on the snake | `draft` | T | — | — |
-| **FR-CMD-110** A truce is fragile | `draft` | T | — | — |
-| **FR-CMD-120** Losing the role-holder silences the commander | `draft` | T | — | — |
-| **FR-CMD-125** Losing the role-holder voids orders and roles | `draft` | T | — | — |
-| **FR-CMD-130** Collapsed bots keep their last weights, with more panic | `draft` | T | — | — |
-| **FR-CMD-140** Bots speak on events | `draft` | D | — | — |
-| **FR-CMD-150** Speech is rate-limited and queued | `draft` | T | — | — |
-| **FR-CMD-160** Every line passes a content filter | `draft` | T | — | — |
-| **FR-MAP-010** A map has more than one floor | `draft` | I | — | — |
-| **FR-MAP-020** The navigation mesh covers every walkable surface | `draft` | T | — | — |
-| **FR-MAP-030** Destructible modules have three states | `draft` | T | — | — |
-| **FR-MAP-040** Debris stops blocking sight and fire | `draft` | T | — | — |
-| **FR-MAP-050** The navigation mesh follows destruction | `draft` | T | — | — |
-| **FR-MAP-060** What can and cannot be destroyed is declared per module type | `draft` | I | — | — |
-| **FR-MAP-070** Stairs the snake can block | `draft` | I | — | — |
-| **FR-MAP-080** Trap corridors | `draft` | I | — | — |
-| **FR-MAP-090** Every reachable surface is continuous for the tail | `draft` | T | — | — |
-| **FR-MAP-100** Maps are assembled from a modular kit | `draft` | I | — | — |
-| **FR-SCORE-010** Consuming a bot awards points | `draft` | T | — | — |
-| **FR-SCORE-020** Live prey has the higher base value | `draft` | T | — | — |
-| **FR-SCORE-030** Stealth multiplier by who saw | `draft` | T | — | — |
-| **FR-SCORE-040** The leading squad is the one with more living bots | `draft` | T | — | — |
-| **FR-SCORE-050** Balance multiplier for prey from the leading squad | `draft` | T | — | — |
-| **FR-SCORE-060** Target-value multiplier for commander, heavy and medic | `draft` | T | — | — |
-| **FR-SCORE-070** A witness is a bot with line of sight during the window | `draft` | T | — | — |
-| **FR-SCORE-080** Arriving right after counts as witnessing | `draft` | T | — | — |
-| **FR-SCORE-090** A witness reports after a delay | `draft` | T | — | — |
-| **FR-SCORE-100** A consumed witness never reports | `draft` | T | — | — |
-| **FR-SCORE-110** A body carries its cause of death | `draft` | D | — | — |
-| **FR-SCORE-120** Finding a body is one thing, inspecting it another | `draft` | T | — | — |
-| **FR-SCORE-125** A vanished body raises the alarm | `draft` | T | — | — |
-| **FR-SCORE-130** Each squad has an awareness state | `draft` | T | — | — |
-| **FR-SCORE-140** The match ends when the snake dies | `draft` | T | — | — |
-| **FR-SCORE-150** The match ends when no bot is left | `draft` | T | — | — |
-| **FR-SNAKE-010** Head moves on the navigation mesh | `draft` | D | — | — |
-| **FR-SNAKE-020** Tail follows the head's path | `draft` | D | — | — |
-| **FR-SNAKE-030** Head speed comes from configuration | `draft` | T | — | — |
-| **FR-SNAKE-040** Tail blocks bots | `draft` | T | — | — |
-| **FR-SNAKE-050** Tail blocks the snake's own head | `draft` | T | — | — |
-| **FR-SNAKE-060** Eating extends the tail | `draft` | T | — | — |
-| **FR-SNAKE-070** Damage removes segments from the end | `draft` | T | — | — |
-| **FR-SNAKE-080** A removed segment takes its ability with it | `draft` | T | — | — |
-| **FR-SNAKE-090** Eating takes time and holds the snake in place | `draft` | T | — | — |
-| **FR-SNAKE-100** Live prey takes longer than a body | `draft` | T | — | — |
-| **FR-SNAKE-110** Consuming a bot attaches its archetype's ability to a segment | `draft` | T | — | — |
-| **FR-SNAKE-120** An ability is consumed on use | `draft` | T | — | — |
-| **FR-SNAKE-130** Assault: dash | `draft` | T | — | — |
-| **FR-SNAKE-140** Sapper: breach a partition | `draft` | T | — | — |
-| **FR-SNAKE-150** Scout: see bots through walls | `draft` | T | — | — |
-| **FR-SNAKE-160** Sniper: focus | `draft` | T | — | — |
-| **FR-SNAKE-170** Medic: regrow | `draft` | T | — | — |
-| **FR-SNAKE-180** Heavy: temporary armour | `draft` | T | — | — |
-| **FR-SNAKE-190** Heavy: faster destruction | `draft` | T | — | — |
-| **FR-SNAKE-200** The body destroys what it crosses | `draft` | T | — | — |
-| **FR-SNAKE-210** The snake dies when hit with no tail left | `draft` | T | — | — |
-| **FR-SNAKE-220** A drop is a path, not a fall | `draft` | D | — | — |
-| **FR-TOOL-010** Parse a map specification | `draft` | T | — | — |
-| **FR-TOOL-020** Assemble the scene from the kit | `draft` | T | — | — |
-| **FR-TOOL-030** Generate the navigation mesh | `draft` | T | — | — |
-| **FR-TOOL-040** Validate the map | `draft` | T | — | — |
-| **FR-TOOL-050** Export to the level editor | `draft` | T | — | — |
-| **FR-TOOL-060** Render a 2D plan per floor | `draft` | T | — | — |
-| **FR-TOOL-070** Free camera | `draft` | D | — | — |
-| **FR-TOOL-080** Navigation mesh overlay | `draft` | D | — | — |
-| **FR-TOOL-090** Disconnected regions and seams highlighted | `draft` | D | — | — |
-| **FR-TOOL-100** Teleport by pointing | `draft` | D | — | — |
-| **FR-TOOL-110** Snake length slider | `draft` | D | — | — |
-| **FR-TOOL-120** Bot sight lines drawn | `draft` | D | — | — |
-| **FR-TOOL-130** Concept renders are built by script | `draft` | I | — | — |
-| **FR-TOOL-140** Pre-commit check for a Team ID in the project file | `draft` | T | — | — |
-| **FR-VIEW-010** A perspective camera pitched between 50 and 60 degrees | `draft` | D | — | — |
-| **FR-VIEW-020** The camera follows the head | `draft` | D | — | — |
-| **FR-VIEW-030** Game logic reads intents, not device events | `draft` | I | — | — |
-| **FR-VIEW-040** macOS scheme: keyboard and mouse | `draft` | D | — | — |
-| **FR-VIEW-050** iOS scheme: touch | `draft` | D | — | — |
-| **FR-VIEW-060** Squad affiliation is readable at a glance | `draft` | D | — | — |
-| **FR-VIEW-070** Archetype is readable from the silhouette | `draft` | D | — | — |
-| **FR-VIEW-080** Wounded and separated bots stand out | `draft` | D | — | — |
-| **FR-VIEW-090** Panic is visible on the bot | `draft` | D | — | — |
-| **FR-VIEW-100** Eating is staged as comedy | `draft` | D | — | — |
-| **FR-VIEW-110** The snake squashes and stretches | `draft` | D | — | — |
-| **FR-VIEW-120** The HUD is drawn in the diorama style | `draft` | I | — | — |
-| **IF-BOT-010** Bot and match configuration | `draft` | T | — | — |
-| **IF-CMD-010** Commander input | `draft` | T | — | — |
-| **IF-CMD-020** Commander output | `draft` | T | — | — |
-| **IF-CMD-030** Speech configuration | `draft` | T | — | — |
-| **IF-MAP-010** The map specification file | `draft` | T | — | — |
-| **IF-MAP-020** Tuning configuration for destruction and maps | `draft` | T | — | — |
-| **IF-SCORE-010** Scoring configuration | `draft` | T | — | — |
-| **IF-SNAKE-010** Snake configuration | `draft` | T | — | — |
-| **IF-VIEW-010** Input intents | `draft` | T | — | — |
-| **IF-VIEW-020** View configuration | `draft` | T | — | — |
-| **INV-BOT-010** Execution runs every frame for every bot | `draft` | T | — | — |
-| **INV-BOT-020** Squads never remove bodies | `draft` | T | — | — |
-| **INV-BOT-030** Both squads share one archetype set | `draft` | I | — | — |
-| **INV-MAP-010** The load-bearing frame never breaks | `draft` | T | — | — |
-| **INV-MAP-020** Destruction never disconnects floors | `draft` | T | — | — |
-| **INV-SCORE-010** Nothing but consumption scores | `draft` | T | — | — |
-| **INV-SCORE-020** A body stays until the snake consumes it | `draft` | T | — | — |
-| **INV-SNAKE-010** No ability shoots | `draft` | I | — | — |
-| **INV-SNAKE-020** The snake is slower than a running bot | `draft` | T | — | — |
-| **NFR-PERF-010** 60 frames per second on the baseline device | `draft` | A | — | — |
-| **NFR-PERF-020** Deliberation costs at most 0.5 ms per frame | `draft` | T | — | — |
-| **NFR-PERF-030** A commander inference does not break the frame budget | `draft` | A | — | — |
-| **NFR-PERF-040** Commander answers within its interval | `draft` | A | — | — |
-| **NFR-PERF-050** Sustained performance over a long session | `draft` | A | — | — |
-| **NFR-PERF-055** Commander latency holds over a long session | `draft` | A | — | — |
-| **NFR-PERF-060** Under thermal pressure the commander interval stretches | `draft` | T | — | — |
-| **NFR-PERF-070** Under thermal pressure speech falls back to pre-written lines | `draft` | T | — | — |
-| **NFR-PERF-080** The language model costs the app no memory or download size | `draft` | I | — | — |
+| **CON-MAP-010** No existing map is reproduced | `deferred` | I | — | — |
+| **CON-PUB-010** Platforms | `deferred` | I | — | — |
+| **CON-PUB-020** Source under the MIT licence | `deferred` | I | — | — |
+| **CON-PUB-030** Third-party assets keep their licences | `deferred` | I | — | — |
+| **CON-PUB-040** Signing identifiers stay out of the repository | `deferred` | I | — | — |
+| **CON-PUB-050** No Team ID in the project file | `deferred` | T | — | — |
+| **CON-PUB-060** No secrets in the repository or its history | `deferred` | I | — | — |
+| **CON-PUB-070** Nothing from another game is named | `deferred` | I | — | — |
+| **CON-PUB-080** Generated speech is treated as user-generated content | `deferred` | I | — | — |
+| **CON-PUB-090** The working title is not the released name | `deferred` | I | — | — |
+| **CON-PUB-100** Commit authorship exposes no personal address | `deferred` | I | — | — |
+| **CON-PUB-110** The company is the seller | `deferred` | I | — | — |
+| **FR-BOT-010** Six archetypes | `deferred` | I | — | — |
+| **FR-BOT-020** Two squads at war | `deferred` | T | — | — |
+| **FR-BOT-030** Archetype sets base personality weights | `deferred` | T | — | — |
+| **FR-BOT-040** One bot per squad holds the commander role | `deferred` | T | — | — |
+| **FR-BOT-050** A bot notices the snake in view | `deferred` | T | — | — |
+| **FR-BOT-060** A bot fires at its target | `deferred` | T | — | — |
+| **FR-BOT-070** Heavy and sapper weapons destroy cover | `deferred` | T | — | — |
+| **FR-BOT-080** Action chosen by maximum utility | `deferred` | T | — | — |
+| **FR-BOT-090** Personality weights multiply utility | `deferred` | T | — | — |
+| **FR-BOT-100** Cover is valued by what is left of it | `deferred` | T | — | — |
+| **FR-BOT-105** Cover is worth less against a wrecking weapon | `deferred` | T | — | — |
+| **FR-BOT-110** Height advantage enters position scoring | `deferred` | T | — | — |
+| **FR-BOT-115** Distance along the snake's path enters position scoring | `deferred` | T | — | — |
+| **FR-BOT-120** Nearby snake overrides the commander's priority | `deferred` | T | — | — |
+| **FR-BOT-130** Discipline decides how far an order is kept | `deferred` | T | — | — |
+| **FR-BOT-140** Target choice has hysteresis | `deferred` | T | — | — |
+| **FR-BOT-150** Deliberation runs on a fixed step, not per frame | `deferred` | T | — | — |
+| **FR-BOT-160** Slots go by priority, not round-robin | `deferred` | T | — | — |
+| **FR-BOT-170** Interrupts grant a slot at once | `deferred` | T | — | — |
+| **FR-BOT-180** Calm squads do not hunt the snake | `deferred` | T | — | — |
+| **FR-BOT-190** Alarmed squads keep together | `deferred` | T | — | — |
+| **FR-BOT-200** The actions a bot can choose from | `deferred` | T | — | — |
+| **FR-CMD-010** One commander per squad | `deferred` | T | — | — |
+| **FR-CMD-020** The commander is called on an interval | `deferred` | T | — | — |
+| **FR-CMD-030** The commander sets the threat priority | `deferred` | T | — | — |
+| **FR-CMD-040** The commander issues an order | `deferred` | T | — | — |
+| **FR-CMD-050** The commander assigns roles | `deferred` | T | — | — |
+| **FR-CMD-060** The commander sets personality weights | `deferred` | T | — | — |
+| **FR-CMD-070** Awareness gates what the commander is told | `deferred` | T | — | — |
+| **FR-CMD-080** The two commanders run out of phase | `deferred` | T | — | — |
+| **FR-CMD-090** A commander may propose a truce | `deferred` | T | — | — |
+| **FR-CMD-100** A truce stops fire between the squads | `deferred` | T | — | — |
+| **FR-CMD-105** A truce turns both squads on the snake | `deferred` | T | — | — |
+| **FR-CMD-110** A truce is fragile | `deferred` | T | — | — |
+| **FR-CMD-120** Losing the role-holder silences the commander | `deferred` | T | — | — |
+| **FR-CMD-125** Losing the role-holder voids orders and roles | `deferred` | T | — | — |
+| **FR-CMD-130** Collapsed bots keep their last weights, with more panic | `deferred` | T | — | — |
+| **FR-CMD-140** Bots speak on events | `deferred` | D | — | — |
+| **FR-CMD-150** Speech is rate-limited and queued | `deferred` | T | — | — |
+| **FR-CMD-160** Every line passes a content filter | `deferred` | T | — | — |
+| **FR-MAP-010** A map has more than one floor | `deferred` | I | — | — |
+| **FR-MAP-020** The navigation mesh covers every walkable surface | `deferred` | T | — | — |
+| **FR-MAP-030** Destructible modules have three states | `deferred` | T | — | — |
+| **FR-MAP-040** Debris stops blocking sight and fire | `deferred` | T | — | — |
+| **FR-MAP-050** The navigation mesh follows destruction | `deferred` | T | — | — |
+| **FR-MAP-060** What can and cannot be destroyed is declared per module type | `deferred` | I | — | — |
+| **FR-MAP-070** Stairs the snake can block | `deferred` | I | — | — |
+| **FR-MAP-080** Trap corridors | `deferred` | I | — | — |
+| **FR-MAP-090** Every reachable surface is continuous for the tail | `deferred` | T | — | — |
+| **FR-MAP-100** Maps are assembled from a modular kit | `deferred` | I | — | — |
+| **FR-SCORE-010** Consuming a bot awards points | `deferred` | T | — | — |
+| **FR-SCORE-020** Live prey has the higher base value | `deferred` | T | — | — |
+| **FR-SCORE-030** Stealth multiplier by who saw | `deferred` | T | — | — |
+| **FR-SCORE-040** The leading squad is the one with more living bots | `deferred` | T | — | — |
+| **FR-SCORE-050** Balance multiplier for prey from the leading squad | `deferred` | T | — | — |
+| **FR-SCORE-060** Target-value multiplier for commander, heavy and medic | `deferred` | T | — | — |
+| **FR-SCORE-070** A witness is a bot with line of sight during the window | `deferred` | T | — | — |
+| **FR-SCORE-080** Arriving right after counts as witnessing | `deferred` | T | — | — |
+| **FR-SCORE-090** A witness reports after a delay | `deferred` | T | — | — |
+| **FR-SCORE-100** A consumed witness never reports | `deferred` | T | — | — |
+| **FR-SCORE-110** A body carries its cause of death | `deferred` | D | — | — |
+| **FR-SCORE-120** Finding a body is one thing, inspecting it another | `deferred` | T | — | — |
+| **FR-SCORE-125** A vanished body raises the alarm | `deferred` | T | — | — |
+| **FR-SCORE-130** Each squad has an awareness state | `deferred` | T | — | — |
+| **FR-SCORE-140** The match ends when the snake dies | `deferred` | T | — | — |
+| **FR-SCORE-150** The match ends when no bot is left | `deferred` | T | — | — |
+| **FR-SNAKE-010** Head moves on the navigation mesh | `deferred` | D | — | — |
+| **FR-SNAKE-020** Tail follows the head's path | `deferred` | D | — | — |
+| **FR-SNAKE-030** Head speed comes from configuration | `deferred` | T | — | — |
+| **FR-SNAKE-040** Tail blocks bots | `deferred` | T | — | — |
+| **FR-SNAKE-050** Tail blocks the snake's own head | `deferred` | T | — | — |
+| **FR-SNAKE-060** Eating extends the tail | `deferred` | T | — | — |
+| **FR-SNAKE-070** Damage removes segments from the end | `deferred` | T | — | — |
+| **FR-SNAKE-080** A removed segment takes its ability with it | `deferred` | T | — | — |
+| **FR-SNAKE-090** Eating takes time and holds the snake in place | `deferred` | T | — | — |
+| **FR-SNAKE-100** Live prey takes longer than a body | `deferred` | T | — | — |
+| **FR-SNAKE-110** Consuming a bot attaches its archetype's ability to a segment | `deferred` | T | — | — |
+| **FR-SNAKE-120** An ability is consumed on use | `deferred` | T | — | — |
+| **FR-SNAKE-130** Assault: dash | `deferred` | T | — | — |
+| **FR-SNAKE-140** Sapper: breach a partition | `deferred` | T | — | — |
+| **FR-SNAKE-150** Scout: see bots through walls | `deferred` | T | — | — |
+| **FR-SNAKE-160** Sniper: focus | `deferred` | T | — | — |
+| **FR-SNAKE-170** Medic: regrow | `deferred` | T | — | — |
+| **FR-SNAKE-180** Heavy: temporary armour | `deferred` | T | — | — |
+| **FR-SNAKE-190** Heavy: faster destruction | `deferred` | T | — | — |
+| **FR-SNAKE-200** The body destroys what it crosses | `deferred` | T | — | — |
+| **FR-SNAKE-210** The snake dies when hit with no tail left | `deferred` | T | — | — |
+| **FR-SNAKE-220** A drop is a path, not a fall | `deferred` | D | — | — |
+| **FR-TOOL-010** Parse a map specification | `deferred` | T | — | — |
+| **FR-TOOL-020** Assemble the scene from the kit | `deferred` | T | — | — |
+| **FR-TOOL-030** Generate the navigation mesh | `deferred` | T | — | — |
+| **FR-TOOL-040** Validate the map | `deferred` | T | — | — |
+| **FR-TOOL-050** Export to the level editor | `deferred` | T | — | — |
+| **FR-TOOL-060** Render a 2D plan per floor | `deferred` | T | — | — |
+| **FR-TOOL-070** Free camera | `deferred` | D | — | — |
+| **FR-TOOL-080** Navigation mesh overlay | `deferred` | D | — | — |
+| **FR-TOOL-090** Disconnected regions and seams highlighted | `deferred` | D | — | — |
+| **FR-TOOL-100** Teleport by pointing | `deferred` | D | — | — |
+| **FR-TOOL-110** Snake length slider | `deferred` | D | — | — |
+| **FR-TOOL-120** Bot sight lines drawn | `deferred` | D | — | — |
+| **FR-TOOL-130** Concept renders are built by script | `deferred` | I | — | — |
+| **FR-TOOL-140** Pre-commit check for a Team ID in the project file | `deferred` | T | — | — |
+| **FR-VIEW-010** A perspective camera pitched between 50 and 60 degrees | `deferred` | D | — | — |
+| **FR-VIEW-020** The camera follows the head | `deferred` | D | — | — |
+| **FR-VIEW-030** Game logic reads intents, not device events | `deferred` | I | — | — |
+| **FR-VIEW-040** macOS scheme: keyboard and mouse | `deferred` | D | — | — |
+| **FR-VIEW-050** iOS scheme: touch | `deferred` | D | — | — |
+| **FR-VIEW-060** Squad affiliation is readable at a glance | `deferred` | D | — | — |
+| **FR-VIEW-070** Archetype is readable from the silhouette | `deferred` | D | — | — |
+| **FR-VIEW-080** Wounded and separated bots stand out | `deferred` | D | — | — |
+| **FR-VIEW-090** Panic is visible on the bot | `deferred` | D | — | — |
+| **FR-VIEW-100** Eating is staged as comedy | `deferred` | D | — | — |
+| **FR-VIEW-110** The snake squashes and stretches | `deferred` | D | — | — |
+| **FR-VIEW-120** The HUD is drawn in the diorama style | `deferred` | I | — | — |
+| **IF-BOT-010** Bot and match configuration | `deferred` | T | — | — |
+| **IF-CMD-010** Commander input | `deferred` | T | — | — |
+| **IF-CMD-020** Commander output | `deferred` | T | — | — |
+| **IF-CMD-030** Speech configuration | `deferred` | T | — | — |
+| **IF-MAP-010** The map specification file | `deferred` | T | — | — |
+| **IF-MAP-020** Tuning configuration for destruction and maps | `deferred` | T | — | — |
+| **IF-SCORE-010** Scoring configuration | `deferred` | T | — | — |
+| **IF-SNAKE-010** Snake configuration | `deferred` | T | — | — |
+| **IF-VIEW-010** Input intents | `deferred` | T | — | — |
+| **IF-VIEW-020** View configuration | `deferred` | T | — | — |
+| **INV-BOT-010** Execution runs every frame for every bot | `deferred` | T | — | — |
+| **INV-BOT-020** Squads never remove bodies | `deferred` | T | — | — |
+| **INV-BOT-030** Both squads share one archetype set | `deferred` | I | — | — |
+| **INV-MAP-010** The load-bearing frame never breaks | `deferred` | T | — | — |
+| **INV-MAP-020** Destruction never disconnects floors | `deferred` | T | — | — |
+| **INV-SCORE-010** Nothing but consumption scores | `deferred` | T | — | — |
+| **INV-SCORE-020** A body stays until the snake consumes it | `deferred` | T | — | — |
+| **INV-SNAKE-010** No ability shoots | `deferred` | I | — | — |
+| **INV-SNAKE-020** The snake is slower than a running bot | `deferred` | T | — | — |
+| **NFR-PERF-010** 60 frames per second on the baseline device | `deferred` | A | — | — |
+| **NFR-PERF-020** Deliberation costs at most 0.5 ms per frame | `deferred` | T | — | — |
+| **NFR-PERF-030** A commander inference does not break the frame budget | `deferred` | A | — | — |
+| **NFR-PERF-040** Commander answers within its interval | `deferred` | A | — | — |
+| **NFR-PERF-050** Sustained performance over a long session | `deferred` | A | — | — |
+| **NFR-PERF-055** Commander latency holds over a long session | `deferred` | A | — | — |
+| **NFR-PERF-060** Under thermal pressure the commander interval stretches | `deferred` | T | — | — |
+| **NFR-PERF-070** Under thermal pressure speech falls back to pre-written lines | `deferred` | T | — | — |
+| **NFR-PERF-080** The language model costs the app no memory or download size | `deferred` | I | — | — |
 
 ## Incoming links
 

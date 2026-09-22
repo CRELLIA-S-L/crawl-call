@@ -11,7 +11,7 @@ Frames of the grounds register — F-010, F-020, F-030 — are the boundaries th
 ### INV-SNAKE-010 — No ability shoots
 
 ```yaml
-status: draft
+status: deferred
 verification: I
 derives_from: []
 depends_on: [FR-SNAKE-110]
@@ -31,7 +31,7 @@ Frame F-010.
 ### INV-SNAKE-020 — The snake is slower than a running bot
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: []
 depends_on: [FR-SNAKE-030]
@@ -50,7 +50,7 @@ The dash (FR-SNAKE-130) is the temporary exception the player earns by eating an
 ### INV-BOT-010 — Execution runs every frame for every bot
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: []
 depends_on: [FR-BOT-150]
@@ -68,7 +68,7 @@ In every frame, the system **shall** update aim, movement, animation and collisi
 ### INV-BOT-020 — Squads never remove bodies
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: []
 depends_on: [FR-SCORE-110]
@@ -86,7 +86,7 @@ The system **shall not** let a bot move, carry or remove a body.
 ### INV-BOT-030 — Both squads share one archetype set
 
 ```yaml
-status: draft
+status: deferred
 verification: I
 derives_from: []
 depends_on: [FR-BOT-010, FR-BOT-020]
@@ -104,7 +104,7 @@ The two squads **shall** differ only in colour and in their commander, never in 
 ### INV-SCORE-010 — Nothing but consumption scores
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: []
 depends_on: [FR-SCORE-010]
@@ -123,7 +123,7 @@ Watching is useful, doing nothing is not.
 ### INV-SCORE-020 — A body stays until the snake consumes it
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: []
 depends_on: [FR-SCORE-110, INV-BOT-020]
@@ -142,7 +142,7 @@ INV-BOT-020 says squads do not move bodies; this says nothing else does either.
 ### INV-MAP-010 — The load-bearing frame never breaks
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: []
 depends_on: [FR-MAP-060]
@@ -160,7 +160,7 @@ The system **shall not** change the state of a module declared load-bearing, wha
 ### INV-MAP-020 — Destruction never disconnects floors
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: [INV-MAP-010]
 depends_on: [FR-MAP-050]
@@ -181,7 +181,7 @@ Stated separately from INV-MAP-010 because it is the property, and INV-MAP-010 t
 ### CON-PUB-010 — Platforms
 
 ```yaml
-status: draft
+status: deferred
 verification: I
 derives_from: []
 depends_on: []
@@ -200,7 +200,7 @@ Older devices are out, knowingly; the line sits at the iPhone 15 Pro rather than
 ### CON-PUB-020 — Source under the MIT licence
 
 ```yaml
-status: draft
+status: deferred
 verification: I
 derives_from: []
 depends_on: []
@@ -219,7 +219,7 @@ Closed clones are permitted and that is accepted knowingly (§17.3).
 ### CON-PUB-030 — Third-party assets keep their licences
 
 ```yaml
-status: draft
+status: deferred
 verification: I
 derives_from: [CON-PUB-020]
 depends_on: []
@@ -238,7 +238,7 @@ The listing and the licence it lists are one act of admitting an asset; an asset
 ### CON-PUB-040 — Signing identifiers stay out of the repository
 
 ```yaml
-status: draft
+status: deferred
 verification: I
 derives_from: [CON-PUB-060]
 depends_on: []
@@ -256,7 +256,7 @@ The repository **shall** carry the bundle identifier and development team only a
 ### CON-PUB-050 — No Team ID in the project file
 
 ```yaml
-status: draft
+status: deferred
 verification: T
 derives_from: [CON-PUB-040]
 depends_on: []
@@ -275,7 +275,7 @@ Enforced by FR-TOOL-140.
 ### CON-PUB-060 — No secrets in the repository or its history
 
 ```yaml
-status: draft
+status: deferred
 verification: I
 derives_from: []
 depends_on: []
@@ -294,7 +294,7 @@ A scanner such as gitleaks is the concept's example; the requirement is the clea
 ### CON-PUB-070 — Nothing from another game is named
 
 ```yaml
-status: draft
+status: deferred
 verification: I
 derives_from: []
 depends_on: []
@@ -313,7 +313,7 @@ Frame F-020.
 ### CON-PUB-080 — Generated speech is treated as user-generated content
 
 ```yaml
-status: draft
+status: deferred
 verification: I
 derives_from: []
 depends_on: [FR-CMD-140]
@@ -332,7 +332,7 @@ The filter is FR-CMD-160; the rating and what the filter rejects are ADR-0014.
 ### CON-PUB-090 — The working title is not the released name
 
 ```yaml
-status: draft
+status: deferred
 verification: I
 derives_from: [CON-PUB-070]
 depends_on: []
@@ -350,7 +350,7 @@ The name "Chomp Company" **shall** appear only in the repository, code, document
 ### CON-MAP-010 — No existing map is reproduced
 
 ```yaml
-status: draft
+status: deferred
 verification: I
 derives_from: [CON-PUB-070]
 depends_on: [FR-MAP-100]
@@ -370,7 +370,7 @@ Frame F-020.
 ### CON-PUB-100 — Commit authorship exposes no personal address
 
 ```yaml
-status: draft
+status: deferred
 verification: I
 derives_from: [CON-PUB-060]
 depends_on: []
@@ -389,7 +389,7 @@ The history is rewritten once, before publication, rather than policed afterward
 ### CON-PUB-110 — The company is the seller
 
 ```yaml
-status: draft
+status: deferred
 verification: I
 derives_from: [CON-PUB-020]
 depends_on: []
