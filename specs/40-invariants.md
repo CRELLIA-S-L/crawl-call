@@ -38,7 +38,7 @@ depends_on: [FR-SNAKE-030]
 refines: []
 conflicts_with: []
 code: []
-tests: []
+tests: [Tests/CrawlCallTests/ConfigurationTests.swift]
 created: 2026-09-21
 ```
 

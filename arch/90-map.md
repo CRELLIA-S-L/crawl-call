@@ -7,5 +7,7 @@ What each part of this project is, what it carries and what state it is in.
 | Element | Status | Carries | Requirements |
 |---|---|---|---|
 | **E-010** The prompt bench | `built` | `Sources/PromptBench/PromptBench.swift`, `Sources/PromptBench/PromptVariants.swift`, `Sources/PromptBench/main.swift` | **FR-TOOL-150**, **FR-TOOL-160** (2 realized) |
+| **E-020** Start-up and configuration | `built` | `Sources/CrawlCall/Config`, `Sources/CrawlCall/Launch.swift`, `Sources/CrawlCall/CrawlCallApp.swift` | **IF-SNAKE-010**, **IF-MAP-020**, **IF-VIEW-020**, **IF-BOT-010** (4 realized) |
+| **E-030** The input contract | `built` | `Sources/CrawlCall/Input` | **IF-VIEW-010** (1 realized) |
 
-1 elements, carrying 2 of the 173 requirements this specification holds.
+3 elements, carrying 7 of the 173 requirements this specification holds.

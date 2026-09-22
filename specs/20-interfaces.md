@@ -12,14 +12,14 @@ The files are JSON, one per interface, and the map a text file with a grid per f
 ### IF-SNAKE-010 — Snake configuration
 
 ```yaml
-status: deferred
+status: implemented
 verification: T
 derives_from: []
 depends_on: []
 refines: []
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Config/Configurations.swift, Sources/CrawlCall/Config/Configurations+Load.swift, Sources/CrawlCall/Config/Schema.swift, Sources/CrawlCall/Launch.swift, Sources/CrawlCall/CrawlCallApp.swift]
+tests: [Tests/CrawlCallTests/ConfigurationTests.swift, Tests/CrawlCallTests/LaunchTests.swift, Tests/CrawlCallTests/SchemaTests.swift]
 created: 2026-09-21
 ```
 
@@ -31,14 +31,14 @@ One act — reading one file — over an enumerated set of keys.
 ### IF-MAP-020 — Tuning configuration for destruction and maps
 
 ```yaml
-status: deferred
+status: implemented
 verification: T
 derives_from: []
 depends_on: []
 refines: []
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Config/Configurations.swift, Sources/CrawlCall/Config/Configurations+Load.swift, Sources/CrawlCall/Config/Schema.swift, Sources/CrawlCall/Launch.swift, Sources/CrawlCall/CrawlCallApp.swift]
+tests: [Tests/CrawlCallTests/ConfigurationTests.swift, Tests/CrawlCallTests/LaunchTests.swift, Tests/CrawlCallTests/SchemaTests.swift]
 created: 2026-09-21
 ```
 
@@ -67,14 +67,14 @@ When the game starts, the system **shall** read from the scoring configuration �
 ### IF-BOT-010 — Bot and match configuration
 
 ```yaml
-status: deferred
+status: implemented
 verification: T
 derives_from: []
 depends_on: []
 refines: []
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Config/Configurations.swift, Sources/CrawlCall/Config/Configurations+Load.swift, Sources/CrawlCall/Config/Schema.swift, Sources/CrawlCall/Launch.swift, Sources/CrawlCall/CrawlCallApp.swift]
+tests: [Tests/CrawlCallTests/ConfigurationTests.swift, Tests/CrawlCallTests/LaunchTests.swift, Tests/CrawlCallTests/SchemaTests.swift]
 created: 2026-09-21
 ```
 
@@ -174,14 +174,14 @@ Which characters mean which modules is the kit's own `legend.json` (ADR-0012), s
 ### IF-VIEW-010 — Input intents
 
 ```yaml
-status: deferred
+status: implemented
 verification: T
 derives_from: []
 depends_on: []
 refines: []
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Input/Intent.swift]
+tests: [Tests/CrawlCallTests/IntentTests.swift]
 created: 2026-09-21
 ```
 
@@ -193,14 +193,14 @@ The input layer **shall** deliver to the game logic exactly these intents: a mov
 ### IF-VIEW-020 — View configuration
 
 ```yaml
-status: deferred
+status: implemented
 verification: T
 derives_from: []
 depends_on: []
 refines: []
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Config/Configurations.swift, Sources/CrawlCall/Config/Configurations+Load.swift, Sources/CrawlCall/Config/Schema.swift, Sources/CrawlCall/Launch.swift, Sources/CrawlCall/CrawlCallApp.swift]
+tests: [Tests/CrawlCallTests/ConfigurationTests.swift, Tests/CrawlCallTests/LaunchTests.swift, Tests/CrawlCallTests/SchemaTests.swift]
 created: 2026-09-21
 ```
 

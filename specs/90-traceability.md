@@ -8,9 +8,9 @@ Total requirements: 173.
 | Status | Requirements |
 |---|---|
 | `draft` | 3 |
-| `deferred` | 168 |
+| `deferred` | 163 |
 | `partial` | 0 |
-| `implemented` | 2 |
+| `implemented` | 7 |
 | `superseded` | 0 |
 | `withdrawn` | 0 |
 
@@ -160,7 +160,7 @@ Total requirements: 173.
 | **FR-VIEW-100** Eating is staged as comedy | `deferred` | D | — | — |
 | **FR-VIEW-110** The snake squashes and stretches | `deferred` | D | — | — |
 | **FR-VIEW-120** The HUD is drawn in the diorama style | `deferred` | I | — | — |
-| **IF-BOT-010** Bot and match configuration | `deferred` | T | — | — |
+| **IF-BOT-010** Bot and match configuration | `implemented` | T | `Sources/CrawlCall/Config/Configurations.swift`<br>`Sources/CrawlCall/Config/Configurations+Load.swift`<br>`Sources/CrawlCall/Config/Schema.swift`<br>`Sources/CrawlCall/Launch.swift`<br>`Sources/CrawlCall/CrawlCallApp.swift` | `Tests/CrawlCallTests/ConfigurationTests.swift`<br>`Tests/CrawlCallTests/LaunchTests.swift`<br>`Tests/CrawlCallTests/SchemaTests.swift` |
 | **IF-CMD-010** Commander input | `deferred` | T | — | — |
 | **IF-CMD-020** Commander output | `deferred` | T | — | — |
 | **IF-CMD-030** Speech configuration | `deferred` | T | — | — |
@@ -168,11 +168,11 @@ Total requirements: 173.
 | **IF-CMD-050** Instructions for a bot's line | `deferred` | I | — | — |
 | **IF-CMD-060** What a generated line may and may not contain | `deferred` | T | — | — |
 | **IF-MAP-010** The map specification file | `deferred` | T | — | — |
-| **IF-MAP-020** Tuning configuration for destruction and maps | `deferred` | T | — | — |
+| **IF-MAP-020** Tuning configuration for destruction and maps | `implemented` | T | `Sources/CrawlCall/Config/Configurations.swift`<br>`Sources/CrawlCall/Config/Configurations+Load.swift`<br>`Sources/CrawlCall/Config/Schema.swift`<br>`Sources/CrawlCall/Launch.swift`<br>`Sources/CrawlCall/CrawlCallApp.swift` | `Tests/CrawlCallTests/ConfigurationTests.swift`<br>`Tests/CrawlCallTests/LaunchTests.swift`<br>`Tests/CrawlCallTests/SchemaTests.swift` |
 | **IF-SCORE-010** Scoring configuration | `deferred` | T | — | — |
-| **IF-SNAKE-010** Snake configuration | `deferred` | T | — | — |
-| **IF-VIEW-010** Input intents | `deferred` | T | — | — |
-| **IF-VIEW-020** View configuration | `deferred` | T | — | — |
+| **IF-SNAKE-010** Snake configuration | `implemented` | T | `Sources/CrawlCall/Config/Configurations.swift`<br>`Sources/CrawlCall/Config/Configurations+Load.swift`<br>`Sources/CrawlCall/Config/Schema.swift`<br>`Sources/CrawlCall/Launch.swift`<br>`Sources/CrawlCall/CrawlCallApp.swift` | `Tests/CrawlCallTests/ConfigurationTests.swift`<br>`Tests/CrawlCallTests/LaunchTests.swift`<br>`Tests/CrawlCallTests/SchemaTests.swift` |
+| **IF-VIEW-010** Input intents | `implemented` | T | `Sources/CrawlCall/Input/Intent.swift` | `Tests/CrawlCallTests/IntentTests.swift` |
+| **IF-VIEW-020** View configuration | `implemented` | T | `Sources/CrawlCall/Config/Configurations.swift`<br>`Sources/CrawlCall/Config/Configurations+Load.swift`<br>`Sources/CrawlCall/Config/Schema.swift`<br>`Sources/CrawlCall/Launch.swift`<br>`Sources/CrawlCall/CrawlCallApp.swift` | `Tests/CrawlCallTests/ConfigurationTests.swift`<br>`Tests/CrawlCallTests/LaunchTests.swift`<br>`Tests/CrawlCallTests/SchemaTests.swift` |
 | **INV-BOT-010** Execution runs every frame for every bot | `deferred` | T | — | — |
 | **INV-BOT-020** Squads never remove bodies | `deferred` | T | — | — |
 | **INV-BOT-030** Both squads share one archetype set | `deferred` | I | — | — |
@@ -181,7 +181,7 @@ Total requirements: 173.
 | **INV-SCORE-010** Nothing but consumption scores | `deferred` | T | — | — |
 | **INV-SCORE-020** A body stays until the snake consumes it | `deferred` | T | — | — |
 | **INV-SNAKE-010** No ability shoots | `deferred` | I | — | — |
-| **INV-SNAKE-020** The snake is slower than a running bot | `deferred` | T | — | — |
+| **INV-SNAKE-020** The snake is slower than a running bot | `deferred` | T | — | `Tests/CrawlCallTests/ConfigurationTests.swift` |
 | **NFR-PERF-010** 60 frames per second on the baseline device | `deferred` | A | — | — |
 | **NFR-PERF-020** Deliberation costs at most 0.5 ms per frame | `deferred` | T | — | — |
 | **NFR-PERF-030** A commander inference does not break the frame budget | `deferred` | A | — | — |
@@ -300,7 +300,6 @@ Verified by means other than testing — or the check has not been set up yet.
 
 ## Code files outside the specification
 
-No requirement references them: 1 of 4.
+No requirement references them: 0 of 9.
 
-- `Sources/CrawlCall/CrawlCallApp.swift`
 

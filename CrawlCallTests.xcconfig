@@ -1,0 +1,18 @@
+// Build settings for the unit-test bundle. It is hosted by the app, so `Bundle.main`
+// in a test is the app bundle and `config/` is the same folder the game reads.
+#include? "Signing.xcconfig"
+
+PRODUCT_NAME = CrawlCallTests
+PRODUCT_BUNDLE_IDENTIFIER = $(BUNDLE_ID_PREFIX).crawlcall.tests
+CODE_SIGN_STYLE = Automatic
+
+SDKROOT = iphoneos
+SUPPORTED_PLATFORMS = iphoneos iphonesimulator
+IPHONEOS_DEPLOYMENT_TARGET = 27.0
+TARGETED_DEVICE_FAMILY = 1
+SWIFT_VERSION = 5.0
+SWIFT_STRICT_CONCURRENCY = minimal
+
+GENERATE_INFOPLIST_FILE = YES
+TEST_HOST = $(BUILT_PRODUCTS_DIR)/CrawlCall.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/CrawlCall
+BUNDLE_LOADER = $(TEST_HOST)

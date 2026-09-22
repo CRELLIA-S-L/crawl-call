@@ -1,0 +1,19 @@
+{
+  "moduleDamageThresholds": {
+    "partition": { "damagedAt": 40, "debrisAt": 80 },
+    "crate": { "damagedAt": 25, "debrisAt": 50 },
+    "barrier": { "damagedAt": 60, "debrisAt": 120 }
+  },
+  "weapons": {
+    "default": { "destructionDamage": 8, "destructionAmmunition": 30 }
+  },
+  "snakeBodyDestructionDamagePerSegment": 1.5,
+  "trapWidth": 2.0,
+  "trapLength": 6.0,
+  "tailGapTolerance": 0.25,
+  "maximumDropHeight": 3.0,
+  "navigationGraphCellSize": 0.5,
+  "stepHeight": 0.4,
+  "slopeAngle": 50,
+  "bodyRadius": 0.3
+}

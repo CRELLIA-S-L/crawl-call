@@ -1,0 +1,23 @@
+{
+  "archetypes": {
+    "default": {
+      "basePersonalityWeights": { "panic": 0.5, "discipline": 0.5, "aggression": 0.5, "selfSacrifice": 0.5 },
+      "allowedRanges": {
+        "panic": { "lowest": 0.0, "highest": 1.0 },
+        "discipline": { "lowest": 0.0, "highest": 1.0 },
+        "aggression": { "lowest": 0.0, "highest": 1.0 },
+        "selfSacrifice": { "lowest": 0.0, "highest": 1.0 }
+      },
+      "runSpeed": 4.5,
+      "weaponDamage": 8,
+      "detectionRange": 14.0
+    }
+  },
+  "overrideDistance": 6.0,
+  "interruptDistance": 8.0,
+  "groupingDistance": 5.0,
+  "hysteresisMargin": 0.1,
+  "deliberationPeriod": 0.2,
+  "perFrameSlotMaximum": 2,
+  "collapsePanicIncrement": 0.3
+}

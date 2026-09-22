@@ -9,14 +9,39 @@
 /* Begin PBXFileReference section */
 		B0000001 /* CrawlCall.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CrawlCall.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B0000002 /* CrawlCall.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = CrawlCall.xcconfig; sourceTree = "<group>"; };
+		B0000081 /* CrawlCallTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CrawlCallTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		B0000082 /* config */ = {isa = PBXFileReference; lastKnownFileType = folder; path = config; sourceTree = "<group>"; };
+		B000008D /* CrawlCallTests.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = CrawlCallTests.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		B0000010 /* Sources */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Sources/CrawlCall; sourceTree = "<group>"; };
+		B0000084 /* Tests */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Tests/CrawlCallTests; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXBuildFile section */
+		B0000083 /* config in Resources */ = {isa = PBXBuildFile; fileRef = B0000082 /* config */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		B0000089 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = B0000050 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = B0000040;
+			remoteInfo = CrawlCall;
+		};
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		B0000020 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B0000086 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -30,7 +55,10 @@
 			isa = PBXGroup;
 			children = (
 				B0000010 /* Sources */,
+				B0000084 /* Tests */,
+				B0000082 /* config */,
 				B0000002 /* CrawlCall.xcconfig */,
+				B000008D /* CrawlCallTests.xcconfig */,
 				B0000031 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -39,6 +67,7 @@
 			isa = PBXGroup;
 			children = (
 				B0000001 /* CrawlCall.app */,
+				B0000081 /* CrawlCallTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -68,7 +97,38 @@
 			productReference = B0000001 /* CrawlCall.app */;
 			productType = "com.apple.product-type.application";
 		};
+		B0000080 /* CrawlCallTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B000008C /* Build configuration list for PBXNativeTarget "CrawlCallTests" */;
+			buildPhases = (
+				B0000085 /* Sources */,
+				B0000086 /* Frameworks */,
+				B0000087 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				B0000088 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				B0000084 /* Tests */,
+			);
+			name = CrawlCallTests;
+			packageProductDependencies = (
+			);
+			productName = CrawlCallTests;
+			productReference = B0000081 /* CrawlCallTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
+
+/* Begin PBXTargetDependency section */
+		B0000088 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = B0000040 /* CrawlCall */;
+			targetProxy = B0000089 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin PBXProject section */
 		B0000050 /* Project object */ = {
@@ -80,6 +140,10 @@
 				TargetAttributes = {
 					B0000040 = {
 						CreatedOnToolsVersion = 27.0;
+					};
+					B0000080 = {
+						CreatedOnToolsVersion = 27.0;
+						TestTargetID = B0000040;
 					};
 				};
 			};
@@ -98,12 +162,21 @@
 			projectRoot = "";
 			targets = (
 				B0000040 /* CrawlCall */,
+				B0000080 /* CrawlCallTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		B0000022 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B0000083 /* config in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B0000087 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -114,6 +187,13 @@
 
 /* Begin PBXSourcesBuildPhase section */
 		B0000021 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B0000085 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -167,6 +247,20 @@
 			};
 			name = Release;
 		};
+		B000008A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = B000008D /* CrawlCallTests.xcconfig */;
+			buildSettings = {
+			};
+			name = Debug;
+		};
+		B000008B /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = B000008D /* CrawlCallTests.xcconfig */;
+			buildSettings = {
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -184,6 +278,15 @@
 			buildConfigurations = (
 				B0000070 /* Debug */,
 				B0000071 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		B000008C /* Build configuration list for PBXNativeTarget "CrawlCallTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B000008A /* Debug */,
+				B000008B /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

@@ -133,20 +133,20 @@ requirements link to them, plus how many files their `code` field names.
 | Requirement | Incoming | Code files | Weight |
 |---|---|---|---|
 | FR-BOT-080 | 20 | 0 | 20 |
-| IF-SNAKE-010 | 12 | 0 | 12 |
+| IF-SNAKE-010 | 12 | 5 | 17 |
 | FR-SNAKE-110 | 10 | 0 | 10 |
+| IF-MAP-020 | 5 | 5 | 10 |
+| IF-BOT-010 | 4 | 5 | 9 |
+| IF-VIEW-020 | 4 | 5 | 9 |
 | FR-BOT-010 | 7 | 0 | 7 |
 | FR-MAP-030 | 6 | 0 | 6 |
 | FR-SCORE-010 | 6 | 0 | 6 |
+| IF-VIEW-010 | 5 | 1 | 6 |
 | FR-MAP-020 | 5 | 0 | 5 |
 | FR-SNAKE-090 | 5 | 0 | 5 |
-| IF-MAP-020 | 5 | 0 | 5 |
-| IF-VIEW-010 | 5 | 0 | 5 |
 | FR-BOT-030 | 4 | 0 | 4 |
 | FR-BOT-160 | 4 | 0 | 4 |
-| IF-BOT-010 | 4 | 0 | 4 |
 | IF-MAP-010 | 4 | 0 | 4 |
-| IF-VIEW-020 | 4 | 0 | 4 |
 | NFR-PERF-010 | 4 | 0 | 4 |
 | NFR-PERF-050 | 4 | 0 | 4 |
 | CON-PUB-010 | 3 | 0 | 3 |

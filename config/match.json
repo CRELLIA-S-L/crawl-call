@@ -1,0 +1,11 @@
+{
+  "squadSize": 4,
+  "commanderEligibleArchetypes": [],
+  "commanderInterval": 7.0,
+  "truceSwitch": false,
+  "truceBreakThreshold": 0.3,
+  "stateTokenBudget": 1000,
+  "maximumResponseTokens": 80,
+  "thermalDegradationThreshold": "serious",
+  "thermalDegradationFactor": 2.0
+}
