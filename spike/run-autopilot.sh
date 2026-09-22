@@ -3,8 +3,16 @@
 # the app to exit, pull the CSV, analyse. Usage: sh spike/run-autopilot.sh [minutes] [extra app args]
 set -e
 cd "$(dirname "$0")"
-DEVICE=${DEVICE:?set DEVICE to the target device}
-BUNDLE=com.example.chompcompany.spike
+# The device and the bundle identifier never live in this file: a device UDID is personal
+# data and the bundle prefix belongs to whoever builds (CON-PUB-040, concept §17.4).
+# DEVICE comes from the environment; the prefix from the git-ignored Signing.xcconfig.
+if [ -z "$DEVICE" ]; then
+  echo "set DEVICE to the target device: DEVICE=<udid> sh $0 [minutes]" >&2
+  echo "  xcrun devicectl list devices   lists them" >&2
+  exit 2
+fi
+PREFIX=$(sed -n 's/^ *BUNDLE_ID_PREFIX *= *//p' ../Signing.xcconfig 2>/dev/null | tr -d ' \r')
+BUNDLE=${PREFIX:-com.example}.chompcompany.spike
 MINUTES=${1:-20}; shift 2>/dev/null || true
 DD=${DD:-/tmp/spike-dd}
 OUT=${OUT:-runs}
