@@ -433,3 +433,66 @@ When the head is steered off a ledge no higher than the maximum drop of the tuni
 
 **Rationale.** Concept §4: verticality works both ways — the snake cuts through drops the bots will not jump; a drop that hurt or severed the tail would take that away (Q-040, closed 2026-09-21).
 A ledge higher than the maximum drop is fenced by geometry the head cannot pass, so it never goes over one; the tail's sag is rendering.
+
+### FR-SNAKE-230 — The snake bites off its own tail
+
+```yaml
+status: draft
+verification: T
+derives_from: [FR-SNAKE-060]
+depends_on: [FR-SNAKE-070, FR-SNAKE-080, FR-SNAKE-240]
+refines: []
+conflicts_with: []
+code: []
+tests: []
+created: 2026-09-22
+```
+
+When the snake finishes biting off a segment, the system **shall** remove the segment at the end of the tail.
+
+**Rationale.** A choice the game can already price without a new system: FR-BOT-050 counts the snake as noticed when *any* segment enters a bot's view, so length is already exposure — a long tail shows around the corner the head is hiding behind. Going short buys quiet.
+What it costs is equally already written: the segment takes its ability with it (FR-SNAKE-080), so the player trades concrete options for concealment, and a shorter snake also blocks itself less (FR-SNAKE-050), which is a second, opposite reason to do it.
+One segment per act, taken from the end, for symmetry with damage (FR-SNAKE-070) and because a segment is the unit an ability hangs on; a player who wants to be shorter repeats the act and pays each time.
+The act itself — what starts it, what refuses it and how long it holds the snake — is FR-SNAKE-240; this requirement speaks of finishing so that the two cannot disagree about when the segment is gone, the same split as eating, where FR-SNAKE-060 appends on finishing and FR-SNAKE-090 holds the head from beginning.
+Nothing in the concept proposes this — it is the maintainer's idea of 2026-09-22, which is why it is `draft` and why the mechanic it belongs to is the verticality-and-cover layer, not stage 1.
+Approving it adds a shed intent to IF-VIEW-010, which today defines four.
+
+### FR-SNAKE-240 — Biting off takes time and holds the snake in place
+
+```yaml
+status: draft
+verification: T
+derives_from: [FR-SNAKE-230]
+depends_on: [IF-SNAKE-010, IF-VIEW-010]
+refines: []
+conflicts_with: []
+code: []
+tests: []
+created: 2026-09-22
+```
+
+When the player issues the shed intent and the tail is longer than one segment, the system **shall** keep the head stationary for the shedding duration of the snake configuration, after which the snake has finished biting off a segment.
+
+**Rationale.** The same shape as eating (FR-SNAKE-090), for the same reason: an instant act is a free one, and a free way to become unseen would be taken every time.
+The trigger carries the refusal as well as the hold: a tail one segment long is not shed, because with no tail left the next hit kills (FR-SNAKE-210) and a control that deletes the player in one press is a trap rather than a choice.
+The duration is what stops the loop of eat, shed, eat that FR-SNAKE-060 would otherwise pay for — no cooldown is needed when the act is a commitment made in the open, stationary and damageable.
+Approving it adds a shedding duration to the keys IF-SNAKE-010 reads, beside the eating duration it already names.
+
+### FR-SNAKE-250 — A severed segment leaves nothing behind
+
+```yaml
+status: draft
+verification: T
+derives_from: [FR-SNAKE-230]
+depends_on: []
+refines: []
+conflicts_with: []
+code: []
+tests: []
+created: 2026-09-22
+```
+
+When a segment is removed by the snake's own act, the system **shall** take it out of the arena leaving no body, no obstacle and no pickup.
+
+**Rationale.** The smallest rule that delivers the choice the mechanic is for, and a deliberate refusal of the larger one: the tail already blocks bots (FR-SNAKE-040), so a severed piece that stayed would be a wall the player places at will — a different mechanic, an order of magnitude larger, and one that changes what a map is.
+Whether it should stay is not settled by argument but by five people: H-080 measures whether a piece left lying about is placed on purpose or used as cover, and this requirement is what holds until that reading exists.

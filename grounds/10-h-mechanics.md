@@ -83,3 +83,42 @@ impact: the product's main selling argument (I-010)
 At least one of five players, unprompted, replays a situation for the lines, quotes one aloud or retells one to somebody else. Observed and asked once after the session.
 
 **Rationale.** Concept §13 stage 5, §16.2 H5.
+
+### H-070 — Players trade length for concealment
+
+```yaml
+status: assumed
+class: III
+population: playtesters of the stage-2 build, given no instructions
+refuted_if: proportion < 0.40 at n >= 5
+expires: 2027-06-30
+owner: @alex_v
+impact: the tail-shedding requirements (FR-SNAKE-230, FR-SNAKE-240, FR-SNAKE-250) and the shed intent they add to IF-VIEW-010
+```
+
+At least two of five players deliberately bite off the tail at least once — deliberately meaning the act is followed by play rather than by a visible attempt to undo it, and the player, asked afterwards, gives a reason of their own. Observed during the session and asked once at the end, without naming the mechanic first.
+
+**Rationale.** The mechanic exists to sell a trade: FR-BOT-050 notices the snake when any segment enters a bot's view, so a long tail is exposure, while FR-SNAKE-080 makes every segment shed a concrete ability given up.
+A trade nobody takes is a rule nobody needs, and the cheapest way to find that out is five people and a build with cover in it.
+Stage 2 rather than stage 1 because the trade only has a buyer where height and cover exist (H-020).
+Threshold, owner and date set by the maintainer on 2026-09-22.
+
+### H-080 — A severed tail piece left in the arena earns its keep
+
+```yaml
+status: untested
+class: III
+population: playtesters of a stage-2 build in which a severed segment stays as an obstacle
+refuted_if: proportion < 0.40 at n >= 5
+expires: 2027-06-30
+owner: @alex_v
+impact: whether the shed piece persists — a placeable barrier layer, or FR-SNAKE-250 as written
+```
+
+At least two of five players either bite off the tail in order to place a barrier — closing a corridor, splitting a squad, walling off a body — or take cover behind a piece already lying there. Either one counts, and the two need not be the same players: observed during the session, the intent confirmed by asking afterwards.
+
+**Rationale.** The tail blocks bots while attached (FR-SNAKE-040), so a piece that stayed would be a barrier the player places at will — a layer with its own questions about decay, count and how bots treat it, and too large to adopt on an argument.
+It is the open question of 2026-09-22 turned into a measurement: FR-SNAKE-250 holds the small version until five people say the large one is worth building.
+Testing it needs a throwaway variant build in which the piece persists, which is the price of the answer.
+Owner, date and what counts as evidence set by the maintainer on 2026-09-22 — either behaviour counts, and the two groups of players need not overlap.
+The threshold is carried over from H-070 rather than chosen for this claim; it holds until the maintainer sets one of their own, and a reading taken against a borrowed threshold says so when it is recorded.

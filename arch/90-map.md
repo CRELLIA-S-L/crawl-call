@@ -8,4 +8,4 @@ What each part of this project is, what it carries and what state it is in.
 |---|---|---|---|
 | **E-010** The prompt bench | `built` | `Sources/PromptBench/PromptBench.swift`, `Sources/PromptBench/PromptVariants.swift`, `Sources/PromptBench/main.swift` | **FR-TOOL-150**, **FR-TOOL-160** (2 realized) |
 
-1 elements, carrying 2 of the 169 requirements this specification holds.
+1 elements, carrying 2 of the 172 requirements this specification holds.

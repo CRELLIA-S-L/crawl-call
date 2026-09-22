@@ -822,3 +822,39 @@ all_of: [H-040]
 FR-TOOL-170 — A bench measurement names the configuration it covers — is worth building only if H-040 holds.
 
 **Rationale.** Concept §16.2 H4: a refutation removes all LLM tactics, leaving utility AI — a saving, not a loss.
+
+### B-690 — FR-SNAKE-230 stands on players trading length for concealment
+
+```yaml
+status: active
+requirement: FR-SNAKE-230
+all_of: [H-070]
+```
+
+FR-SNAKE-230 — The snake bites off its own tail — is worth building only if H-070 holds.
+
+**Rationale.** The act is the mechanic; a refutation withdraws it and the shed intent with it.
+
+### B-700 — FR-SNAKE-240 stands on players trading length for concealment
+
+```yaml
+status: active
+requirement: FR-SNAKE-240
+all_of: [H-070]
+```
+
+FR-SNAKE-240 — Biting off takes time and holds the snake in place — is worth building only if H-070 holds.
+
+**Rationale.** The price of the act, which has nothing to price if the act is not built.
+
+### B-710 — FR-SNAKE-250 stands on players trading length for concealment
+
+```yaml
+status: active
+requirement: FR-SNAKE-250
+all_of: [H-070]
+```
+
+FR-SNAKE-250 — A severed segment leaves nothing behind — is worth building only if H-070 holds.
+
+**Rationale.** What happens to the piece matters only where there is a piece; H-080 decides which way this requirement goes, H-070 whether it exists at all.

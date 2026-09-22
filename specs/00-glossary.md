@@ -24,6 +24,7 @@ The convention of this project:
 | **navigation graph** | The bots' model of the map, derived from the map grid: one node per walkable cell and floor, edges between neighbours and along floor transitions. Cells carry passability and cost; the tail and destruction change them (ADR-0016). RealityKit's navigation mesh is not used. |
 | **vertical transition** | A way between floors: stairs, a ramp, a drop from a ledge. For the bots an edge of the graph; for the snake, geometry its controller climbs or falls down. |
 | **eating** | The act by which the snake consumes a bot, alive or dead. It takes time, during which the snake is exposed. Eating — not killing — is what scores. |
+| **shedding** | The act by which the snake bites off the segment at the end of its own tail, trading an ability and length for being harder to see. Like eating it takes time and holds the snake still; the input that starts it is the *shed intent*, the time it takes the *shedding duration*, and the piece removed a *severed segment*. Proposed 2026-09-22 and still `draft` (FR-SNAKE-230). |
 | **live prey** | A bot eaten while alive. Resists, takes longer, scores more than a body. |
 | **body** | A dead bot left on the map. Squads do not remove bodies; only the snake does. |
 | **ability** | A power the snake gains by eating a bot of a given archetype. Attached to one segment, single-use, lost with the segment. Abilities never shoot. |
