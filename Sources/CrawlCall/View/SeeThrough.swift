@@ -59,46 +59,12 @@ struct SeeThrough {
         return material
     }
 
-    /// Whether a box comes within `margin` of the straight line from `eye` to
-    /// `point` — the slab test over the segment, against the box grown by that
-    /// margin.
-    ///
-    /// The margin is what makes this a body rather than a point: the snake is drawn
-    /// as spheres, and a wall that hides half a sphere hides it, so the box is grown
-    /// by the body's own radius and by whatever the view configuration adds on top
-    /// of it, which is what starts the fade before the player has lost sight of
-    /// anything.
-    ///
-    /// A module whose top is no higher than the body it would hide is never in the
-    /// way of a camera standing above that body: every point of the line is at least
-    /// as high as the body itself. That is what keeps the floor the snake is standing
-    /// on — which touches the end of the line, and which the margin would otherwise
-    /// swallow — solid underfoot.
+    /// What stands in the way is the map layer's rule, not the view's: the picture
+    /// and the bots' eyes have to agree about what a wall is (`Sight`).
     nonisolated static func blocks(centre: SIMD3<Double>, size: SIMD3<Double>,
                                    from eye: SIMD3<Double>, to point: SIMD3<Double>,
                                    margin: Double) -> Bool {
-        if eye.y > point.y, centre.y + size.y / 2 <= point.y + 1e-9 { return false }
-        let direction = point - eye
-        var near = 0.0
-        var far = 1.0
-        for axis in 0..<3 {
-            let step = direction[axis]
-            let half = size[axis] / 2 + margin
-            let low = centre[axis] - half - eye[axis]
-            let high = centre[axis] + half - eye[axis]
-            if abs(step) < 1e-12 {
-                // Parallel to this pair of faces: either inside them for the whole
-                // segment, or never.
-                if low > 0 || high < 0 { return false }
-                continue
-            }
-            let first = min(low / step, high / step)
-            let second = max(low / step, high / step)
-            near = max(near, first)
-            far = min(far, second)
-            if near > far { return false }
-        }
-        return true
+        Sight.blocks(centre: centre, size: size, from: eye, to: point, margin: margin)
     }
 
     /// The map as it should be drawn now: solid, except for the floors above the

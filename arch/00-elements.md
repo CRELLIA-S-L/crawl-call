@@ -77,7 +77,7 @@ It depends on start-up because the cell size it measures in is tuning (IF-MAP-02
 ```yaml
 status: built
 carries: [Sources/CrawlCall/View]
-requirements: [FR-VIEW-010, FR-VIEW-130, FR-VIEW-020, FR-VIEW-140, FR-VIEW-150]
+requirements: [FR-VIEW-010, FR-VIEW-130, FR-VIEW-020, FR-VIEW-060, FR-VIEW-140, FR-VIEW-150]
 depends_on: [E-040]
 interface: a scene plan in; the camera it is seen through and the light it is read by, out
 ```
@@ -92,7 +92,7 @@ The boundary is also where the specification puts it — the VIEW area owns the 
 ```yaml
 status: built
 carries: [Sources/CrawlCall/Snake]
-requirements: [FR-SNAKE-010, FR-SNAKE-020, FR-SNAKE-030, FR-SNAKE-220, FR-MAP-025]
+requirements: [FR-SNAKE-010, FR-SNAKE-020, FR-SNAKE-030, FR-SNAKE-070, FR-SNAKE-220, FR-MAP-025]
 depends_on: [E-040]
 interface: a held direction and a frame's time in; a head, a floor and a trail out
 ```
@@ -116,6 +116,22 @@ What runs while a match is on: the intents the player sends, the world advanced 
 
 **Rationale.** This is the boundary FR-VIEW-030 draws — intents in, never touches or keys — and it is worth a part of its own so that the rule has somewhere to live rather than being a habit of whoever writes the next input scheme.
 It is also the only part that knows the order of a frame: the world moves first and the picture follows, never the other way round, which is what keeps the camera from chasing a head that has not moved yet.
+
+### E-090 — The squads
+
+```yaml
+status: built
+carries: [Sources/CrawlCall/Bot]
+requirements: [FR-BOT-010, FR-BOT-020, FR-BOT-030, FR-BOT-050, FR-BOT-060, FR-BOT-080, FR-BOT-090, FR-BOT-150, FR-BOT-160, FR-BOT-165, FR-BOT-200, INV-BOT-010, INV-BOT-030]
+depends_on: [E-020, E-040]
+interface: a world, where the snake is and a frame's time in; squads that see, decide, walk and fire out
+```
+
+Everything a bot is: the kinds there are, who is on the map at the whistle, what each of them knows, what it decides and what it then does.
+
+**Rationale.** One part rather than a perception part, a decision part and a movement part, because the three are one loop and the seams between them would be crossed every frame: what a bot knows is what it decides on, and what it decided is what it walks. Splitting them would mean three files agreeing about the same bot every step.
+It is separate from the match (E-070) for the opposite reason: the match owns the snake, the clock and the order of a frame, and a squad that reached into those would decide when the world moves. What crosses the boundary is a world, the snake's whereabouts and a frame's time in; squads, their decisions and the damage they dealt out.
+It leans on start-up for the numbers an archetype is made of (IF-BOT-010) and on the map layer for the graph it walks and the geometry it sees through; it knows nothing about what any of it looks like.
 
 ### E-080 — The test runner
 

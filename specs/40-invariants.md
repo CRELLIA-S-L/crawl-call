@@ -50,14 +50,14 @@ The dash (FR-SNAKE-130) is the temporary exception the player earns by eating an
 ### INV-BOT-010 — Execution runs every frame for every bot
 
 ```yaml
-status: deferred
+status: implemented
 verification: T
 derives_from: []
 depends_on: [FR-BOT-150]
 refines: []
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Bot/Execution.swift, Sources/CrawlCall/Game.swift]
+tests: [Tests/CrawlCallTests/ExecutionTests.swift]
 created: 2026-09-21
 ```
 
@@ -86,14 +86,14 @@ The system **shall not** let a bot move, carry or remove a body.
 ### INV-BOT-030 — Both squads share one archetype set
 
 ```yaml
-status: deferred
+status: implemented
 verification: I
 derives_from: []
 depends_on: [FR-BOT-010, FR-BOT-020]
 refines: []
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Bot/Archetype.swift, Sources/CrawlCall/Bot/Squads.swift]
+tests: [Tests/CrawlCallTests/BotTests.swift]
 created: 2026-09-21
 ```
 

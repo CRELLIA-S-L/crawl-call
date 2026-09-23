@@ -123,17 +123,31 @@ final class SnakeEntityTests: XCTestCase {
     }
 
     func testTheBodiesTrailBehindTheHeadRatherThanSittingOnIt() throws {
+        // Driven through `Snake` rather than through a match: what is being checked
+        // is that the tail lies along the path, and a match now has bots in it that
+        // shoot the tail off while the test is walking it.
         let world = try Launch.world().get()
-        var game = Game(world: world, start: try XCTUnwrap(Game.start(in: world)))
-        game.apply(.move(direction: SIMD2(1, 0)))
-        for _ in 0..<120 { game.advance(seconds: 1.0 / 60) }
+        let start = try XCTUnwrap(Game.start(in: world))
+        let cell = world.configurations.tuning.navigationGraphCellSize
+        let surfaces = Surfaces(graph: world.graph, kit: world.kit,
+                                tuning: world.configurations.tuning)
+        var snake = Snake(head: SIMD3(Double(start.x) * cell,
+                                      Double(start.floor) * world.kit.floorHeight,
+                                      Double(start.z) * cell),
+                          floor: start.floor,
+                          segments: world.configurations.snake.startingSegmentCount,
+                          segmentSpacing: world.configurations.tuning.bodyRadius * 2)
+        for _ in 0..<120 {
+            snake.advance(direction: SIMD2(1, 0), speed: world.configurations.snake.baseSpeed,
+                          seconds: 1.0 / 60, over: surfaces)
+        }
         let entity = SnakeEntity.make(radius: world.configurations.tuning.bodyRadius,
-                                      segments: game.snake.segments)
-        SnakeEntity.update(entity, from: game.snake)
+                                      segments: snake.segments)
+        SnakeEntity.update(entity, from: snake)
         let head = try XCTUnwrap(entity.children.first { $0.name == "head" })
         let first = try XCTUnwrap(entity.children.first { $0.name == "segment0" })
         XCTAssertLessThan(first.position.x, head.position.x)
         XCTAssertEqual(Double(head.position.x - first.position.x),
-                       game.snake.segmentSpacing, accuracy: 1e-4)
+                       snake.segmentSpacing, accuracy: 1e-4)
     }
 }

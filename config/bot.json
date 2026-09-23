@@ -1,16 +1,190 @@
 {
   "archetypes": {
-    "default": {
-      "basePersonalityWeights": { "panic": 0.5, "discipline": 0.5, "aggression": 0.5, "selfSacrifice": 0.5 },
+    "assault": {
+      "basePersonalityWeights": {
+        "panic": 0.5,
+        "discipline": 0.5,
+        "aggression": 0.7,
+        "selfSacrifice": 0.5
+      },
       "allowedRanges": {
-        "panic": { "lowest": 0.0, "highest": 1.0 },
-        "discipline": { "lowest": 0.0, "highest": 1.0 },
-        "aggression": { "lowest": 0.0, "highest": 1.0 },
-        "selfSacrifice": { "lowest": 0.0, "highest": 1.0 }
+        "panic": {
+          "lowest": 0.0,
+          "highest": 1.0
+        },
+        "discipline": {
+          "lowest": 0.0,
+          "highest": 1.0
+        },
+        "aggression": {
+          "lowest": 0.0,
+          "highest": 1.0
+        },
+        "selfSacrifice": {
+          "lowest": 0.0,
+          "highest": 1.0
+        }
       },
       "runSpeed": 4.5,
       "weaponDamage": 8,
-      "detectionRange": 14.0
+      "detectionRange": 14.0,
+      "health": 100.0,
+      "magazine": 30
+    },
+    "heavy": {
+      "basePersonalityWeights": {
+        "panic": 0.3,
+        "discipline": 0.7,
+        "aggression": 0.5,
+        "selfSacrifice": 0.5
+      },
+      "allowedRanges": {
+        "panic": {
+          "lowest": 0.0,
+          "highest": 1.0
+        },
+        "discipline": {
+          "lowest": 0.0,
+          "highest": 1.0
+        },
+        "aggression": {
+          "lowest": 0.0,
+          "highest": 1.0
+        },
+        "selfSacrifice": {
+          "lowest": 0.0,
+          "highest": 1.0
+        }
+      },
+      "runSpeed": 3.5,
+      "weaponDamage": 8,
+      "detectionRange": 14.0,
+      "health": 150.0,
+      "magazine": 30
+    },
+    "sapper": {
+      "basePersonalityWeights": {
+        "panic": 0.5,
+        "discipline": 0.5,
+        "aggression": 0.5,
+        "selfSacrifice": 0.5
+      },
+      "allowedRanges": {
+        "panic": {
+          "lowest": 0.0,
+          "highest": 1.0
+        },
+        "discipline": {
+          "lowest": 0.0,
+          "highest": 1.0
+        },
+        "aggression": {
+          "lowest": 0.0,
+          "highest": 1.0
+        },
+        "selfSacrifice": {
+          "lowest": 0.0,
+          "highest": 1.0
+        }
+      },
+      "runSpeed": 4.5,
+      "weaponDamage": 8,
+      "detectionRange": 14.0,
+      "health": 100.0,
+      "magazine": 30
+    },
+    "scout": {
+      "basePersonalityWeights": {
+        "panic": 0.7,
+        "discipline": 0.5,
+        "aggression": 0.5,
+        "selfSacrifice": 0.5
+      },
+      "allowedRanges": {
+        "panic": {
+          "lowest": 0.0,
+          "highest": 1.0
+        },
+        "discipline": {
+          "lowest": 0.0,
+          "highest": 1.0
+        },
+        "aggression": {
+          "lowest": 0.0,
+          "highest": 1.0
+        },
+        "selfSacrifice": {
+          "lowest": 0.0,
+          "highest": 1.0
+        }
+      },
+      "runSpeed": 5.5,
+      "weaponDamage": 8,
+      "detectionRange": 14.0,
+      "health": 100.0,
+      "magazine": 30
+    },
+    "sniper": {
+      "basePersonalityWeights": {
+        "panic": 0.5,
+        "discipline": 0.7,
+        "aggression": 0.5,
+        "selfSacrifice": 0.5
+      },
+      "allowedRanges": {
+        "panic": {
+          "lowest": 0.0,
+          "highest": 1.0
+        },
+        "discipline": {
+          "lowest": 0.0,
+          "highest": 1.0
+        },
+        "aggression": {
+          "lowest": 0.0,
+          "highest": 1.0
+        },
+        "selfSacrifice": {
+          "lowest": 0.0,
+          "highest": 1.0
+        }
+      },
+      "runSpeed": 4.5,
+      "weaponDamage": 8,
+      "detectionRange": 18.0,
+      "health": 100.0,
+      "magazine": 30
+    },
+    "medic": {
+      "basePersonalityWeights": {
+        "panic": 0.5,
+        "discipline": 0.5,
+        "aggression": 0.5,
+        "selfSacrifice": 0.7
+      },
+      "allowedRanges": {
+        "panic": {
+          "lowest": 0.0,
+          "highest": 1.0
+        },
+        "discipline": {
+          "lowest": 0.0,
+          "highest": 1.0
+        },
+        "aggression": {
+          "lowest": 0.0,
+          "highest": 1.0
+        },
+        "selfSacrifice": {
+          "lowest": 0.0,
+          "highest": 1.0
+        }
+      },
+      "runSpeed": 4.5,
+      "weaponDamage": 8,
+      "detectionRange": 14.0,
+      "health": 100.0,
+      "magazine": 30
     }
   },
   "overrideDistance": 6.0,

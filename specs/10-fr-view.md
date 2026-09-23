@@ -75,7 +75,7 @@ derives_from: [FR-VIEW-010]
 depends_on: [FR-SNAKE-010, FR-VIEW-020, IF-VIEW-020]
 refines: []
 conflicts_with: []
-code: [Sources/CrawlCall/View/SeeThrough.swift, Sources/CrawlCall/Map/SceneBuilder.swift, Sources/CrawlCall/GameSession.swift]
+code: [Sources/CrawlCall/View/SeeThrough.swift, Sources/CrawlCall/Map/Sight.swift, Sources/CrawlCall/Map/SceneBuilder.swift, Sources/CrawlCall/GameSession.swift]
 tests: [Tests/CrawlCallTests/SeeThroughTests.swift]
 created: 2026-09-22
 ```
@@ -151,14 +151,14 @@ iPhone is the primary target (concept §15), so this scheme is not the port of t
 ### FR-VIEW-060 — Squad affiliation is readable at a glance
 
 ```yaml
-status: deferred
+status: partial
 verification: D
 derives_from: []
 depends_on: [FR-BOT-020]
 refines: []
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/View/BotEntity.swift, Sources/CrawlCall/GameSession.swift, Sources/CrawlCall/CrawlCallApp.swift]
+tests: [Tests/CrawlCallTests/BotEntityTests.swift]
 created: 2026-09-21
 ```
 

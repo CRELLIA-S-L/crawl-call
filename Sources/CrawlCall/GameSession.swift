@@ -5,7 +5,7 @@
 // measured with — `specs/50-verification.md` says why, and the two are different
 // questions asked of the same number.
 //
-// implements: FR-VIEW-020, FR-VIEW-030, FR-VIEW-140, FR-VIEW-150
+// implements: FR-VIEW-020, FR-VIEW-030, FR-VIEW-060, FR-VIEW-140, FR-VIEW-150
 import Foundation
 import RealityKit
 
@@ -13,16 +13,18 @@ import RealityKit
 final class GameSession {
     private(set) var game: Game
     private let snakeEntity: Entity
+    private let botEntities: Entity
     private let camera: Entity
     private var seeThrough: SeeThrough
     private var focus: SIMD3<Double>
     private let distance: Double
     private let fieldOfView: Double
 
-    init(game: Game, snakeEntity: Entity, camera: Entity, seeThrough: SeeThrough,
+    init(game: Game, snakeEntity: Entity, botEntities: Entity, camera: Entity, seeThrough: SeeThrough,
          distance: Double, fieldOfView: Double) {
         self.game = game
         self.snakeEntity = snakeEntity
+        self.botEntities = botEntities
         self.camera = camera
         self.seeThrough = seeThrough
         self.distance = distance
@@ -44,6 +46,7 @@ final class GameSession {
 
     private func place() {
         SnakeEntity.update(snakeEntity, from: game.snake)
+        BotEntity.update(botEntities, from: game.bots)
         focus = SceneView.focus(keeping: game.snake.head,
                                 inside: game.world.configurations.view.centralRegion,
                                 from: focus,

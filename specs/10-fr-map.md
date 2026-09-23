@@ -18,7 +18,7 @@ depends_on: [IF-MAP-010]
 refines: []
 conflicts_with: []
 code: [maps/blockout.map]
-tests: [Tests/CrawlCallTests/MapParserTests.swift, Tests/CrawlCallTests/LaunchTests.swift]
+tests: [Tests/CrawlCallTests/MapParserTests.swift, Tests/CrawlCallTests/LaunchTests.swift, Tests/CrawlCallTests/SnakeTests.swift]
 created: 2026-09-21
 ```
 

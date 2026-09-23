@@ -5,16 +5,20 @@
 // or a key: the schemes produce intents (FR-VIEW-050), the logic consumes them, and
 // neither knows about the other.
 //
-// implements: FR-VIEW-030, FR-SNAKE-030
+// implements: FR-VIEW-030, FR-SNAKE-030, FR-BOT-020, FR-SNAKE-070, INV-BOT-010
 import Foundation
 
 struct Game {
     let world: World
     private(set) var snake: Snake
+    /// Both squads, spawned where the match begins (FR-BOT-020).
+    private(set) var bots: [Bot]
     /// What the player is holding now, on the map plane. Zero when nothing is held.
     private(set) var held: SIMD2<Double> = .zero
     private(set) var isPaused = false
     private let surfaces: Surfaces
+    /// The bots' own clock, which the frame rate does not set (FR-BOT-150).
+    private var slots = Slots()
 
     init(world: World, start: NavigationGraph.Node) {
         self.world = world
@@ -26,6 +30,7 @@ struct Game {
                            floor: start.floor,
                            segments: world.configurations.snake.startingSegmentCount,
                            segmentSpacing: world.configurations.tuning.bodyRadius * 2)
+        self.bots = Squads.spawn(in: world, snakeStart: start)
     }
 
     /// Everything the player can ask for arrives here, and only here.
@@ -46,13 +51,29 @@ struct Game {
         }
     }
 
-    /// One frame.
+    /// One frame: the snake moves where it is steered, the bots see what there is to
+    /// see, whoever holds a slot decides, and every bot walks whatever it decided.
     mutating func advance(seconds: Double) {
         guard !isPaused else { return }
         snake.advance(direction: held,
                       speed: world.configurations.snake.baseSpeed,
                       seconds: seconds,
                       over: surfaces)
+
+        let body = [snake.head] + snake.tail
+        Perception.notice(&bots, snake: body, plan: world.plan,
+                          configuration: world.configurations.bot)
+        let steps = slots.steps(after: seconds, period: world.configurations.bot.deliberationPeriod)
+        for _ in 0..<steps {
+            let holders = slots.next(among: bots, snake: body, configuration: world.configurations.bot)
+            let damage = Execution.deliberate(&bots, slots: holders, snake: body, world: world)
+            if damage > 0 {
+                snake.take(damage: damage, perSegment: world.configurations.snake.damagePerSegment)
+            }
+        }
+        Execution.walk(&bots, seconds: seconds, world: world,
+                       routeOrder: slots.order(among: bots, snake: body,
+                                               configuration: world.configurations.bot))
     }
 
     /// Where a match starts: the lowest floor's first walkable cell, so that a map

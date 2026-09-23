@@ -9,14 +9,14 @@ Per-frame execution for every bot is INV-BOT-010; that squads never remove bodie
 ### FR-BOT-010 — Six archetypes
 
 ```yaml
-status: deferred
+status: implemented
 verification: I
 derives_from: []
 depends_on: []
 refines: []
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Bot/Archetype.swift]
+tests: [Tests/CrawlCallTests/BotTests.swift]
 created: 2026-09-21
 ```
 
@@ -28,14 +28,14 @@ Six is a number the player can learn; the set is the obligation, so this is one 
 ### FR-BOT-020 — Two squads at war
 
 ```yaml
-status: deferred
+status: implemented
 verification: T
 derives_from: []
 depends_on: [FR-BOT-010, IF-BOT-010]
 refines: []
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Bot/Squads.swift, Sources/CrawlCall/Game.swift]
+tests: [Tests/CrawlCallTests/BotTests.swift]
 created: 2026-09-21
 ```
 
@@ -47,14 +47,14 @@ Four per squad is the size of the vertical slice and there are no reinforcements
 ### FR-BOT-030 — Archetype sets base personality weights
 
 ```yaml
-status: deferred
+status: implemented
 verification: T
 derives_from: [FR-BOT-010]
 depends_on: [IF-BOT-010]
 refines: []
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Bot/Bot.swift]
+tests: [Tests/CrawlCallTests/BotTests.swift]
 created: 2026-09-21
 ```
 
@@ -87,14 +87,14 @@ A role rather than a seventh archetype, and no marker: the role-holder is found 
 ### FR-BOT-050 — A bot notices the snake in view
 
 ```yaml
-status: deferred
+status: implemented
 verification: T
 derives_from: []
 depends_on: []
 refines: []
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Bot/Perception.swift, Sources/CrawlCall/Map/Sight.swift, Sources/CrawlCall/Bot/Bot.swift]
+tests: [Tests/CrawlCallTests/PerceptionTests.swift]
 created: 2026-09-21
 ```
 
@@ -106,14 +106,14 @@ Known-to-a-bot is what deliberation (FR-BOT-080) and the interrupt on sight (FR-
 ### FR-BOT-060 — A bot fires at its target
 
 ```yaml
-status: deferred
+status: partial
 verification: T
 derives_from: []
 depends_on: [FR-BOT-080]
 refines: []
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Bot/Execution.swift]
+tests: [Tests/CrawlCallTests/ExecutionTests.swift]
 created: 2026-09-21
 ```
 
@@ -121,6 +121,9 @@ While a bot's chosen action is to fire and it has a line of fire to its target, 
 
 **Rationale.** Concept §1: bots are fast, armed and organised.
 A target may be an enemy bot or any segment of the snake — shooting at the tail is a meaningful action because of FR-SNAKE-070.
+
+**Partial, and how.** What is built is fire at the snake: a bot whose slot chooses to fire spends a round and deals its weapon's damage to the segment it aimed at. Fire at an enemy bot is not, because nothing yet chooses an enemy bot as a target — that needs the target hysteresis of FR-BOT-140 and a squad war the vertical slice does not ask for (concept §13 stage 1 is the snake and the hunt). The damage side is the same code the day a target is a bot.
+A shot goes off once per deliberation step rather than once per frame, so that the damage a second does not depend on the frame rate. No requirement gives a weapon a rate of fire; when one does, the cadence moves out of the deliberation period and into the bot configuration.
 
 ### FR-BOT-070 — Heavy and sapper weapons destroy cover
 
@@ -146,14 +149,14 @@ Ammunition is the regulator the concept names against a map that turns into wast
 ### FR-BOT-080 — Action chosen by maximum utility
 
 ```yaml
-status: deferred
+status: implemented
 verification: T
 derives_from: []
 depends_on: []
 refines: []
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Bot/Deliberation.swift]
+tests: [Tests/CrawlCallTests/DeliberationTests.swift]
 created: 2026-09-21
 ```
 
@@ -165,14 +168,14 @@ The inputs are named so that a test can vary each and observe the choice move; t
 ### FR-BOT-090 — Personality weights multiply utility
 
 ```yaml
-status: deferred
+status: implemented
 verification: T
 derives_from: [FR-BOT-080]
 depends_on: [FR-BOT-030]
 refines: [FR-BOT-080]
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Bot/Deliberation.swift]
+tests: [Tests/CrawlCallTests/DeliberationTests.swift]
 created: 2026-09-21
 ```
 
@@ -315,14 +318,14 @@ Written as behaviour — no flapping under a margin — so that a test can show 
 ### FR-BOT-150 — Deliberation runs on a fixed step, not per frame
 
 ```yaml
-status: deferred
+status: implemented
 verification: T
 derives_from: []
 depends_on: []
 refines: []
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Bot/Slots.swift, Sources/CrawlCall/Game.swift]
+tests: [Tests/CrawlCallTests/ExecutionTests.swift]
 created: 2026-09-21
 ```
 
@@ -334,21 +337,22 @@ Verifiable by running the same scenario at two frame rates and counting slots.
 ### FR-BOT-160 — Slots go by priority, not round-robin
 
 ```yaml
-status: deferred
+status: implemented
 verification: T
 derives_from: [FR-BOT-150]
 depends_on: []
 refines: []
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Bot/Slots.swift]
+tests: [Tests/CrawlCallTests/ExecutionTests.swift]
 created: 2026-09-21
 ```
 
-When choosing which bot deliberates next, the system **shall** take the bot with the greatest product of frames-since-last-update and importance, where the importance of a bot in combat or within snake range is at least three times that of an idle bot.
+When choosing which bot deliberates next, the system **shall** take the bot with the greatest product of deliberation steps since its last slot and importance, where the importance of a bot in combat or within snake range is at least three times that of an idle bot.
 
 **Rationale.** Concept §9.2: a bot in combat or near the snake gets a slot 3–4 times more often than one patrolling an empty floor; the same rule gives AI level-of-detail for free — distant bots think about once a second.
 The per-frame budget that bounds how many slots a frame hands out is NFR-PERF-020.
+What is counted is deliberation steps and not frames, because this requirement derives from FR-BOT-150: a queue ordered by frames waited would put the frame rate back into the pace of thinking that FR-BOT-150 takes it out of, and two machines would hand the same bot different numbers of slots for the same second of play.
 
 ### FR-BOT-167 — An unreachable target sends the bot back to deliberation
 
@@ -374,14 +378,14 @@ Measured on the spike in its worst-case mode, about one path request in a hundre
 ### FR-BOT-165 — At most one path is computed per frame
 
 ```yaml
-status: deferred
+status: implemented
 verification: T
 derives_from: [FR-BOT-160, NFR-PERF-020]
 depends_on: [FR-MAP-020]
 refines: [FR-BOT-160]
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Bot/Route.swift, Sources/CrawlCall/Bot/Execution.swift]
+tests: [Tests/CrawlCallTests/ExecutionTests.swift]
 created: 2026-09-22
 ```
 
@@ -453,14 +457,14 @@ Corner-checking is left to the commander's orders; keeping together is the obser
 ### FR-BOT-200 — The actions a bot can choose from
 
 ```yaml
-status: deferred
+status: implemented
 verification: T
 derives_from: [FR-BOT-080]
 depends_on: [FR-BOT-010]
 refines: [FR-BOT-080]
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Bot/Action.swift, Sources/CrawlCall/Bot/Deliberation.swift]
+tests: [Tests/CrawlCallTests/DeliberationTests.swift]
 created: 2026-09-21
 ```
 

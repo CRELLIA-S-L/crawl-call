@@ -43,6 +43,19 @@ struct Surfaces {
         graph.isWalkable(cell(of: position, floor: floor))
     }
 
+    /// The floor a declared transition leads up to from this cell, if there is one.
+    /// A transition is an edge of the graph between the same cell on two floors
+    /// (FR-MAP-020), which is what a map's `transition` line becomes — so the stairs
+    /// the head climbs and the edge the bots path along are the same thing, said
+    /// once.
+    func rise(at position: SIMD3<Double>, from floor: Int) -> Int? {
+        let here = cell(of: position, floor: floor)
+        return graph.neighbours(of: here)
+            .filter { $0.x == here.x && $0.z == here.z && $0.floor > floor }
+            .map(\.floor)
+            .min()
+    }
+
     /// The floor the head lands on when it leaves a ledge: the first one below that is
     /// walkable at the same place and no further down than the tuning allows
     /// (FR-SNAKE-220). Nil where there is nothing to land on within reach.

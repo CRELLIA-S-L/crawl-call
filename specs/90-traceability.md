@@ -8,9 +8,9 @@ Total requirements: 178.
 | Status | Requirements |
 |---|---|
 | `draft` | 4 |
-| `deferred` | 146 |
-| `partial` | 1 |
-| `implemented` | 27 |
+| `deferred` | 131 |
+| `partial` | 3 |
+| `implemented` | 40 |
 | `superseded` | 0 |
 | `withdrawn` | 0 |
 
@@ -33,15 +33,15 @@ Total requirements: 178.
 | **CON-PUB-100** Commit authorship exposes no personal address | `deferred` | I | — | — |
 | **CON-PUB-110** The company is the seller | `deferred` | I | — | — |
 | **CON-PUB-120** Xcode 27 is the minimum toolchain | `deferred` | I | — | — |
-| **FR-BOT-010** Six archetypes | `deferred` | I | — | — |
-| **FR-BOT-020** Two squads at war | `deferred` | T | — | — |
-| **FR-BOT-030** Archetype sets base personality weights | `deferred` | T | — | — |
+| **FR-BOT-010** Six archetypes | `implemented` | I | `Sources/CrawlCall/Bot/Archetype.swift` | `Tests/CrawlCallTests/BotTests.swift` |
+| **FR-BOT-020** Two squads at war | `implemented` | T | `Sources/CrawlCall/Bot/Squads.swift`<br>`Sources/CrawlCall/Game.swift` | `Tests/CrawlCallTests/BotTests.swift` |
+| **FR-BOT-030** Archetype sets base personality weights | `implemented` | T | `Sources/CrawlCall/Bot/Bot.swift` | `Tests/CrawlCallTests/BotTests.swift` |
 | **FR-BOT-040** One bot per squad holds the commander role | `deferred` | T | — | — |
-| **FR-BOT-050** A bot notices the snake in view | `deferred` | T | — | — |
-| **FR-BOT-060** A bot fires at its target | `deferred` | T | — | — |
+| **FR-BOT-050** A bot notices the snake in view | `implemented` | T | `Sources/CrawlCall/Bot/Perception.swift`<br>`Sources/CrawlCall/Map/Sight.swift`<br>`Sources/CrawlCall/Bot/Bot.swift` | `Tests/CrawlCallTests/PerceptionTests.swift` |
+| **FR-BOT-060** A bot fires at its target | `partial` | T | `Sources/CrawlCall/Bot/Execution.swift` | `Tests/CrawlCallTests/ExecutionTests.swift` |
 | **FR-BOT-070** Heavy and sapper weapons destroy cover | `deferred` | T | — | — |
-| **FR-BOT-080** Action chosen by maximum utility | `deferred` | T | — | — |
-| **FR-BOT-090** Personality weights multiply utility | `deferred` | T | — | — |
+| **FR-BOT-080** Action chosen by maximum utility | `implemented` | T | `Sources/CrawlCall/Bot/Deliberation.swift` | `Tests/CrawlCallTests/DeliberationTests.swift` |
+| **FR-BOT-090** Personality weights multiply utility | `implemented` | T | `Sources/CrawlCall/Bot/Deliberation.swift` | `Tests/CrawlCallTests/DeliberationTests.swift` |
 | **FR-BOT-100** Cover is valued by what is left of it | `deferred` | T | — | — |
 | **FR-BOT-105** Cover is worth less against a wrecking weapon | `deferred` | T | — | — |
 | **FR-BOT-110** Height advantage enters position scoring | `deferred` | T | — | — |
@@ -49,14 +49,14 @@ Total requirements: 178.
 | **FR-BOT-120** Nearby snake overrides the commander's priority | `deferred` | T | — | — |
 | **FR-BOT-130** Discipline decides how far an order is kept | `deferred` | T | — | — |
 | **FR-BOT-140** Target choice has hysteresis | `deferred` | T | — | — |
-| **FR-BOT-150** Deliberation runs on a fixed step, not per frame | `deferred` | T | — | — |
-| **FR-BOT-160** Slots go by priority, not round-robin | `deferred` | T | — | — |
-| **FR-BOT-165** At most one path is computed per frame | `deferred` | T | — | — |
+| **FR-BOT-150** Deliberation runs on a fixed step, not per frame | `implemented` | T | `Sources/CrawlCall/Bot/Slots.swift`<br>`Sources/CrawlCall/Game.swift` | `Tests/CrawlCallTests/ExecutionTests.swift` |
+| **FR-BOT-160** Slots go by priority, not round-robin | `implemented` | T | `Sources/CrawlCall/Bot/Slots.swift` | `Tests/CrawlCallTests/ExecutionTests.swift` |
+| **FR-BOT-165** At most one path is computed per frame | `implemented` | T | `Sources/CrawlCall/Bot/Route.swift`<br>`Sources/CrawlCall/Bot/Execution.swift` | `Tests/CrawlCallTests/ExecutionTests.swift` |
 | **FR-BOT-167** An unreachable target sends the bot back to deliberation | `deferred` | T | — | — |
 | **FR-BOT-170** Interrupts grant a slot at once | `deferred` | T | — | — |
 | **FR-BOT-180** Calm squads do not hunt the snake | `deferred` | T | — | — |
 | **FR-BOT-190** Alarmed squads keep together | `deferred` | T | — | — |
-| **FR-BOT-200** The actions a bot can choose from | `deferred` | T | — | — |
+| **FR-BOT-200** The actions a bot can choose from | `implemented` | T | `Sources/CrawlCall/Bot/Action.swift`<br>`Sources/CrawlCall/Bot/Deliberation.swift` | `Tests/CrawlCallTests/DeliberationTests.swift` |
 | **FR-CMD-010** One commander per squad | `deferred` | T | — | — |
 | **FR-CMD-020** The commander is called on an interval | `deferred` | T | — | — |
 | **FR-CMD-025** Each commander call is its own session | `deferred` | T | — | — |
@@ -78,7 +78,7 @@ Total requirements: 178.
 | **FR-CMD-150** Speech is rate-limited and queued | `deferred` | T | — | — |
 | **FR-CMD-160** Every line passes a content filter | `deferred` | T | — | — |
 | **FR-CMD-165** A refused generation falls back to a pre-written line | `deferred` | T | — | — |
-| **FR-MAP-010** A map has more than one floor | `implemented` | I | `maps/blockout.map` | `Tests/CrawlCallTests/MapParserTests.swift`<br>`Tests/CrawlCallTests/LaunchTests.swift` |
+| **FR-MAP-010** A map has more than one floor | `implemented` | I | `maps/blockout.map` | `Tests/CrawlCallTests/MapParserTests.swift`<br>`Tests/CrawlCallTests/LaunchTests.swift`<br>`Tests/CrawlCallTests/SnakeTests.swift` |
 | **FR-MAP-020** The navigation graph covers every walkable cell | `implemented` | T | `Sources/CrawlCall/Map/NavigationGraph.swift`<br>`Sources/CrawlCall/Launch.swift` | `Tests/CrawlCallTests/NavigationGraphTests.swift`<br>`Tests/CrawlCallTests/LaunchTests.swift`<br>`Tests/CrawlCallTests/MapParserTests.swift` |
 | **FR-MAP-025** The snake and the bots agree on what is climbable | `partial` | T | `Sources/CrawlCall/Snake/Surfaces.swift` | `Tests/CrawlCallTests/SnakeTests.swift` |
 | **FR-MAP-030** Destructible modules have three states | `deferred` | T | — | — |
@@ -112,7 +112,7 @@ Total requirements: 178.
 | **FR-SNAKE-040** Tail blocks bots | `deferred` | T | — | — |
 | **FR-SNAKE-050** Tail blocks the snake's own head | `deferred` | T | — | — |
 | **FR-SNAKE-060** Eating extends the tail | `deferred` | T | — | — |
-| **FR-SNAKE-070** Damage removes segments from the end | `deferred` | T | — | — |
+| **FR-SNAKE-070** Damage removes segments from the end | `implemented` | T | `Sources/CrawlCall/Snake/Snake.swift`<br>`Sources/CrawlCall/Game.swift` | `Tests/CrawlCallTests/ExecutionTests.swift` |
 | **FR-SNAKE-080** A removed segment takes its ability with it | `deferred` | T | — | — |
 | **FR-SNAKE-090** Eating takes time and holds the snake in place | `deferred` | T | — | — |
 | **FR-SNAKE-100** Live prey takes longer than a body | `deferred` | T | — | — |
@@ -155,7 +155,7 @@ Total requirements: 178.
 | **FR-VIEW-030** Game logic reads intents, not device events | `implemented` | I | `Sources/CrawlCall/Game.swift`<br>`Sources/CrawlCall/Input/Intent.swift`<br>`Sources/CrawlCall/GameSession.swift` | `Tests/CrawlCallTests/GameTests.swift` |
 | **FR-VIEW-040** macOS scheme: keyboard and mouse | `deferred` | D | — | — |
 | **FR-VIEW-050** iOS scheme: touch | `implemented` | D | `Sources/CrawlCall/Input/TouchScheme.swift`<br>`Sources/CrawlCall/CrawlCallApp.swift` | `Tests/CrawlCallTests/TouchSchemeTests.swift` |
-| **FR-VIEW-060** Squad affiliation is readable at a glance | `deferred` | D | — | — |
+| **FR-VIEW-060** Squad affiliation is readable at a glance | `partial` | D | `Sources/CrawlCall/View/BotEntity.swift`<br>`Sources/CrawlCall/GameSession.swift`<br>`Sources/CrawlCall/CrawlCallApp.swift` | `Tests/CrawlCallTests/BotEntityTests.swift` |
 | **FR-VIEW-070** Archetype is readable from the silhouette | `deferred` | D | — | — |
 | **FR-VIEW-080** Wounded and separated bots stand out | `deferred` | D | — | — |
 | **FR-VIEW-090** Panic is visible on the bot | `deferred` | D | — | — |
@@ -164,7 +164,7 @@ Total requirements: 178.
 | **FR-VIEW-120** The HUD is drawn in the diorama style | `deferred` | I | — | — |
 | **FR-VIEW-130** The arena is lit as bright daylight | `implemented` | D | `Sources/CrawlCall/View/SceneView.swift` | `Tests/CrawlCallTests/ScenePlanTests.swift` |
 | **FR-VIEW-140** A floor above the head is drawn see-through | `implemented` | D | `Sources/CrawlCall/View/SeeThrough.swift`<br>`Sources/CrawlCall/Map/SceneBuilder.swift`<br>`Sources/CrawlCall/GameSession.swift` | `Tests/CrawlCallTests/SeeThroughTests.swift` |
-| **FR-VIEW-150** Nothing between the camera and the snake stays solid | `implemented` | D | `Sources/CrawlCall/View/SeeThrough.swift`<br>`Sources/CrawlCall/Map/SceneBuilder.swift`<br>`Sources/CrawlCall/GameSession.swift` | `Tests/CrawlCallTests/SeeThroughTests.swift` |
+| **FR-VIEW-150** Nothing between the camera and the snake stays solid | `implemented` | D | `Sources/CrawlCall/View/SeeThrough.swift`<br>`Sources/CrawlCall/Map/Sight.swift`<br>`Sources/CrawlCall/Map/SceneBuilder.swift`<br>`Sources/CrawlCall/GameSession.swift` | `Tests/CrawlCallTests/SeeThroughTests.swift` |
 | **IF-BOT-010** Bot and match configuration | `implemented` | T | `Sources/CrawlCall/Config/Configurations.swift`<br>`Sources/CrawlCall/Config/Configurations+Load.swift`<br>`Sources/CrawlCall/Config/Schema.swift`<br>`Sources/CrawlCall/Launch.swift`<br>`Sources/CrawlCall/CrawlCallApp.swift` | `Tests/CrawlCallTests/ConfigurationTests.swift`<br>`Tests/CrawlCallTests/LaunchTests.swift`<br>`Tests/CrawlCallTests/SchemaTests.swift` |
 | **IF-CMD-010** Commander input | `deferred` | T | — | — |
 | **IF-CMD-020** Commander output | `deferred` | T | — | — |
@@ -178,9 +178,9 @@ Total requirements: 178.
 | **IF-SNAKE-010** Snake configuration | `implemented` | T | `Sources/CrawlCall/Config/Configurations.swift`<br>`Sources/CrawlCall/Config/Configurations+Load.swift`<br>`Sources/CrawlCall/Config/Schema.swift`<br>`Sources/CrawlCall/Launch.swift`<br>`Sources/CrawlCall/CrawlCallApp.swift` | `Tests/CrawlCallTests/ConfigurationTests.swift`<br>`Tests/CrawlCallTests/LaunchTests.swift`<br>`Tests/CrawlCallTests/SchemaTests.swift` |
 | **IF-VIEW-010** Input intents | `implemented` | T | `Sources/CrawlCall/Input/Intent.swift` | `Tests/CrawlCallTests/IntentTests.swift`<br>`Tests/CrawlCallTests/TouchSchemeTests.swift` |
 | **IF-VIEW-020** View configuration | `implemented` | T | `Sources/CrawlCall/Config/Configurations.swift`<br>`Sources/CrawlCall/Config/Configurations+Load.swift`<br>`Sources/CrawlCall/Config/Schema.swift`<br>`Sources/CrawlCall/Launch.swift`<br>`Sources/CrawlCall/CrawlCallApp.swift` | `Tests/CrawlCallTests/ConfigurationTests.swift`<br>`Tests/CrawlCallTests/LaunchTests.swift`<br>`Tests/CrawlCallTests/SchemaTests.swift` |
-| **INV-BOT-010** Execution runs every frame for every bot | `deferred` | T | — | — |
+| **INV-BOT-010** Execution runs every frame for every bot | `implemented` | T | `Sources/CrawlCall/Bot/Execution.swift`<br>`Sources/CrawlCall/Game.swift` | `Tests/CrawlCallTests/ExecutionTests.swift` |
 | **INV-BOT-020** Squads never remove bodies | `deferred` | T | — | — |
-| **INV-BOT-030** Both squads share one archetype set | `deferred` | I | — | — |
+| **INV-BOT-030** Both squads share one archetype set | `implemented` | I | `Sources/CrawlCall/Bot/Archetype.swift`<br>`Sources/CrawlCall/Bot/Squads.swift` | `Tests/CrawlCallTests/BotTests.swift` |
 | **INV-MAP-010** The load-bearing frame never breaks | `deferred` | T | — | — |
 | **INV-MAP-020** Destruction never disconnects floors | `deferred` | T | — | — |
 | **INV-SCORE-010** Nothing but consumption scores | `deferred` | T | — | — |
@@ -306,6 +306,6 @@ Verified by means other than testing — or the check has not been set up yet.
 
 ## Code files outside the specification
 
-No requirement references them: 0 of 22.
+No requirement references them: 0 of 33.
 
 

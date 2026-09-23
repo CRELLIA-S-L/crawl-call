@@ -121,6 +121,10 @@ struct BotConfiguration: Decodable, Equatable {
         let allowedRanges: [String: Range]
         let runSpeed: Double
         let weaponDamage: Double
+        /// What a bot of this kind starts with and what it can spend before it has to
+        /// reload — both named as utility inputs by FR-BOT-080.
+        let health: Double
+        let magazine: Int
         let detectionRange: Double
     }
 
@@ -142,6 +146,8 @@ struct BotConfiguration: Decodable, Equatable {
             "basePersonalityWeights": weights,
             "allowedRanges": .named(of: .object(["lowest": .value, "highest": .value])),
             "runSpeed": .value,
+            "health": .value,
+            "magazine": .value,
             "weaponDamage": .value,
             "detectionRange": .value,
         ])),

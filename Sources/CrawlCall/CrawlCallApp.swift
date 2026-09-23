@@ -1,7 +1,7 @@
 // The game's entry point. Starting the app is the moment the interface requirements
 // name for reading the configurations, and the moment a match begins.
 //
-// implements: IF-SNAKE-010, IF-MAP-020, IF-VIEW-020, IF-BOT-010, FR-VIEW-050
+// implements: IF-SNAKE-010, IF-MAP-020, IF-VIEW-020, IF-BOT-010, FR-VIEW-050, FR-VIEW-060
 import RealityKit
 import SwiftUI
 
@@ -53,7 +53,14 @@ struct MatchView: View {
             }
             map.addChild(snake)
 
-            let session = GameSession(game: game, snakeEntity: snake, camera: camera, seeThrough: seeThrough,
+            let squads = BotEntity.make(for: game.bots)
+            for body in squads.children {
+                body.components.set(ImageBasedLightReceiverComponent(imageBasedLight: ambient))
+            }
+            map.addChild(squads)
+
+            let session = GameSession(game: game, snakeEntity: snake, botEntities: squads,
+                                      camera: camera, seeThrough: seeThrough,
                                       distance: max(world.plan.bounds.extent.x, world.plan.bounds.extent.z) * 1.1,
                                       fieldOfView: 50)
             self.session = session
