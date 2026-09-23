@@ -8,9 +8,9 @@ Total requirements: 184.
 | Status | Requirements |
 |---|---|
 | `draft` | 4 |
-| `deferred` | 123 |
+| `deferred` | 122 |
 | `partial` | 7 |
-| `implemented` | 50 |
+| `implemented` | 51 |
 | `superseded` | 0 |
 | `withdrawn` | 0 |
 
@@ -150,7 +150,7 @@ Total requirements: 184.
 | **FR-TOOL-150** The prompt bench | `implemented` | T | `Sources/PromptBench/PromptBench.swift`<br>`Sources/PromptBench/main.swift` | — |
 | **FR-TOOL-160** The bench carries a control that must be blocked | `implemented` | T | `Sources/PromptBench/PromptBench.swift`<br>`Sources/PromptBench/PromptVariants.swift` | — |
 | **FR-TOOL-170** A bench measurement names the configuration it covers | `deferred` | T | — | — |
-| **FR-TOOL-180** An unattended run closes the app it started | `deferred` | T | — | — |
+| **FR-TOOL-180** An unattended run closes the app it started | `implemented` | T | `scripts/run-on-device.sh` | `scripts/run-on-device-selftest.sh` |
 | **FR-TOOL-190** A phase that stops making progress is killed and reported | `implemented` | T | `scripts/run-tests.sh` | `scripts/run-tests-selftest.sh` |
 | **FR-VIEW-010** A perspective camera pitched between 50 and 60 degrees | `implemented` | D | `Sources/CrawlCall/View/SceneView.swift` | `Tests/CrawlCallTests/ScenePlanTests.swift` |
 | **FR-VIEW-020** The camera follows the head | `implemented` | D | `Sources/CrawlCall/View/SceneView.swift`<br>`Sources/CrawlCall/GameSession.swift` | `Tests/CrawlCallTests/ScenePlanTests.swift` |

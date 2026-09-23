@@ -134,17 +134,19 @@ Everything a bot is: the kinds there are, who is on the map at the whistle, what
 It is separate from the match (E-070) for the opposite reason: the match owns the snake, the clock and the order of a frame, and a squad that reached into those would decide when the world moves. What crosses the boundary is a world, the snake's whereabouts and a frame's time in; squads, their decisions and the damage they dealt out.
 It leans on start-up for the numbers an archetype is made of (IF-BOT-010) and on the map layer for the graph it walks and the geometry it sees through; it knows nothing about what any of it looks like.
 
-### E-080 — The test runner
+### E-080 — The runners
 
 ```yaml
 status: built
 carries: [scripts]
-requirements: [FR-TOOL-190]
+requirements: [FR-TOOL-190, FR-TOOL-180]
 depends_on: []
-interface: a simulator identifier in; each phase's time, its verdict, and a named timeout out
+interface: a simulator or a device identifier in; each phase's time, its verdict, a named timeout, and an app that is not left running out
 ```
 
-Runs the suite the way the project says to run it: the simulator booted by identifier, the build and the run as separate phases, each ended by its own report or by a watchdog.
+Runs this project's own software the way the project says to run it: the suite on a simulator booted by identifier, with the build and the run as separate phases each ended by its own report or by a watchdog; and a build on a device, installed, launched, looked at and closed again.
 
 **Rationale.** A part rather than a habit because the knowledge in it was expensive: that phases must be timed apart, that a phase ends when its log says so and not when `xcodebuild` exits, and that ending one means ending the tree it started. Each of those was learned from a stall that cost minutes, and each would be lost the moment somebody typed the single `test` command from memory.
-It depends on nothing in the game: it drives the build system from outside, and the game does not know it exists.
+It depends on nothing in the game: it drives the build system and the device from outside, and the game does not know it exists.
+The device run belongs beside the test run rather than in a part of its own, because the expensive knowledge is the same knowledge: a run is addressed by identifier and never by name, it ends by the verb meant for ending it, and it confirms what it did instead of assuming it (`specs/50-verification.md`). Two parts would mean two places to learn that, and the second one would learn it later.
+Neither runner carries an identifier of its own — the simulator arrives as an argument and the device as an environment variable — which is what lets the part be published as it stands. For the simulator that is convenience; for the device it is the maintainer's standing rule that no device identifier enters the repository, which no requirement states.

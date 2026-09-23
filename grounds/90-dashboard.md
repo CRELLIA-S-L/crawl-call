@@ -199,6 +199,7 @@ requirements link to them, plus how many files their `code` field names.
 | FR-SNAKE-200 | 1 | 0 | 1 |
 | FR-TOOL-040 | 1 | 0 | 1 |
 | FR-TOOL-080 | 1 | 0 | 1 |
+| FR-TOOL-180 | 0 | 1 | 1 |
 | FR-TOOL-190 | 0 | 1 | 1 |
 | FR-VIEW-130 | 0 | 1 | 1 |
 | INV-MAP-010 | 1 | 0 | 1 |
@@ -235,7 +236,6 @@ requirements link to them, plus how many files their `code` field names.
 | FR-TOOL-120 | 0 | 0 | 0 |
 | FR-TOOL-130 | 0 | 0 | 0 |
 | FR-TOOL-140 | 0 | 0 | 0 |
-| FR-TOOL-180 | 0 | 0 | 0 |
 | FR-VIEW-040 | 0 | 0 | 0 |
 | FR-VIEW-070 | 0 | 0 | 0 |
 | FR-VIEW-080 | 0 | 0 | 0 |

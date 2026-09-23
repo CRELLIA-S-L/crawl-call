@@ -338,14 +338,14 @@ What the record obliges is a re-run before the change ships, and the cost of one
 ### FR-TOOL-180 — An unattended run closes the app it started
 
 ```yaml
-status: deferred
+status: implemented
 verification: T
 derives_from: []
 depends_on: [NFR-PERF-010, NFR-PERF-050]
 refines: []
 conflicts_with: []
-code: []
-tests: []
+code: [scripts/run-on-device.sh]
+tests: [scripts/run-on-device-selftest.sh]
 created: 2026-09-22
 ```
 
@@ -354,6 +354,8 @@ When an unattended run ends, whether it finished its route or stopped early, the
 **Rationale.** The next measurement is the reason, not tidiness: NFR-PERF-010 asks for 60 frames per second *cold*, and the thermal requirements are read against a device that started cool (NFR-PERF-050), so an app left rendering in the background puts the following run somewhere in the middle of its own thermal curve and produces a number nobody can reproduce (`specs/50-verification.md`).
 The spike's own instrument is the evidence that this does not happen by itself: `materials/spike/instrument/run-autopilot.sh` terminates any *previous* instance when it launches, and never terminates the one it started — not on the path that succeeds, and not on the two paths that abort, which are the runs most likely to be left behind.
 "Before it reports" rather than "afterwards" because a report is where a run ends for whoever reads it, and a step after the report is a step that gets skipped.
+Built as a trap on the way out and not as a last line, because "stopped early" is the half that matters: a failed capture, an interrupted run or a device that went away are exactly the paths a last line never reaches, and they are the runs that leave the app rendering.
+The device is named to the tool by the environment and never written into it, so that closing a run is one command and the tool is the same tool on anybody's desk. That a device identifier stays out of the repository is the maintainer's standing rule and not a requirement: CON-PUB-040 is about signing identifiers and CON-PUB-060 about secrets, and neither reaches a device.
 
 ### FR-TOOL-190 — A phase that stops making progress is killed and reported
 
