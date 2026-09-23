@@ -1,7 +1,7 @@
 // The game's entry point. Starting the app is the moment the interface requirements
 // name for reading the configurations, and the moment a match begins.
 //
-// implements: IF-SNAKE-010, IF-MAP-020, IF-VIEW-020, IF-BOT-010, FR-VIEW-050, FR-VIEW-060, FR-VIEW-160
+// implements: IF-SNAKE-010, IF-MAP-020, IF-VIEW-020, IF-BOT-010, FR-VIEW-050, FR-VIEW-060, FR-VIEW-160, FR-VIEW-190
 import RealityKit
 import SwiftUI
 
@@ -80,11 +80,21 @@ struct MatchView: View {
             }
         }
         .ignoresSafeArea()
-        // FR-VIEW-050: a stick on the left steers and a button on the right eats,
-        // each in a corner of its own so that one cannot be taken for the other.
-        .overlay(Controls(steer: { session?.apply(.move(direction: $0)) },
-                          release: { session?.apply(TouchScheme.release) },
-                          eat: { session?.apply(TouchScheme.eat) },
-                          canEat: session?.canEat ?? false))
+        // One or the other, never both (FR-VIEW-190): while the match is on, the
+        // controls; once it is over, the plate that says how it ended and starts
+        // another.
+        .overlay {
+            if let outcome = session?.game.outcome {
+                MatchEnd(outcome: outcome, again: { session?.restart() })
+            } else {
+                // FR-VIEW-050: a stick on the left steers and a button on the right
+                // eats, each in a corner of its own so that one cannot be taken for
+                // the other.
+                Controls(steer: { session?.apply(.move(direction: $0)) },
+                         release: { session?.apply(TouchScheme.release) },
+                         eat: { session?.apply(TouchScheme.eat) },
+                         canEat: session?.canEat ?? false)
+            }
+        }
     }
 }

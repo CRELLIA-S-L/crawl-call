@@ -402,14 +402,14 @@ When the snake's body passes through a destructible module, the system **shall**
 ### FR-SNAKE-210 — The snake dies when hit with no tail left
 
 ```yaml
-status: deferred
+status: implemented
 verification: T
 derives_from: [FR-SNAKE-070]
 depends_on: [IF-SNAKE-010]
 refines: []
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Snake/Snake.swift]
+tests: [Tests/CrawlCallTests/MatchEndTests.swift]
 created: 2026-09-21
 ```
 
@@ -417,6 +417,8 @@ When the snake takes damage while its tail has no segments, the system **shall**
 
 **Rationale.** ADR-0009: the snake's life is its tail — one currency for growth, abilities, blocking and survival.
 The match starts with the segment count the snake configuration sets (IF-SNAKE-010), so the first bullet is never the last.
+"While its tail has no segments" and not "when the last segment goes": the hit that empties the tail is paid for by that segment, and the one after it is the one with nothing left to pay.
+The damage a hit does not pay for in full is banked (FR-SNAKE-070), and at an empty tail there is nothing to bank against — so the smallest weapon in the game kills a tailless snake as surely as the largest.
 
 ### FR-SNAKE-220 — A drop is a path, not a fall
 

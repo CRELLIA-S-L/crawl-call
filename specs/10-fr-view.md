@@ -337,7 +337,7 @@ derives_from: []
 depends_on: [IF-VIEW-010]
 refines: []
 conflicts_with: []
-code: [Sources/CrawlCall/View/Controls.swift]
+code: [Sources/CrawlCall/View/Controls.swift, Sources/CrawlCall/View/MatchEnd.swift]
 tests: []
 created: 2026-09-21
 ```
@@ -347,7 +347,7 @@ Every HUD element **shall** be drawn as a rounded, light-coloured plate carrying
 **Rationale.** Concept §2: the interface in the same aesthetic as the world — rounded light plates, a bold rounded typeface, large readable icons; a military HUD with slanted plates argues with the style (ADR-0002).
 Inspected against these four properties; a separate style guide was considered and not written, since the properties are the guide (Q-160, closed 2026-09-21).
 
-**Partial, and how.** What exists of the interface is the two controls FR-VIEW-050 asks for — the stick and the eat button — and they are drawn to this requirement: round, light, translucent, an icon and no word. Nothing else of a HUD exists yet, so the requirement is met by everything there is and unmet by everything there is not.
+**Partial, and how.** What exists of the interface is the two controls FR-VIEW-050 asks for — the stick and the eat button — and the plate FR-VIEW-190 puts up when the match is over; all three are drawn to this requirement: rounded, light, translucent, with an icon or a bold rounded word. Nothing else of a HUD exists yet, so the requirement is met by everything there is and unmet by everything there is not.
 
 ### FR-VIEW-130 — The arena is lit as bright daylight
 
@@ -368,3 +368,25 @@ While a match is running, the system **shall** light the arena with a single bri
 **Rationale.** Concept §2 names the light as part of the style, not as a technical detail: "bright daylight, soft shadows, a saturated palette. No gloom." A diorama is read by its shapes, and shapes are read by their shading.
 It is also what makes a blockout judgeable at all: an unlit scene renders as flat fields of one colour, so a floor, a wall and a crate become indistinguishable and every `D` judgement about a map — whether a corridor is a trap, whether a balcony overlooks the room — has nothing to look at.
 The number of lights is one on purpose: a single source is what casts a readable shadow direction, and the thermal budget of a phone rendering a match is not the place to discover that three were affordable (NFR-PERF-010).
+
+### FR-VIEW-190 — A finished match says so and starts again on a press
+
+```yaml
+status: implemented
+verification: T
+derives_from: [FR-SCORE-140, FR-SCORE-150]
+depends_on: [FR-VIEW-120]
+refines: []
+conflicts_with: []
+code: [Sources/CrawlCall/View/MatchEnd.swift, Sources/CrawlCall/Game.swift, Sources/CrawlCall/GameSession.swift, Sources/CrawlCall/View/BotEntity.swift, Sources/CrawlCall/CrawlCallApp.swift]
+tests: [Tests/CrawlCallTests/MatchEndTests.swift]
+created: 2026-09-23
+```
+
+While the match is over, the system **shall** draw, in place of the steering controls, a plate that names which of the two ends it was and carries one control that begins a new match in the same arena.
+
+**Rationale.** H-010 is measured by whether a first-time player keeps going past the second minute, and until now a match had no end at all; with FR-SCORE-140 and FR-SCORE-150 it has two, and an end that froze the screen with no way back would end the session along with the match.
+Which of the two, because they are opposite results — the snake was shot down, or the snake ate the arena empty — and a plate saying only that it was over would leave the player to work out which of them they had just reached.
+The same arena, because stage 1 has one map (concept §13) and a choice of levels is a menu, which the vertical slice does not build.
+In place of the steering controls, because a stick that still answers after the snake is dead says the match is not over.
+"A new match" is the whole of it and not only a new model: played on 2026-09-23, the first restart brought the bots the snake had eaten back the size the last bite had left them, because the drawing kept what the previous match had done to it. Whatever a match changes on screen, starting one puts back.

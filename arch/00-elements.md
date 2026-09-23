@@ -77,7 +77,7 @@ It depends on start-up because the cell size it measures in is tuning (IF-MAP-02
 ```yaml
 status: built
 carries: [Sources/CrawlCall/View]
-requirements: [FR-VIEW-010, FR-VIEW-130, FR-VIEW-020, FR-VIEW-060, FR-VIEW-100, FR-VIEW-120, FR-VIEW-140, FR-VIEW-150, FR-VIEW-160, FR-VIEW-170, FR-VIEW-180]
+requirements: [FR-VIEW-010, FR-VIEW-130, FR-VIEW-020, FR-VIEW-060, FR-VIEW-100, FR-VIEW-120, FR-VIEW-140, FR-VIEW-150, FR-VIEW-160, FR-VIEW-170, FR-VIEW-180, FR-VIEW-190]
 depends_on: [E-040]
 interface: a scene plan in; the camera it is seen through and the light it is read by, out
 ```
@@ -92,7 +92,7 @@ The boundary is also where the specification puts it — the VIEW area owns the 
 ```yaml
 status: built
 carries: [Sources/CrawlCall/Snake]
-requirements: [FR-SNAKE-010, FR-SNAKE-020, FR-SNAKE-030, FR-SNAKE-060, FR-SNAKE-070, FR-SNAKE-090, FR-SNAKE-100, FR-SNAKE-220, FR-MAP-025]
+requirements: [FR-SNAKE-010, FR-SNAKE-020, FR-SNAKE-030, FR-SNAKE-060, FR-SNAKE-070, FR-SNAKE-090, FR-SNAKE-100, FR-SNAKE-210, FR-SNAKE-220, FR-MAP-025]
 depends_on: [E-040]
 interface: a held direction and a frame's time in; a head, a floor and a trail out
 ```
@@ -107,15 +107,16 @@ It leans on the map layer for what is walkable and on nothing else: the snake as
 ```yaml
 status: built
 carries: [Sources/CrawlCall/Game.swift, Sources/CrawlCall/GameSession.swift]
-requirements: [FR-VIEW-030, FR-VIEW-170, FR-VIEW-180]
+requirements: [FR-VIEW-030, FR-VIEW-170, FR-VIEW-180, FR-VIEW-190, FR-SCORE-140, FR-SCORE-150]
 depends_on: [E-020, E-060, E-050]
 interface: intents in, a frame advanced, the scene and the camera moved to follow
 ```
 
-What runs while a match is on: the intents the player sends, the world advanced once per frame, and the drawing brought up to date afterwards.
+What runs while a match is on: the intents the player sends, the world advanced once per frame, and the drawing brought up to date afterwards — and the two ends that stop all of it.
 
 **Rationale.** This is the boundary FR-VIEW-030 draws — intents in, never touches or keys — and it is worth a part of its own so that the rule has somewhere to live rather than being a habit of whoever writes the next input scheme.
 It is also the only part that knows the order of a frame: the world moves first and the picture follows, never the other way round, which is what keeps the camera from chasing a head that has not moved yet.
+Whether a match is still on belongs here for the same reason: the two ends (FR-SCORE-140, FR-SCORE-150) are read off the snake and the bots but are a fact about the match, and a part that asked the snake whether the game was over would be the beginning of two answers.
 
 ### E-090 — The squads
 

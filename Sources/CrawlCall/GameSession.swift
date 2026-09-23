@@ -5,7 +5,7 @@
 // measured with — `specs/50-verification.md` says why, and the two are different
 // questions asked of the same number.
 //
-// implements: FR-VIEW-020, FR-VIEW-030, FR-VIEW-060, FR-VIEW-100, FR-VIEW-140, FR-VIEW-150, FR-VIEW-160, FR-VIEW-170, FR-VIEW-180
+// implements: FR-VIEW-020, FR-VIEW-030, FR-VIEW-060, FR-VIEW-100, FR-VIEW-140, FR-VIEW-150, FR-VIEW-160, FR-VIEW-170, FR-VIEW-180, FR-VIEW-190
 import Foundation
 import Observation
 import RealityKit
@@ -41,6 +41,17 @@ final class GameSession {
     }
 
     func apply(_ intent: Intent) { game.apply(intent) }
+
+    /// Another match in the same arena (FR-VIEW-190). The scene is kept and brought
+    /// back into line with the new match rather than built again: every entity in it
+    /// belongs to the arena, which the match does not change, and the bodies are
+    /// addressed by what they draw — so a bot that was eaten stands up again and a
+    /// tail grown long is drawn short.
+    func restart() {
+        game = game.restarted()
+        focus = game.snake.head
+        place()
+    }
 
     /// One frame: the world moves, then what is drawn catches up with it.
     func step(seconds: Double) {

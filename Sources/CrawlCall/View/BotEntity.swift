@@ -11,7 +11,7 @@
 // A bot being eaten is drawn going into the snake rather than blinking out of
 // existence: it is drawn towards the head and shrinks as it goes (FR-VIEW-100).
 //
-// implements: FR-VIEW-060, FR-VIEW-100
+// implements: FR-VIEW-060, FR-VIEW-100, FR-VIEW-190
 import CoreGraphics
 import Foundation
 import RealityKit
@@ -56,6 +56,13 @@ enum BotEntity {
                 continue
             }
             body.isEnabled = true
+            // Everything a meal did to this body is undone here, and not only where
+            // it stood: a bot swallowed in the last match came back in the next one
+            // the size the last bite had left it (found in play on 2026-09-23,
+            // FR-VIEW-190). What this does not set is what survives a new match, so
+            // it sets all of it — the shrinking of FR-VIEW-100 is applied after,
+            // every frame, by `swallow`.
+            body.scale = .one
             body.position = SIMD3(Float(bot.position.x),
                                   Float(bot.position.y + height / 2),
                                   Float(bot.position.z))

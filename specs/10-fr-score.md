@@ -278,14 +278,14 @@ Monotonic because nothing lowers it: bodies do not decay (ADR-0013), so evidence
 ### FR-SCORE-140 — The match ends when the snake dies
 
 ```yaml
-status: deferred
+status: partial
 verification: T
 derives_from: []
 depends_on: [FR-SNAKE-210]
 refines: []
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Game.swift]
+tests: [Tests/CrawlCallTests/MatchEndTests.swift]
 created: 2026-09-21
 ```
 
@@ -294,20 +294,27 @@ When the snake dies, the system **shall** end the match with the score accumulat
 **Rationale.** ADR-0010: the score is the result, not the goal.
 No timer and no score threshold end a match; the only two ends are this one and FR-SCORE-150.
 
+**Partial, and how.** What is built is the end: a snake killed under FR-SNAKE-210 stops the match where it stands, nothing in the arena moves again, and the screen says which end it was (FR-VIEW-190).
+What is not built is the result, because there is no score to carry into it — FR-SCORE-010 and the three multipliers it derives are the next layer, and a zero reported as a result would be a number nobody computed.
+
 ### FR-SCORE-150 — The match ends when no bot is left
 
 ```yaml
-status: deferred
+status: partial
 verification: T
 derives_from: []
 depends_on: [FR-BOT-020]
 refines: []
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Game.swift]
+tests: [Tests/CrawlCallTests/MatchEndTests.swift]
 created: 2026-09-21
 ```
 
 When the last living bot of either squad dies or is consumed, the system **shall** end the match with the score accumulated so far as its result.
 
 **Rationale.** ADR-0010: prey is finite and there are no reinforcements; a wiped-out squad does not end the match — the other one is still there — and the arena being empty does.
+Living is what is counted, not present: the day a body stays where it fell (INV-SCORE-020), a match with nothing left that can shoot back is still over.
+
+**Partial, and how.** The same half as FR-SCORE-140: the end is built and the result is not, for want of a score (FR-SCORE-010).
+Today the only way a bot leaves the arena is being eaten, so the two readings of the trigger — the last living one, the last one of any kind — cannot be told apart in play; the code counts the living ones, which is what the statement says.

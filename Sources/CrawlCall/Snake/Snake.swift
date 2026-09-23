@@ -1,7 +1,7 @@
 // The snake as the game reasons about it: where the head is, where it has been, and
 // where the tail therefore lies. No RealityKit here — this is the part a test can read.
 //
-// implements: FR-SNAKE-010, FR-SNAKE-020, FR-SNAKE-030, FR-SNAKE-060, FR-SNAKE-070, FR-SNAKE-220
+// implements: FR-SNAKE-010, FR-SNAKE-020, FR-SNAKE-030, FR-SNAKE-060, FR-SNAKE-070, FR-SNAKE-210, FR-SNAKE-220
 import Foundation
 
 struct Snake {
@@ -15,6 +15,8 @@ struct Snake {
     private(set) var segments: Int
     /// Damage taken that has not yet cost a whole segment (FR-SNAKE-070).
     private var unpaid = 0.0
+    /// False once a hit has landed on a snake with nothing left to lose (FR-SNAKE-210).
+    private(set) var isAlive = true
     /// The height a climb is still working its way up to, while one is under way.
     /// A stair is walked up at the configured speed like any other ground
     /// (FR-SNAKE-030), so it takes the time it takes.
@@ -174,6 +176,13 @@ struct Snake {
     @discardableResult
     mutating func take(damage: Double, perSegment: Double) -> Int {
         guard damage > 0, perSegment > 0 else { return 0 }
+        // The tail is the life (ADR-0009), so a hit on a snake with no tail has
+        // nothing to take but the snake (FR-SNAKE-210). Banking it would make the
+        // last hit the only harmless one there is.
+        guard segments > 0 else {
+            isAlive = false
+            return 0
+        }
         unpaid += damage
         let lost = min(segments, Int(unpaid / perSegment))
         unpaid -= Double(lost) * perSegment

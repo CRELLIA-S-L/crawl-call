@@ -21,6 +21,8 @@ Of five people handed the stage-1 build (one grey blockout of two floors joined 
 **Rationale.** Concept §13 stage 1, §16.2 H1. Threshold is the concept's "three of five quit before minute two" inverted into the register's grammar: the proportion who stay.
 The build carries two squads of four where the concept's stage 1 describes four bots, and the description is brought to what was built rather than the build to the description: the second squad was needed to place the first at a distance from it, no damage passes between bots yet, and both squads are prey exactly as one would be.
 What the second squad is *for* — two sides fighting each other while the snake waits — is stage 3 and is not what this measures.
+Since 2026-09-23 the build also ends rather than running on: the snake can be shot to pieces and the arena can be eaten empty (FR-SCORE-140, FR-SCORE-150), and either end offers another match on the same map (FR-VIEW-190).
+That matters to the measurement rather than decorating it — "keeps playing past the second minute" is only a question you can ask of a build a player can lose, and a session that ends at the first death is a refusal this now has a way of seeing.
 
 ### H-020 — Multi-level maps change the hunt, not decorate it
 

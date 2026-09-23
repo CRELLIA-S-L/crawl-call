@@ -5,11 +5,23 @@
 // or a key: the schemes produce intents (FR-VIEW-050), the logic consumes them, and
 // neither knows about the other.
 //
-// implements: FR-VIEW-030, FR-VIEW-170, FR-SNAKE-030, FR-BOT-020, FR-BOT-150, FR-SNAKE-060, FR-SNAKE-070, FR-SNAKE-090, INV-BOT-010
+// implements: FR-VIEW-030, FR-VIEW-170, FR-VIEW-190, FR-SNAKE-030, FR-BOT-020, FR-BOT-150, FR-SNAKE-060, FR-SNAKE-070, FR-SNAKE-090, FR-SCORE-140, FR-SCORE-150, INV-BOT-010
 import Foundation
 
 struct Game {
+    /// The two ways a match can be over, and the only two there are: no timer and no
+    /// score threshold ends one (FR-SCORE-140, FR-SCORE-150).
+    enum Outcome: Equatable {
+        /// The snake was shot with nothing left to lose (FR-SNAKE-210).
+        case snakeDied
+        /// Nothing is left alive to hunt.
+        case arenaEmpty
+    }
+
     let world: World
+    /// Where this match began, kept so that another one can begin in the same place
+    /// (FR-VIEW-190).
+    let start: NavigationGraph.Node
     private(set) var snake: Snake
     /// Both squads, spawned where the match begins (FR-BOT-020).
     private(set) var bots: [Bot]
@@ -24,8 +36,12 @@ struct Game {
     /// The shots still being drawn, each with what is left of its time (FR-VIEW-170).
     private(set) var shots: [Shot] = []
 
+    /// How the match ended, or nil while it is still being played.
+    private(set) var outcome: Outcome?
+
     init(world: World, start: NavigationGraph.Node) {
         self.world = world
+        self.start = start
         self.surfaces = Surfaces(graph: world.graph, kit: world.kit, tuning: world.configurations.tuning, map: world.map)
         let cell = world.configurations.tuning.navigationGraphCellSize
         self.snake = Snake(head: SIMD3(Double(start.x) * cell,
@@ -99,7 +115,9 @@ struct Game {
     /// the snake moves where it is steered; either way the bots see what there is to
     /// see, whoever holds a slot decides, and every bot walks whatever it decided.
     mutating func advance(seconds: Double) {
-        guard !isPaused else { return }
+        // A match that is over stays where it stopped: the arena is still drawn, and
+        // nothing in it moves again until a new one is started (FR-VIEW-190).
+        guard !isPaused, outcome == nil else { return }
         if eating != nil {
             // FR-SNAKE-090: the head stays where it is until the meal is over, which
             // is what makes eating a choice with a price. Live prey is chewed through
@@ -136,6 +154,13 @@ struct Game {
             shots += volley.shots
             if volley.damage > 0 {
                 snake.take(damage: volley.damage, perSegment: world.configurations.snake.damagePerSegment)
+                // FR-SCORE-140. Checked inside the loop rather than after it: the
+                // remaining deliberation steps of a long frame belong to a match that
+                // is already over.
+                if !snake.isAlive {
+                    outcome = .snakeDied
+                    return
+                }
             }
         }
         // Whatever is being eaten stays where it is: it resists by shooting, not by
@@ -144,6 +169,13 @@ struct Game {
                        routeOrder: slots.order(among: bots, snake: body,
                                                configuration: world.configurations.bot),
                        holding: eating?.prey)
+
+        // FR-SCORE-150: prey is finite and there are no reinforcements, so the arena
+        // running out of living bots is an end of its own. Living, not present: a bot
+        // is only removed when the snake has finished eating it, and the day bodies
+        // stay behind (INV-SCORE-020) the match must still end when the last one that
+        // could shoot back is gone.
+        if !bots.contains(where: { $0.health > 0 }) { outcome = .arenaEmpty }
     }
 
     /// The meal is over: the bot is gone from the map — squads do not remove bodies,
@@ -155,6 +187,12 @@ struct Game {
         bots.removeAll { $0.id == meal.prey }
         snake.grow(by: world.configurations.snake.segmentsPerArchetype[meal.archetype.rawValue] ?? 0)
     }
+
+    /// Another match in the same arena, from the same starting cell: the world is
+    /// read once at start-up (IF-SNAKE-010 and its neighbours) and nothing in it is
+    /// spent by a match, so a new one is a new `Game` over the same value
+    /// (FR-VIEW-190).
+    func restarted() -> Game { Game(world: world, start: start) }
 
     /// Where a match starts: the lowest floor's first walkable cell, so that a map
     /// without a declared spawn still runs. Where the snake *should* start is a map
