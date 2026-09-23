@@ -30,7 +30,9 @@ struct SnakeConfiguration: Decodable, Equatable {
     let medicRegrownSegments: Int
     let damagePerSegment: Double
     let bodyEatingDuration: Double
-    let livePreyEatingDuration: Double
+    /// How fast the snake chews through a living bot: its health, taken out at this
+    /// rate, is what a live meal lasts (FR-SNAKE-100).
+    let eatingDamagePerSecond: Double
     let abilities: Abilities
 
     // The sapper ability takes no parameter — FR-SNAKE-140 sets a partition to its
@@ -42,7 +44,7 @@ struct SnakeConfiguration: Decodable, Equatable {
         "medicRegrownSegments": .value,
         "damagePerSegment": .value,
         "bodyEatingDuration": .value,
-        "livePreyEatingDuration": .value,
+        "eatingDamagePerSecond": .value,
         "abilities": .object([
             "assault": .object(["dashSpeed": .value, "dashDuration": .value]),
             "scout": .object(["duration": .value]),

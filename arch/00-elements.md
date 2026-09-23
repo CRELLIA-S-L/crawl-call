@@ -77,12 +77,12 @@ It depends on start-up because the cell size it measures in is tuning (IF-MAP-02
 ```yaml
 status: built
 carries: [Sources/CrawlCall/View]
-requirements: [FR-VIEW-010, FR-VIEW-130, FR-VIEW-020, FR-VIEW-060, FR-VIEW-140, FR-VIEW-150]
+requirements: [FR-VIEW-010, FR-VIEW-130, FR-VIEW-020, FR-VIEW-060, FR-VIEW-100, FR-VIEW-120, FR-VIEW-140, FR-VIEW-150, FR-VIEW-160]
 depends_on: [E-040]
 interface: a scene plan in; the camera it is seen through and the light it is read by, out
 ```
 
-Decides how the arena reaches the player: one camera at a fixed pitch, one daylight source with the ambient that keeps shadows readable, and the two looks a map module has — solid, or see-through while it stands over the snake or in front of it.
+Decides how the arena reaches the player: one camera at a fixed pitch, one daylight source with the ambient that keeps shadows readable, the two looks a map module has — solid, or see-through while it stands over the snake or in front of it — and the controls the player's thumbs land on.
 
 **Rationale.** Split from the map layer because the two answer different questions and change for different reasons: the map changes when a level does, the view when the game's look does, and a file holding both invites a camera decision to be made while editing geometry.
 The boundary is also where the specification puts it — the VIEW area owns the angle and the light, the MAP and TOOL areas own what is placed and where.
@@ -92,12 +92,12 @@ The boundary is also where the specification puts it — the VIEW area owns the 
 ```yaml
 status: built
 carries: [Sources/CrawlCall/Snake]
-requirements: [FR-SNAKE-010, FR-SNAKE-020, FR-SNAKE-030, FR-SNAKE-070, FR-SNAKE-220, FR-MAP-025]
+requirements: [FR-SNAKE-010, FR-SNAKE-020, FR-SNAKE-030, FR-SNAKE-060, FR-SNAKE-070, FR-SNAKE-090, FR-SNAKE-100, FR-SNAKE-220, FR-MAP-025]
 depends_on: [E-040]
 interface: a held direction and a frame's time in; a head, a floor and a trail out
 ```
 
-Where the snake is and where it has been: the head's movement over walkable surfaces, the drop it may take, and the trail the tail is read from.
+Where the snake is and where it has been: the head's movement over walkable surfaces, the drop it may take, the trail the tail is read from, and the meal that holds it still while the tail grows.
 
 **Rationale.** A part of its own because it is the one place that decides whether a move is allowed, and the game will grow several callers of that decision — eating holds the head still, abilities move it differently, a bot's shot shortens the tail. A rule about passing through walls that lived in each of them would be a rule in none.
 It leans on the map layer for what is walkable and on nothing else: the snake asks the graph, it does not read the map file, and it has no idea what the scene looks like.

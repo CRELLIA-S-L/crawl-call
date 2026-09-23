@@ -137,15 +137,36 @@ derives_from: [FR-VIEW-030, CON-PUB-010]
 depends_on: [IF-VIEW-010]
 refines: []
 conflicts_with: []
-code: [Sources/CrawlCall/Input/TouchScheme.swift, Sources/CrawlCall/CrawlCallApp.swift]
-tests: [Tests/CrawlCallTests/TouchSchemeTests.swift]
+code: [Sources/CrawlCall/Input/TouchScheme.swift, Sources/CrawlCall/View/Controls.swift, Sources/CrawlCall/CrawlCallApp.swift]
+tests: [Tests/CrawlCallTests/TouchSchemeTests.swift, Tests/CrawlCallTests/ControlsTests.swift]
 created: 2026-09-21
 ```
 
-Where the game runs on iOS, the system **shall** produce every intent IF-VIEW-010 defines from touch, the movement direction coming from swipes and held while the finger stays down.
+Where the game runs on iOS, the system **shall** produce every intent IF-VIEW-010 defines from touch, the movement direction coming from a stick on the left of the screen and held while the finger rests on it, and the intent to eat from a button on the right.
 
-**Rationale.** Concept §3: touch on iOS — swipes, holding a direction.
+**Rationale.** Concept §3: touch on iOS — holding a direction.
+A stick and a button rather than gestures over the whole screen, because gestures collide: eating was a long press and steering a drag, and a thumb that pauses before it moves asks for a meal instead of a step. Tried on the device on 2026-09-23 and rejected there. Controls that occupy their own corners cannot be mistaken for one another, and the left-right split is what a thumb on each side of a phone reaches.
 iPhone is the primary target (concept §15), so this scheme is not the port of the other one.
+
+### FR-VIEW-160 — The eat button says whether there is anything to eat
+
+```yaml
+status: implemented
+verification: D
+derives_from: [FR-VIEW-050]
+depends_on: [FR-SNAKE-090]
+refines: []
+conflicts_with: []
+code: [Sources/CrawlCall/View/Controls.swift, Sources/CrawlCall/GameSession.swift, Sources/CrawlCall/CrawlCallApp.swift]
+tests: [Tests/CrawlCallTests/ControlsTests.swift]
+created: 2026-09-23
+```
+
+While a match is running, the system **shall** show the eat button as available exactly when the head has reached a bot it could begin eating.
+
+**Rationale.** A control that does nothing looks broken. Tried on the device on 2026-09-23: the button was pressed with nothing in reach, nothing happened, and nothing on screen said why — the reading was "the button does not work", which is what any player would conclude.
+Reach is a distance the player cannot see and would otherwise have to guess at; the button is where they are already looking when they want to eat, so that is where it is said.
+"Exactly when" is the whole of it: a button that lit up hopefully would be the same lie in the other direction.
 
 ## Readability
 
@@ -225,20 +246,23 @@ While a bot's panic weight exceeds the visible-panic threshold of the view confi
 ### FR-VIEW-100 — Eating is staged as comedy
 
 ```yaml
-status: deferred
+status: partial
 verification: D
 derives_from: []
 depends_on: [FR-SNAKE-090]
 refines: []
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/View/BotEntity.swift, Sources/CrawlCall/GameSession.swift]
+tests: [Tests/CrawlCallTests/BotEntityTests.swift]
 created: 2026-09-21
 ```
 
 While the snake is consuming a bot, the system **shall** show the bot swallowed whole — a bulge travelling down the body, boots protruding from the mouth — without dismemberment or blood.
 
 **Rationale.** Concept §2: in stylisation eating stops being a problem — funny and without gore; F-030 is the boundary this serves.
+
+**Partial, and how.** What is built is the half that says a meal is happening: the bot is drawn towards the head and shrinks as what is left of it does, and it is gone from the screen when it is gone from the match. The bulge travelling down the body and the boots at the mouth need a snake that is more than a chain of spheres and a bot that is more than a box — they arrive with the models, not with this. What is already true is the part that matters for the boundary: whole, no dismemberment, nothing red.
+Found by playing on 2026-09-23: with none of this, a meal was a bot standing still and then standing still for ever, because the view went on drawing a body the match had already removed.
 
 ### FR-VIEW-110 — The snake squashes and stretches
 
@@ -264,13 +288,13 @@ Three deformations, one continuous act of drawing the body; a test of "the body 
 ### FR-VIEW-120 — The HUD is drawn in the diorama style
 
 ```yaml
-status: deferred
+status: partial
 verification: I
 derives_from: []
 depends_on: [IF-VIEW-010]
 refines: []
 conflicts_with: []
-code: []
+code: [Sources/CrawlCall/View/Controls.swift]
 tests: []
 created: 2026-09-21
 ```
@@ -279,6 +303,8 @@ Every HUD element **shall** be drawn as a rounded, light-coloured plate carrying
 
 **Rationale.** Concept §2: the interface in the same aesthetic as the world — rounded light plates, a bold rounded typeface, large readable icons; a military HUD with slanted plates argues with the style (ADR-0002).
 Inspected against these four properties; a separate style guide was considered and not written, since the properties are the guide (Q-160, closed 2026-09-21).
+
+**Partial, and how.** What exists of the interface is the two controls FR-VIEW-050 asks for — the stick and the eat button — and they are drawn to this requirement: round, light, translucent, an icon and no word. Nothing else of a HUD exists yet, so the requirement is met by everything there is and unmet by everything there is not.
 
 ### FR-VIEW-130 — The arena is lit as bright daylight
 

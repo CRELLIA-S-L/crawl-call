@@ -23,7 +23,7 @@ tests: [Tests/CrawlCallTests/ConfigurationTests.swift, Tests/CrawlCallTests/Laun
 created: 2026-09-21
 ```
 
-When the game starts, the system **shall** read from the snake configuration — the JSON file `config/snake.json` (ADR-0012) — the base speed; the starting segment count; segments gained per archetype consumed; segments regrown by the medic ability; damage per segment; the body and live-prey eating durations; and per ability its speed, factor, amount or duration as FR-SNAKE-130 to FR-SNAKE-190 name them.
+When the game starts, the system **shall** read from the snake configuration — the JSON file `config/snake.json` (ADR-0012) — the base speed; the starting segment count; segments gained per archetype consumed; segments regrown by the medic ability; damage per segment; the body eating duration; the eating damage per second; and per ability its speed, factor, amount or duration as FR-SNAKE-130 to FR-SNAKE-190 name them.
 
 **Rationale.** Concept §12: the final feel — snake speed, reaction distances, thresholds — stays with the human, and the agent takes corrections as numbers (§11.2).
 One act — reading one file — over an enumerated set of keys.
@@ -185,10 +185,10 @@ tests: [Tests/CrawlCallTests/IntentTests.swift, Tests/CrawlCallTests/TouchScheme
 created: 2026-09-21
 ```
 
-The input layer **shall** deliver to the game logic exactly these intents: a movement direction, an ability activation naming the segment, a pointed position on the map, and a pause.
+The input layer **shall** deliver to the game logic exactly these intents: a movement direction, an ability activation naming the segment, a pointed position on the map, a pause, and an intent to eat what the head has reached.
 
 **Rationale.** Concept §3: the abstraction is laid down from day one; the schemes (FR-VIEW-040, FR-VIEW-050) produce these, the logic consumes them.
-"Exactly these" is the contract — a scheme that needs a fifth intent changes this requirement first.
+"Exactly these" is the contract — a scheme that needs another intent changes this requirement first, which is what eating did: the concept builds the whole economy of §6.2 on the choice between eating a body and leaving it, and a meal that began by itself whenever the head touched something would take that choice away.
 
 ### IF-VIEW-020 — View configuration
 

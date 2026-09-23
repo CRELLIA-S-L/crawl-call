@@ -1,11 +1,18 @@
 {
   "baseSpeed": 3.0,
   "startingSegmentCount": 6,
-  "segmentsPerArchetype": { "default": 2 },
+  "segmentsPerArchetype": {
+    "assault": 2,
+    "heavy": 4,
+    "sapper": 2,
+    "scout": 1,
+    "sniper": 2,
+    "medic": 3
+  },
   "medicRegrownSegments": 2,
   "damagePerSegment": 10,
   "bodyEatingDuration": 1.2,
-  "livePreyEatingDuration": 2.0,
+  "eatingDamagePerSecond": 50.0,
   "abilities": {
     "assault": { "dashSpeed": 9.0, "dashDuration": 0.6 },
     "scout": { "duration": 6.0 },

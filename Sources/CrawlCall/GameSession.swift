@@ -5,13 +5,18 @@
 // measured with — `specs/50-verification.md` says why, and the two are different
 // questions asked of the same number.
 //
-// implements: FR-VIEW-020, FR-VIEW-030, FR-VIEW-060, FR-VIEW-140, FR-VIEW-150
+// implements: FR-VIEW-020, FR-VIEW-030, FR-VIEW-060, FR-VIEW-100, FR-VIEW-140, FR-VIEW-150, FR-VIEW-160
 import Foundation
+import Observation
 import RealityKit
 
 @MainActor
+@Observable
 final class GameSession {
     private(set) var game: Game
+    /// Whether the eat button would do anything if it were pressed right now
+    /// (FR-VIEW-160). Read by the controls, written once a frame.
+    private(set) var canEat = false
     private let snakeEntity: Entity
     private let botEntities: Entity
     private let camera: Entity
@@ -45,8 +50,16 @@ final class GameSession {
     }
 
     private func place() {
+        canEat = Game.preyWithinReach(of: game.snake.head, among: game.bots,
+                                      tuning: game.world.configurations.tuning) != nil
         SnakeEntity.update(snakeEntity, from: game.snake)
         BotEntity.update(botEntities, from: game.bots)
+        // A meal under way is drawn going in (FR-VIEW-100). What is left of the prey
+        // is measured by whatever ends that meal: live prey by the health it has
+        // left, a body by the time it has left.
+        if let meal = game.eating, let left = remaining(of: meal) {
+            BotEntity.swallow(botEntities, prey: meal.prey, head: game.snake.head, left: left)
+        }
         focus = SceneView.focus(keeping: game.snake.head,
                                 inside: game.world.configurations.view.centralRegion,
                                 from: focus,
@@ -66,5 +79,19 @@ final class GameSession {
                         from: eye,
                         margin: game.world.configurations.tuning.bodyRadius
                             + game.world.configurations.view.seeThroughMargin)
+    }
+
+    /// How much of the prey is still outside the snake: one at the first bite, zero
+    /// at the last. A body has no health to count down — it is eaten in a duration —
+    /// so counting its health would draw the whole meal as already swallowed.
+    private func remaining(of meal: Eating) -> Double? {
+        guard meal.alive else {
+            let whole = game.world.configurations.snake.bodyEatingDuration
+            return whole > 0 ? (meal.left ?? 0) / whole : 0
+        }
+        guard let prey = game.bots.first(where: { $0.id == meal.prey }),
+              let entry = game.world.configurations.bot.archetypes[prey.archetype.rawValue],
+              entry.health > 0 else { return nil }
+        return prey.health / entry.health
     }
 }

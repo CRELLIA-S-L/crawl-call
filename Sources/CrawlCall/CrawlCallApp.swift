@@ -1,7 +1,7 @@
 // The game's entry point. Starting the app is the moment the interface requirements
 // name for reading the configurations, and the moment a match begins.
 //
-// implements: IF-SNAKE-010, IF-MAP-020, IF-VIEW-020, IF-BOT-010, FR-VIEW-050, FR-VIEW-060
+// implements: IF-SNAKE-010, IF-MAP-020, IF-VIEW-020, IF-BOT-010, FR-VIEW-050, FR-VIEW-060, FR-VIEW-160
 import RealityKit
 import SwiftUI
 
@@ -70,12 +70,11 @@ struct MatchView: View {
             }
         }
         .ignoresSafeArea()
-        // FR-VIEW-050: the direction comes from a swipe and is held while the finger
-        // stays down; letting go stops the snake.
-        .gesture(
-            DragGesture(minimumDistance: 0)
-                .onChanged { value in session?.apply(TouchScheme.intent(fromDrag: value.translation)) }
-                .onEnded { _ in session?.apply(TouchScheme.release) }
-        )
+        // FR-VIEW-050: a stick on the left steers and a button on the right eats,
+        // each in a corner of its own so that one cannot be taken for the other.
+        .overlay(Controls(steer: { session?.apply(.move(direction: $0)) },
+                          release: { session?.apply(TouchScheme.release) },
+                          eat: { session?.apply(TouchScheme.eat) },
+                          canEat: session?.canEat ?? false))
     }
 }

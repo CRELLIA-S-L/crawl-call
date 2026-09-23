@@ -111,14 +111,14 @@ For the head this is collision, not the graph (ADR-0016): the head is steered, a
 ### FR-SNAKE-060 — Eating extends the tail
 
 ```yaml
-status: deferred
+status: implemented
 verification: T
 derives_from: []
 depends_on: [FR-SNAKE-100, IF-SNAKE-010]
 refines: []
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Game.swift, Sources/CrawlCall/Snake/Snake.swift]
+tests: [Tests/CrawlCallTests/EatingTests.swift]
 created: 2026-09-21
 ```
 
@@ -170,40 +170,42 @@ When a tail segment is removed, the system **shall** discard the ability attache
 ### FR-SNAKE-090 — Eating takes time and holds the snake in place
 
 ```yaml
-status: deferred
+status: implemented
 verification: T
 derives_from: []
 depends_on: [IF-SNAKE-010]
 refines: []
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Snake/Eating.swift, Sources/CrawlCall/Game.swift]
+tests: [Tests/CrawlCallTests/EatingTests.swift]
 created: 2026-09-21
 ```
 
-When the snake begins consuming a bot, the system **shall** keep the head stationary for the eating duration of the snake configuration before the bot counts as consumed.
+When the snake begins consuming a bot, the system **shall** keep the head stationary until that bot counts as consumed.
 
 **Rationale.** Concept §6.2: the speed of consumption is the key parameter of the whole mechanic — instant eating makes "eat or leave" a free and therefore nonexistent choice.
+How long it lasts depends on what is being eaten: a body takes the body eating duration of the snake configuration, live prey takes as long as its health lasts (FR-SNAKE-100).
 A stationary snake is a visible and damageable one, which is the exposure the concept asks for; nothing here reduces damage during eating, so no separate requirement says the snake stays vulnerable.
 
 ### FR-SNAKE-100 — Live prey takes longer than a body
 
 ```yaml
-status: deferred
+status: implemented
 verification: T
 derives_from: [FR-SNAKE-090]
 depends_on: [IF-SNAKE-010]
 refines: [FR-SNAKE-090]
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Snake/Eating.swift]
+tests: [Tests/CrawlCallTests/EatingTests.swift]
 created: 2026-09-21
 ```
 
-When the bot being consumed is alive, the system **shall** apply the live-prey eating duration of the snake configuration, which is greater than the body eating duration.
+While the snake consumes a bot that is alive, the system **shall** take the eating damage per second of the snake configuration out of that bot's health, the bot counting as consumed when no health is left.
 
 **Rationale.** Concept §6.2: live prey resists and takes longer, and is worth more for it (FR-SCORE-020).
-The relation "greater than" is the concept's; the two numbers are tuning.
+Resisting is what a second duration could not express: a bot with health left goes on shooting while it is being eaten, and the meal lasts exactly as long as its health does. That also makes the heavy the slowest meal without a number of its own — it is the fattest target the concept §8 calls it, and the rate is one number rather than one per archetype.
+A body has no health and is eaten in the body eating duration of FR-SNAKE-090; the two cases are the same act and differ in what ends it.
 
 ## Abilities from prey
 

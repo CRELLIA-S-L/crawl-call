@@ -1,7 +1,8 @@
-// The bots as the player sees them: one body each, put where the model has them, and
-// a colour that says which side it is on (FR-VIEW-060).
+// The bots as the player sees them: one body each, put where the model has them, a
+// colour that says which side it is on (FR-VIEW-060), and — while one is being eaten
+// — a body going into the snake rather than blinking out (FR-VIEW-100).
 //
-// verifies: FR-VIEW-060
+// verifies: FR-VIEW-060, FR-VIEW-100
 import RealityKit
 import XCTest
 @testable import CrawlCall
@@ -38,6 +39,43 @@ final class BotEntityTests: XCTestCase {
         let body = try XCTUnwrap(entity.children.first { $0.name == "bot\(bots[0].id)" })
         XCTAssertEqual(Double(body.position.x), moved.x, accuracy: 1e-6)
         XCTAssertEqual(Double(body.position.z), moved.z, accuracy: 1e-6)
+    }
+
+    func testABotThatHasBeenEatenLeavesTheScreen() throws {
+        // The model drops an eaten bot; a body left standing where it was swallowed
+        // would say the opposite of what happened.
+        let bots = try squads()
+        let entity = BotEntity.make(for: bots)
+        let eaten = try XCTUnwrap(bots.first)
+        BotEntity.update(entity, from: bots.filter { $0.id != eaten.id })
+
+        let body = try XCTUnwrap(entity.children.first { $0.name == "bot\(eaten.id)" })
+        XCTAssertFalse(body.isEnabled, "the eaten bot is still standing there")
+        for other in bots where other.id != eaten.id {
+            let standing = try XCTUnwrap(entity.children.first { $0.name == "bot\(other.id)" })
+            XCTAssertTrue(standing.isEnabled, "bot \(other.id) went with it")
+        }
+    }
+
+    func testABotBeingEatenIsDrawnGoingIntoTheSnake() throws {
+        let bots = try squads()
+        let entity = BotEntity.make(for: bots)
+        let prey = try XCTUnwrap(bots.first)
+        let body = try XCTUnwrap(entity.children.first { $0.name == "bot\(prey.id)" })
+        let head = prey.position + SIMD3(2, 0, 0)
+        let stood = body.position
+
+        // The first bite: barely moved, barely smaller.
+        BotEntity.swallow(entity, prey: prey.id, head: head, left: 0.95)
+        XCTAssertLessThan(body.scale.x, 1)
+        XCTAssertGreaterThan(body.scale.x, 0.8)
+        XCTAssertLessThan(abs(body.position.x - stood.x), 0.3)
+
+        // Most of the way in: small, and nearly at the head.
+        BotEntity.swallow(entity, prey: prey.id, head: head, left: 0.1)
+        XCTAssertLessThan(body.scale.x, 0.3)
+        XCTAssertEqual(Double(body.position.x), head.x, accuracy: 0.3)
+        XCTAssertGreaterThan(body.scale.x, 0.1, "a body that shrank to nothing reads as a bug")
     }
 
     func testTheTwoSidesAreNotTheSameColour() {

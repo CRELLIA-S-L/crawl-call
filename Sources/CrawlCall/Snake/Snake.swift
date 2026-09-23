@@ -1,7 +1,7 @@
 // The snake as the game reasons about it: where the head is, where it has been, and
 // where the tail therefore lies. No RealityKit here — this is the part a test can read.
 //
-// implements: FR-SNAKE-010, FR-SNAKE-020, FR-SNAKE-030, FR-SNAKE-070, FR-SNAKE-220
+// implements: FR-SNAKE-010, FR-SNAKE-020, FR-SNAKE-030, FR-SNAKE-060, FR-SNAKE-070, FR-SNAKE-220
 import Foundation
 
 struct Snake {

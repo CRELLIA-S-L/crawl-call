@@ -60,13 +60,15 @@ enum Execution {
     /// (FR-BOT-165). Given no order, the bots' own is used, which is what a test
     /// exercising movement alone wants.
     static func walk(_ bots: inout [Bot], seconds: Double, world: World,
-                     routeOrder: [Int] = []) {
+                     routeOrder: [Int] = [], holding held: Int? = nil) {
         let cell = world.configurations.tuning.navigationGraphCellSize
         var routed = false
         let queue = routeOrder.isEmpty
             ? Array(bots.indices)
             : routeOrder.compactMap { id in bots.firstIndex { $0.id == id } }
         for index in queue {
+            // A bot in the snake's mouth does not walk away from it (FR-SNAKE-090).
+            guard bots[index].id != held else { continue }
             guard let goal = destination(of: bots[index].action) else { continue }
             if bots[index].path.isEmpty {
                 guard !routed else { continue }

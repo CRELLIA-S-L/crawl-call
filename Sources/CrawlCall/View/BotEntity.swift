@@ -8,7 +8,10 @@
 // a tracer, and both arrive with the archetype silhouettes (FR-VIEW-070) and the
 // firing effects. The colours chosen here are the ones those will have to match.
 //
-// implements: FR-VIEW-060
+// A bot being eaten is drawn going into the snake rather than blinking out of
+// existence: it is drawn towards the head and shrinks as it goes (FR-VIEW-100).
+//
+// implements: FR-VIEW-060, FR-VIEW-100
 import CoreGraphics
 import Foundation
 import RealityKit
@@ -37,15 +40,50 @@ enum BotEntity {
     }
 
     /// Puts every bot where the model has it, standing on the floor rather than sunk
-    /// into it.
+    /// into it — and takes off screen the ones the model no longer has.
+    ///
+    /// A bot leaves the match by being eaten, and a body that stayed standing where
+    /// it was swallowed would say the opposite of what happened. This walks the
+    /// bodies rather than the bots for that reason: what is gone is what has no bot
+    /// left to answer for it.
     @MainActor
     static func update(_ entity: Entity, from bots: [Bot]) {
-        for bot in bots {
-            guard let model = entity.children.first(where: { $0.name == "bot\(bot.id)" }) else { continue }
-            model.position = SIMD3(Float(bot.position.x),
-                                   Float(bot.position.y + height / 2),
-                                   Float(bot.position.z))
+        var standing: [String: Bot] = [:]
+        for bot in bots { standing["bot\(bot.id)"] = bot }
+        for body in entity.children {
+            guard let bot = standing[body.name] else {
+                body.isEnabled = false
+                continue
+            }
+            body.isEnabled = true
+            body.position = SIMD3(Float(bot.position.x),
+                                  Float(bot.position.y + height / 2),
+                                  Float(bot.position.z))
         }
+    }
+
+    /// Draws the bot being eaten on its way in: pulled towards the head and shrinking
+    /// as what is left of it does (FR-VIEW-100).
+    ///
+    /// `left` is what remains of the prey, one at the first bite and zero at the
+    /// last. It never reaches zero on screen — a body that vanished while still
+    /// full-sized would read as a bug rather than a meal, which is what the previous
+    /// build did.
+    @MainActor
+    static func swallow(_ entity: Entity, prey id: Int, head: SIMD3<Double>, left: Double) {
+        guard let body = entity.children.first(where: { $0.name == "bot\(id)" }) else { return }
+        let gone = min(max(1 - left, 0), 1)
+        let scale = Float(max(0.15, 1 - gone))
+        body.scale = SIMD3(repeating: scale)
+        // Towards the head, and down into it as it goes: the snake's mouth is at the
+        // floor, and a bot standing at full height beside it is not being eaten.
+        let x = bot(body.position.x, towards: Float(head.x), by: Float(gone))
+        let z = bot(body.position.z, towards: Float(head.z), by: Float(gone))
+        body.position = SIMD3(x, Float(head.y) + Float(height) * scale / 2, z)
+    }
+
+    private static func bot(_ from: Float, towards target: Float, by part: Float) -> Float {
+        from + (target - from) * min(part, 1)
     }
 
     /// One colour a side, told apart at a glance and from the snake's green and the
