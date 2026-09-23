@@ -28,9 +28,14 @@ final class ScenePlanTests: XCTestCase {
         let wall = try XCTUnwrap(p.pieces.first { $0.module == "wall" })
         // The slab is 0.1 thick, so its centre is half of that below zero.
         XCTAssertEqual(slab.centre.y, -0.05, accuracy: 1e-9)
-        // The wall is 3 high and stands on the surface, so its centre would be at 1.5 —
-        // less the overlap that keeps its underside out of the slab's plane.
-        XCTAssertEqual(wall.centre.y, 1.5 - ScenePlan.surfaceOverlap, accuracy: 1e-9)
+        // A wall stands on the surface, so its centre is half its own height above it
+        // — less the overlap that keeps its underside out of the slab's plane. Its
+        // height is read from the kit and not written here: the kit is where the
+        // number lives, and a test that carried a copy of it would fail the day the
+        // maintainer changed the one that matters.
+        let height = try XCTUnwrap(kit.module(for: "#")).size[1]
+        XCTAssertEqual(wall.size.y, height, accuracy: 1e-9)
+        XCTAssertEqual(wall.centre.y, height / 2 - ScenePlan.surfaceOverlap, accuracy: 1e-9)
         // Which is what matters: the two faces are not in one plane.
         let wallBottom = wall.centre.y - wall.size.y / 2
         XCTAssertLessThan(wallBottom, slab.centre.y + slab.size.y / 2)

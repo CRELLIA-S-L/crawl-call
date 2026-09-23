@@ -76,18 +76,50 @@ derives_from: [FR-VIEW-010]
 depends_on: [FR-SNAKE-010, FR-VIEW-020, IF-VIEW-020]
 refines: []
 conflicts_with: []
-code: [Sources/CrawlCall/View/SeeThrough.swift, Sources/CrawlCall/Map/Sight.swift, Sources/CrawlCall/Map/SceneBuilder.swift, Sources/CrawlCall/GameSession.swift]
+code: [Sources/CrawlCall/View/SeeThrough.swift, Sources/CrawlCall/Map/Sight.swift, Sources/CrawlCall/Map/SceneBuilder.swift, Sources/CrawlCall/GameSession.swift, Sources/CrawlCall/View/SeeThroughHole.metal]
 tests: [Tests/CrawlCallTests/SeeThroughTests.swift]
 created: 2026-09-22
 ```
 
-While a match is running, the system **shall** draw as see-through every map module that hides any part of the snake from the camera, or stands within the see-through margin of the view configuration of doing so, for as long as it does.
+While a match is running, the system **shall** draw as see-through the part of every map module that lies across a line of sight from the camera to any part of the snake, or within the see-through margin of the view configuration of one, for as long as it does.
 
 **Rationale.** The camera's angle and yaw never change (FR-VIEW-010) and the camera follows the head (FR-VIEW-020), so a wall that leans over the snake near the edge of the frame cannot be stepped around: the player's own body is behind it and nothing they do moves it.
 The alternative is a map without walls, and a wall is what a map is assembled from (FR-MAP-100) — the arena reads as a place because it has sides.
 This is the rule FR-VIEW-140 applies to a floor above the head, widened to whatever is in the way. The two are separate requirements because they answer differently: a floor above hides a whole room and goes see-through wholesale, while a wall is only ever in the way while the snake is behind it, and a wall that stayed see-through afterwards would cost the arena its shape.
 What is measured to is the head and every segment, because a tail the player cannot see is a tail they cannot place, and placing it is the game (concept §4).
 The body is a body and not a point: a wall that hides half a segment hides it, and a fade that began only once the centre went behind the wall would begin after the player had already lost sight of the thing they are steering. The margin beyond that is the same argument taken one step further — it buys the fade time to happen before it is needed — and it is a number settled by eye, which is why it is in the view configuration and not here.
+The part and not the module (ADR-0020). On 2026-09-23 a partition standing in front of the snake, faded whole, showed as a hard-edged pale block a cell wide, when what the player needed cleared was the patch of it in front of the snake; a module is a cell of wall, and the unit that matters is the patch.
+What clears is the part of the module around the line of sight, and not the neighbourhood of the snake: a fence of the kit cuts the line only within 0.56 m of the snake at the shipped pitch, but a 2 m partition cuts it from 1.4 m away and a stair from 2.1 m, and a hole kept to the snake's side would leave either standing solid between the camera and the snake. It is along the line, where it goes through the occluder, that the hole is cut — which is how a game whose camera cannot move does it — and along the line rather than around a stretch of it, because a steep line stays near a thin partition for a metre and more, and a sphere holding that stretch cleared the whole partition when it was first tried on the phone.
+The same margin decides both that a module is in the way and how wide the cut around the line is, so the hole reaches at least as far as the reason for making it.
+
+### FR-VIEW-155 — The ground around the head is kept in sight
+
+```yaml
+status: implemented
+verification: D
+derives_from: [FR-VIEW-010]
+depends_on: [FR-SNAKE-010, FR-VIEW-020, IF-VIEW-020]
+refines: []
+conflicts_with: []
+code: [Sources/CrawlCall/View/SeeThrough.swift, Sources/CrawlCall/Map/SceneBuilder.swift, Sources/CrawlCall/GameSession.swift, Sources/CrawlCall/View/SeeThroughHole.metal]
+tests: [Tests/CrawlCallTests/SeeThroughTests.swift]
+created: 2026-09-23
+```
+
+While a match is running, for every map module that stands higher than the floor the head is on and not wholly beyond the head, measured across the ground away from the camera, the system **shall** draw as see-through the part of that module within the visibility radius of the view configuration around the head, for as long as the head is that near.
+
+**Rationale.** FR-VIEW-150 keeps the snake itself visible, which is not the same as seeing where it is going: a wall that hides no part of the body still hides the metre in front of the head, and with the yaw fixed (FR-VIEW-010) there is no leaning around it.
+Around the head and not along the whole snake, because what the tail needs is to be seen and what the head needs is room to be steered into.
+Written beside FR-VIEW-150 rather than into it: that one says the snake is never hidden and stays true by itself; this one says the ground it is steered over is not hidden either.
+The radius is a number settled by eye, which is why it is in the view configuration (IF-VIEW-020) and not here, and it is bounded by the argument that bounds FR-VIEW-150's margin: an arena whose walls are clear wherever the snake goes has stopped having a shape. It ships at 1.6 m, the radius the maintainer looked at in a throwaway build on 2026-09-23 and approved; the 2.5 m it was first written with was a guess made before anyone had seen a hole.
+The window is a hole of that radius cut around the head in whatever stands there (ADR-0020). Its first form asked which floor cells a module hid, and a wall lying along the camera's line of sight hides a strip of floor for its whole length, so some of that strip was always inside the radius and the wall went see-through a cell at a time; narrowing the radius to a metre still cleared two cells that could hide nothing. Measured as a hole, the wall is cut open near the head and stands everywhere else.
+Nothing that stands no higher than the floor the head is on is cut: the floor the snake stands on would open onto the void, which is what a throwaway build showed on 2026-09-23. The floor and not the head, because a head walking a stair has already changed floors and is a second's climb short of the surface, and measured against the head the balcony it is climbing onto would be cut open under it.
+Beyond the head is where this stops, because a window taken in every direction at once puts a module behind the snake in front of the ground behind that, and clears it — which is the thing FR-VIEW-150 was fixed on 2026-09-23 for doing, returned at five times the radius. The two rules now say the same thing about direction: nothing beyond the snake was ever hiding it, or the ground it stands on, from a camera in front of it.
+Beyond is measured across the ground and not by the plane the camera looks along: that plane is tilted by the pitch FR-VIEW-010 fixes, so the top of a waist-high fence standing behind the head falls on the camera's side of it and the rule it was meant to state says nothing at all. The margin takes no part in the measurement either — it is room to the side of a line, as in FR-VIEW-150 — or the ring of cells touching the head comes back through the door this closes.
+The price is named rather than discovered: steering straight away from the camera, the module just ahead of the head stays solid and keeps the ground immediately behind it, which for the shipped fence at the shipped pitch is a little over half a metre. Seeing past that would be a different rule, and this one is the maintainer's of 2026-09-23.
+The demonstration that verifies this, for whoever carries it out: steer the head up beside a wall that hides no part of the body — the part of that wall near the head goes clear and the rest of it stands, a wall the same distance behind the head stays solid, and nothing outside the radius changes. The frame captured off the device is what records the judgement (`specs/50-verification.md`).
+Rebuilt as a hole on 2026-09-23.
+This was met by accident before it was written. Until 2026-09-23 the margin of FR-VIEW-150 was applied around each point of the snake in every direction at once, which cleared the ring of cells touching it — including the ones behind it, which hide nothing — and read on screen as this requirement. FR-VIEW-150 never asked for that, and taking it away takes with it the thing the player had been steering by, which is why this is asked for on purpose.
 
 ## Input
 

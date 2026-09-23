@@ -15,16 +15,40 @@ derives_from: []
 depends_on: []
 refines: []
 conflicts_with: []
-code: [Sources/CrawlCall/Snake/Snake.swift, Sources/CrawlCall/Snake/Surfaces.swift, Sources/CrawlCall/View/SnakeEntity.swift]
+code: [Sources/CrawlCall/Snake/Snake.swift, Sources/CrawlCall/Snake/Surfaces.swift, Sources/CrawlCall/Game.swift, Sources/CrawlCall/View/SnakeEntity.swift]
 tests: [Tests/CrawlCallTests/SnakeTests.swift, Tests/CrawlCallTests/GameTests.swift]
 created: 2026-09-21
 ```
 
-While a match is running, the snake's head **shall** move in the direction the player holds, staying on the map's walkable surfaces — over ramps, stairs and drops from ledges — and never passing through walls or load-bearing geometry.
+While a match is running, the snake's head **shall** move in the direction the player holds, staying on the map's walkable surfaces — over ramps, stairs and drops from ledges — with no part of its body passing into anything the map places that is not walkable.
 
 **Rationale.** The snake lives on the map's surfaces, not in free space: it crawls over geometry, steered rather than pathfound (concept §3, ADR-0016).
 Everything the tail does for free — blocking corridors and stairs, becoming a liability in narrow passages, vertical play in both directions — follows from the head being bound to the surfaces.
 Free flight was never on the table.
+What is kept out of walls is the body and not the centre of the head: the body is 0.6 m across at the shipped radius on a grid of half a metre, and a head kept only to walkable cells sank into the wall beside it (ADR-0021).
+Where the head may stand is still the navigation graph's to say — which floor, which stair, which ledge — and how close to a wall it may come is the geometry's.
+
+### FR-SNAKE-015 — A blocked head slides along what stopped it
+
+```yaml
+status: implemented
+verification: T
+derives_from: [FR-SNAKE-010]
+depends_on: []
+refines: [FR-SNAKE-010, FR-SNAKE-030]
+conflicts_with: []
+code: [Sources/CrawlCall/Snake/Snake.swift]
+tests: [Tests/CrawlCallTests/SnakeTests.swift]
+created: 2026-09-23
+```
+
+When the direction the player holds would take the head into what it cannot pass, the system **shall** move the head along that obstacle at the head's base speed taken in the part of the held direction that runs along it.
+
+**Rationale.** The camera's yaw never changes (FR-VIEW-010) and the stick gives a direction in the frame's axes rather than the corridor's (FR-VIEW-050), so a thumb cannot be laid exactly along a wall; a head that stops dead on contact makes the control punish the precision it does not give.
+The snake is steered rather than pathfound (ADR-0016), and a direction taken along the surface is what steering over one means.
+What the head cannot pass is both of the refusals it already knows — a wall, and ground too far below to be dropped to (FR-SNAKE-220) — so the head slides along the lip of a hole exactly as it slides along a wall.
+Nothing is said here of corners or of a direction pressed squarely into a wall, because nothing needs to be: a part that is zero is standing still, and a corner is this same rule applied to the second obstacle as well as the first.
+FR-SNAKE-030 is narrowed by this and not broken: the base speed is still the one the configuration gives, and what a slide takes of it is the part the obstacle leaves. A head that slid at the whole of it from a square push would turn every wall into a rail.
 
 ### FR-SNAKE-020 — Tail follows the head's path
 

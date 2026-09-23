@@ -1,7 +1,7 @@
 // The snake as the game reasons about it: where the head is, where it has been, and
 // where the tail therefore lies. No RealityKit here — this is the part a test can read.
 //
-// implements: FR-SNAKE-010, FR-SNAKE-020, FR-SNAKE-030, FR-SNAKE-060, FR-SNAKE-070, FR-SNAKE-210, FR-SNAKE-220
+// implements: FR-SNAKE-010, FR-SNAKE-015, FR-SNAKE-020, FR-SNAKE-030, FR-SNAKE-060, FR-SNAKE-070, FR-SNAKE-210, FR-SNAKE-220
 import Foundation
 
 struct Snake {
@@ -36,9 +36,11 @@ struct Snake {
 
     /// Moves the head for one frame in the direction the player holds.
     ///
-    /// The direction is on the map plane; the head keeps to walkable surfaces, takes a
-    /// drop where the tuning allows one, and stays where it is when the way is a wall
-    /// (FR-SNAKE-010, FR-SNAKE-220). Speed is the configuration's (FR-SNAKE-030).
+    /// The direction is on the map plane; the head keeps to walkable surfaces and its
+    /// body out of what stands on them, takes a drop where the tuning allows one, and
+    /// slides along what it cannot pass rather than stopping against it (FR-SNAKE-010,
+    /// FR-SNAKE-015, FR-SNAKE-220, ADR-0021). Speed is the configuration's
+    /// (FR-SNAKE-030).
     mutating func advance(direction: SIMD2<Double>, speed: Double, seconds: Double, over surfaces: Surfaces) {
         guard speed > 0, seconds > 0 else { return }
         var budget = speed * seconds
@@ -68,19 +70,81 @@ struct Snake {
         let longest = max(surfaces.cellSize / 2, 1e-6)
         while budget > 1e-12 {
             let step = min(budget, longest)
-            guard let spent = stepOnce(unit: unit, distance: step, over: surfaces) else { return }
+            guard let spent = slide(unit: unit, distance: step, over: surfaces) else { return }
             budget -= spent
         }
     }
 
-    /// One piece of a frame's movement, and what it cost. Nil where the way is
-    /// blocked, which ends the frame: the head rests against what stopped it.
+    /// One piece of a frame's movement, taken along the obstacle where the way the
+    /// player asked for is not open (FR-SNAKE-015). Nil only where the head could
+    /// not move at all.
+    ///
+    /// What the frame spends is the whole piece either way, and what the head covers
+    /// is the part of the held direction that runs along the obstacle: a head pushed
+    /// squarely into a wall covers none of it and stands still, and one pushed at a
+    /// glance covers nearly all.
+    ///
+    /// There are two kinds of obstacle and two ways of taking what runs along them.
+    /// A module the body touches has a face, and the rest of the piece is laid along
+    /// that face — at the end of a wall the face turns, and the head rounds the corner
+    /// rather than catching on it (ADR-0021). A cell the graph refuses — the lip of a
+    /// hole — has no face but its cell's sides, and the piece is split along the two
+    /// axes instead. A corner needs nothing of its own in either: it is an obstacle
+    /// on each of the two ways, and both are refused.
+    private mutating func slide(unit: SIMD2<Double>, distance: Double, over surfaces: Surfaces) -> Double? {
+        var direction = unit
+        var left = distance
+        var moved = false
+        // The way asked for; then along what stopped it; then along a second thing,
+        // where the first led into a corner.
+        for _ in 0..<3 {
+            guard let step = stepOnce(unit: direction, distance: left, over: surfaces) else {
+                return slideAcrossCells(unit: direction, distance: left, over: surfaces) || moved ? distance : nil
+            }
+            guard let against = step.against else { return distance }
+            moved = moved || step.covered > 1e-12
+            let pressing = direction.x * against.x + direction.y * against.y
+            let along = SIMD2(direction.x - pressing * against.x, direction.y - pressing * against.y)
+            let share = (along.x * along.x + along.y * along.y).squareRoot()
+            left = (left - step.covered) * share
+            guard share > 1e-9, left > 1e-12 else { break }
+            direction = along / share
+        }
+        return moved ? distance : nil
+    }
+
+    /// The piece split along the two axes, for an obstacle the graph refuses rather
+    /// than one the body touches. True where either part moved the head.
+    private mutating func slideAcrossCells(unit: SIMD2<Double>, distance: Double, over surfaces: Surfaces) -> Bool {
+        // The larger part first: a head stopped by a corner goes the way the player
+        // is leaning, and one stopped by a flat edge has only one part left at all.
+        let parts = abs(unit.x) >= abs(unit.y)
+            ? [SIMD2(unit.x, 0.0), SIMD2(0.0, unit.y)]
+            : [SIMD2(0.0, unit.y), SIMD2(unit.x, 0.0)]
+        for part in parts {
+            let share = abs(part.x + part.y)
+            guard share > 1e-12 else { continue }
+            let along = SIMD2(part.x / share, part.y / share)
+            if let step = stepOnce(unit: along, distance: distance * share, over: surfaces),
+               step.covered > 1e-12 { return true }
+        }
+        return false
+    }
+
+    /// One piece of a frame's movement: how far the head covered, and which way leads
+    /// away from the module that stopped it short, where one did. Nil where the graph
+    /// refuses where the piece leads — a hole with nothing to land on within reach.
     ///
     /// A climb costs the height it climbed on top of the ground it covered, because
     /// going up a stair is walking and walking takes the speed the configuration
     /// gives (FR-SNAKE-030). A drop costs nothing: falling is not walking.
-    private mutating func stepOnce(unit: SIMD2<Double>, distance: Double, over surfaces: Surfaces) -> Double? {
-        let wanted = SIMD3(head.x + unit.x * distance, head.y, head.z + unit.y * distance)
+    private mutating func stepOnce(unit: SIMD2<Double>, distance: Double,
+                                   over surfaces: Surfaces) -> (covered: Double, against: SIMD2<Double>?)? {
+        // The body first: as far as it goes before it touches something it cannot
+        // pass (FR-SNAKE-010, ADR-0021). What the grid says is asked of where it got to.
+        let room = surfaces.room(from: head, floor: floor, along: unit, upTo: distance)
+        guard room.metres > 1e-12 else { return (0, room.against) }
+        let wanted = SIMD3(head.x + unit.x * room.metres, head.y, head.z + unit.y * room.metres)
 
         if surfaces.isWalkable(wanted, floor: floor) {
             let leaving = surfaces.cell(of: head, floor: floor)
@@ -101,18 +165,19 @@ struct Snake {
                let other = surfaces.rise(at: wanted, from: floor) ?? surfaces.descent(at: wanted, from: floor) {
                 floor = other
                 climbingTo = surfaces.elevation(of: other)
-                return distance
             }
-            return distance
+            return (room.metres, room.against)
         }
-        if let below = surfaces.landing(below: wanted, from: floor) {
+        // A drop lands the body on the floor below as well as taking it off this one,
+        // and a landing inside something down there is refused like a wall.
+        if let below = surfaces.landing(below: wanted, from: floor), surfaces.fits(wanted, floor: below) {
             // The drop is part of the path: the corner it leaves and the ground it
             // lands on both go into the trail, so the tail lies down the drop rather
             // than cutting the corner (FR-SNAKE-220).
             moveTo(SIMD3(wanted.x, surfaces.elevation(of: floor), wanted.z))
             floor = below
             moveTo(SIMD3(wanted.x, surfaces.elevation(of: below), wanted.z))
-            return distance
+            return (room.metres, room.against)
         }
         return nil
     }

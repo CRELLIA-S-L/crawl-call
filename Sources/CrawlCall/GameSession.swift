@@ -5,7 +5,7 @@
 // measured with — `specs/50-verification.md` says why, and the two are different
 // questions asked of the same number.
 //
-// implements: FR-VIEW-020, FR-VIEW-030, FR-VIEW-060, FR-VIEW-100, FR-VIEW-140, FR-VIEW-150, FR-VIEW-160, FR-VIEW-170, FR-VIEW-180, FR-VIEW-190
+// implements: FR-VIEW-020, FR-VIEW-030, FR-VIEW-060, FR-VIEW-100, FR-VIEW-140, FR-VIEW-150, FR-VIEW-155, FR-VIEW-160, FR-VIEW-170, FR-VIEW-180, FR-VIEW-190
 import Foundation
 import Observation
 import RealityKit
@@ -88,13 +88,18 @@ final class GameSession {
         // where the camera is now (FR-VIEW-150), and the floor above the head is a lid
         // wherever the camera stands (FR-VIEW-140).
         let eye = SIMD3(Double(camera.position.x), Double(camera.position.y), Double(camera.position.z))
-        // The body's own radius, because a sphere half behind a wall is behind it,
-        // plus what the configuration adds so that the fade starts a little early.
-        seeThrough.show(headOn: game.snake.floor,
+        // Floors above fade whole; what stands in the way of the snake, or near the
+        // head, is cut open where it matters and stands everywhere else (ADR-0020).
+        seeThrough.show(headOn: game.snake.floor, head: game.snake.head,
+                        surface: Double(game.snake.floor) * game.world.plan.floorHeight,
                         snake: [game.snake.head] + game.snake.tail,
                         from: eye,
+                        // The body's own radius, because a sphere half behind a wall
+                        // is behind it, plus what the configuration adds so that the
+                        // fade starts a little early.
                         margin: game.world.configurations.tuning.bodyRadius
-                            + game.world.configurations.view.seeThroughMargin)
+                            + game.world.configurations.view.seeThroughMargin,
+                        visibilityRadius: game.world.configurations.view.visibilityRadius)
     }
 
     /// How much of the prey is still outside the snake: one at the first bite, zero

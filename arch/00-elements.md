@@ -65,10 +65,11 @@ depends_on: [E-020]
 interface: a map file and its kit in; the placements, the navigation graph and the scene geometry out
 ```
 
-Turns one text file into the two models the game runs on: what the bots path over and what the player sees.
+Turns one text file into the two models the game runs on: what the bots path over and what the player sees, and answers the one question both of them ask of the geometry afterwards — what stands in the way of a straight line between two points (ADR-0019).
 
 **Rationale.** The boundary that matters here is between the two models, and it is kept by making them one part rather than two: the graph and the geometry are derived from the same parse, in the same place, so a bot cannot path over a cell where no floor was placed.
 Splitting parsing from geometry would look tidier and would let exactly that drift in, which is the failure the spike's navigation mesh made expensive (ADR-0016).
+The line test sits here for the same reason and not in the view: the picture the player reads and the bots' eyes have to agree about what a wall is, and a part that owned the geometry but not the question asked of it would be a part with two answers waiting to happen. What the rule is, and the divergence standing in it, are ADR-0019; the requirements it serves stay with the parts that own them — FR-VIEW-150 and FR-VIEW-155 with E-050, FR-BOT-050 with E-090.
 It depends on start-up because the cell size it measures in is tuning (IF-MAP-020), read by E-020.
 `ATTRIBUTION.md` sits here for want of a better home rather than by right: it is a repository-wide document, and today the only requirement that reads it is FR-MAP-100's "a kit listed in the attribution file". When CON-PUB-030 has third-party assets to list, the file belongs to whatever owns the repository's guards, and this line moves with it.
 
@@ -77,12 +78,12 @@ It depends on start-up because the cell size it measures in is tuning (IF-MAP-02
 ```yaml
 status: built
 carries: [Sources/CrawlCall/View]
-requirements: [FR-VIEW-010, FR-VIEW-130, FR-VIEW-020, FR-VIEW-060, FR-VIEW-100, FR-VIEW-120, FR-VIEW-140, FR-VIEW-150, FR-VIEW-160, FR-VIEW-170, FR-VIEW-180, FR-VIEW-190]
+requirements: [FR-VIEW-010, FR-VIEW-130, FR-VIEW-020, FR-VIEW-060, FR-VIEW-100, FR-VIEW-120, FR-VIEW-140, FR-VIEW-150, FR-VIEW-155, FR-VIEW-160, FR-VIEW-170, FR-VIEW-180, FR-VIEW-190]
 depends_on: [E-040]
 interface: a scene plan in; the camera it is seen through and the light it is read by, out
 ```
 
-Decides how the arena reaches the player: one camera at a fixed pitch, one daylight source with the ambient that keeps shadows readable, the two looks a map module has — solid, or see-through while it stands over the snake or in front of it — and the controls the player's thumbs land on.
+Decides how the arena reaches the player: one camera at a fixed pitch, one daylight source with the ambient that keeps shadows readable, the looks a map module has — solid; faded whole while it is a floor over the snake; or cut open where a line of sight to the snake goes through it, or around the head (ADR-0020) — and the controls the player's thumbs land on.
 
 **Rationale.** Split from the map layer because the two answer different questions and change for different reasons: the map changes when a level does, the view when the game's look does, and a file holding both invites a camera decision to be made while editing geometry.
 The boundary is also where the specification puts it — the VIEW area owns the angle and the light, the MAP and TOOL areas own what is placed and where.
@@ -92,15 +93,15 @@ The boundary is also where the specification puts it — the VIEW area owns the 
 ```yaml
 status: built
 carries: [Sources/CrawlCall/Snake]
-requirements: [FR-SNAKE-010, FR-SNAKE-020, FR-SNAKE-030, FR-SNAKE-060, FR-SNAKE-070, FR-SNAKE-090, FR-SNAKE-100, FR-SNAKE-210, FR-SNAKE-220, FR-MAP-025]
+requirements: [FR-SNAKE-010, FR-SNAKE-015, FR-SNAKE-020, FR-SNAKE-030, FR-SNAKE-060, FR-SNAKE-070, FR-SNAKE-090, FR-SNAKE-100, FR-SNAKE-210, FR-SNAKE-220, FR-MAP-025]
 depends_on: [E-040]
 interface: a held direction and a frame's time in; a head, a floor and a trail out
 ```
 
-Where the snake is and where it has been: the head's movement over walkable surfaces, the drop it may take, the trail the tail is read from, and the meal that holds it still while the tail grows.
+Where the snake is and where it has been: the head's movement over walkable surfaces with its body kept out of what stands on them, the slide along what it cannot pass, the drop it may take, the trail the tail is read from, and the meal that holds it still while the tail grows.
 
 **Rationale.** A part of its own because it is the one place that decides whether a move is allowed, and the game will grow several callers of that decision — eating holds the head still, abilities move it differently, a bot's shot shortens the tail. A rule about passing through walls that lived in each of them would be a rule in none.
-It leans on the map layer for what is walkable and on nothing else: the snake asks the graph, it does not read the map file, and it has no idea what the scene looks like.
+It leans on the map layer for what is walkable and for the boxes of what is not, and on nothing else: the snake asks the graph and the scene plan, it does not read the map file, and it has no idea how any of it is drawn (ADR-0021).
 
 ### E-070 — The match
 

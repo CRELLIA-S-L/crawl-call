@@ -2,6 +2,7 @@
 
 - **Status:** accepted
 - **Date:** 2026-09-22
+- **Amended by:** ADR-0021 — the head is not a character controller: it is steered over the graph, and its body is kept out of walls by the boxes the scene is built from
 - **Related requirements:** FR-SNAKE-010, FR-SNAKE-040, FR-SNAKE-050, FR-SNAKE-220, FR-MAP-020, FR-MAP-050, FR-BOT-115, FR-TOOL-030, FR-TOOL-040, FR-TOOL-080, FR-TOOL-100, INV-MAP-020
 
 ## Context and problem statement

@@ -19,7 +19,7 @@ Greed is punished by the situation, not by rules.
 ## 2.3 Operating environment
 
 - Platforms: iOS 27+ / macOS 27+ on devices with Apple Intelligence — iPhone 15 Pro and later, Apple silicon Macs (ADR-0015); everything older is out.
-- Engine: RealityKit 5 (iOS 27 / macOS 27 SDK) — ECS, `LowLevelMesh` for the per-frame tail mesh, `CharacterControllerComponent` for the snake's head; its navigation mesh is not used (ADR-0016) — the bots path over a graph derived from the map grid.
+- Engine: RealityKit 5 (iOS 27 / macOS 27 SDK) — ECS, `LowLevelMesh` for the per-frame tail mesh. Its character controller is not used — the snake's head is steered over the map's own geometry (ADR-0021) — and neither is its navigation mesh: the bots path over a graph derived from the map grid (ADR-0016).
 - On-device language model: the system Foundation Models (AFM 3 Core, 3B) via guided generation; a custom Core AI model only if measurements force it.
 - Level editor: Reality Composer Pro 3.
 - Fallback stack if the technical spike fails: SwiftGodot (Godot 4 through GDExtension, all logic in Swift).
