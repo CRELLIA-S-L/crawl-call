@@ -32,6 +32,30 @@ The reason is the next measurement rather than tidiness. NFR-PERF-010 asks for 6
 
 This holds for every run — a two-minute check by eye as much as a twenty-minute unattended one — and for runs that failed or were interrupted, which are the ones most likely to be left behind.
 
+## A run is timed, and a run that takes longer than usual is a finding
+
+Every run is measured — the tests, and the command that launches them — and the time is read, not just the verdict. A suite that passes in nine minutes where it passed in twenty-five seconds has told you something, and waiting for it to finish is a way of not hearing it.
+
+What the numbers are here, so that a departure is recognisable, measured on 2026-09-22 with 138 tests: building the test target takes 2 to 8 seconds against warm derived data and about 14 from empty, the run phase takes 8 to 10, and the tests themselves 1.5 of those. `/usr/bin/time -p` in front of the command, and `IDETestOperationsObserverDebug: N elapsed` in the log, are where those come from.
+A baseline is only useful while it is current: the suite took 5.6 seconds earlier the same day with eleven fewer tests in it, and what moved it was one change — the scene's materials being made once per module type rather than once per piece — which is exactly the kind of thing this section exists to notice, in the direction nobody complains about.
+The phases are run apart for that reason, which is the next section.
+
+When a run departs from that, the first questions are cheap and they are about the run rather than the code: is the process using a processor or waiting on something, is a compiler under it at all, and which device did the destination actually resolve to. On 2026-09-22 a run sat for nine minutes at no output; it was not compiling — no `swift-frontend` was running — and it was reported as contention with another project before anything had established that. The watchdog settled it three stalls later: the suite had finished, printed its counts and its verdict, and `xcodebuild` then sat blocked at no processor until something killed it. The result had been ready in five seconds and was being waited away. What the evidence did show was that simulator names are not unique: this machine carries two devices called `iPhone 17 Pro` and two called `iPhone 17 Pro Max`, one of them unavailable for want of a runtime profile, and the run had been addressed by name.
+
+So: address a simulator by its identifier, not its name; boot it before the run so that its time is its own and not hidden inside the run's; and when the time is wrong, find out why before running it again, because a second run is the slowest possible way to ask the same question.
+
+## A test run is three commands, not one
+
+The automated tests are run by `scripts/run-tests.sh`, which does the three phases below, each under a watchdog (FR-TOOL-190), and prints what each one took:
+
+1. `xcrun simctl boot <id>` — the simulator is booted before the run and addressed by its identifier. Names on a machine are not unique: this one carries two devices called `iPhone 17 Pro` and two called `iPhone 17 Pro Max`, one of them unavailable for want of a runtime profile, so a destination given by name is a destination somebody else chose.
+2. `xcodebuild … -destination "id=<id>" build-for-testing` — compiles the app and the test bundle, needing no device.
+3. `xcodebuild … -destination "id=<id>" test-without-building` — installs, launches and runs.
+
+The single `test` action does all three and reports one number for them, which is why it is not used here. On 2026-09-22 it sat repeatedly for minutes with no output and no compiler under it; the phases run apart so that a stall says which of the three it is in, and that is how this one was pinned down — it is after the tests, in `xcodebuild`'s own exit, with the verdict already printed. A phase is therefore ended on its own report rather than on its process (FR-TOOL-190). The split is also faster to work in: step 2 answers in seconds, so a compile error is found without touching a simulator at all.
+
+A clean run — caches cleared, built from scratch — is still made before anything is called stable, and it is made the same way, by the same script with its derived data removed first.
+
 ## Geometry is compared with a tolerance, never for equality
 
 A test that checks a position, a size, an orientation or anything derived from them compares within a tolerance. Exact equality on a floating-point number is a test that fails for a reason that has nothing to do with the behaviour under test, and it fails later rather than sooner — when a constant changes, when the arithmetic is reordered, when the same value arrives by a different route.

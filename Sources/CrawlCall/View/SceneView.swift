@@ -2,7 +2,7 @@
 // by. Separate from the map layer because they answer a different question — the map
 // is what the arena is, this is how it reaches the player.
 //
-// implements: FR-VIEW-010, FR-VIEW-130
+// implements: FR-VIEW-010, FR-VIEW-020, FR-VIEW-130
 import CoreGraphics
 import Foundation
 import RealityKit
@@ -79,5 +79,49 @@ enum SceneView {
                                 Float(target.y) + distance * sin(pitch),
                                 Float(target.z) + distance * cos(pitch))
         return camera
+    }
+
+    /// How wide the ground is in view at a given distance, in metres, from the
+    /// camera's vertical field of view.
+    static func groundSpan(distance: Double, fieldOfViewDegrees: Double) -> Double {
+        2 * distance * tan(fieldOfViewDegrees * .pi / 360)
+    }
+
+    /// Where the camera should look now, given where it looked and where the head is.
+    ///
+    /// The focus moves only when the head would leave the central region the view
+    /// configuration defines (FR-VIEW-020), so the picture holds still while the snake
+    /// moves inside it, which is what a fixed-angle camera is for.
+    ///
+    /// The region's fractions are applied to the ground span of the vertical field of
+    /// view on both axes. Along the depth axis that is conservative, because the pitch
+    /// foreshortens it; the alternative needs the frame's aspect, which this layer does
+    /// not know and the configuration does not carry.
+    static func focus(keeping head: SIMD3<Double>,
+                      inside region: ViewConfiguration.CentralRegion,
+                      from focus: SIMD3<Double>,
+                      distance: Double,
+                      fieldOfViewDegrees: Double) -> SIMD3<Double> {
+        let span = groundSpan(distance: distance, fieldOfViewDegrees: fieldOfViewDegrees)
+        let halfX = span * region.width / 2
+        let halfZ = span * region.height / 2
+        var moved = focus
+        moved.x = min(max(focus.x, head.x - halfX), head.x + halfX)
+        moved.z = min(max(focus.z, head.z - halfZ), head.z + halfZ)
+        // Height follows the head outright: a floor change is not something to lag
+        // behind, or the snake leaves the frame downwards.
+        moved.y = head.y
+        return moved
+    }
+
+    /// The camera that looks at a focus point from the fixed pitch.
+    @MainActor
+    static func place(_ camera: Entity, lookingAt focus: SIMD3<Double>,
+                      pitchDegrees: Double, distance: Double) {
+        let pitch = Float(pitchDegrees * .pi / 180)
+        camera.orientation = simd_quatf(angle: -pitch, axis: SIMD3(1, 0, 0))
+        camera.position = SIMD3(Float(focus.x),
+                                Float(focus.y) + Float(distance) * sin(pitch),
+                                Float(focus.z) + Float(distance) * cos(pitch))
     }
 }

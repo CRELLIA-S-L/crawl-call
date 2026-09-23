@@ -9,14 +9,14 @@ Tunable numbers — speeds, durations, growth, damage-to-segments — are read f
 ### FR-SNAKE-010 — Head stays on the map's walkable surfaces
 
 ```yaml
-status: deferred
+status: implemented
 verification: D
 derives_from: []
 depends_on: []
 refines: []
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Snake/Snake.swift, Sources/CrawlCall/Snake/Surfaces.swift, Sources/CrawlCall/View/SnakeEntity.swift]
+tests: [Tests/CrawlCallTests/SnakeTests.swift, Tests/CrawlCallTests/GameTests.swift]
 created: 2026-09-21
 ```
 
@@ -29,14 +29,14 @@ Free flight was never on the table.
 ### FR-SNAKE-020 — Tail follows the head's path
 
 ```yaml
-status: deferred
+status: implemented
 verification: D
 derives_from: [FR-SNAKE-010]
 depends_on: []
 refines: []
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Snake/Snake.swift, Sources/CrawlCall/Snake/Surfaces.swift, Sources/CrawlCall/View/SnakeEntity.swift]
+tests: [Tests/CrawlCallTests/SnakeTests.swift, Tests/CrawlCallTests/GameTests.swift]
 created: 2026-09-21
 ```
 
@@ -48,14 +48,14 @@ That the tail's mesh is regenerated every frame is how, not what, and is left to
 ### FR-SNAKE-030 — Head speed comes from configuration
 
 ```yaml
-status: deferred
+status: implemented
 verification: T
 derives_from: [FR-SNAKE-010]
 depends_on: [IF-SNAKE-010]
 refines: []
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Snake/Snake.swift, Sources/CrawlCall/Game.swift]
+tests: [Tests/CrawlCallTests/SnakeTests.swift, Tests/CrawlCallTests/GameTests.swift]
 created: 2026-09-21
 ```
 
@@ -418,14 +418,14 @@ The match starts with the segment count the snake configuration sets (IF-SNAKE-0
 ### FR-SNAKE-220 — A drop is a path, not a fall
 
 ```yaml
-status: deferred
+status: implemented
 verification: D
 derives_from: [FR-SNAKE-010, FR-SNAKE-020]
 depends_on: [IF-MAP-020]
 refines: [FR-SNAKE-020]
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Snake/Snake.swift, Sources/CrawlCall/Snake/Surfaces.swift]
+tests: [Tests/CrawlCallTests/SnakeTests.swift]
 created: 2026-09-21
 ```
 

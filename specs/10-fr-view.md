@@ -29,14 +29,14 @@ A fixed yaw is what lets height and sight lines be learnt once (concept §2, "sp
 ### FR-VIEW-020 — The camera follows the head
 
 ```yaml
-status: deferred
+status: implemented
 verification: D
 derives_from: [FR-VIEW-010]
 depends_on: [FR-SNAKE-010, IF-VIEW-020]
 refines: []
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/View/SceneView.swift, Sources/CrawlCall/GameSession.swift]
+tests: [Tests/CrawlCallTests/ScenePlanTests.swift]
 created: 2026-09-21
 ```
 
@@ -44,19 +44,63 @@ While a match is running, the system **shall** keep the snake's head within the 
 
 **Rationale.** Concept §3: the camera follows the snake.
 
+### FR-VIEW-140 — A floor above the head is drawn see-through
+
+```yaml
+status: implemented
+verification: D
+derives_from: [FR-VIEW-010]
+depends_on: [FR-MAP-010]
+refines: []
+conflicts_with: []
+code: [Sources/CrawlCall/View/SeeThrough.swift, Sources/CrawlCall/Map/SceneBuilder.swift, Sources/CrawlCall/GameSession.swift]
+tests: [Tests/CrawlCallTests/SeeThroughTests.swift]
+created: 2026-09-22
+```
+
+While the snake's head is on a floor that another floor stands above, the system **shall** draw the map modules of every floor above the head's see-through, so that the floor the head is on, and whatever stands on it, read through them.
+
+**Rationale.** Concept §3 asks for multi-level maps — floors, stairs, balconies — and for a camera whose angle and yaw never change, and says nothing about what the player sees when one stands over the other.
+The stage-1 blockout is that case: its balcony lies between the camera and the floor beneath it, and a fixed yaw leaves no way to look past it, so the floor the snake is on, the stair up to the balcony and whatever stands under it are not on screen at all.
+Concept §2 asks that height be read off the camera from above, and a floor that reads as a lid over the level below is that promise broken.
+See-through rather than gone, because the floor above is information too — where it ends, where its stair is, what is standing on it — and it is the map's modules that give way, so a creature on the upper floor stays as visible as the floor under it.
+What see-through means was settled by looking: a wireframe of the module's own triangles was tried on the device on 2026-09-22 and rejected — the balcony read as a net and the crate standing under it was lost in it — and the shipped look is the whole module drawn at low opacity, which leaves both the balcony's shape and what is beneath it readable.
+
+### FR-VIEW-150 — Nothing between the camera and the snake stays solid
+
+```yaml
+status: implemented
+verification: D
+derives_from: [FR-VIEW-010]
+depends_on: [FR-SNAKE-010, FR-VIEW-020, IF-VIEW-020]
+refines: []
+conflicts_with: []
+code: [Sources/CrawlCall/View/SeeThrough.swift, Sources/CrawlCall/Map/SceneBuilder.swift, Sources/CrawlCall/GameSession.swift]
+tests: [Tests/CrawlCallTests/SeeThroughTests.swift]
+created: 2026-09-22
+```
+
+While a match is running, the system **shall** draw as see-through every map module that hides any part of the snake from the camera, or stands within the see-through margin of the view configuration of doing so, for as long as it does.
+
+**Rationale.** The camera's angle and yaw never change (FR-VIEW-010) and the camera follows the head (FR-VIEW-020), so a wall that leans over the snake near the edge of the frame cannot be stepped around: the player's own body is behind it and nothing they do moves it.
+The alternative is a map without walls, and a wall is what a map is assembled from (FR-MAP-100) — the arena reads as a place because it has sides.
+This is the rule FR-VIEW-140 applies to a floor above the head, widened to whatever is in the way. The two are separate requirements because they answer differently: a floor above hides a whole room and goes see-through wholesale, while a wall is only ever in the way while the snake is behind it, and a wall that stayed see-through afterwards would cost the arena its shape.
+What is measured to is the head and every segment, because a tail the player cannot see is a tail they cannot place, and placing it is the game (concept §4).
+The body is a body and not a point: a wall that hides half a segment hides it, and a fade that began only once the centre went behind the wall would begin after the player had already lost sight of the thing they are steering. The margin beyond that is the same argument taken one step further — it buys the fade time to happen before it is needed — and it is a number settled by eye, which is why it is in the view configuration and not here.
+
 ## Input
 
 ### FR-VIEW-030 — Game logic reads intents, not device events
 
 ```yaml
-status: deferred
+status: implemented
 verification: I
 derives_from: []
 depends_on: [IF-VIEW-010]
 refines: []
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Game.swift, Sources/CrawlCall/Input/Intent.swift, Sources/CrawlCall/GameSession.swift]
+tests: [Tests/CrawlCallTests/GameTests.swift]
 created: 2026-09-21
 ```
 
@@ -86,14 +130,14 @@ Direction and ability activation from keys, the pointed position from the mouse;
 ### FR-VIEW-050 — iOS scheme: touch
 
 ```yaml
-status: deferred
+status: implemented
 verification: D
 derives_from: [FR-VIEW-030, CON-PUB-010]
 depends_on: [IF-VIEW-010]
 refines: []
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Input/TouchScheme.swift, Sources/CrawlCall/CrawlCallApp.swift]
+tests: [Tests/CrawlCallTests/TouchSchemeTests.swift]
 created: 2026-09-21
 ```
 

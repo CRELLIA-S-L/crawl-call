@@ -94,12 +94,16 @@ struct ViewConfiguration: Decodable, Equatable {
 
     let cameraPitch: Double
     let centralRegion: CentralRegion
+    /// Metres beyond the body itself at which a module stops hiding the snake and
+    /// starts being drawn through (FR-VIEW-150).
+    let seeThroughMargin: Double
     let stragglerDistance: Double
     let visiblePanicThreshold: Double
 
     static let schema = Schema.object([
         "cameraPitch": .value,
         "centralRegion": .object(["width": .value, "height": .value]),
+        "seeThroughMargin": .value,
         "stragglerDistance": .value,
         "visiblePanicThreshold": .value,
     ])

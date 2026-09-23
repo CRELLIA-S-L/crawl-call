@@ -9,6 +9,7 @@ System behavior is described in `specs/` as numbered requirements with links bet
 - **Engineering principles** — `specs/constitution.md` (`ART-*`); they apply to every task.
 - **Markdown is not wrapped to a width** — a line breaks where the meaning breaks, never inside a sentence; the renderer does the wrapping.
 - **Check** — `python3 tools/srs_check.py`.
+- **Run the tests** — `sh scripts/run-tests.sh <simulator-udid>`: it boots the simulator, builds and runs as separate phases under a watchdog, and prints what each took. `CRAWLCALL_TIMEOUT` sets the watchdog. The reasoning, the phase times and why it is not one command are in `specs/50-verification.md`.
 - **Read** — `python3 tools/srs_view.py <ID>` for one requirement with its links resolved, `--code <path>` for the requirements describing a file (`--statements` adds what each obliges), `<ID> --where` for the lines that carry it (`--source` prints them), `--areas` for what the specification is divided into, `--open` for a page a non-engineer can read; `.claude/skills/srs-page/SKILL.md` is the procedure around it.
 - **Check a finished change** — `.claude/skills/srs-check/SKILL.md` reads the `verification` method and the `tests` field of every requirement the change touched, and offers exactly those; it runs nothing unasked.
 - **Skills** — the procedures in `.claude/skills/*/SKILL.md` are plain markdown; an agent without a skill system reads them directly as workflow guides.

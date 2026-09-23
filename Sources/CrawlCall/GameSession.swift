@@ -1,0 +1,66 @@
+// What runs while a match is on: the logic advanced once per frame, the entities moved
+// to where it says, and the camera kept on the head.
+//
+// The frame's own delta is what advances the world. It is not what the frame rate is
+// measured with — `specs/50-verification.md` says why, and the two are different
+// questions asked of the same number.
+//
+// implements: FR-VIEW-020, FR-VIEW-030, FR-VIEW-140, FR-VIEW-150
+import Foundation
+import RealityKit
+
+@MainActor
+final class GameSession {
+    private(set) var game: Game
+    private let snakeEntity: Entity
+    private let camera: Entity
+    private var seeThrough: SeeThrough
+    private var focus: SIMD3<Double>
+    private let distance: Double
+    private let fieldOfView: Double
+
+    init(game: Game, snakeEntity: Entity, camera: Entity, seeThrough: SeeThrough,
+         distance: Double, fieldOfView: Double) {
+        self.game = game
+        self.snakeEntity = snakeEntity
+        self.camera = camera
+        self.seeThrough = seeThrough
+        self.distance = distance
+        self.fieldOfView = fieldOfView
+        self.focus = game.snake.head
+        place()
+    }
+
+    func apply(_ intent: Intent) { game.apply(intent) }
+
+    /// One frame: the world moves, then what is drawn catches up with it.
+    func step(seconds: Double) {
+        // A frame long enough to be a stall is not a frame the snake should cross the
+        // room in; the model refuses to pass through walls whatever it is given, and
+        // this keeps the picture from lurching as well.
+        game.advance(seconds: min(seconds, 1.0 / 20))
+        place()
+    }
+
+    private func place() {
+        SnakeEntity.update(snakeEntity, from: game.snake)
+        focus = SceneView.focus(keeping: game.snake.head,
+                                inside: game.world.configurations.view.centralRegion,
+                                from: focus,
+                                distance: distance,
+                                fieldOfViewDegrees: fieldOfView)
+        SceneView.place(camera, lookingAt: focus, pitchDegrees: game.world.configurations.view.cameraPitch,
+                        distance: distance)
+        // After the camera has moved, not before: what hides the snake is judged from
+        // where the camera is now (FR-VIEW-150), and the floor above the head is a lid
+        // wherever the camera stands (FR-VIEW-140).
+        let eye = SIMD3(Double(camera.position.x), Double(camera.position.y), Double(camera.position.z))
+        // The body's own radius, because a sphere half behind a wall is behind it,
+        // plus what the configuration adds so that the fade starts a little early.
+        seeThrough.show(headOn: game.snake.floor,
+                        snake: [game.snake.head] + game.snake.tail,
+                        from: eye,
+                        margin: game.world.configurations.tuning.bodyRadius
+                            + game.world.configurations.view.seeThroughMargin)
+    }
+}

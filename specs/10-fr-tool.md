@@ -354,3 +354,24 @@ When an unattended run ends, whether it finished its route or stopped early, the
 **Rationale.** The next measurement is the reason, not tidiness: NFR-PERF-010 asks for 60 frames per second *cold*, and the thermal requirements are read against a device that started cool (NFR-PERF-050), so an app left rendering in the background puts the following run somewhere in the middle of its own thermal curve and produces a number nobody can reproduce (`specs/50-verification.md`).
 The spike's own instrument is the evidence that this does not happen by itself: `materials/spike/instrument/run-autopilot.sh` terminates any *previous* instance when it launches, and never terminates the one it started — not on the path that succeeds, and not on the two paths that abort, which are the runs most likely to be left behind.
 "Before it reports" rather than "afterwards" because a report is where a run ends for whoever reads it, and a step after the report is a step that gets skipped.
+
+### FR-TOOL-190 — A phase that stops making progress is killed and reported
+
+```yaml
+status: implemented
+verification: T
+derives_from: []
+depends_on: []
+refines: []
+conflicts_with: []
+code: [scripts/run-tests.sh]
+tests: [scripts/run-tests-selftest.sh]
+created: 2026-09-22
+```
+
+When a phase of a test run has reported its result, or has outlived the time the run allows it, the test runner **shall** end that phase — and where the time ran out, report which phase it was, how long it was given, and what the process was doing.
+
+**Rationale.** Three runs on 2026-09-22 sat for minutes — nine, four and four — with no output and no processor in use, and each was noticed by a person watching a clock rather than by the tools. The fourth was caught by this requirement's own code, and it named what none of the others could: the suite had finished and printed its verdict, and `xcodebuild` was hanging afterwards. Hence the first half of the statement — a phase ends when it has said what it came to say, not when its process decides to leave. A watchdog turns that from a wait into a finding, which is what `specs/50-verification.md` asks of a run whose time is wrong.
+Killing is the easy half; the report is the point. "The tests phase gave up after 150s, the process was blocked at 0% CPU, and its last output was …" is where the next investigation starts, and it is exactly what nobody had during those three stalls.
+The limit belongs to the caller rather than to the script, because a clean build and an incremental one are not the same wait, and a machine slower than this one is not wrong.
+Its test takes the watchdog out of the runner rather than restating it, so a copy that drifted from what ships would prove nothing: the self-test reads `watch()` out of `run-tests.sh`, gives it a command that finishes and one that does not, and checks the timeout code, the report's three facts, and that the stuck command is actually gone.

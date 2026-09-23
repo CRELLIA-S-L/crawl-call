@@ -119,7 +119,7 @@ final class ScenePlanBoundsTests: XCTestCase {
 final class SceneBuilderTests: XCTestCase {
     private func scene() throws -> Entity {
         let world = try Launch.world().get()
-        return SceneBuilder.scene(for: world.plan, pitchDegrees: world.configurations.view.cameraPitch)
+        return SceneBuilder.scene(for: world.plan, pitchDegrees: world.configurations.view.cameraPitch).root
     }
 
     func testTheSceneCarriesTheMapTheLightsTheAmbientAndTheCamera() throws {
@@ -146,7 +146,7 @@ final class SceneBuilderTests: XCTestCase {
 
     func testTheCameraSitsAtThePitchTheConfigurationSets() throws {
         let world = try Launch.world().get()
-        let scene = SceneBuilder.scene(for: world.plan, pitchDegrees: world.configurations.view.cameraPitch)
+        let scene = SceneBuilder.scene(for: world.plan, pitchDegrees: world.configurations.view.cameraPitch).root
         let camera = try XCTUnwrap(scene.children.first { $0.name == "camera" })
         // Pitch read back off the orientation, in degrees below the horizontal.
         let forward = camera.orientation.act(SIMD3<Float>(0, 0, -1))
@@ -247,5 +247,124 @@ final class ImpliedFloorTests: XCTestCase {
             }
             XCTAssertTrue(stands, "\(piece.module) at \(piece.centre) stands on nothing")
         }
+    }
+}
+
+/// A tail rests on surfaces, so the surfaces under a route have to meet (FR-MAP-090).
+///
+/// verifies: FR-MAP-090
+final class TailSurfaceTests: XCTestCase {
+    private lazy var kit: Kit = { try! Kit.load(named: "blockout", from: .main) }()
+
+    private func kitWithFloorWidth(_ width: Double) throws -> Kit {
+        let json = """
+        {"floorHeight": 3.0, "floorModule": ".",
+         "modules": {".": {"name": "floor", "walkable": true,
+                           "size": [\(width), 0.1, \(width)], "colour": [0.5, 0.5, 0.5]}}}
+        """
+        return try Configurations.decode(Kit.self, named: "kit/test/legend",
+                                         schema: Kit.schema, from: Data(json.utf8))
+    }
+
+    private func gap(floorWidth: Double, cell: Double = 0.5) throws -> Double {
+        let kit = try kitWithFloorWidth(floorWidth)
+        let map = try MapParser.parse("kit test\nfloor 0\n..\n..\n", kit: kit)
+        return ScenePlan.make(map: map, kit: kit, cellSize: cell)
+            .widestGap(along: NavigationGraph.derive(from: map))
+    }
+
+    func testAFloorModuleThatFillsItsCellLeavesNoGap() throws {
+        XCTAssertEqual(try gap(floorWidth: 0.5), 0, accuracy: 1e-9)
+    }
+
+    func testANarrowerFloorModuleLeavesTheDifference() throws {
+        // Half-metre cells, forty-centimetre slabs: ten centimetres of nothing.
+        XCTAssertEqual(try gap(floorWidth: 0.4), 0.1, accuracy: 1e-9)
+    }
+
+    func testTheShippedMapIsWithinTheTolerance() throws {
+        let world = try Launch.world().get()
+        let widest = world.plan.widestGap(along: world.graph)
+        XCTAssertLessThanOrEqual(widest, world.configurations.tuning.tailGapTolerance,
+                                 "the widest gap is \(widest) m against a tolerance of \(world.configurations.tuning.tailGapTolerance) m")
+    }
+
+    func testAGapWiderThanTheToleranceIsVisibleToTheCheck() throws {
+        // The check earns its place only if it can fail: a kit with slabs half the
+        // width of a cell leaves a quarter of a metre, past the shipped tolerance.
+        let tolerance = try Configurations.load(from: .main).tuning.tailGapTolerance
+        XCTAssertGreaterThan(try gap(floorWidth: 0.2), tolerance)
+    }
+}
+
+/// The camera holds still while the snake moves inside the frame, and moves when it
+/// would leave it (FR-VIEW-020).
+///
+/// verifies: FR-VIEW-020
+final class CameraFollowTests: XCTestCase {
+    private let region = ViewConfiguration.CentralRegion(width: 0.4, height: 0.4)
+    private let distance = 12.0
+    private let fov = 50.0
+
+    private var halfZone: Double {
+        SceneView.groundSpan(distance: distance, fieldOfViewDegrees: fov) * 0.4 / 2
+    }
+
+    func testTheGroundSpanFollowsFromTheFieldOfView() {
+        // Two sides of a triangle: half the span over the distance is tan(fov / 2).
+        let span = SceneView.groundSpan(distance: 10, fieldOfViewDegrees: 90)
+        XCTAssertEqual(span, 20, accuracy: 1e-9)      // tan 45° = 1
+    }
+
+    func testAHeadInsideTheRegionLeavesTheCameraWhereItIs() {
+        let focus = SIMD3(0.0, 0.0, 0.0)
+        let head = SIMD3(halfZone * 0.5, 0.0, 0.0)
+        let moved = SceneView.focus(keeping: head, inside: region, from: focus,
+                                    distance: distance, fieldOfViewDegrees: fov)
+        XCTAssertEqual(moved.x, focus.x, accuracy: 1e-9)
+        XCTAssertEqual(moved.z, focus.z, accuracy: 1e-9)
+    }
+
+    func testAHeadPastTheRegionPullsTheCameraJustEnough() {
+        let focus = SIMD3(0.0, 0.0, 0.0)
+        let head = SIMD3(halfZone + 3, 0.0, 0.0)
+        let moved = SceneView.focus(keeping: head, inside: region, from: focus,
+                                    distance: distance, fieldOfViewDegrees: fov)
+        // The head ends up on the boundary, not in the middle: the picture moves as
+        // little as it can.
+        XCTAssertEqual(head.x - moved.x, halfZone, accuracy: 1e-9)
+    }
+
+    func testTheHeadNeverLeavesTheRegionHoweverFarItWalks() {
+        var focus = SIMD3(0.0, 0.0, 0.0)
+        var head = SIMD3(0.0, 0.0, 0.0)
+        for _ in 0..<200 {
+            head.x += 0.31
+            head.z += 0.17
+            focus = SceneView.focus(keeping: head, inside: region, from: focus,
+                                    distance: distance, fieldOfViewDegrees: fov)
+            XCTAssertLessThanOrEqual(abs(head.x - focus.x), halfZone + 1e-9)
+            XCTAssertLessThanOrEqual(abs(head.z - focus.z), halfZone + 1e-9)
+        }
+        XCTAssertGreaterThan(focus.x, 0)      // it did follow
+    }
+
+    func testTheCameraFollowsAFloorChangeAtOnce() {
+        let focus = SIMD3(0.0, 0.0, 0.0)
+        let head = SIMD3(0.0, 3.0, 0.0)
+        let moved = SceneView.focus(keeping: head, inside: region, from: focus,
+                                    distance: distance, fieldOfViewDegrees: fov)
+        XCTAssertEqual(moved.y, 3.0, accuracy: 1e-9)
+    }
+
+    @MainActor
+    func testPlacingTheCameraKeepsThePitchAndStandsBackFromTheFocus() {
+        let camera = Entity()
+        SceneView.place(camera, lookingAt: SIMD3(2, 0, 3), pitchDegrees: 55, distance: 10)
+        let forward = camera.orientation.act(SIMD3<Float>(0, 0, -1))
+        XCTAssertEqual(Double(-asin(forward.y) * 180 / .pi), 55, accuracy: 1e-3)
+        XCTAssertEqual(camera.position.x, 2, accuracy: 1e-5)
+        XCTAssertGreaterThan(camera.position.y, 0)
+        XCTAssertGreaterThan(camera.position.z, 3)
     }
 }

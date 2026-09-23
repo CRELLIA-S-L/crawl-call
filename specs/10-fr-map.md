@@ -30,18 +30,20 @@ Checked by the validator (FR-TOOL-040).
 ### FR-MAP-025 — The snake and the bots agree on what is climbable
 
 ```yaml
-status: deferred
+status: partial
 verification: T
 derives_from: [FR-MAP-020]
 depends_on: [FR-SNAKE-010, IF-MAP-020]
 refines: []
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Snake/Surfaces.swift]
+tests: [Tests/CrawlCallTests/SnakeTests.swift]
 created: 2026-09-22
 ```
 
 The step height, slope angle and body radius that decide where the snake's head may go **shall** be the same values the navigation graph uses to decide where a bot may go, both read from the tuning configuration.
+
+**Partial, and how.** The snake reads the step height, the slope angle and the body radius from the tuning configuration (`Surfaces`); the navigation graph reads none of them, because the stage-1 grid has neither ramps nor steps — a floor cell is walkable or it is not, and a change of floor is an explicit transition. The requirement is met on the snake's side and vacuous on the graph's until a map has geometry those numbers can decide about.
 
 **Rationale.** Two models of the same map that disagree produce a map with two shapes: a step the snake climbs and the bots path around, or a ledge the bots walk off and the snake cannot follow.
 The tail blocking a passage (FR-SNAKE-040) only means something if both sides agree the passage exists.
@@ -185,14 +187,14 @@ Every map **shall** contain at least two corridors narrower than the trap width 
 ### FR-MAP-090 — Every reachable surface is continuous for the tail
 
 ```yaml
-status: deferred
+status: implemented
 verification: T
 derives_from: [FR-MAP-020]
 depends_on: [FR-SNAKE-020]
 refines: []
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Map/ScenePlan.swift]
+tests: [Tests/CrawlCallTests/ScenePlanTests.swift]
 created: 2026-09-21
 ```
 

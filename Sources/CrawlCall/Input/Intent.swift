@@ -2,7 +2,7 @@
 // "Exactly these" is the contract: a scheme that needs a fifth intent changes
 // IF-VIEW-010 first, and this type after it.
 //
-// implements: IF-VIEW-010
+// implements: IF-VIEW-010, FR-VIEW-030
 import Foundation
 
 enum Intent: Equatable {

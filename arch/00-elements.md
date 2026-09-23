@@ -45,7 +45,7 @@ The app's entry point belongs here rather than in a shell of its own — startin
 ```yaml
 status: built
 carries: [Sources/CrawlCall/Input]
-requirements: [IF-VIEW-010]
+requirements: [IF-VIEW-010, FR-VIEW-050]
 depends_on: []
 interface: four intents, and nothing else crosses into the game logic
 ```
@@ -60,7 +60,7 @@ One file today, and the element is what keeps the fifth intent a change to IF-VI
 ```yaml
 status: built
 carries: [Sources/CrawlCall/Map, maps/blockout.map, ATTRIBUTION.md]
-requirements: [IF-MAP-010, FR-TOOL-010, FR-TOOL-020, FR-TOOL-030, FR-MAP-010, FR-MAP-020, FR-MAP-100]
+requirements: [IF-MAP-010, FR-TOOL-010, FR-TOOL-020, FR-TOOL-030, FR-MAP-010, FR-MAP-020, FR-MAP-100, FR-MAP-090]
 depends_on: [E-020]
 interface: a map file and its kit in; the placements, the navigation graph and the scene geometry out
 ```
@@ -77,12 +77,57 @@ It depends on start-up because the cell size it measures in is tuning (IF-MAP-02
 ```yaml
 status: built
 carries: [Sources/CrawlCall/View]
-requirements: [FR-VIEW-010, FR-VIEW-130]
+requirements: [FR-VIEW-010, FR-VIEW-130, FR-VIEW-020, FR-VIEW-140, FR-VIEW-150]
 depends_on: [E-040]
 interface: a scene plan in; the camera it is seen through and the light it is read by, out
 ```
 
-Decides how the arena reaches the player: one camera at a fixed pitch, one daylight source with the ambient that keeps shadows readable.
+Decides how the arena reaches the player: one camera at a fixed pitch, one daylight source with the ambient that keeps shadows readable, and the two looks a map module has — solid, or see-through while it stands over the snake or in front of it.
 
 **Rationale.** Split from the map layer because the two answer different questions and change for different reasons: the map changes when a level does, the view when the game's look does, and a file holding both invites a camera decision to be made while editing geometry.
 The boundary is also where the specification puts it — the VIEW area owns the angle and the light, the MAP and TOOL areas own what is placed and where.
+
+### E-060 — The snake
+
+```yaml
+status: built
+carries: [Sources/CrawlCall/Snake]
+requirements: [FR-SNAKE-010, FR-SNAKE-020, FR-SNAKE-030, FR-SNAKE-220, FR-MAP-025]
+depends_on: [E-040]
+interface: a held direction and a frame's time in; a head, a floor and a trail out
+```
+
+Where the snake is and where it has been: the head's movement over walkable surfaces, the drop it may take, and the trail the tail is read from.
+
+**Rationale.** A part of its own because it is the one place that decides whether a move is allowed, and the game will grow several callers of that decision — eating holds the head still, abilities move it differently, a bot's shot shortens the tail. A rule about passing through walls that lived in each of them would be a rule in none.
+It leans on the map layer for what is walkable and on nothing else: the snake asks the graph, it does not read the map file, and it has no idea what the scene looks like.
+
+### E-070 — The match
+
+```yaml
+status: built
+carries: [Sources/CrawlCall/Game.swift, Sources/CrawlCall/GameSession.swift]
+requirements: [FR-VIEW-030]
+depends_on: [E-020, E-060, E-050]
+interface: intents in, a frame advanced, the scene and the camera moved to follow
+```
+
+What runs while a match is on: the intents the player sends, the world advanced once per frame, and the drawing brought up to date afterwards.
+
+**Rationale.** This is the boundary FR-VIEW-030 draws — intents in, never touches or keys — and it is worth a part of its own so that the rule has somewhere to live rather than being a habit of whoever writes the next input scheme.
+It is also the only part that knows the order of a frame: the world moves first and the picture follows, never the other way round, which is what keeps the camera from chasing a head that has not moved yet.
+
+### E-080 — The test runner
+
+```yaml
+status: built
+carries: [scripts]
+requirements: [FR-TOOL-190]
+depends_on: []
+interface: a simulator identifier in; each phase's time, its verdict, and a named timeout out
+```
+
+Runs the suite the way the project says to run it: the simulator booted by identifier, the build and the run as separate phases, each ended by its own report or by a watchdog.
+
+**Rationale.** A part rather than a habit because the knowledge in it was expensive: that phases must be timed apart, that a phase ends when its log says so and not when `xcodebuild` exits, and that ending one means ending the tree it started. Each of those was learned from a stall that cost minutes, and each would be lost the moment somebody typed the single `test` command from memory.
+It depends on nothing in the game: it drives the build system from outside, and the game does not know it exists.

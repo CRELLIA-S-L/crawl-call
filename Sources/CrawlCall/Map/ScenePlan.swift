@@ -7,7 +7,7 @@
 // configuration (IF-MAP-020) and the kit's floor height, so the graph's cells and the
 // geometry cannot drift apart.
 //
-// implements: FR-TOOL-020
+// implements: FR-TOOL-020, FR-MAP-090
 import Foundation
 
 struct ScenePlan: Equatable {
@@ -19,6 +19,43 @@ struct ScenePlan: Equatable {
         let centre: SIMD3<Double>
         /// Red, green and blue in 0…1, as the kit's legend gives them.
         let colour: SIMD3<Double>
+        /// The floor of the map this piece was placed on, carried rather than
+        /// measured: a module's height says nothing about which floor it belongs to
+        /// — a stair rises to its floor from the one below, a wall stands on its own
+        /// — and FR-VIEW-140 asks what is above the head, not what is high up.
+        let level: Int
+    }
+
+    /// The widest gap between the surfaces of two cells a walker can step between,
+    /// in metres. FR-MAP-090 asks that this stay within the tuning's tail-gap
+    /// tolerance, because a tail rests on surfaces and falls through what is missing.
+    ///
+    /// Measured between the facing edges of the two pieces, so a kit whose floor
+    /// module is narrower than a cell shows up here rather than under the snake.
+    func widestGap(along graph: NavigationGraph) -> Double {
+        var widest = 0.0
+        for node in graph.nodes {
+            guard let here = surface(at: node) else { continue }
+            for next in graph.neighbours(of: node) where next.floor == node.floor {
+                guard let there = surface(at: next) else { continue }
+                let alongX = next.x != node.x
+                let centres = alongX ? abs(there.centre.x - here.centre.x) : abs(there.centre.z - here.centre.z)
+                let halves = alongX ? (here.size.x + there.size.x) / 2 : (here.size.z + there.size.z) / 2
+                widest = max(widest, centres - halves)
+            }
+        }
+        return widest
+    }
+
+    /// The walkable piece a cell stands on, if the plan placed one there.
+    func surface(at node: NavigationGraph.Node) -> Piece? {
+        let x = Double(node.x) * cellSize
+        let z = Double(node.z) * cellSize
+        let top = Double(node.floor) * floorHeight
+        return pieces.first { piece in
+            abs(piece.centre.x - x) < 1e-9 && abs(piece.centre.z - z) < 1e-9
+                && abs(piece.centre.y + piece.size.y / 2 - top) < 1e-9
+        }
     }
 
     /// The box the whole map sits in, which is what a camera with nothing to follow
@@ -71,7 +108,8 @@ struct ScenePlan: Equatable {
                                     centre: SIMD3(Double(placement.x) * cellSize,
                                                   elevation - floorSize.y / 2,
                                                   Double(placement.z) * cellSize),
-                                    colour: SIMD3(floor.colour[0], floor.colour[1], floor.colour[2])))
+                                    colour: SIMD3(floor.colour[0], floor.colour[1], floor.colour[2]),
+                                    level: placement.floor))
             }
             // A walkable module *is* the surface, so its top sits at the floor's
             // elevation; anything else stands on that surface, sunk into it by
@@ -83,7 +121,8 @@ struct ScenePlan: Equatable {
             pieces.append(Piece(module: module.name,
                                 size: size,
                                 centre: SIMD3(Double(placement.x) * cellSize, y, Double(placement.z) * cellSize),
-                                colour: SIMD3(module.colour[0], module.colour[1], module.colour[2])))
+                                colour: SIMD3(module.colour[0], module.colour[1], module.colour[2]),
+                                level: placement.floor))
         }
         return ScenePlan(pieces: pieces, cellSize: cellSize, floorHeight: kit.floorHeight)
     }
