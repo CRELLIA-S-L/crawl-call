@@ -15,6 +15,10 @@ struct Snake {
     private(set) var segments: Int
     /// Damage taken that has not yet cost a whole segment (FR-SNAKE-070).
     private var unpaid = 0.0
+    /// The height a climb is still working its way up to, while one is under way.
+    /// A stair is walked up at the configured speed like any other ground
+    /// (FR-SNAKE-030), so it takes the time it takes.
+    private var climbingTo: Double?
 
     /// The distance between one segment and the next, taken from the body's own width
     /// rather than a number of its own: a segment is a body length along the path.
@@ -34,8 +38,24 @@ struct Snake {
     /// drop where the tuning allows one, and stays where it is when the way is a wall
     /// (FR-SNAKE-010, FR-SNAKE-220). Speed is the configuration's (FR-SNAKE-030).
     mutating func advance(direction: SIMD2<Double>, speed: Double, seconds: Double, over surfaces: Surfaces) {
+        guard speed > 0, seconds > 0 else { return }
+        var budget = speed * seconds
+
+        // A climb already under way is paid for first, and paid for whether or not
+        // the player is still holding a direction: a snake halfway up a stair is on
+        // the stair. Each step goes into the trail, so the tail climbs behind the
+        // head rather than hanging through the floor.
+        if let target = climbingTo {
+            let gap = target - head.y
+            let step = min(budget, abs(gap)) * (gap < 0 ? -1 : 1)
+            moveTo(SIMD3(head.x, head.y + step, head.z))
+            budget -= abs(step)
+            if abs(target - head.y) < 1e-9 { climbingTo = nil }
+            guard budget > 1e-12 else { return }
+        }
+
         let length = (direction.x * direction.x + direction.y * direction.y).squareRoot()
-        guard length > 0, speed > 0, seconds > 0 else { return }
+        guard length > 0 else { return }
         let unit = SIMD2(direction.x / length, direction.y / length)
 
         // The frame's distance is walked in pieces no longer than half a cell. A whole
@@ -43,18 +63,21 @@ struct Snake {
         // half-second frame is a metre and a half, and a wall in between would go
         // unnoticed. Frames do get long — a pause, a stall, the app coming back — and
         // the snake must not pass through geometry because of it.
-        var remaining = speed * seconds
         let longest = max(surfaces.cellSize / 2, 1e-6)
-        while remaining > 1e-12 {
-            let step = min(remaining, longest)
-            remaining -= step
-            if !stepOnce(unit: unit, distance: step, over: surfaces) { return }
+        while budget > 1e-12 {
+            let step = min(budget, longest)
+            guard let spent = stepOnce(unit: unit, distance: step, over: surfaces) else { return }
+            budget -= spent
         }
     }
 
-    /// One piece of a frame's movement. False where the way is blocked, which ends the
-    /// frame: the head rests against what stopped it.
-    private mutating func stepOnce(unit: SIMD2<Double>, distance: Double, over surfaces: Surfaces) -> Bool {
+    /// One piece of a frame's movement, and what it cost. Nil where the way is
+    /// blocked, which ends the frame: the head rests against what stopped it.
+    ///
+    /// A climb costs the height it climbed on top of the ground it covered, because
+    /// going up a stair is walking and walking takes the speed the configuration
+    /// gives (FR-SNAKE-030). A drop costs nothing: falling is not walking.
+    private mutating func stepOnce(unit: SIMD2<Double>, distance: Double, over surfaces: Surfaces) -> Double? {
         let wanted = SIMD3(head.x + unit.x * distance, head.y, head.z + unit.y * distance)
 
         if surfaces.isWalkable(wanted, floor: floor) {
@@ -68,11 +91,17 @@ struct Snake {
             //
             // Entering is what does it, not standing: a head that has just dropped
             // onto the same cell would otherwise be sent straight back up.
-            if entering != leaving, let above = surfaces.rise(at: wanted, from: floor) {
-                floor = above
-                moveTo(SIMD3(wanted.x, surfaces.elevation(of: above), wanted.z))
+            // A transition is walked in whichever direction the head came at it from:
+            // up it from below, down it from above. The floor changes at the cell —
+            // it is walkable on both, which is what a transition means — and the
+            // height between them is then walked over the frames that follow.
+            if entering != leaving,
+               let other = surfaces.rise(at: wanted, from: floor) ?? surfaces.descent(at: wanted, from: floor) {
+                floor = other
+                climbingTo = surfaces.elevation(of: other)
+                return distance
             }
-            return true
+            return distance
         }
         if let below = surfaces.landing(below: wanted, from: floor) {
             // The drop is part of the path: the corner it leaves and the ground it
@@ -81,9 +110,9 @@ struct Snake {
             moveTo(SIMD3(wanted.x, surfaces.elevation(of: floor), wanted.z))
             floor = below
             moveTo(SIMD3(wanted.x, surfaces.elevation(of: below), wanted.z))
-            return true
+            return distance
         }
-        return false
+        return nil
     }
 
     private mutating func moveTo(_ position: SIMD3<Double>) {

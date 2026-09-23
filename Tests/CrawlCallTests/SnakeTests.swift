@@ -12,7 +12,7 @@ final class SnakeTests: XCTestCase {
     /// A small room with a wall on its right and an upper floor joined by one cell.
     private func surfaces(_ text: String) throws -> Surfaces {
         let map = try MapParser.parse(text, kit: kit)
-        return Surfaces(graph: NavigationGraph.derive(from: map), kit: kit, tuning: tuning)
+        return Surfaces(graph: NavigationGraph.derive(from: map), kit: kit, tuning: tuning, map: map)
     }
 
     private func snake(at x: Double, _ z: Double, floor: Int = 0, segments: Int = 4) -> Snake {
@@ -213,7 +213,7 @@ final class SnakeClimbTests: XCTestCase {
     /// transition links to the same cell one floor up.
     private func stairs() throws -> Surfaces {
         let map = try MapParser.parse("kit blockout\ntransition 2,0 0 1\nfloor 0\n../\nfloor 1\n  /\n", kit: kit)
-        return Surfaces(graph: NavigationGraph.derive(from: map), kit: kit, tuning: tuning)
+        return Surfaces(graph: NavigationGraph.derive(from: map), kit: kit, tuning: tuning, map: map)
     }
 
     private func snake(at x: Int) -> Snake {
@@ -223,7 +223,9 @@ final class SnakeClimbTests: XCTestCase {
     func testWalkingIntoAStairTakesTheHeadUp() throws {
         let surfaces = try stairs()
         var body = snake(at: 0)
-        for _ in 0..<40 {
+        // Two seconds: one to walk the metre to the stair and one to walk its three
+        // metres of height at three metres a second.
+        for _ in 0..<120 {
             body.advance(direction: SIMD2(1, 0), speed: 3.0, seconds: 1.0 / 60, over: surfaces)
         }
         XCTAssertEqual(body.floor, 1, "the head is still on the ground floor")
@@ -233,17 +235,19 @@ final class SnakeClimbTests: XCTestCase {
     func testTheTrailCarriesBothHeightsSoTheTailClimbsToo() throws {
         let surfaces = try stairs()
         var body = snake(at: 0)
-        for _ in 0..<40 {
+        for _ in 0..<120 {
             body.advance(direction: SIMD2(1, 0), speed: 3.0, seconds: 1.0 / 60, over: surfaces)
         }
-        // The stair's cell appears in the path at both heights, which is what lays
-        // the tail up it instead of through the floor. Taken over the cell — half a
-        // metre wide — and not over its centre point, because where a sub-step lands
-        // inside it is arithmetic, not behaviour.
-        let atStair = body.trail.filter { abs($0.x - 2 * cell) <= cell / 2 + 1e-9 }
-        XCTAssertTrue(atStair.contains { abs($0.y) < 1e-9 }, "the foot of the stair is not in the path")
-        XCTAssertTrue(atStair.contains { abs($0.y - kit.floorHeight) < 1e-9 },
-                      "the top of the stair is not in the path")
+        // What the path is for is the tail, so that is what is asked: with the head
+        // at the top, the segments behind it stand at the heights it came up
+        // through, not on the floor below or on the balcony with it.
+        XCTAssertEqual(body.head.y, kit.floorHeight, accuracy: 1e-9)
+        let tail = body.tail
+        XCTAssertEqual(tail.count, 4)
+        XCTAssertTrue(tail.allSatisfy { $0.y > 1e-9 && $0.y <= kit.floorHeight + 1e-9 },
+                      "the tail hangs below the stair: \(tail.map(\.y))")
+        XCTAssertTrue(tail.contains { $0.y < kit.floorHeight - 1e-9 },
+                      "the whole tail is already at the top: \(tail.map(\.y))")
     }
 
     func testAHeadAlreadyInAStairsCellIsNotCarriedUpByStandingInIt() throws {
@@ -275,7 +279,7 @@ final class SnakeClimbTests: XCTestCase {
         let world = try Launch.world().get()
         let start = try XCTUnwrap(Game.start(in: world))
         let size = world.configurations.tuning.navigationGraphCellSize
-        let surfaces = Surfaces(graph: world.graph, kit: world.kit, tuning: world.configurations.tuning)
+        let surfaces = Surfaces(graph: world.graph, kit: world.kit, tuning: world.configurations.tuning, map: world.map)
         var body = Snake(head: SIMD3(Double(start.x) * size, 0, Double(start.z) * size),
                          floor: start.floor,
                          segments: world.configurations.snake.startingSegmentCount,
@@ -290,9 +294,84 @@ final class SnakeClimbTests: XCTestCase {
         }
         steer(SIMD2(1, 0)) { Int(($0.head.x / size).rounded()) >= stair.x }
         steer(SIMD2(0, 1)) { $0.floor != start.floor }
+        // And then up it, which takes the height's worth of walking.
+        steer(SIMD2(0, 1)) { $0.head.y >= Double(stair.to) * world.kit.floorHeight - 1e-9 }
 
         XCTAssertEqual(body.floor, stair.to, "the balcony cannot be reached from the start")
         XCTAssertEqual(body.head.y, Double(stair.to) * world.kit.floorHeight, accuracy: 1e-9)
+    }
+
+    func testAClimbTakesTheTimeItsHeightIsWorth() throws {
+        // FR-SNAKE-030: the stair is walked at the configured speed, so three metres
+        // of it cost a second at three metres a second — a climb that cost nothing
+        // read as a teleport on the device.
+        let surfaces = try stairs()
+        var body = snake(at: 1)          // one cell from the stair
+        let speed = 3.0
+        var frames = 0
+        while body.floor == 0, frames < 600 {
+            body.advance(direction: SIMD2(1, 0), speed: speed, seconds: 1.0 / 60, over: surfaces)
+            frames += 1
+        }
+        let atFoot = frames
+        while body.head.y < kit.floorHeight - 1e-9, frames < 600 {
+            body.advance(direction: SIMD2(1, 0), speed: speed, seconds: 1.0 / 60, over: surfaces)
+            frames += 1
+        }
+        let climbing = Double(frames - atFoot) / 60
+        XCTAssertEqual(climbing, kit.floorHeight / speed, accuracy: 0.05,
+                       "the climb took \(climbing) s for \(kit.floorHeight) m at \(speed) m/s")
+    }
+
+    func testTheHeadRisesThroughTheHeightsRatherThanJumpingToTheTop() throws {
+        let surfaces = try stairs()
+        var body = snake(at: 1)
+        var heights: [Double] = []
+        for _ in 0..<120 {
+            body.advance(direction: SIMD2(1, 0), speed: 3.0, seconds: 1.0 / 60, over: surfaces)
+            heights.append(body.head.y)
+        }
+        // Something in between, which is what the tail follows up the stair.
+        let between = heights.filter { $0 > 1e-9 && $0 < kit.floorHeight - 1e-9 }
+        XCTAssertGreaterThan(between.count, 30, "the head went up in one jump")
+        XCTAssertEqual(try XCTUnwrap(heights.last), kit.floorHeight, accuracy: 1e-9)
+    }
+
+    func testAWallOnTheBalconyIsAWallAndNotALedge() throws {
+        // Found by walking the shipped map: the balcony's west edge is a wall
+        // standing on it, with open floor below. A drop that asked only what was
+        // underneath took the head through that wall and down (FR-SNAKE-010).
+        let world = try Launch.world().get()
+        let size = world.configurations.tuning.navigationGraphCellSize
+        let surfaces = Surfaces(graph: world.graph, kit: world.kit,
+                                tuning: world.configurations.tuning, map: world.map)
+        let wall = NavigationGraph.Node(floor: 1, x: 14, z: 12)
+        let beside = NavigationGraph.Node(floor: 1, x: 15, z: 12)
+        XCTAssertFalse(world.graph.isWalkable(wall), "the map changed: (14,12) is no longer a wall")
+        XCTAssertTrue(world.graph.isWalkable(NavigationGraph.Node(floor: 0, x: 14, z: 12)),
+                      "the map changed: there is no floor under that wall")
+
+        var body = Snake(head: SIMD3(Double(beside.x) * size, world.kit.floorHeight,
+                                     Double(beside.z) * size),
+                         floor: 1, segments: 4, segmentSpacing: 0.6)
+        for _ in 0..<60 {
+            body.advance(direction: SIMD2(-1, 0), speed: 3.0, seconds: 1.0 / 60, over: surfaces)
+        }
+        XCTAssertEqual(body.floor, 1, "the head went through the balcony's wall and fell")
+        XCTAssertEqual(body.head.y, world.kit.floorHeight, accuracy: 1e-9)
+
+        // And the way down is the stair it came up: this balcony is walled on the two
+        // sides that face the room and ends at the map's edge on the others, so with
+        // the wall holding, a one-way transition would make it a trap.
+        let stair = try XCTUnwrap(world.map.transitions.first)
+        var leaving = Snake(head: SIMD3(Double(stair.x) * size, world.kit.floorHeight,
+                                        Double(stair.z + 2) * size),
+                            floor: 1, segments: 4, segmentSpacing: 0.6)
+        for _ in 0..<180 {
+            leaving.advance(direction: SIMD2(0, -1), speed: 3.0, seconds: 1.0 / 60, over: surfaces)
+        }
+        XCTAssertEqual(leaving.floor, stair.from, "the balcony is a trap: the stair does not go down")
+        XCTAssertEqual(leaving.head.y, 0, accuracy: 1e-9)
     }
 
     func testAStairIsOnlyAWayUpFromBelow() throws {

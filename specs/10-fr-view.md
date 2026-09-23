@@ -40,9 +40,10 @@ tests: [Tests/CrawlCallTests/ScenePlanTests.swift]
 created: 2026-09-21
 ```
 
-While a match is running, the system **shall** keep the snake's head within the central region of the frame the view configuration defines, moving the camera as the head moves.
+While a match is running, the system **shall** keep the snake's head within the central region of the frame the view configuration defines, moving the camera as the head moves, except where that would show ground beyond the arena, where the camera stops at its edge.
 
 **Rationale.** Concept §3: the camera follows the snake.
+The exception is what a match starts in: the blockout's first cell is a corner, and a camera obeying the region alone put sixty-one per cent of the screen outside the map, measured on the device on 2026-09-22. Ground beyond the arena is nothing — there is no world there to draw — so a frame spent on it is a frame not spent on the room the player is in. A camera stopped at the edge lets the head leave the central region, which is the lesser of the two: the head is still on screen, and what surrounds it is the arena rather than the void.
 
 ### FR-VIEW-140 — A floor above the head is drawn see-through
 

@@ -130,7 +130,7 @@ final class SnakeEntityTests: XCTestCase {
         let start = try XCTUnwrap(Game.start(in: world))
         let cell = world.configurations.tuning.navigationGraphCellSize
         let surfaces = Surfaces(graph: world.graph, kit: world.kit,
-                                tuning: world.configurations.tuning)
+                                tuning: world.configurations.tuning, map: world.map)
         var snake = Snake(head: SIMD3(Double(start.x) * cell,
                                       Double(start.floor) * world.kit.floorHeight,
                                       Double(start.z) * cell),

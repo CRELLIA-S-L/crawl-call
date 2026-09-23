@@ -5,7 +5,7 @@
 // or a key: the schemes produce intents (FR-VIEW-050), the logic consumes them, and
 // neither knows about the other.
 //
-// implements: FR-VIEW-030, FR-SNAKE-030, FR-BOT-020, FR-SNAKE-070, INV-BOT-010
+// implements: FR-VIEW-030, FR-SNAKE-030, FR-BOT-020, FR-BOT-150, FR-SNAKE-070, INV-BOT-010
 import Foundation
 
 struct Game {
@@ -22,7 +22,7 @@ struct Game {
 
     init(world: World, start: NavigationGraph.Node) {
         self.world = world
-        self.surfaces = Surfaces(graph: world.graph, kit: world.kit, tuning: world.configurations.tuning)
+        self.surfaces = Surfaces(graph: world.graph, kit: world.kit, tuning: world.configurations.tuning, map: world.map)
         let cell = world.configurations.tuning.navigationGraphCellSize
         self.snake = Snake(head: SIMD3(Double(start.x) * cell,
                                        Double(start.floor) * world.kit.floorHeight,

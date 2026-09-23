@@ -51,7 +51,8 @@ final class GameSession {
                                 inside: game.world.configurations.view.centralRegion,
                                 from: focus,
                                 distance: distance,
-                                fieldOfViewDegrees: fieldOfView)
+                                fieldOfViewDegrees: fieldOfView,
+                                within: game.world.plan.bounds)
         SceneView.place(camera, lookingAt: focus, pitchDegrees: game.world.configurations.view.cameraPitch,
                         distance: distance)
         // After the camera has moved, not before: what hides the snake is judged from

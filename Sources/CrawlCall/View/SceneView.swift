@@ -101,17 +101,33 @@ enum SceneView {
                       inside region: ViewConfiguration.CentralRegion,
                       from focus: SIMD3<Double>,
                       distance: Double,
-                      fieldOfViewDegrees: Double) -> SIMD3<Double> {
+                      fieldOfViewDegrees: Double,
+                      within arena: ScenePlan.Bounds) -> SIMD3<Double> {
         let span = groundSpan(distance: distance, fieldOfViewDegrees: fieldOfViewDegrees)
         let halfX = span * region.width / 2
         let halfZ = span * region.height / 2
         var moved = focus
         moved.x = min(max(focus.x, head.x - halfX), head.x + halfX)
         moved.z = min(max(focus.z, head.z - halfZ), head.z + halfZ)
+        // And then no further than the arena: ground past its edge is nothing at all,
+        // and a match that begins in a corner spends most of the screen on it
+        // (FR-VIEW-020). The window is taken as the vertical span on both axes, the
+        // same conservative measure the region above uses and for the same reason —
+        // this layer does not know the frame's aspect.
+        moved.x = stopped(moved.x, half: span / 2, between: arena.lowest.x, and: arena.highest.x)
+        moved.z = stopped(moved.z, half: span / 2, between: arena.lowest.z, and: arena.highest.z)
         // Height follows the head outright: a floor change is not something to lag
         // behind, or the snake leaves the frame downwards.
         moved.y = head.y
         return moved
+    }
+
+    /// Keeps a window of `2 * half` inside the range, or centres it where the range
+    /// is narrower than the window and nothing can keep it inside.
+    private static func stopped(_ value: Double, half: Double,
+                                between low: Double, and high: Double) -> Double {
+        guard high - low > 2 * half else { return (low + high) / 2 }
+        return min(max(value, low + half), high - half)
     }
 
     /// The camera that looks at a focus point from the fixed pitch.

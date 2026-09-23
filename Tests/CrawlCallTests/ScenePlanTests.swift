@@ -309,6 +309,10 @@ final class CameraFollowTests: XCTestCase {
     private var halfZone: Double {
         SceneView.groundSpan(distance: distance, fieldOfViewDegrees: fov) * 0.4 / 2
     }
+    /// An arena wider than anything these tests walk, so that the rule under test is
+    /// the central region and not the edge the camera stops at.
+    private let open = ScenePlan.Bounds(lowest: SIMD3(-1000, 0, -1000),
+                                        highest: SIMD3(1000, 0, 1000))
 
     func testTheGroundSpanFollowsFromTheFieldOfView() {
         // Two sides of a triangle: half the span over the distance is tan(fov / 2).
@@ -320,7 +324,7 @@ final class CameraFollowTests: XCTestCase {
         let focus = SIMD3(0.0, 0.0, 0.0)
         let head = SIMD3(halfZone * 0.5, 0.0, 0.0)
         let moved = SceneView.focus(keeping: head, inside: region, from: focus,
-                                    distance: distance, fieldOfViewDegrees: fov)
+                                    distance: distance, fieldOfViewDegrees: fov, within: open)
         XCTAssertEqual(moved.x, focus.x, accuracy: 1e-9)
         XCTAssertEqual(moved.z, focus.z, accuracy: 1e-9)
     }
@@ -329,7 +333,7 @@ final class CameraFollowTests: XCTestCase {
         let focus = SIMD3(0.0, 0.0, 0.0)
         let head = SIMD3(halfZone + 3, 0.0, 0.0)
         let moved = SceneView.focus(keeping: head, inside: region, from: focus,
-                                    distance: distance, fieldOfViewDegrees: fov)
+                                    distance: distance, fieldOfViewDegrees: fov, within: open)
         // The head ends up on the boundary, not in the middle: the picture moves as
         // little as it can.
         XCTAssertEqual(head.x - moved.x, halfZone, accuracy: 1e-9)
@@ -342,18 +346,43 @@ final class CameraFollowTests: XCTestCase {
             head.x += 0.31
             head.z += 0.17
             focus = SceneView.focus(keeping: head, inside: region, from: focus,
-                                    distance: distance, fieldOfViewDegrees: fov)
+                                    distance: distance, fieldOfViewDegrees: fov, within: open)
             XCTAssertLessThanOrEqual(abs(head.x - focus.x), halfZone + 1e-9)
             XCTAssertLessThanOrEqual(abs(head.z - focus.z), halfZone + 1e-9)
         }
         XCTAssertGreaterThan(focus.x, 0)      // it did follow
     }
 
+    func testTheCameraStopsAtTheArenasEdgeRatherThanShowingTheVoid() {
+        // A match begins in a corner: obeying the region alone would centre the
+        // picture on the head and spend half the screen on ground that is not there.
+        let span = SceneView.groundSpan(distance: distance, fieldOfViewDegrees: fov)
+        let arena = ScenePlan.Bounds(lowest: SIMD3(0, 0, 0), highest: SIMD3(span * 3, 0, span * 3))
+        let corner = SIMD3(0.0, 0.0, 0.0)
+        let moved = SceneView.focus(keeping: corner, inside: region, from: corner,
+                                    distance: distance, fieldOfViewDegrees: fov, within: arena)
+        XCTAssertGreaterThanOrEqual(moved.x, arena.lowest.x + span / 2 - 1e-9)
+        XCTAssertGreaterThanOrEqual(moved.z, arena.lowest.z + span / 2 - 1e-9)
+        // And it stops, rather than centring on the arena: the head is still what the
+        // camera is about.
+        XCTAssertLessThan(moved.x, arena.centre.x)
+    }
+
+    func testAnArenaNarrowerThanTheFrameIsCentredInIt() {
+        let span = SceneView.groundSpan(distance: distance, fieldOfViewDegrees: fov)
+        let small = ScenePlan.Bounds(lowest: SIMD3(2, 0, 2), highest: SIMD3(2 + span / 2, 0, 2 + span / 2))
+        let head = SIMD3(2.0, 0.0, 2.0)
+        let moved = SceneView.focus(keeping: head, inside: region, from: head,
+                                    distance: distance, fieldOfViewDegrees: fov, within: small)
+        XCTAssertEqual(moved.x, small.centre.x, accuracy: 1e-9)
+        XCTAssertEqual(moved.z, small.centre.z, accuracy: 1e-9)
+    }
+
     func testTheCameraFollowsAFloorChangeAtOnce() {
         let focus = SIMD3(0.0, 0.0, 0.0)
         let head = SIMD3(0.0, 3.0, 0.0)
         let moved = SceneView.focus(keeping: head, inside: region, from: focus,
-                                    distance: distance, fieldOfViewDegrees: fov)
+                                    distance: distance, fieldOfViewDegrees: fov, within: open)
         XCTAssertEqual(moved.y, 3.0, accuracy: 1e-9)
     }
 

@@ -17,8 +17,15 @@ struct Surfaces {
     let stepHeight: Double
     /// The steepest slope the head may take, read for the same reason.
     let slopeAngle: Double
+    /// The cells something stands in that the head cannot walk through. The graph
+    /// cannot tell these from thin air — both are simply not walkable — and the
+    /// difference is the whole of it: air is a ledge to drop from, a wall is a wall
+    /// (FR-SNAKE-010).
+    private let occupied: Set<NavigationGraph.Node>
 
-    init(graph: NavigationGraph, kit: Kit, tuning: TuningConfiguration) {
+    init(graph: NavigationGraph, kit: Kit, tuning: TuningConfiguration, map: MapSpecification) {
+        self.occupied = Set(map.placements.filter { !$0.walkable }
+            .map { NavigationGraph.Node(floor: $0.floor, x: $0.x, z: $0.z) })
         self.graph = graph
         self.cellSize = tuning.navigationGraphCellSize
         self.floorHeight = kit.floorHeight
@@ -43,6 +50,17 @@ struct Surfaces {
         graph.isWalkable(cell(of: position, floor: floor))
     }
 
+    /// The floor a declared transition leads down to from this cell, if there is one.
+    /// A transition is an edge and an edge has two ends: the bots walk it either way
+    /// and so does the snake, which is what keeps a balcony from being a trap.
+    func descent(at position: SIMD3<Double>, from floor: Int) -> Int? {
+        let here = cell(of: position, floor: floor)
+        return graph.neighbours(of: here)
+            .filter { $0.x == here.x && $0.z == here.z && $0.floor < floor }
+            .map(\.floor)
+            .max()
+    }
+
     /// The floor a declared transition leads up to from this cell, if there is one.
     /// A transition is an edge of the graph between the same cell on two floors
     /// (FR-MAP-020), which is what a map's `transition` line becomes — so the stairs
@@ -60,6 +78,10 @@ struct Surfaces {
     /// walkable at the same place and no further down than the tuning allows
     /// (FR-SNAKE-220). Nil where there is nothing to land on within reach.
     func landing(below position: SIMD3<Double>, from floor: Int) -> Int? {
+        // A ledge is where nothing stands. Walking into a wall with an open floor
+        // beneath it is walking into a wall, not stepping off an edge — and without
+        // this the head drops through the balcony's own walls.
+        guard !occupied.contains(cell(of: position, floor: floor)) else { return nil }
         var candidate = floor - 1
         while elevation(of: floor) - elevation(of: candidate) <= maximumDropHeight {
             if graph.isWalkable(cell(of: position, floor: candidate)) { return candidate }
