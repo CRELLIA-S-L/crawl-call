@@ -5,7 +5,7 @@
 // or a key: the schemes produce intents (FR-VIEW-050), the logic consumes them, and
 // neither knows about the other.
 //
-// implements: FR-VIEW-030, FR-SNAKE-030, FR-BOT-020, FR-BOT-150, FR-SNAKE-060, FR-SNAKE-070, FR-SNAKE-090, INV-BOT-010
+// implements: FR-VIEW-030, FR-VIEW-170, FR-SNAKE-030, FR-BOT-020, FR-BOT-150, FR-SNAKE-060, FR-SNAKE-070, FR-SNAKE-090, INV-BOT-010
 import Foundation
 
 struct Game {
@@ -21,6 +21,8 @@ struct Game {
     private var slots = Slots()
     /// The meal under way, if there is one (FR-SNAKE-090).
     private(set) var eating: Eating?
+    /// The shots still being drawn, each with what is left of its time (FR-VIEW-170).
+    private(set) var shots: [Shot] = []
 
     init(world: World, start: NavigationGraph.Node) {
         self.world = world
@@ -120,12 +122,20 @@ struct Game {
         let body = [snake.head] + snake.tail
         Perception.notice(&bots, snake: body, plan: world.plan,
                           configuration: world.configurations.bot)
+        // Aged before this frame's shots are added, so that a shot fired now is drawn
+        // for its whole period and not for that period less one frame.
+        shots = shots.compactMap { shot in
+            var aged = shot
+            aged.left -= seconds
+            return aged.left > 0 ? aged : nil
+        }
         let steps = slots.steps(after: seconds, period: world.configurations.bot.deliberationPeriod)
         for _ in 0..<steps {
             let holders = slots.next(among: bots, snake: body, configuration: world.configurations.bot)
-            let damage = Execution.deliberate(&bots, slots: holders, snake: body, world: world)
-            if damage > 0 {
-                snake.take(damage: damage, perSegment: world.configurations.snake.damagePerSegment)
+            let volley = Execution.deliberate(&bots, slots: holders, snake: body, world: world)
+            shots += volley.shots
+            if volley.damage > 0 {
+                snake.take(damage: volley.damage, perSegment: world.configurations.snake.damagePerSegment)
             }
         }
         // Whatever is being eaten stays where it is: it resists by shooting, not by

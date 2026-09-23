@@ -11,9 +11,12 @@
 // numbers an interface names (IF-BOT-010) and none for these. They sit here as
 // named constants rather than as magic numbers in expressions, said out loud: when
 // the maintainer wants to tune the mix, this table moves into the bot configuration
-// and the interface requirement gains a line.
+// and the interface requirement gains a line. One number has already made that move —
+// how much an unhurt bot fears the snake (FR-BOT-210), which is what decides whether
+// an archetype holds its ground or bolts, and is therefore read from the
+// configuration rather than from here.
 //
-// implements: FR-BOT-080, FR-BOT-090, FR-BOT-200
+// implements: FR-BOT-080, FR-BOT-090, FR-BOT-118, FR-BOT-200, FR-BOT-210
 import Foundation
 
 enum Deliberation {
@@ -75,11 +78,13 @@ enum Deliberation {
                            Term.threat * closeness * handy * (Term.wounded - health / 2) * bot.weights.panic))
         }
 
-        // Flight: the same fear, spent on distance rather than on a wall.
+        // Flight: the same fear, spent on distance rather than on a wall. A whole bot
+        // is afraid too (FR-BOT-210) — the fear of a wound already taken is what a
+        // wound adds, not the whole of what there is to be afraid of.
         if let nearest, let away = away(from: nearest.point, for: bot, in: situation) {
             let closeness = nearness(nearest.metres, within: entry.detectionRange)
-            scored.append((.flee(to: away),
-                           Term.threat * closeness * (Term.wounded - health) * bot.weights.panic))
+            let fear = situation.configuration.fearWhenUnhurt + (Term.wounded - health)
+            scored.append((.flee(to: away), Term.threat * closeness * fear * bot.weights.panic))
         }
 
         // An order to obey is the one thing discipline scales; without a commander
@@ -166,17 +171,39 @@ enum Deliberation {
         return nil
     }
 
-    /// The reachable cell within the search distance that puts the most ground
-    /// between the bot and what it is running from.
+    /// The cell within the search distance that puts the most ground between the bot
+    /// and what it is running from, out of those it can actually get to.
+    ///
+    /// Walked outwards over the graph, as cover is (FR-BOT-118): a spot picked by how
+    /// far away it lies can be on the other side of a wall, and a bot that sets off
+    /// for one and then stops is the standing still concept §9.2 calls the signature
+    /// stupidity. Walking the graph makes the answer reachable by construction rather
+    /// than by a second test afterwards.
     static func away(from danger: SIMD3<Double>, for bot: Bot,
                      in situation: Situation) -> NavigationGraph.Node? {
         let reach = coverSearch(situation.configuration)
+        let here = NavigationGraph.Node(floor: bot.floor,
+                                        x: Int((bot.position.x / situation.cellSize).rounded()),
+                                        z: Int((bot.position.z / situation.cellSize).rounded()))
+        guard situation.graph.isWalkable(here) else { return nil }
+
+        var seen: Set<NavigationGraph.Node> = [here]
+        var queue = [here]
+        var index = 0
         var best: (NavigationGraph.Node, Double)?
-        for node in situation.graph.nodes where node.floor == bot.floor {
+        while index < queue.count {
+            let node = queue[index]
+            index += 1
             let there = centre(of: node, in: situation)
+            // Out of reach is also as far as the walk goes: what lies beyond is only
+            // approached through cells the bot would have to cross to get there.
             guard Perception.metres(bot.position, there) <= reach else { continue }
             let gained = Perception.metres(there, danger)
             if best == nil || gained > best!.1 { best = (node, gained) }
+            for next in situation.graph.neighbours(of: node).sorted(by: order)
+            where next.floor == bot.floor && seen.insert(next).inserted {
+                queue.append(next)
+            }
         }
         guard let best, best.1 > Perception.metres(bot.position, danger) else { return nil }
         return best.0

@@ -4,7 +4,7 @@
 // The arena is built here rather than loaded, so that what is in the way, where the
 // cover is and how far the snake stands are all known quantities.
 //
-// verifies: FR-BOT-080, FR-BOT-090, FR-BOT-200
+// verifies: FR-BOT-080, FR-BOT-090, FR-BOT-118, FR-BOT-200, FR-BOT-210
 import XCTest
 @testable import CrawlCall
 
@@ -113,14 +113,16 @@ final class DeliberationTests: XCTestCase {
         var situation = try arena("..........")
         situation.snake = [at(4, 0)]
         var whole = try bot(.scout, at: 1, 0)
-        whole.weights = weights(panic: 0.9)
+        // Panic low enough that the standing fear of FR-BOT-210 does not by itself
+        // outrank shooting: what is under test here is the wound, not the panic.
+        whole.weights = weights(panic: 0.3)
         XCTAssertEqual(Deliberation.choose(for: whole, in: situation).map(isFire), true)
 
         var wounded = whole
         wounded.health = 5
         let choice = try XCTUnwrap(Deliberation.choose(for: wounded, in: situation))
         XCTAssertTrue(isFlight(choice) || isCover(choice),
-                      "a bot at five health with panic 0.9 chose \(choice)")
+                      "a bot at five health with panic 0.3 chose \(choice)")
     }
 
     func testTheSnakesPositionMovesTheChoice() throws {
@@ -165,6 +167,79 @@ final class DeliberationTests: XCTestCase {
         XCTAssertGreaterThan(handy, distant)
     }
 
+    // MARK: where a flight goes (FR-BOT-118)
+
+    func testABotFleesToACellItCanGetTo() throws {
+        // A wall across the corridor, with the snake behind the bot: everything on the
+        // far side of it lies further from the snake and is worth more to a bot that
+        // measures the distance across the map instead of along it.
+        var cut = try arena("...#........")
+        cut.snake = [at(0, 0)]
+        let bot = try bot(.assault, at: 1, 0)
+
+        let flight = try XCTUnwrap(Deliberation.scores(for: bot, in: cut).first { isFlight($0.action) })
+        guard case .flee(let node) = flight.action else { return XCTFail("not a flight") }
+        let here = NavigationGraph.Node(floor: 0, x: 1, z: 0)
+        XCTAssertFalse(Route.between(here, node, in: cut.graph).isEmpty,
+                       "the bot set off for a cell with no route to it")
+    }
+
+    func testABotWithNowhereToGoDoesNotFlee() throws {
+        // Walled in on every side: there is no cell it can get to, so it is not sent
+        // to one — the other half of the same rule.
+        var boxed = try arena("#####",
+                              "#.###",
+                              "#####")
+        boxed.snake = [at(4, 1)]
+        let bot = try bot(.assault, at: 1, 1)
+
+        XCTAssertNil(utility(of: isFlight, for: bot, in: boxed))
+    }
+
+    // MARK: fear that does not wait for a wound (FR-BOT-210)
+
+    func testAWholeBotStillWantsToRunFromANearSnake() throws {
+        // The bot is untouched and the snake is two cells away. Before this rule the
+        // urge to run was the fear of a wound already taken, which is nothing at all
+        // while the bot is whole — and nothing but the snake's mouth ever wounds one.
+        var close = try arena("..........")
+        close.snake = [at(2, 0)]
+        let bot = try bot(.assault, at: 0, 0)
+
+        let urge = try XCTUnwrap(utility(of: isFlight, for: bot, in: close))
+        XCTAssertGreaterThan(urge, 0)
+    }
+
+    func testTheNearerTheSnakeTheStrongerTheUrgeToRun() throws {
+        // The bot stands in the middle of the room in both arenas: in a corner, with
+        // the snake between it and the rest of the floor, there is nowhere further to
+        // go and no flight is scored at all — which is a different rule (FR-BOT-118)
+        // and would have made this one look satisfied for the wrong reason.
+        var near = try arena("....................")
+        near.snake = [at(8, 0)]
+        var far = try arena("....................")
+        far.snake = [at(2, 0)]
+        let bot = try bot(.assault, at: 10, 0)
+
+        let pressing = try XCTUnwrap(utility(of: isFlight, for: bot, in: near))
+        let distant = try XCTUnwrap(utility(of: isFlight, for: bot, in: far))
+        XCTAssertGreaterThan(pressing, distant)
+    }
+
+    func testAWoundAddsToTheFearRatherThanBeingAllOfIt() throws {
+        // Both halves have to be there: the wound still counts, and it counts on top
+        // of the fear rather than instead of it.
+        var arena = try arena("..........")
+        arena.snake = [at(2, 0)]
+        let whole = try bot(.assault, at: 0, 0)
+        var hurt = whole
+        hurt.health /= 2
+
+        let steady = try XCTUnwrap(utility(of: isFlight, for: whole, in: arena))
+        let shaken = try XCTUnwrap(utility(of: isFlight, for: hurt, in: arena))
+        XCTAssertGreaterThan(shaken, steady)
+    }
+
     // MARK: personality multiplies (FR-BOT-090)
 
     func testAggressionScalesAttackAndPanicScalesThreat() throws {
@@ -183,9 +258,13 @@ final class DeliberationTests: XCTestCase {
         let threat = try XCTUnwrap(utility(of: isCover, for: calm, in: situation))
         XCTAssertGreaterThan(try XCTUnwrap(utility(of: isCover, for: frightened, in: situation)), threat)
         // And the weights decide the choice, not only the number: the same bot in the
-        // same spot fires when it is aggressive and hides when it is frightened.
+        // same spot fires when it is aggressive, and when it is frightened it answers
+        // the threat instead — behind a wall or with its feet, which of the two being
+        // FR-BOT-210's business rather than this requirement's.
         XCTAssertEqual(Deliberation.choose(for: fierce, in: situation).map(isFire), true)
-        XCTAssertEqual(Deliberation.choose(for: frightened, in: situation).map(isCover), true)
+        let scared = try XCTUnwrap(Deliberation.choose(for: frightened, in: situation))
+        XCTAssertTrue(isCover(scared) || isFlight(scared),
+                      "a bot with panic 0.9 and aggression 0.2 chose \(scared)")
     }
 
     func testDisciplineScalesObedienceAndSelfSacrificeScalesHealing() throws {

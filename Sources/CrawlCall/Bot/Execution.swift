@@ -9,16 +9,23 @@
 // rather than an accident: no requirement gives a weapon a rate of fire, and
 // inventing one would put a number in this file that no interface carries.
 //
-// implements: FR-BOT-060, INV-BOT-010, FR-BOT-165
+// implements: FR-BOT-060, FR-VIEW-170, INV-BOT-010, FR-BOT-165
 import Foundation
 
 enum Execution {
-    /// One deliberation step: the bots holding a slot choose, and a bot whose choice
-    /// is to fire fires once. Returns the damage dealt to the snake, which the caller
-    /// applies, because the snake is not the bots' to change.
-    static func deliberate(_ bots: inout [Bot], slots: [Int], snake: [SIMD3<Double>],
-                           world: World) -> Double {
+    /// What one deliberation step did: the damage the snake takes, and the shots that
+    /// dealt it, to be drawn where they went (FR-VIEW-170).
+    struct Volley: Equatable {
         var damage = 0.0
+        var shots: [Shot] = []
+    }
+
+    /// One deliberation step: the bots holding a slot choose, and a bot whose choice
+    /// is to fire fires once. The damage is returned rather than applied, because the
+    /// snake is not the bots' to change.
+    static func deliberate(_ bots: inout [Bot], slots: [Int], snake: [SIMD3<Double>],
+                           world: World) -> Volley {
+        var volley = Volley()
         for id in slots {
             guard let index = bots.firstIndex(where: { $0.id == id }) else { continue }
             guard let entry = world.configurations.bot.archetypes[bots[index].archetype.rawValue] else { continue }
@@ -39,7 +46,12 @@ enum Execution {
                 guard bots[index].ammunition > 0,
                       Sight.isClear(from: bots[index].position, to: point, through: world.plan) else { break }
                 bots[index].ammunition -= 1
-                damage += entry.weaponDamage
+                volley.damage += entry.weaponDamage
+                // Drawn for one deliberation period, which is also how long it is
+                // until this bot may fire again (FR-VIEW-170).
+                volley.shots.append(Shot(from: bots[index].position, to: point,
+                                         squad: bots[index].squad,
+                                         left: world.configurations.bot.deliberationPeriod))
             case .reload:
                 bots[index].ammunition = entry.magazine
             case .takeCover, .flee, .moveToOrderedZone:
@@ -50,7 +62,7 @@ enum Execution {
                 break
             }
         }
-        return damage
+        return volley
     }
 
     /// One frame: every bot walks what is left of its route.

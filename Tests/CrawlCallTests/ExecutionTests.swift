@@ -175,10 +175,10 @@ final class ExecutionTests: XCTestCase {
         let target = SIMD3(Double(here.x) * cell + cell, 0, Double(here.z) * cell)
         let before = bots[0].ammunition
 
-        let damage = Execution.deliberate(&bots, slots: [0], snake: [target], world: world)
+        let volley = Execution.deliberate(&bots, slots: [0], snake: [target], world: world)
         let entry = try XCTUnwrap(world.configurations.bot.archetypes[Archetype.assault.rawValue])
         XCTAssertEqual(bots[0].action, .fire(at: .snake(at: target)))
-        XCTAssertEqual(damage, entry.weaponDamage)
+        XCTAssertEqual(volley.damage, entry.weaponDamage)
         XCTAssertEqual(bots[0].ammunition, before - 1)
     }
 
@@ -188,7 +188,7 @@ final class ExecutionTests: XCTestCase {
         let cell = world.configurations.tuning.navigationGraphCellSize
         var bots = [try bot(0, at: here, in: world)]
         let target = SIMD3(Double(here.x) * cell + cell, 0, Double(here.z) * cell)
-        XCTAssertEqual(Execution.deliberate(&bots, slots: [0], snake: [target], world: world), 0)
+        XCTAssertEqual(Execution.deliberate(&bots, slots: [0], snake: [target], world: world).damage, 0)
         XCTAssertNil(bots[0].action)
     }
 
@@ -200,7 +200,7 @@ final class ExecutionTests: XCTestCase {
         bots[0].knowsSnake = true
         bots[0].ammunition = 0
         let target = SIMD3(Double(here.x) * cell + cell, 0, Double(here.z) * cell)
-        XCTAssertEqual(Execution.deliberate(&bots, slots: [0], snake: [target], world: world), 0)
+        XCTAssertEqual(Execution.deliberate(&bots, slots: [0], snake: [target], world: world).damage, 0)
         XCTAssertEqual(bots[0].action, .reload)
         XCTAssertEqual(bots[0].ammunition,
                        try XCTUnwrap(world.configurations.bot.archetypes[Archetype.assault.rawValue]).magazine)

@@ -16,9 +16,11 @@ owner: @alex_v
 impact: the whole project; nothing downstream survives a refutation
 ```
 
-Of five people handed the stage-1 build (one grey blockout, four utility-AI bots, no LLM) without explanation, at least two keep playing past the second minute and name something concrete they wanted to do next. Measured by watching the session and one question afterwards.
+Of five people handed the stage-1 build (one grey blockout of two floors joined by a stair, two squads of four utility-AI bots, no LLM) without explanation, at least two keep playing past the second minute and name something concrete they wanted to do next. Measured by watching the session and one question afterwards.
 
 **Rationale.** Concept §13 stage 1, §16.2 H1. Threshold is the concept's "three of five quit before minute two" inverted into the register's grammar: the proportion who stay.
+The build carries two squads of four where the concept's stage 1 describes four bots, and the description is brought to what was built rather than the build to the description: the second squad was needed to place the first at a distance from it, no damage passes between bots yet, and both squads are prey exactly as one would be.
+What the second squad is *for* — two sides fighting each other while the snake waits — is stage 3 and is not what this measures.
 
 ### H-020 — Multi-level maps change the hunt, not decorate it
 

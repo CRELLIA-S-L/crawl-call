@@ -188,6 +188,8 @@ While a bot is on screen, the system **shall** show its squad through its body c
 
 **Rationale.** Concept §2: the player decides whom to eat from the balance of power, and if the sides are confused the whole strategic layer fails; three channels because one of them is always occluded or out of frame.
 
+**Partial, and how.** Two of the three channels are built: the body is drawn in its squad's colour, and so is the line of every shot it fires (FR-VIEW-170). The silhouette of the equipment is the third and waits on the archetype models (FR-VIEW-070) — a grey box has no equipment to show.
+
 ### FR-VIEW-070 — Archetype is readable from the silhouette
 
 ```yaml
@@ -282,6 +284,47 @@ While the snake moves, the system **shall** deform its body — flattening in a 
 
 **Rationale.** Concept §2: squash and stretch is the snake's home ground.
 Three deformations, one continuous act of drawing the body; a test of "the body deforms" that checked only one would not be this requirement.
+Held over on 2026-09-23 until the game is drawn with something better than the blockout: on a chain of spheres two of the three would be deformations nobody can see, and the third has nothing to read, since the snake keeps one speed until the dash of FR-SNAKE-130 gives it a second.
+
+### FR-VIEW-170 — A shot is drawn where it went
+
+```yaml
+status: implemented
+verification: T
+derives_from: [FR-BOT-060]
+depends_on: [IF-BOT-010, FR-VIEW-060]
+refines: []
+conflicts_with: []
+code: [Sources/CrawlCall/Bot/Shot.swift, Sources/CrawlCall/Bot/Execution.swift, Sources/CrawlCall/Game.swift, Sources/CrawlCall/View/ShotEntity.swift, Sources/CrawlCall/GameSession.swift]
+tests: [Tests/CrawlCallTests/ShotTests.swift]
+created: 2026-09-23
+```
+
+When a bot fires, the system **shall** draw a line from it to the point it aimed at, for the deliberation period of the bot configuration.
+
+**Rationale.** Played on the device on 2026-09-23: bots were firing and the snake was losing segments, and nothing on screen said so — the only sign of being shot at was a tail that had grown shorter, which is a thing a player counts rather than feels. Danger that leaves no trace is danger nobody takes.
+The line is what the model already has: a shot lands in the step it is fired (FR-BOT-060), there is no projectile to follow, and where it came from and where it went is the whole of what happened.
+It lasts the deliberation period because that is the cadence of fire: one line a shot, gone by the time the next is due, so that the number of lines on screen is the number of shots being fired and not a decoration that accumulates.
+
+### FR-VIEW-180 — The tail on screen is as long as the tail
+
+```yaml
+status: implemented
+verification: T
+derives_from: [FR-SNAKE-060]
+depends_on: [FR-SNAKE-020]
+refines: []
+conflicts_with: []
+code: [Sources/CrawlCall/View/SnakeEntity.swift, Sources/CrawlCall/GameSession.swift]
+tests: [Tests/CrawlCallTests/GameTests.swift]
+created: 2026-09-23
+```
+
+While the snake is on screen, the system **shall** draw one body at every point the tail lays down.
+
+**Rationale.** Found in play on 2026-09-23: a snake that had been shot down to nothing and then ate looked as though it had been restored to its starting length, and the truth was the other way round — the model had grown past that length and the screen could not show it. The bodies were made once, at the count the match starts with, and eating changed a number nobody could see.
+FR-SNAKE-060 is then true and invisible, which is the worst of the two ways to be wrong: the player is shown a snake that stopped rewarding them for eating.
+"Every point the tail lays down" and not "every segment the snake has": a tail longer than the trail behind it has nowhere to put its last segments, and where the model puts nothing the screen draws nothing.
 
 ## Interface
 

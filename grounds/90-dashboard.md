@@ -123,44 +123,47 @@ Counted by quarter, which is what `period` says in the register's configuration.
 
 | quarter | arrived unclaimed | areas |
 |---|---|---|
-| 2026-Q3 | 108 | BOT 20, MAP 11, PERF 4, PUB 12, SCORE 7, SNAKE 20, TOOL 16, VIEW 18 |
+| 2026-Q3 | 112 | BOT 22, MAP 11, PERF 4, PUB 12, SCORE 7, SNAKE 20, TOOL 16, VIEW 20 |
 
 ## Requirements resting on no hypothesis
 
-108 of 179 requirements. Weight is what stands on them: how many
+112 of 183 requirements. Weight is what stands on them: how many
 requirements link to them, plus how many files their `code` field names.
 
 | Requirement | Incoming | Code files | Weight |
 |---|---|---|---|
-| FR-BOT-080 | 20 | 1 | 21 |
+| FR-BOT-080 | 22 | 1 | 23 |
 | IF-SNAKE-010 | 12 | 5 | 17 |
+| IF-BOT-010 | 6 | 5 | 11 |
 | FR-SNAKE-110 | 10 | 0 | 10 |
 | IF-MAP-020 | 5 | 5 | 10 |
 | IF-VIEW-020 | 5 | 5 | 10 |
-| IF-BOT-010 | 4 | 5 | 9 |
+| FR-MAP-020 | 7 | 2 | 9 |
 | FR-BOT-010 | 7 | 1 | 8 |
-| FR-MAP-020 | 6 | 2 | 8 |
 | FR-SNAKE-090 | 6 | 2 | 8 |
+| FR-BOT-050 | 3 | 3 | 6 |
 | FR-MAP-030 | 6 | 0 | 6 |
 | FR-SCORE-010 | 6 | 0 | 6 |
+| FR-SNAKE-060 | 4 | 2 | 6 |
 | FR-TOOL-020 | 4 | 2 | 6 |
 | FR-VIEW-010 | 5 | 1 | 6 |
 | IF-MAP-010 | 5 | 1 | 6 |
 | IF-VIEW-010 | 5 | 1 | 6 |
 | FR-BOT-030 | 4 | 1 | 5 |
-| FR-BOT-050 | 2 | 3 | 5 |
 | FR-BOT-150 | 3 | 2 | 5 |
 | FR-BOT-160 | 4 | 1 | 5 |
-| FR-SNAKE-060 | 3 | 2 | 5 |
 | FR-SNAKE-070 | 3 | 2 | 5 |
 | FR-VIEW-030 | 2 | 3 | 5 |
+| FR-VIEW-060 | 2 | 3 | 5 |
+| FR-VIEW-170 | 0 | 5 | 5 |
+| FR-BOT-200 | 2 | 2 | 4 |
 | FR-MAP-100 | 2 | 2 | 4 |
 | FR-VIEW-050 | 1 | 3 | 4 |
-| FR-VIEW-060 | 1 | 3 | 4 |
 | FR-VIEW-150 | 0 | 4 | 4 |
 | NFR-PERF-010 | 4 | 0 | 4 |
 | NFR-PERF-050 | 4 | 0 | 4 |
 | CON-PUB-010 | 3 | 0 | 3 |
+| FR-BOT-060 | 2 | 1 | 3 |
 | FR-BOT-165 | 1 | 2 | 3 |
 | FR-SNAKE-030 | 1 | 2 | 3 |
 | FR-SNAKE-100 | 2 | 1 | 3 |
@@ -174,16 +177,17 @@ requirements link to them, plus how many files their `code` field names.
 | CON-PUB-070 | 2 | 0 | 2 |
 | CON-PUB-080 | 2 | 0 | 2 |
 | FR-BOT-040 | 2 | 0 | 2 |
-| FR-BOT-060 | 1 | 1 | 2 |
 | FR-BOT-090 | 1 | 1 | 2 |
 | FR-BOT-100 | 2 | 0 | 2 |
-| FR-BOT-200 | 0 | 2 | 2 |
 | FR-VIEW-100 | 0 | 2 | 2 |
+| FR-VIEW-180 | 0 | 2 | 2 |
 | INV-BOT-010 | 0 | 2 | 2 |
 | CON-PUB-040 | 1 | 0 | 1 |
 | CON-PUB-050 | 1 | 0 | 1 |
 | FR-BOT-070 | 1 | 0 | 1 |
+| FR-BOT-118 | 0 | 1 | 1 |
 | FR-BOT-120 | 1 | 0 | 1 |
+| FR-BOT-210 | 0 | 1 | 1 |
 | FR-MAP-050 | 1 | 0 | 1 |
 | FR-MAP-060 | 1 | 0 | 1 |
 | FR-SNAKE-080 | 1 | 0 | 1 |

@@ -10,10 +10,10 @@ What each part of this project is, what it carries and what state it is in.
 | **E-020** Start-up and configuration | `built` | `Sources/CrawlCall/Config`, `Sources/CrawlCall/Launch.swift`, `Sources/CrawlCall/CrawlCallApp.swift` | **IF-SNAKE-010**, **IF-MAP-020**, **IF-VIEW-020**, **IF-BOT-010** (4 realized) |
 | **E-030** The input contract | `built` | `Sources/CrawlCall/Input` | **IF-VIEW-010**, **FR-VIEW-050** (2 realized) |
 | **E-040** The map layer | `built` | `Sources/CrawlCall/Map`, `maps/blockout.map`, `ATTRIBUTION.md` | **IF-MAP-010**, **FR-TOOL-010**, **FR-TOOL-020**, **FR-TOOL-030**, **FR-MAP-010**, **FR-MAP-020**, **FR-MAP-100**, **FR-MAP-090** (8 realized) |
-| **E-050** The view | `built` | `Sources/CrawlCall/View` | **FR-VIEW-010**, **FR-VIEW-130**, **FR-VIEW-020**, **FR-VIEW-060**, **FR-VIEW-100**, **FR-VIEW-120**, **FR-VIEW-140**, **FR-VIEW-150**, **FR-VIEW-160** (9 realized) |
+| **E-050** The view | `built` | `Sources/CrawlCall/View` | **FR-VIEW-010**, **FR-VIEW-130**, **FR-VIEW-020**, **FR-VIEW-060**, **FR-VIEW-100**, **FR-VIEW-120**, **FR-VIEW-140**, **FR-VIEW-150**, **FR-VIEW-160**, **FR-VIEW-170**, **FR-VIEW-180** (11 realized) |
 | **E-060** The snake | `built` | `Sources/CrawlCall/Snake` | **FR-SNAKE-010**, **FR-SNAKE-020**, **FR-SNAKE-030**, **FR-SNAKE-060**, **FR-SNAKE-070**, **FR-SNAKE-090**, **FR-SNAKE-100**, **FR-SNAKE-220**, **FR-MAP-025** (9 realized) |
-| **E-070** The match | `built` | `Sources/CrawlCall/Game.swift`, `Sources/CrawlCall/GameSession.swift` | **FR-VIEW-030** (1 realized) |
+| **E-070** The match | `built` | `Sources/CrawlCall/Game.swift`, `Sources/CrawlCall/GameSession.swift` | **FR-VIEW-030**, **FR-VIEW-170**, **FR-VIEW-180** (3 realized) |
 | **E-080** The test runner | `built` | `scripts` | **FR-TOOL-190** (1 realized) |
-| **E-090** The squads | `built` | `Sources/CrawlCall/Bot` | **FR-BOT-010**, **FR-BOT-020**, **FR-BOT-030**, **FR-BOT-050**, **FR-BOT-060**, **FR-BOT-080**, **FR-BOT-090**, **FR-BOT-150**, **FR-BOT-160**, **FR-BOT-165**, **FR-BOT-200**, **INV-BOT-010**, **INV-BOT-030** (13 realized) |
+| **E-090** The squads | `built` | `Sources/CrawlCall/Bot` | **FR-BOT-010**, **FR-BOT-020**, **FR-BOT-030**, **FR-BOT-050**, **FR-BOT-060**, **FR-BOT-080**, **FR-BOT-090**, **FR-BOT-118**, **FR-BOT-150**, **FR-BOT-160**, **FR-BOT-165**, **FR-BOT-200**, **FR-BOT-210**, **FR-VIEW-170**, **INV-BOT-010**, **INV-BOT-030** (16 realized) |
 
-9 elements, carrying 49 of the 179 requirements this specification holds.
+9 elements, carrying 53 of the 183 requirements this specification holds.

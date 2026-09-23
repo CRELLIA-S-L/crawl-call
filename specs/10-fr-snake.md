@@ -144,7 +144,7 @@ created: 2026-09-21
 When the snake takes damage, the system **shall** remove from the end of the tail one segment for every whole multiple of the damage-per-segment value of the snake configuration that the damage reaches, counting what earlier damage left over.
 
 **Rationale.** Concept §5: damage shoots the tail off from the end, so losing length is losing concrete abilities, and shooting at the tail is a meaningful thing for a bot to do.
-What earlier damage left over is counted because otherwise a weapon weaker than a segment is a weapon that does nothing: the shipped numbers are 8 damage a shot against 10 a segment, so under a rounding that forgot the remainder no bot could ever shorten the snake, however long it fired. The alternative — tuning every weapon to a whole number of segments — makes the tuning of one number depend on the other, and the concept's damage numbers are meant to be moved freely (§12).
+What earlier damage left over is counted because otherwise a weapon weaker than a segment is a weapon that does nothing: the shipped numbers are 2 damage a shot against 10 a segment, so under a rounding that forgot the remainder no bot could ever shorten the snake, however long it fired. The alternative — tuning every weapon to a whole number of segments — makes the tuning of one number depend on the other, and the concept's damage numbers are meant to be moved freely (§12).
 What happens when the tail has no segments left is FR-SNAKE-210 (ADR-0009).
 
 ### FR-SNAKE-080 — A removed segment takes its ability with it

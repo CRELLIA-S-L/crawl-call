@@ -59,7 +59,17 @@ struct MatchView: View {
             }
             map.addChild(squads)
 
+            // The shots go on the map beside the bodies that fire them (FR-VIEW-170),
+            // lit by the same light: a tracer darker than the body that fired it is
+            // not the same colour any more (FR-VIEW-060).
+            let shots = ShotEntity.make(for: game.bots)
+            for bar in shots.children {
+                bar.components.set(ImageBasedLightReceiverComponent(imageBasedLight: ambient))
+            }
+            map.addChild(shots)
+
             let session = GameSession(game: game, snakeEntity: snake, botEntities: squads,
+                                      shotEntities: shots,
                                       camera: camera, seeThrough: seeThrough,
                                       distance: max(world.plan.bounds.extent.x, world.plan.bounds.extent.z) * 1.1,
                                       fieldOfView: 50)

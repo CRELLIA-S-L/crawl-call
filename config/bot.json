@@ -193,5 +193,6 @@
   "hysteresisMargin": 0.1,
   "deliberationPeriod": 0.2,
   "perFrameSlotMaximum": 2,
-  "collapsePanicIncrement": 0.3
+  "collapsePanicIncrement": 0.3,
+  "fearWhenUnhurt": 1.2
 }

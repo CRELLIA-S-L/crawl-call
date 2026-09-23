@@ -138,6 +138,11 @@ struct BotConfiguration: Decodable, Equatable {
     let deliberationPeriod: Double
     let perFrameSlotMaximum: Int
     let collapsePanicIncrement: Double
+    /// How much a bot that has not been touched still wants to be somewhere else
+    /// when the snake is near (FR-BOT-210). Multiplied by the bot's panic, so this
+    /// number is where the line runs between an archetype that holds and one that
+    /// bolts.
+    let fearWhenUnhurt: Double
 
     private static let weights = Schema.object([
         "panic": .value, "discipline": .value, "aggression": .value, "selfSacrifice": .value,
@@ -160,6 +165,7 @@ struct BotConfiguration: Decodable, Equatable {
         "deliberationPeriod": .value,
         "perFrameSlotMaximum": .value,
         "collapsePanicIncrement": .value,
+        "fearWhenUnhurt": .value,
     ])
 }
 

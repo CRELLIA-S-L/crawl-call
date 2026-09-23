@@ -5,7 +5,7 @@
 // measured with — `specs/50-verification.md` says why, and the two are different
 // questions asked of the same number.
 //
-// implements: FR-VIEW-020, FR-VIEW-030, FR-VIEW-060, FR-VIEW-100, FR-VIEW-140, FR-VIEW-150, FR-VIEW-160
+// implements: FR-VIEW-020, FR-VIEW-030, FR-VIEW-060, FR-VIEW-100, FR-VIEW-140, FR-VIEW-150, FR-VIEW-160, FR-VIEW-170, FR-VIEW-180
 import Foundation
 import Observation
 import RealityKit
@@ -19,17 +19,19 @@ final class GameSession {
     private(set) var canEat = false
     private let snakeEntity: Entity
     private let botEntities: Entity
+    private let shotEntities: Entity
     private let camera: Entity
     private var seeThrough: SeeThrough
     private var focus: SIMD3<Double>
     private let distance: Double
     private let fieldOfView: Double
 
-    init(game: Game, snakeEntity: Entity, botEntities: Entity, camera: Entity, seeThrough: SeeThrough,
-         distance: Double, fieldOfView: Double) {
+    init(game: Game, snakeEntity: Entity, botEntities: Entity, shotEntities: Entity,
+         camera: Entity, seeThrough: SeeThrough, distance: Double, fieldOfView: Double) {
         self.game = game
         self.snakeEntity = snakeEntity
         self.botEntities = botEntities
+        self.shotEntities = shotEntities
         self.camera = camera
         self.seeThrough = seeThrough
         self.distance = distance
@@ -52,8 +54,11 @@ final class GameSession {
     private func place() {
         canEat = Game.preyWithinReach(of: game.snake.head, among: game.bots,
                                       tuning: game.world.configurations.tuning) != nil
-        SnakeEntity.update(snakeEntity, from: game.snake)
+        SnakeEntity.update(snakeEntity, from: game.snake,
+                           radius: game.world.configurations.tuning.bodyRadius)
         BotEntity.update(botEntities, from: game.bots)
+        // Every shot still alive is drawn where it went (FR-VIEW-170).
+        ShotEntity.update(shotEntities, from: game.shots)
         // A meal under way is drawn going in (FR-VIEW-100). What is left of the prey
         // is measured by whatever ends that meal: live prey by the health it has
         // left, a body by the time it has left.

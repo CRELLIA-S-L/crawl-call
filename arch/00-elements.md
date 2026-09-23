@@ -77,7 +77,7 @@ It depends on start-up because the cell size it measures in is tuning (IF-MAP-02
 ```yaml
 status: built
 carries: [Sources/CrawlCall/View]
-requirements: [FR-VIEW-010, FR-VIEW-130, FR-VIEW-020, FR-VIEW-060, FR-VIEW-100, FR-VIEW-120, FR-VIEW-140, FR-VIEW-150, FR-VIEW-160]
+requirements: [FR-VIEW-010, FR-VIEW-130, FR-VIEW-020, FR-VIEW-060, FR-VIEW-100, FR-VIEW-120, FR-VIEW-140, FR-VIEW-150, FR-VIEW-160, FR-VIEW-170, FR-VIEW-180]
 depends_on: [E-040]
 interface: a scene plan in; the camera it is seen through and the light it is read by, out
 ```
@@ -107,7 +107,7 @@ It leans on the map layer for what is walkable and on nothing else: the snake as
 ```yaml
 status: built
 carries: [Sources/CrawlCall/Game.swift, Sources/CrawlCall/GameSession.swift]
-requirements: [FR-VIEW-030]
+requirements: [FR-VIEW-030, FR-VIEW-170, FR-VIEW-180]
 depends_on: [E-020, E-060, E-050]
 interface: intents in, a frame advanced, the scene and the camera moved to follow
 ```
@@ -122,7 +122,7 @@ It is also the only part that knows the order of a frame: the world moves first 
 ```yaml
 status: built
 carries: [Sources/CrawlCall/Bot]
-requirements: [FR-BOT-010, FR-BOT-020, FR-BOT-030, FR-BOT-050, FR-BOT-060, FR-BOT-080, FR-BOT-090, FR-BOT-150, FR-BOT-160, FR-BOT-165, FR-BOT-200, INV-BOT-010, INV-BOT-030]
+requirements: [FR-BOT-010, FR-BOT-020, FR-BOT-030, FR-BOT-050, FR-BOT-060, FR-BOT-080, FR-BOT-090, FR-BOT-118, FR-BOT-150, FR-BOT-160, FR-BOT-165, FR-BOT-200, FR-BOT-210, FR-VIEW-170, INV-BOT-010, INV-BOT-030]
 depends_on: [E-020, E-040]
 interface: a world, where the snake is and a frame's time in; squads that see, decide, walk and fire out
 ```

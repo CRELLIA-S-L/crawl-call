@@ -257,6 +257,26 @@ When scoring a position, the system **shall** raise the score with the length of
 
 **Rationale.** Concept §13 stage 2: bots retreat to floors the snake takes long to reach — a different thing from being above it, since a balcony over the snake may be one ramp away.
 
+### FR-BOT-118 — A bot flees to somewhere it can get to
+
+```yaml
+status: implemented
+verification: T
+derives_from: [FR-BOT-200]
+depends_on: [FR-MAP-020]
+refines: [FR-BOT-200]
+conflicts_with: []
+code: [Sources/CrawlCall/Bot/Deliberation.swift]
+tests: [Tests/CrawlCallTests/DeliberationTests.swift]
+created: 2026-09-23
+```
+
+When a bot chooses to flee, the system **shall** send it to a cell the navigation graph can reach from the cell it stands in.
+
+**Rationale.** Concept §9.2 calls standing still the signature stupidity, and a bot that sets off for a spot behind a wall and then stops is doing exactly that while looking decided.
+Fleeing is the one action whose destination could be unreachable: a cover position is walked out over the graph and is reachable by construction, and an ordered zone comes from a commander (FR-BOT-040), while the spot to run to was chosen by how much ground it puts between the bot and the danger — a distance across the map, not along it.
+This is not FR-BOT-167, which says what to do when a target turns out to be unreachable; it keeps most of those cases from arising, and both are needed once the tail can cut a passage (FR-SNAKE-040) and a route can disappear after it was chosen.
+
 ### FR-BOT-120 — Nearby snake overrides the commander's priority
 
 ```yaml
@@ -451,6 +471,27 @@ While a squad's awareness is *alarm*, the system **shall** raise the utility of 
 
 **Rationale.** Concept §6.3: on *alarm* the squad keeps together and checks corners.
 Corner-checking is left to the commander's orders; keeping together is the observable behaviour a test can measure by distances.
+
+### FR-BOT-210 — A whole bot is still afraid of the snake
+
+```yaml
+status: implemented
+verification: T
+derives_from: [FR-BOT-080]
+depends_on: [FR-BOT-050, IF-BOT-010]
+refines: [FR-BOT-080]
+conflicts_with: []
+code: [Sources/CrawlCall/Bot/Deliberation.swift]
+tests: [Tests/CrawlCallTests/DeliberationTests.swift]
+created: 2026-09-23
+```
+
+When scoring a bot's flight from the snake, the system **shall** raise the score as the snake comes nearer, whatever health the bot has left.
+
+**Rationale.** Concept §13 stage 1 lists what the stage has to show: the bots see the snake, run, shoot and deal damage. Running was the one of the four that could not happen at all — flight was scored as the fear of a wound already taken, which is nothing while the bot is whole, and nothing but the snake's mouth ever wounds a bot.
+Concept §9.2 says a bot with panic 0.8 overestimates the threat and runs; a weight that multiplies zero leaves the personality visible in the configuration and absent on screen.
+The fear of an unhurt bot is a number of the bot configuration (IF-BOT-010) rather than a constant here: how brave the squads are is the feel the maintainer tunes (§12), and it is the first number this requirement makes worth turning.
+Observed on the device on 2026-09-23: the squads held their ground, and what movement there was read as stepping aside for a better shot.
 
 ## Repertoire
 
