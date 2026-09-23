@@ -44,6 +44,7 @@ created: 2026-09-22
 The step height, slope angle and body radius that decide where the snake's head may go **shall** be the same values the navigation graph uses to decide where a bot may go, both read from the tuning configuration.
 
 **Partial, and how.** The snake reads the step height, the slope angle and the body radius from the tuning configuration (`Surfaces`); the navigation graph reads none of them, because the stage-1 grid has neither ramps nor steps — a floor cell is walkable or it is not, and a change of floor is an explicit transition. The requirement is met on the snake's side and vacuous on the graph's until a map has geometry those numbers can decide about.
+Since ADR-0021 the body radius keeps the snake's body out of what the map places, and the graph still knows nothing of width: a gap of one cell between two walls, half a metre, is a path for a bot and not for a body 0.6 m across. The blockout has no such gap — its narrowest passage is 0.9 m — so the two do not yet disagree on any map that exists.
 
 **Rationale.** Two models of the same map that disagree produce a map with two shapes: a step the snake climbs and the bots path around, or a ledge the bots walk off and the snake cannot follow.
 The tail blocking a passage (FR-SNAKE-040) only means something if both sides agree the passage exists.

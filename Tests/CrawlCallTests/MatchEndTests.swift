@@ -192,9 +192,8 @@ final class MatchEndTests: XCTestCase {
     func testStartingAgainGivesAWholeMatchInTheSameArena() throws {
         let world = try Launch.world().get()
         var game = Game(world: world, start: try XCTUnwrap(Game.start(in: world)))
+        let began = game.snake.head
         try walkAtSomebody(&game, frames: 600)
-        let cell = world.configurations.tuning.navigationGraphCellSize
-        let began = SIMD3(Double(game.start.x) * cell, 0, Double(game.start.z) * cell)
         XCTAssertGreaterThan(Perception.metres(game.snake.head, began), 1,
                              "the snake never moved, so starting again proves nothing")
 
@@ -207,7 +206,7 @@ final class MatchEndTests: XCTestCase {
         XCTAssertNil(next.eating)
         XCTAssertEqual(next.start, game.start, "the new match is somewhere else")
         XCTAssertEqual(Perception.metres(next.snake.head, began), 0, accuracy: 1e-12,
-                       "the new match began somewhere other than the starting cell")
+                       "the new match began somewhere other than where the first one did")
     }
 }
 

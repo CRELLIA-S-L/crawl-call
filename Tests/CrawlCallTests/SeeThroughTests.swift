@@ -235,9 +235,10 @@ final class SeeThroughTests: XCTestCase {
     }
 
     func testAModuleBothBesideTheHeadAndHidingItIsCutWideEnoughForEither() throws {
-        // A fence in the next cell overlaps the body (the body is wider than a cell,
-        // Q-230), so a line of sight grazes it — and it stands within the window too.
-        let beside = box(SIMD3(-0.5, 0.4, 0), fence)
+        // A fence the body touches — its face the body's radius from the head
+        // (ADR-0021) — is within the margin of a line of sight to the head, and it
+        // stands within the window too.
+        let beside = box(SIMD3(-0.25 - 0.3, 0.4, 0), fence)
         let hole = try XCTUnwrap(SeeThrough.holes(in: [beside], headOn: 0, head: .zero, surface: 0, snake: [.zero],
                                                   from: matchEye(), margin: reach,
                                                   visibilityRadius: 2.5)[0])

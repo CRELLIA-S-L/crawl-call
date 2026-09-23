@@ -15,16 +15,18 @@ derives_from: []
 depends_on: []
 refines: []
 conflicts_with: []
-code: [Sources/CrawlCall/Snake/Snake.swift, Sources/CrawlCall/Snake/Surfaces.swift, Sources/CrawlCall/View/SnakeEntity.swift]
+code: [Sources/CrawlCall/Snake/Snake.swift, Sources/CrawlCall/Snake/Surfaces.swift, Sources/CrawlCall/Game.swift, Sources/CrawlCall/View/SnakeEntity.swift]
 tests: [Tests/CrawlCallTests/SnakeTests.swift, Tests/CrawlCallTests/GameTests.swift]
 created: 2026-09-21
 ```
 
-While a match is running, the snake's head **shall** move in the direction the player holds, staying on the map's walkable surfaces — over ramps, stairs and drops from ledges — and never passing through walls or load-bearing geometry.
+While a match is running, the snake's head **shall** move in the direction the player holds, staying on the map's walkable surfaces — over ramps, stairs and drops from ledges — with no part of its body passing into anything the map places that is not walkable.
 
 **Rationale.** The snake lives on the map's surfaces, not in free space: it crawls over geometry, steered rather than pathfound (concept §3, ADR-0016).
 Everything the tail does for free — blocking corridors and stairs, becoming a liability in narrow passages, vertical play in both directions — follows from the head being bound to the surfaces.
 Free flight was never on the table.
+What is kept out of walls is the body and not the centre of the head: the body is 0.6 m across at the shipped radius on a grid of half a metre, and a head kept only to walkable cells sank into the wall beside it (ADR-0021).
+Where the head may stand is still the navigation graph's to say — which floor, which stair, which ledge — and how close to a wall it may come is the geometry's.
 
 ### FR-SNAKE-015 — A blocked head slides along what stopped it
 

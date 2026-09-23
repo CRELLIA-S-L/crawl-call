@@ -98,10 +98,10 @@ depends_on: [E-040]
 interface: a held direction and a frame's time in; a head, a floor and a trail out
 ```
 
-Where the snake is and where it has been: the head's movement over walkable surfaces, the slide along what it cannot pass, the drop it may take, the trail the tail is read from, and the meal that holds it still while the tail grows.
+Where the snake is and where it has been: the head's movement over walkable surfaces with its body kept out of what stands on them, the slide along what it cannot pass, the drop it may take, the trail the tail is read from, and the meal that holds it still while the tail grows.
 
 **Rationale.** A part of its own because it is the one place that decides whether a move is allowed, and the game will grow several callers of that decision — eating holds the head still, abilities move it differently, a bot's shot shortens the tail. A rule about passing through walls that lived in each of them would be a rule in none.
-It leans on the map layer for what is walkable and on nothing else: the snake asks the graph, it does not read the map file, and it has no idea what the scene looks like.
+It leans on the map layer for what is walkable and for the boxes of what is not, and on nothing else: the snake asks the graph and the scene plan, it does not read the map file, and it has no idea how any of it is drawn (ADR-0021).
 
 ### E-070 — The match
 

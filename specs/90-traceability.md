@@ -108,7 +108,7 @@ Total requirements: 186.
 | **FR-SCORE-130** Each squad has an awareness state | `deferred` | T | — | — |
 | **FR-SCORE-140** The match ends when the snake dies | `partial` | T | `Sources/CrawlCall/Game.swift` | `Tests/CrawlCallTests/MatchEndTests.swift` |
 | **FR-SCORE-150** The match ends when no bot is left | `partial` | T | `Sources/CrawlCall/Game.swift` | `Tests/CrawlCallTests/MatchEndTests.swift` |
-| **FR-SNAKE-010** Head stays on the map's walkable surfaces | `implemented` | D | `Sources/CrawlCall/Snake/Snake.swift`<br>`Sources/CrawlCall/Snake/Surfaces.swift`<br>`Sources/CrawlCall/View/SnakeEntity.swift` | `Tests/CrawlCallTests/SnakeTests.swift`<br>`Tests/CrawlCallTests/GameTests.swift` |
+| **FR-SNAKE-010** Head stays on the map's walkable surfaces | `implemented` | D | `Sources/CrawlCall/Snake/Snake.swift`<br>`Sources/CrawlCall/Snake/Surfaces.swift`<br>`Sources/CrawlCall/Game.swift`<br>`Sources/CrawlCall/View/SnakeEntity.swift` | `Tests/CrawlCallTests/SnakeTests.swift`<br>`Tests/CrawlCallTests/GameTests.swift` |
 | **FR-SNAKE-015** A blocked head slides along what stopped it | `implemented` | T | `Sources/CrawlCall/Snake/Snake.swift` | `Tests/CrawlCallTests/SnakeTests.swift` |
 | **FR-SNAKE-020** Tail follows the head's path | `implemented` | D | `Sources/CrawlCall/Snake/Snake.swift`<br>`Sources/CrawlCall/Snake/Surfaces.swift`<br>`Sources/CrawlCall/View/SnakeEntity.swift` | `Tests/CrawlCallTests/SnakeTests.swift`<br>`Tests/CrawlCallTests/GameTests.swift` |
 | **FR-SNAKE-030** Head speed comes from configuration | `implemented` | T | `Sources/CrawlCall/Snake/Snake.swift`<br>`Sources/CrawlCall/Game.swift` | `Tests/CrawlCallTests/SnakeTests.swift`<br>`Tests/CrawlCallTests/GameTests.swift` |
