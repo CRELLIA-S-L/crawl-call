@@ -88,23 +88,18 @@ final class GameSession {
         // where the camera is now (FR-VIEW-150), and the floor above the head is a lid
         // wherever the camera stands (FR-VIEW-140).
         let eye = SIMD3(Double(camera.position.x), Double(camera.position.y), Double(camera.position.z))
-        // The ground around the head goes in beside the body itself: what hides where
-        // the snake is going is as much in the way as what hides the snake
-        // (FR-VIEW-155).
-        let window = SeeThrough.window(around: game.snake.head, floor: game.snake.floor,
-                                       floorHeight: game.world.plan.floorHeight,
-                                       radius: game.world.configurations.view.visibilityRadius,
-                                       cellSize: game.world.configurations.tuning.navigationGraphCellSize,
-                                       in: game.world.graph)
-        seeThrough.show(headOn: game.snake.floor,
+        // Floors above fade whole; what stands in the way of the snake, or near the
+        // head, is cut open where it matters and stands everywhere else (ADR-0020).
+        seeThrough.show(headOn: game.snake.floor, head: game.snake.head,
+                        surface: Double(game.snake.floor) * game.world.plan.floorHeight,
                         snake: [game.snake.head] + game.snake.tail,
-                        window: window,
                         from: eye,
                         // The body's own radius, because a sphere half behind a wall
                         // is behind it, plus what the configuration adds so that the
                         // fade starts a little early.
                         margin: game.world.configurations.tuning.bodyRadius
-                            + game.world.configurations.view.seeThroughMargin)
+                            + game.world.configurations.view.seeThroughMargin,
+                        visibilityRadius: game.world.configurations.view.visibilityRadius)
     }
 
     /// How much of the prey is still outside the snake: one at the first bite, zero

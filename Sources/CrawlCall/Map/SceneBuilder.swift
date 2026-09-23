@@ -7,7 +7,7 @@
 // Colour comes from the kit's legend, not from here: what a module looks like is a
 // property of the kit a map is assembled from (FR-MAP-100).
 //
-// implements: FR-TOOL-020, FR-VIEW-140, FR-VIEW-150
+// implements: FR-TOOL-020, FR-VIEW-140, FR-VIEW-150, FR-VIEW-155
 import Foundation
 import RealityKit
 
@@ -48,15 +48,20 @@ enum SceneBuilder {
         // looks are made once per type and shared. Making a material per piece was
         // the suite's largest cost: its test phase ran in 5.6 s with one look built
         // per piece and in 1.3 s with two looks built per type.
-        var looks: [String: (solid: [any Material], clear: [any Material])] = [:]
+        var looks: [String: (solid: [any Material], clear: [any Material], holed: [any Material]?)] = [:]
         for piece in plan.pieces where piece.size.x > 0 && piece.size.y > 0 && piece.size.z > 0 {
             let mesh = MeshResource.generateBox(width: Float(piece.size.x),
                                                 height: Float(piece.size.y),
                                                 depth: Float(piece.size.z))
             // What a module looks like is the view's business, solid or see-through
             // alike; what colour it is comes from the kit's legend (FR-MAP-100).
-            let look = looks[piece.module] ?? (solid: [SeeThrough.solid(colour: piece.colour)],
-                                               clear: [SeeThrough.clear(colour: piece.colour)])
+            let look = looks[piece.module] ?? {
+                let solid = SeeThrough.solid(colour: piece.colour)
+                // The third look, cut open around a point (ADR-0020); nil where the
+                // shader did not load, and the module then fades whole as before.
+                return (solid: [solid], clear: [SeeThrough.clear(colour: piece.colour)],
+                        holed: SeeThrough.holed(from: solid).map { [$0] })
+            }()
             looks[piece.module] = look
             let model = ModelEntity(mesh: mesh, materials: look.solid)
             model.name = piece.module
@@ -64,7 +69,8 @@ enum SceneBuilder {
             root.addChild(model)
             modules.append(SeeThrough.Module(model: model, level: piece.level,
                                              centre: piece.centre, size: piece.size,
-                                             solid: look.solid, clear: look.clear))
+                                             solid: look.solid, clear: look.clear,
+                                             holed: look.holed))
         }
         return (root, SeeThrough(modules))
     }

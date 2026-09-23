@@ -35,7 +35,23 @@ enum Sight {
     static func blocks(centre: SIMD3<Double>, size: SIMD3<Double>,
                        from eye: SIMD3<Double>, to point: SIMD3<Double>,
                        margin: Double) -> Bool {
-        if eye.y >= point.y, centre.y + size.y / 2 <= point.y + 1e-9 { return false }
+        crossing(centre: centre, size: size, from: eye, to: point, margin: margin) != nil
+    }
+
+    /// Where the line from `eye` towards `point` passes the box, when the box hides
+    /// the point: the two ends of the stretch of that line — stopped a margin short of
+    /// `point`, as `blocks` says — that runs within the box grown by the margin. Nil
+    /// where the box does not hide the point.
+    ///
+    /// This is what a hole is cut around (ADR-0020): the place the line of sight goes
+    /// through the module, which for a tall module standing well in front of the snake
+    /// is nowhere near the snake. Every point of the module within the margin of the
+    /// line lies within the margin of this stretch, because the stretch is all of the
+    /// line that comes that near.
+    static func crossing(centre: SIMD3<Double>, size: SIMD3<Double>,
+                         from eye: SIMD3<Double>, to point: SIMD3<Double>,
+                         margin: Double) -> (SIMD3<Double>, SIMD3<Double>)? {
+        if eye.y >= point.y, centre.y + size.y / 2 <= point.y + 1e-9 { return nil }
         var direction = point - eye
         // The margin is room to the side of the line, never room past its end. Grown
         // in every direction at once, a box swallows the point the line stops at, so
@@ -57,18 +73,20 @@ enum Sight {
             if abs(step) < 1e-12 {
                 // Parallel to this pair of faces: either inside them for the whole
                 // segment, or never.
-                if low > 0 || high < 0 { return false }
+                if low > 0 || high < 0 { return nil }
                 continue
             }
             let first = min(low / step, high / step)
             let second = max(low / step, high / step)
             near = max(near, first)
             far = min(far, second)
-            if near > far { return false }
+            if near > far { return nil }
         }
-        guard margin > 0 else { return true }
-        return nearestSquared(lowest: centre - size / 2, highest: centre + size / 2,
-                              from: eye, along: direction) <= margin * margin + 1e-12
+        let stretch = (eye + direction * near, eye + direction * far)
+        guard margin > 0 else { return stretch }
+        let reached = nearestSquared(lowest: centre - size / 2, highest: centre + size / 2,
+                                     from: eye, along: direction) <= margin * margin + 1e-12
+        return reached ? stretch : nil
     }
 
     /// The square of the shortest distance between the segment `eye` → `eye +

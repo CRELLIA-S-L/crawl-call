@@ -83,7 +83,7 @@ depends_on: [E-040]
 interface: a scene plan in; the camera it is seen through and the light it is read by, out
 ```
 
-Decides how the arena reaches the player: one camera at a fixed pitch, one daylight source with the ambient that keeps shadows readable, the two looks a map module has — solid, or see-through while it stands over the snake, in front of it, or in front of the ground around its head — and the controls the player's thumbs land on.
+Decides how the arena reaches the player: one camera at a fixed pitch, one daylight source with the ambient that keeps shadows readable, the looks a map module has — solid; faded whole while it is a floor over the snake; or cut open where a line of sight to the snake goes through it, or around the head (ADR-0020) — and the controls the player's thumbs land on.
 
 **Rationale.** Split from the map layer because the two answer different questions and change for different reasons: the map changes when a level does, the view when the game's look does, and a file holding both invites a camera decision to be made while editing geometry.
 The boundary is also where the specification puts it — the VIEW area owns the angle and the light, the MAP and TOOL areas own what is placed and where.

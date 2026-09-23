@@ -167,8 +167,8 @@ Total requirements: 186.
 | **FR-VIEW-120** The HUD is drawn in the diorama style | `partial` | I | `Sources/CrawlCall/View/Controls.swift`<br>`Sources/CrawlCall/View/MatchEnd.swift` | — |
 | **FR-VIEW-130** The arena is lit as bright daylight | `implemented` | D | `Sources/CrawlCall/View/SceneView.swift` | `Tests/CrawlCallTests/ScenePlanTests.swift` |
 | **FR-VIEW-140** A floor above the head is drawn see-through | `implemented` | D | `Sources/CrawlCall/View/SeeThrough.swift`<br>`Sources/CrawlCall/Map/SceneBuilder.swift`<br>`Sources/CrawlCall/GameSession.swift` | `Tests/CrawlCallTests/SeeThroughTests.swift` |
-| **FR-VIEW-150** Nothing between the camera and the snake stays solid | `implemented` | D | `Sources/CrawlCall/View/SeeThrough.swift`<br>`Sources/CrawlCall/Map/Sight.swift`<br>`Sources/CrawlCall/Map/SceneBuilder.swift`<br>`Sources/CrawlCall/GameSession.swift` | `Tests/CrawlCallTests/SeeThroughTests.swift` |
-| **FR-VIEW-155** The ground around the head is kept in sight | `implemented` | D | `Sources/CrawlCall/View/SeeThrough.swift`<br>`Sources/CrawlCall/GameSession.swift` | `Tests/CrawlCallTests/SeeThroughTests.swift` |
+| **FR-VIEW-150** Nothing between the camera and the snake stays solid | `implemented` | D | `Sources/CrawlCall/View/SeeThrough.swift`<br>`Sources/CrawlCall/Map/Sight.swift`<br>`Sources/CrawlCall/Map/SceneBuilder.swift`<br>`Sources/CrawlCall/GameSession.swift`<br>`Sources/CrawlCall/View/SeeThroughHole.metal` | `Tests/CrawlCallTests/SeeThroughTests.swift` |
+| **FR-VIEW-155** The ground around the head is kept in sight | `implemented` | D | `Sources/CrawlCall/View/SeeThrough.swift`<br>`Sources/CrawlCall/Map/SceneBuilder.swift`<br>`Sources/CrawlCall/GameSession.swift`<br>`Sources/CrawlCall/View/SeeThroughHole.metal` | `Tests/CrawlCallTests/SeeThroughTests.swift` |
 | **FR-VIEW-160** The eat button says whether there is anything to eat | `implemented` | D | `Sources/CrawlCall/View/Controls.swift`<br>`Sources/CrawlCall/GameSession.swift`<br>`Sources/CrawlCall/CrawlCallApp.swift` | `Tests/CrawlCallTests/ControlsTests.swift` |
 | **FR-VIEW-170** A shot is drawn where it went | `implemented` | T | `Sources/CrawlCall/Bot/Shot.swift`<br>`Sources/CrawlCall/Bot/Execution.swift`<br>`Sources/CrawlCall/Game.swift`<br>`Sources/CrawlCall/View/ShotEntity.swift`<br>`Sources/CrawlCall/GameSession.swift` | `Tests/CrawlCallTests/ShotTests.swift` |
 | **FR-VIEW-180** The tail on screen is as long as the tail | `implemented` | T | `Sources/CrawlCall/View/SnakeEntity.swift`<br>`Sources/CrawlCall/GameSession.swift` | `Tests/CrawlCallTests/GameTests.swift` |
@@ -320,6 +320,6 @@ Verified by means other than testing — or the check has not been set up yet.
 
 ## Code files outside the specification
 
-No requirement references them: 0 of 38.
+No requirement references them: 0 of 39.
 
 

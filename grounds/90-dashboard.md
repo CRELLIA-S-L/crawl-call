@@ -155,6 +155,7 @@ requirements link to them, plus how many files their `code` field names.
 | FR-SNAKE-070 | 3 | 2 | 5 |
 | FR-VIEW-030 | 2 | 3 | 5 |
 | FR-VIEW-060 | 2 | 3 | 5 |
+| FR-VIEW-150 | 0 | 5 | 5 |
 | FR-VIEW-170 | 0 | 5 | 5 |
 | FR-VIEW-190 | 0 | 5 | 5 |
 | FR-BOT-200 | 2 | 2 | 4 |
@@ -162,7 +163,7 @@ requirements link to them, plus how many files their `code` field names.
 | FR-SNAKE-030 | 2 | 2 | 4 |
 | FR-VIEW-020 | 2 | 2 | 4 |
 | FR-VIEW-050 | 1 | 3 | 4 |
-| FR-VIEW-150 | 0 | 4 | 4 |
+| FR-VIEW-155 | 0 | 4 | 4 |
 | NFR-PERF-010 | 4 | 0 | 4 |
 | NFR-PERF-050 | 4 | 0 | 4 |
 | CON-PUB-010 | 3 | 0 | 3 |
@@ -185,7 +186,6 @@ requirements link to them, plus how many files their `code` field names.
 | FR-SCORE-150 | 1 | 1 | 2 |
 | FR-SNAKE-210 | 1 | 1 | 2 |
 | FR-VIEW-100 | 0 | 2 | 2 |
-| FR-VIEW-155 | 0 | 2 | 2 |
 | FR-VIEW-180 | 0 | 2 | 2 |
 | INV-BOT-010 | 0 | 2 | 2 |
 | CON-PUB-040 | 1 | 0 | 1 |
