@@ -2,6 +2,7 @@
   "cameraPitch": 55,
   "centralRegion": { "width": 0.4, "height": 0.4 },
   "seeThroughMargin": 0.15,
+  "visibilityRadius": 2.5,
   "stragglerDistance": 8.0,
   "visiblePanicThreshold": 0.6
 }

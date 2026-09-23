@@ -123,11 +123,11 @@ Counted by quarter, which is what `period` says in the register's configuration.
 
 | quarter | arrived unclaimed | areas |
 |---|---|---|
-| 2026-Q3 | 113 | BOT 22, MAP 11, PERF 4, PUB 12, SCORE 7, SNAKE 20, TOOL 16, VIEW 21 |
+| 2026-Q3 | 115 | BOT 22, MAP 11, PERF 4, PUB 12, SCORE 7, SNAKE 21, TOOL 16, VIEW 22 |
 
 ## Requirements resting on no hypothesis
 
-113 of 184 requirements. Weight is what stands on them: how many
+115 of 186 requirements. Weight is what stands on them: how many
 requirements link to them, plus how many files their `code` field names.
 
 | Requirement | Incoming | Code files | Weight |
@@ -135,18 +135,18 @@ requirements link to them, plus how many files their `code` field names.
 | FR-BOT-080 | 22 | 1 | 23 |
 | IF-SNAKE-010 | 12 | 5 | 17 |
 | IF-BOT-010 | 6 | 5 | 11 |
+| IF-VIEW-020 | 6 | 5 | 11 |
 | FR-SNAKE-110 | 10 | 0 | 10 |
 | IF-MAP-020 | 5 | 5 | 10 |
-| IF-VIEW-020 | 5 | 5 | 10 |
 | FR-MAP-020 | 7 | 2 | 9 |
 | FR-BOT-010 | 7 | 1 | 8 |
 | FR-SNAKE-090 | 6 | 2 | 8 |
+| FR-VIEW-010 | 6 | 1 | 7 |
 | FR-BOT-050 | 3 | 3 | 6 |
 | FR-MAP-030 | 6 | 0 | 6 |
 | FR-SCORE-010 | 6 | 0 | 6 |
 | FR-SNAKE-060 | 4 | 2 | 6 |
 | FR-TOOL-020 | 4 | 2 | 6 |
-| FR-VIEW-010 | 5 | 1 | 6 |
 | IF-MAP-010 | 5 | 1 | 6 |
 | IF-VIEW-010 | 5 | 1 | 6 |
 | FR-BOT-030 | 4 | 1 | 5 |
@@ -159,6 +159,8 @@ requirements link to them, plus how many files their `code` field names.
 | FR-VIEW-190 | 0 | 5 | 5 |
 | FR-BOT-200 | 2 | 2 | 4 |
 | FR-MAP-100 | 2 | 2 | 4 |
+| FR-SNAKE-030 | 2 | 2 | 4 |
+| FR-VIEW-020 | 2 | 2 | 4 |
 | FR-VIEW-050 | 1 | 3 | 4 |
 | FR-VIEW-150 | 0 | 4 | 4 |
 | NFR-PERF-010 | 4 | 0 | 4 |
@@ -166,11 +168,9 @@ requirements link to them, plus how many files their `code` field names.
 | CON-PUB-010 | 3 | 0 | 3 |
 | FR-BOT-060 | 2 | 1 | 3 |
 | FR-BOT-165 | 1 | 2 | 3 |
-| FR-SNAKE-030 | 1 | 2 | 3 |
 | FR-SNAKE-100 | 2 | 1 | 3 |
 | FR-TOOL-010 | 2 | 1 | 3 |
 | FR-TOOL-030 | 2 | 1 | 3 |
-| FR-VIEW-020 | 1 | 2 | 3 |
 | FR-VIEW-120 | 1 | 2 | 3 |
 | FR-VIEW-140 | 0 | 3 | 3 |
 | FR-VIEW-160 | 0 | 3 | 3 |
@@ -185,6 +185,7 @@ requirements link to them, plus how many files their `code` field names.
 | FR-SCORE-150 | 1 | 1 | 2 |
 | FR-SNAKE-210 | 1 | 1 | 2 |
 | FR-VIEW-100 | 0 | 2 | 2 |
+| FR-VIEW-155 | 0 | 2 | 2 |
 | FR-VIEW-180 | 0 | 2 | 2 |
 | INV-BOT-010 | 0 | 2 | 2 |
 | CON-PUB-040 | 1 | 0 | 1 |
@@ -195,6 +196,7 @@ requirements link to them, plus how many files their `code` field names.
 | FR-BOT-210 | 0 | 1 | 1 |
 | FR-MAP-050 | 1 | 0 | 1 |
 | FR-MAP-060 | 1 | 0 | 1 |
+| FR-SNAKE-015 | 0 | 1 | 1 |
 | FR-SNAKE-080 | 1 | 0 | 1 |
 | FR-SNAKE-200 | 1 | 0 | 1 |
 | FR-TOOL-040 | 1 | 0 | 1 |

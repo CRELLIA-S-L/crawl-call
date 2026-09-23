@@ -12,12 +12,19 @@ import Foundation
 
 enum Sight {
     /// Whether a box comes within `margin` of the straight line from `eye` to
-    /// `point` — the slab test over the segment, against the box grown by that
-    /// margin.
+    /// `point`, the line stopping a margin short of `point` (ADR-0019, points 2–4).
     ///
     /// The margin is what makes this a body rather than a point: a wall that hides
-    /// half of something hides it, so the box is grown by the body's own radius and
-    /// by whatever else the caller wants counted.
+    /// half of something hides it, so the reach is the body's own radius and whatever
+    /// else the caller wants counted. It is a distance and therefore a ball: growing
+    /// the box by the margin on each axis instead would add a cube of side twice the
+    /// margin, reaching a further half again into a corner and giving the box height
+    /// it has not got — which is what this asked until 2026-09-23.
+    ///
+    /// The cheap test comes first and rejects nearly everything: a box that the
+    /// segment misses even when grown on every axis is further away than the margin
+    /// in any direction, because a Chebyshev reach of the margin covers a Euclidean
+    /// one. What survives is measured exactly.
     ///
     /// A module whose top is no higher than the body it would hide is never in the
     /// way of an eye standing at or above that body: every point of the line is at
@@ -29,7 +36,17 @@ enum Sight {
                        from eye: SIMD3<Double>, to point: SIMD3<Double>,
                        margin: Double) -> Bool {
         if eye.y >= point.y, centre.y + size.y / 2 <= point.y + 1e-9 { return false }
-        let direction = point - eye
+        var direction = point - eye
+        // The margin is room to the side of the line, never room past its end. Grown
+        // in every direction at once, a box swallows the point the line stops at, so
+        // a wall standing a hand's breadth *behind* the body answered "in the way" —
+        // and nothing a camera in front of that body does can put it between the two
+        // (FR-VIEW-150). The line therefore ends a margin short, and the room the
+        // margin buys reaches the body and no further.
+        let reach = (direction.x * direction.x + direction.y * direction.y
+                     + direction.z * direction.z).squareRoot()
+        if margin > 0, reach > margin { direction *= (reach - margin) / reach }
+
         var near = 0.0
         var far = 1.0
         for axis in 0..<3 {
@@ -49,7 +66,64 @@ enum Sight {
             far = min(far, second)
             if near > far { return false }
         }
-        return true
+        guard margin > 0 else { return true }
+        return nearestSquared(lowest: centre - size / 2, highest: centre + size / 2,
+                              from: eye, along: direction) <= margin * margin + 1e-12
+    }
+
+    /// The square of the shortest distance between the segment `eye` → `eye +
+    /// direction` and the box, exactly.
+    ///
+    /// How far a point of the segment lies outside the box is, on each axis, one of
+    /// three straight lines of the parameter — below the box, above it, or inside and
+    /// contributing nothing — and which of the three it is changes only where the
+    /// segment crosses a face. Between two such crossings every axis is on one line,
+    /// so the squared distance is one quadratic with a non-negative leading term, and
+    /// its least value on the piece is at an end of the piece or at its vertex. There
+    /// are at most six crossings, so at most seven pieces, and no iteration or
+    /// tolerance is needed to find the answer.
+    private static func nearestSquared(lowest: SIMD3<Double>, highest: SIMD3<Double>,
+                                       from eye: SIMD3<Double>,
+                                       along direction: SIMD3<Double>) -> Double {
+        var cuts: [Double] = [0, 1]
+        for axis in 0..<3 where abs(direction[axis]) > 1e-12 {
+            for face in [lowest[axis], highest[axis]] {
+                let t = (face - eye[axis]) / direction[axis]
+                if t > 0, t < 1 { cuts.append(t) }
+            }
+        }
+        cuts.sort()
+
+        var best = Double.greatestFiniteMagnitude
+        for piece in 1..<cuts.count {
+            let from = cuts[piece - 1], to = cuts[piece]
+            guard to - from > 1e-15 else { continue }
+            // Which side of the box each axis is on holds for the whole piece, so it
+            // is read once, in the middle of it.
+            let middle = eye + direction * ((from + to) / 2)
+            var constant = 0.0, slope = 0.0, squares = 0.0
+            for axis in 0..<3 {
+                let outward: Double
+                if middle[axis] < lowest[axis] { outward = -1 }
+                else if middle[axis] > highest[axis] { outward = 1 }
+                else { continue }
+                // How far outside, as a straight line of the parameter.
+                let start = outward * (eye[axis] - (outward < 0 ? lowest[axis] : highest[axis]))
+                let rate = outward * direction[axis]
+                squares += rate * rate
+                constant += start * start
+                slope += 2 * start * rate
+            }
+            func value(_ t: Double) -> Double { squares * t * t + slope * t + constant }
+            best = min(best, min(value(from), value(to)))
+            if squares > 0 {
+                let vertex = -slope / (2 * squares)
+                if vertex > from, vertex < to { best = min(best, value(vertex)) }
+            }
+        }
+        // A quadratic read at its own vertex can come out a hair below zero where the
+        // true answer is zero, and a negative square of a distance is not a thing.
+        return max(best, 0)
     }
 
     /// Whether nothing the plan placed stands between the two points.

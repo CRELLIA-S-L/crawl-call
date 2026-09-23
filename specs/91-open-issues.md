@@ -8,6 +8,7 @@ Entries are numbered `Q-NNN` in tens so that a requirement's rationale can name 
 Sixteen questions were opened on 2026-09-21 by the decomposition of the concept and fourteen were settled the same day; each settlement is an ADR, so a closed number is found by searching `specs/adr/` for it: Q-010 and Q-090 in ADR-0009, Q-020 and Q-030 and Q-050 and Q-060 in ADR-0010, Q-070 and Q-080 in ADR-0013, Q-100 in ADR-0011, Q-110 in ADR-0014, Q-130 in ADR-0012, Q-150 in ADR-0015; Q-040 became FR-SNAKE-220, Q-140 a sentence in NFR-PERF-010's rationale and Q-160 FR-VIEW-120.
 Q-220 — what lies under a wall when a cell holds one module — was opened and settled the same day it was found: the floor is implied under every cell whose module is not walkable (FR-TOOL-020), and a hole is what a map declares on purpose (FR-MAP-110, `draft`).
 Two more were opened and settled on 2026-09-22 by the maintainer: Q-190 — whether a severed tail segment stays in the arena — became H-080, and Q-200 — the hypothesis the shedding requirements rest on — became H-070, both in `grounds/10-h-mechanics.md`; a question that turns into a measurement is closed here and answered there.
+One more was opened and settled on 2026-09-23, when the kit's wall came down to a fence: Q-240 — whether a bot sees over what the player sees over — became the second paragraph of FR-BOT-050's rationale.
 What remains is what a decision inside the repository cannot close.
 
 ### Q-120 — The name is chosen; the search that clears it is not done

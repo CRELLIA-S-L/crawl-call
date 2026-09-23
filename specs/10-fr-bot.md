@@ -103,6 +103,9 @@ When any segment of the snake is within a bot's field of view and within the det
 **Rationale.** Concept §13 stage 1: bots see the snake, flee, shoot.
 Known-to-a-bot is what deliberation (FR-BOT-080) and the interrupt on sight (FR-BOT-150) read.
 
+A bot's sight is measured along the surface it stands on, and a module's height never enters the answer: a knee-high fence stops a line of sight as completely as a wall does, so the player sees over what a bot cannot.
+That is deliberate while a bot is a box with no head on it — an eye height would be a number measured from nothing — and it is revisited when bots get models.
+
 ### FR-BOT-060 — A bot fires at its target
 
 ```yaml

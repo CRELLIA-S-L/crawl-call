@@ -1,7 +1,7 @@
 // The snake as the game reasons about it: where the head is, where it has been, and
 // where the tail therefore lies. No RealityKit here — this is the part a test can read.
 //
-// implements: FR-SNAKE-010, FR-SNAKE-020, FR-SNAKE-030, FR-SNAKE-060, FR-SNAKE-070, FR-SNAKE-210, FR-SNAKE-220
+// implements: FR-SNAKE-010, FR-SNAKE-015, FR-SNAKE-020, FR-SNAKE-030, FR-SNAKE-060, FR-SNAKE-070, FR-SNAKE-210, FR-SNAKE-220
 import Foundation
 
 struct Snake {
@@ -37,8 +37,9 @@ struct Snake {
     /// Moves the head for one frame in the direction the player holds.
     ///
     /// The direction is on the map plane; the head keeps to walkable surfaces, takes a
-    /// drop where the tuning allows one, and stays where it is when the way is a wall
-    /// (FR-SNAKE-010, FR-SNAKE-220). Speed is the configuration's (FR-SNAKE-030).
+    /// drop where the tuning allows one, and slides along what it cannot pass rather
+    /// than stopping against it (FR-SNAKE-010, FR-SNAKE-015, FR-SNAKE-220). Speed is
+    /// the configuration's (FR-SNAKE-030).
     mutating func advance(direction: SIMD2<Double>, speed: Double, seconds: Double, over surfaces: Surfaces) {
         guard speed > 0, seconds > 0 else { return }
         var budget = speed * seconds
@@ -68,9 +69,33 @@ struct Snake {
         let longest = max(surfaces.cellSize / 2, 1e-6)
         while budget > 1e-12 {
             let step = min(budget, longest)
-            guard let spent = stepOnce(unit: unit, distance: step, over: surfaces) else { return }
+            guard let spent = slide(unit: unit, distance: step, over: surfaces) else { return }
             budget -= spent
         }
+    }
+
+    /// One piece of a frame's movement, taken along the obstacle where the way the
+    /// player asked for is not open (FR-SNAKE-015). Nil only where neither way is.
+    ///
+    /// What the frame spends is the whole piece either way, and what the head covers
+    /// is the part of the held direction that runs along the obstacle: a head pushed
+    /// squarely into a wall covers none of it and stands still, and one pushed at a
+    /// glance covers nearly all. A corner needs nothing of its own — it is a wall on
+    /// each of the two ways, and both are refused.
+    private mutating func slide(unit: SIMD2<Double>, distance: Double, over surfaces: Surfaces) -> Double? {
+        if stepOnce(unit: unit, distance: distance, over: surfaces) != nil { return distance }
+        // The larger part first: a head stopped by a corner goes the way the player
+        // is leaning, and one stopped by a flat wall has only one part left at all.
+        let parts = abs(unit.x) >= abs(unit.y)
+            ? [SIMD2(unit.x, 0.0), SIMD2(0.0, unit.y)]
+            : [SIMD2(0.0, unit.y), SIMD2(unit.x, 0.0)]
+        for part in parts {
+            let share = abs(part.x + part.y)
+            guard share > 1e-12 else { continue }
+            let along = SIMD2(part.x / share, part.y / share)
+            if stepOnce(unit: along, distance: distance * share, over: surfaces) != nil { return distance }
+        }
+        return nil
     }
 
     /// One piece of a frame's movement, and what it cost. Nil where the way is

@@ -99,6 +99,10 @@ struct ViewConfiguration: Decodable, Equatable {
     /// Metres beyond the body itself at which a module stops hiding the snake and
     /// starts being drawn through (FR-VIEW-150).
     let seeThroughMargin: Double
+    /// Metres around the head whose own floor the player is kept able to see: a
+    /// module hiding any of it is drawn through, whether or not it hides the snake
+    /// itself (FR-VIEW-155).
+    let visibilityRadius: Double
     let stragglerDistance: Double
     let visiblePanicThreshold: Double
 
@@ -106,6 +110,7 @@ struct ViewConfiguration: Decodable, Equatable {
         "cameraPitch": .value,
         "centralRegion": .object(["width": .value, "height": .value]),
         "seeThroughMargin": .value,
+        "visibilityRadius": .value,
         "stragglerDistance": .value,
         "visiblePanicThreshold": .value,
     ])

@@ -89,6 +89,34 @@ This is the rule FR-VIEW-140 applies to a floor above the head, widened to whate
 What is measured to is the head and every segment, because a tail the player cannot see is a tail they cannot place, and placing it is the game (concept §4).
 The body is a body and not a point: a wall that hides half a segment hides it, and a fade that began only once the centre went behind the wall would begin after the player had already lost sight of the thing they are steering. The margin beyond that is the same argument taken one step further — it buys the fade time to happen before it is needed — and it is a number settled by eye, which is why it is in the view configuration and not here.
 
+### FR-VIEW-155 — The ground around the head is kept in sight
+
+```yaml
+status: implemented
+verification: D
+derives_from: [FR-VIEW-010]
+depends_on: [FR-SNAKE-010, FR-VIEW-020, IF-VIEW-020]
+refines: []
+conflicts_with: []
+code: [Sources/CrawlCall/View/SeeThrough.swift, Sources/CrawlCall/GameSession.swift]
+tests: [Tests/CrawlCallTests/SeeThroughTests.swift]
+created: 2026-09-23
+```
+
+While a match is running, the system **shall** draw as see-through every map module that does not stand wholly beyond the head, measured across the ground away from the camera, and hides from the camera any part of the head's own floor within the visibility radius of the view configuration around the head, for as long as it does.
+
+**Rationale.** FR-VIEW-150 keeps the snake itself visible, which is not the same as seeing where it is going: a wall that hides no part of the body still hides the metre in front of the head, and with the yaw fixed (FR-VIEW-010) there is no leaning around it.
+Measured to the floor around the head and not to the whole snake, because what the tail needs is to be seen and what the head needs is room to be steered into.
+Written beside FR-VIEW-150 rather than into it: that one says the snake is never hidden and stays true by itself; this one says the ground it is steered over is not hidden either.
+The radius is a number settled by eye, which is why it is in the view configuration (IF-VIEW-020) and not here, and it is bounded by the argument that bounds FR-VIEW-150's margin: an arena whose walls are clear wherever the snake goes has stopped having a shape.
+The floor is measured at the cells the map is laid in (IF-MAP-010): the window is the walkable cells of the head's floor whose centres fall inside the radius, which is what "part of the floor" means on a grid, and is how, not what.
+Beyond the head is where this stops, because a window taken in every direction at once puts a module behind the snake in front of the ground behind that, and clears it — which is the thing FR-VIEW-150 was fixed on 2026-09-23 for doing, returned at five times the radius. The two rules now say the same thing about direction: nothing beyond the snake was ever hiding it, or the ground it stands on, from a camera in front of it.
+Beyond is measured across the ground and not by the plane the camera looks along: that plane is tilted by the pitch FR-VIEW-010 fixes, so the top of a waist-high fence standing behind the head falls on the camera's side of it and the rule it was meant to state says nothing at all. The margin takes no part in the measurement either — it is room to the side of a line, as in FR-VIEW-150 — or the ring of cells touching the head comes back through the door this closes.
+The price is named rather than discovered: steering straight away from the camera, the module just ahead of the head stays solid and keeps the ground immediately behind it, which for the shipped fence at the shipped pitch is a little over half a metre. Seeing past that would be a different rule, and this one is the maintainer's of 2026-09-23.
+The demonstration that verifies this, for whoever carries it out: steer the head up to a wall that hides no part of the body and stand a pace short of it — that wall goes clear and stays clear while the head is beside it, the one the same distance behind the tail stays solid, and nothing outside the radius changes. The frame captured off the device is what records the judgement (`specs/50-verification.md`).
+Built and covered by tests on 2026-09-23, and not yet demonstrated: what a radius is worth is a thing seen, and nobody has seen this one.
+This was met by accident before it was written. Until 2026-09-23 the margin of FR-VIEW-150 was applied around each point of the snake in every direction at once, which cleared the ring of cells touching it — including the ones behind it, which hide nothing — and read on screen as this requirement. FR-VIEW-150 never asked for that, and taking it away takes with it the thing the player had been steering by, which is why this is asked for on purpose.
+
 ## Input
 
 ### FR-VIEW-030 — Game logic reads intents, not device events
