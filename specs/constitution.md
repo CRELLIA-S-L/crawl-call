@@ -4,10 +4,11 @@ Standing engineering principles of the project.
 Every plan and every diff is checked against them.
 Unlike requirements (what the system does) and ADRs (single decisions with their context), articles apply to all work at all times and change only through the amendment procedure in ART-090.
 
-- **Version:** 1.2.0
+- **Version:** 1.3.0
 - **Ratified:** 2026-08-05
 - **Amended:** 2026-08-05 — v1.1.0: ART-020 tightened to approved requirements; ART-090 taxonomy extended to classify tightening and relaxing (both changes MINOR per ART-090)
 - **Amended:** 2026-09-24 — v1.2.0: ART-070 added, named values in place of literals in code (MINOR per ART-090)
+- **Amended:** 2026-09-24 — v1.3.0: ART-070 sends text a player reads to the string catalog, so that it can be translated (MINOR per ART-090)
 
 Articles are numbered in steps of 10 and referenced from plans, reviews, and ADRs the same way requirements are: “rejected per ART-040”.
 The set below is a starting point — adapt the articles to your project, but keep the amendment procedure.
@@ -49,7 +50,7 @@ A number or a string in the game's code, under `Sources/CrawlCall/`, carries a n
 The tests, which set up and assert against values of their own, the bench under `Sources/PromptBench/`, whose prompts are the variants it measures, the scripts, the specification's tools — which the framework ships and an upgrade replaces — and `materials/` are outside it.
 A value that is tuned — a speed, a distance, a duration, a threshold, a count — lives in the configuration under `config/` (ADR-0012), and its key is described by the interface requirement for that file.
 A value the design fixes — a unit conversion, a proportion that follows from another, a file name, a key of a protocol — is a named constant under `Sources/CrawlCall/Config/`, grouped by the part of the system it belongs to.
-Text a player hears or reads, and text sent to the model, lives in configuration, not in code.
+Text a player reads lives in the string catalog; text a player hears and text sent to the model live in configuration; none of it in code.
 An error or a log line opens with the identifier of its kind — an upper-case name with underscores, declared once in a catalogue under `Sources/CrawlCall/Config/` — then a colon and the message: `MAP_REPEATED_KIT: line 4 names the kit a second time`.
 The identifier is the named value; the details after it describe and configure nothing, and stay where the line is written.
 Exempt: the literal that declares a name — a constant's value, a configuration key in the schema, an identifier in the catalogue.
