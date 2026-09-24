@@ -71,6 +71,15 @@ struct ScenePlan: Equatable {
     let pieces: [Piece]
     let cellSize: Double
     let floorHeight: Double
+    /// Which pieces cover which cells, for questions about a small stretch of the map.
+    let index: PieceIndex
+
+    init(pieces: [Piece], cellSize: Double, floorHeight: Double) {
+        self.pieces = pieces
+        self.cellSize = cellSize
+        self.floorHeight = floorHeight
+        self.index = PieceIndex(pieces: pieces, cellSize: cellSize)
+    }
 
     /// Empty where there are no pieces, so a caller need not special-case an empty map.
     var bounds: Bounds {

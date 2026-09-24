@@ -139,6 +139,11 @@ enum Deliberation {
                                         x: Int((bot.position.x / situation.cellSize).rounded()),
                                         z: Int((bot.position.z / situation.cellSize).rounded()))
         guard situation.graph.isWalkable(here) else { return nil }
+        // The parts nearest the bot are asked first: the cells searched lie around the
+        // bot, and a part near a cell is the likeliest to see into it, so a watched cell
+        // is known after one or two sight tests rather than after the whole tail. Which
+        // part sees it does not change whether one does (ADR-0028).
+        let byNearness = snake.sorted { Perception.metres(bot.position, $0) < Perception.metres(bot.position, $1) }
 
         var seen: Set<NavigationGraph.Node> = [here]
         var queue = [here]
@@ -150,7 +155,7 @@ enum Deliberation {
             let metres = Perception.metres(bot.position, there)
             guard metres <= reach else { continue }
             if metres > .zero {
-                let watched = snake.contains { Sight.isClear(from: $0, to: there, through: situation.plan) }
+                let watched = byNearness.contains { Sight.isClear(from: $0, to: there, through: situation.plan) }
                 if !watched { return (node: node, metres: metres) }
             }
             for next in situation.graph.neighbours(of: node).sorted(by: order)

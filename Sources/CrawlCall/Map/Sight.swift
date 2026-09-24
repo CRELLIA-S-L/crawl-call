@@ -159,7 +159,9 @@ enum Sight {
         // same either way: this rejects only what the slab test would reject too.
         let low = SIMD3(min(eye.x, point.x), min(eye.y, point.y), min(eye.z, point.z))
         let high = SIMD3(max(eye.x, point.x), max(eye.y, point.y), max(eye.z, point.z))
-        for piece in plan.pieces where piece.size.min() > .zero {
+        for candidate in plan.index.candidates(low: low, high: high) {
+            let piece = plan.pieces[candidate]
+            guard piece.size.min() > .zero else { continue }
             let half = piece.size * Geometry.half
             if piece.centre.x + half.x < low.x || piece.centre.x - half.x > high.x { continue }
             if piece.centre.y + half.y < low.y || piece.centre.y - half.y > high.y { continue }

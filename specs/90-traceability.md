@@ -37,7 +37,7 @@ Total requirements: 194.
 | **FR-BOT-020** Two squads at war | `implemented` | T | `Sources/CrawlCall/Bot/Squads.swift`<br>`Sources/CrawlCall/Game.swift` | `Tests/CrawlCallTests/BotTests.swift` |
 | **FR-BOT-030** Archetype sets base personality weights | `implemented` | T | `Sources/CrawlCall/Bot/Bot.swift` | `Tests/CrawlCallTests/BotTests.swift` |
 | **FR-BOT-040** One bot per squad holds the commander role | `deferred` | T | — | — |
-| **FR-BOT-050** A bot notices the snake in view | `implemented` | T | `Sources/CrawlCall/Bot/Perception.swift`<br>`Sources/CrawlCall/Map/Sight.swift`<br>`Sources/CrawlCall/Bot/Bot.swift`<br>`Sources/CrawlCall/Config/Geometry.swift` | `Tests/CrawlCallTests/PerceptionTests.swift` |
+| **FR-BOT-050** A bot notices the snake in view | `implemented` | T | `Sources/CrawlCall/Bot/Perception.swift`<br>`Sources/CrawlCall/Map/Sight.swift`<br>`Sources/CrawlCall/Bot/Bot.swift`<br>`Sources/CrawlCall/Config/Geometry.swift`<br>`Sources/CrawlCall/Map/PieceIndex.swift` | `Tests/CrawlCallTests/PerceptionTests.swift`<br>`Tests/CrawlCallTests/PieceIndexTests.swift` |
 | **FR-BOT-060** A bot fires at its target | `partial` | T | `Sources/CrawlCall/Bot/Execution.swift`<br>`Sources/CrawlCall/Bot/Bot.swift`<br>`Sources/CrawlCall/Config/Utility.swift` | `Tests/CrawlCallTests/ExecutionTests.swift`<br>`Tests/CrawlCallTests/ShotTests.swift` |
 | **FR-BOT-070** Heavy and sapper weapons destroy cover | `deferred` | T | — | — |
 | **FR-BOT-080** Action chosen by maximum utility | `implemented` | T | `Sources/CrawlCall/Bot/Deliberation.swift`<br>`Sources/CrawlCall/Config/Utility.swift`<br>`Sources/CrawlCall/Config/Geometry.swift` | `Tests/CrawlCallTests/DeliberationTests.swift` |
@@ -46,7 +46,7 @@ Total requirements: 194.
 | **FR-BOT-105** Cover is worth less against a wrecking weapon | `deferred` | T | — | — |
 | **FR-BOT-110** Height advantage enters position scoring | `deferred` | T | — | — |
 | **FR-BOT-115** Distance along the snake's path enters position scoring | `deferred` | T | — | — |
-| **FR-BOT-118** A bot flees to somewhere it can get to | `implemented` | T | `Sources/CrawlCall/Bot/Deliberation.swift` | `Tests/CrawlCallTests/DeliberationTests.swift` |
+| **FR-BOT-118** A bot flees to somewhere it can get to | `implemented` | T | `Sources/CrawlCall/Bot/Deliberation.swift`<br>`Sources/CrawlCall/Map/PieceIndex.swift` | `Tests/CrawlCallTests/DeliberationTests.swift`<br>`Tests/CrawlCallTests/PieceIndexTests.swift` |
 | **FR-BOT-120** Nearby snake overrides the commander's priority | `deferred` | T | — | — |
 | **FR-BOT-130** Discipline decides how far an order is kept | `deferred` | T | — | — |
 | **FR-BOT-140** Target choice has hysteresis | `deferred` | T | — | — |
@@ -332,6 +332,6 @@ Verified by means other than testing — or the check has not been set up yet.
 
 ## Code files outside the specification
 
-No requirement references them: 0 of 60.
+No requirement references them: 0 of 61.
 
 

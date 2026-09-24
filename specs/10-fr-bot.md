@@ -93,8 +93,8 @@ derives_from: []
 depends_on: []
 refines: []
 conflicts_with: []
-code: [Sources/CrawlCall/Bot/Perception.swift, Sources/CrawlCall/Map/Sight.swift, Sources/CrawlCall/Bot/Bot.swift, Sources/CrawlCall/Config/Geometry.swift]
-tests: [Tests/CrawlCallTests/PerceptionTests.swift]
+code: [Sources/CrawlCall/Bot/Perception.swift, Sources/CrawlCall/Map/Sight.swift, Sources/CrawlCall/Bot/Bot.swift, Sources/CrawlCall/Config/Geometry.swift, Sources/CrawlCall/Map/PieceIndex.swift]
+tests: [Tests/CrawlCallTests/PerceptionTests.swift, Tests/CrawlCallTests/PieceIndexTests.swift]
 created: 2026-09-21
 ```
 
@@ -269,8 +269,8 @@ derives_from: [FR-BOT-200]
 depends_on: [FR-MAP-020]
 refines: [FR-BOT-200]
 conflicts_with: []
-code: [Sources/CrawlCall/Bot/Deliberation.swift]
-tests: [Tests/CrawlCallTests/DeliberationTests.swift]
+code: [Sources/CrawlCall/Bot/Deliberation.swift, Sources/CrawlCall/Map/PieceIndex.swift]
+tests: [Tests/CrawlCallTests/DeliberationTests.swift, Tests/CrawlCallTests/PieceIndexTests.swift]
 created: 2026-09-23
 ```
 
