@@ -30,7 +30,7 @@ It is also what keeps a prompt change honest (FR-TOOL-170), so a later part that
 ```yaml
 status: built
 carries: [Sources/CrawlCall/Config, Sources/CrawlCall/Launch.swift, Sources/CrawlCall/CrawlCallApp.swift]
-requirements: [IF-SNAKE-010, IF-MAP-020, IF-VIEW-020, IF-BOT-010]
+requirements: [IF-SNAKE-010, IF-MAP-020, IF-VIEW-020, IF-BOT-010, FR-TOOL-200]
 depends_on: []
 interface: a bundle in, one `Configurations` value or one named error out
 ```

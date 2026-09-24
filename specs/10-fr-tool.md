@@ -378,3 +378,28 @@ When a phase of a test run has reported its result, or has outlived the time the
 Killing is the easy half; the report is the point. "The tests phase gave up after 150s, the process was blocked at 0% CPU, and its last output was …" is where the next investigation starts, and it is exactly what nobody had during those three stalls.
 The limit belongs to the caller rather than to the script, because a clean build and an incremental one are not the same wait, and a machine slower than this one is not wrong.
 Its test takes the watchdog out of the runner rather than restating it, so a copy that drifted from what ships would prove nothing: the self-test reads `watch()` out of `run-tests.sh`, gives it a command that finishes and one that does not, and checks the timeout code, the report's three facts, and that the stuck command is actually gone.
+
+## Diagnostics
+
+### FR-TOOL-200 — An error or a log line opens with the identifier of its kind
+
+```yaml
+status: implemented
+verification: T
+derives_from: []
+depends_on: []
+refines: []
+conflicts_with: []
+code: [Sources/CrawlCall/Config/ErrorIdentifier.swift, Sources/CrawlCall/Config/Schema.swift, Sources/CrawlCall/Config/Configurations+Load.swift, Sources/CrawlCall/Map/Kit.swift, Sources/CrawlCall/Map/MapSpecification.swift, Sources/CrawlCall/Launch.swift]
+tests: [Tests/CrawlCallTests/ErrorIdentifierTests.swift]
+exempt: [unlinked]
+created: 2026-09-24
+```
+
+When the game reports an error or writes a log line, the system **shall** open the line with the identifier of its kind — upper-case words joined by underscores, unique across the game — followed by a colon, a space and the message.
+
+**Rationale.** The maintainer asked on 2026-09-24 for errors to be sorted by kind, each kind with an identifier, and for every line to open with it: `MAP_REPEATED_KIT: line 4 names the kit a second time`.
+An identifier is what a search, a filter or a test holds on to when the wording of a message changes; a message alone has to be matched by its words, and its words are the part most likely to be improved.
+Unique across the game, because an identifier two kinds share would send a search to the wrong one.
+The identifiers are declared once, in the catalogue ART-070 places under `Sources/CrawlCall/Config/`.
+Exempt from `unlinked`: the format serves every error the game reports rather than one requirement, and a link to any single one would say otherwise.

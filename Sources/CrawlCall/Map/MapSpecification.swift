@@ -4,7 +4,7 @@
 // FR-TOOL-010 asks for the placement of every module per floor, or a rejection that
 // names the line and the reason — so every error below carries its line.
 //
-// implements: IF-MAP-010, FR-TOOL-010
+// implements: IF-MAP-010, FR-TOOL-010, FR-TOOL-200
 import Foundation
 
 struct MapSpecification: Equatable {
@@ -39,7 +39,7 @@ struct MapSpecification: Equatable {
     }
 }
 
-enum MapParseError: Error, CustomStringConvertible, Equatable {
+enum MapParseError: IdentifiedError, Equatable {
     case noKit
     case noFloors
     case repeatedKit(line: Int)
@@ -53,7 +53,24 @@ enum MapParseError: Error, CustomStringConvertible, Equatable {
     case unknownCharacter(Character, floor: Int, line: Int, column: Int)
     case emptyFloor(Int, line: Int)
 
-    var description: String {
+    var identifier: ErrorIdentifier {
+        switch self {
+        case .noKit:                    return .mapNoKit
+        case .noFloors:                 return .mapNoFloors
+        case .repeatedKit:              return .mapRepeatedKit
+        case .unknownDirective:         return .mapUnknownDirective
+        case .gridBeforeAnyFloor:       return .mapGridBeforeAnyFloor
+        case .repeatedFloor:            return .mapRepeatedFloor
+        case .badFloorNumber:           return .mapBadFloorNumber
+        case .badTransition:            return .mapBadTransition
+        case .transitionToUnknownFloor: return .mapTransitionToUnknownFloor
+        case .raggedGrid:               return .mapRaggedGrid
+        case .unknownCharacter:         return .mapUnknownCharacter
+        case .emptyFloor:               return .mapEmptyFloor
+        }
+    }
+
+    var details: String {
         switch self {
         case .noKit:
             return "the file names no kit; a map needs `kit <name>` before its floors"

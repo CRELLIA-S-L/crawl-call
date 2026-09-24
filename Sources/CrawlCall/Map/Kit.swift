@@ -7,7 +7,7 @@
 // holds distances, not storeys (IF-MAP-020) — so it lives with the geometry it is a
 // property of. Said out loud because the specification is silent on it.
 //
-// implements: FR-MAP-100
+// implements: FR-MAP-100, FR-TOOL-200
 import Foundation
 
 struct Kit: Decodable, Equatable {
@@ -37,12 +37,20 @@ struct Kit: Decodable, Equatable {
                                       "size": .array(of: .value), "colour": .array(of: .value)])),
     ])
 
-    enum KitError: Error, CustomStringConvertible, Equatable {
+    enum KitError: IdentifiedError, Equatable {
         case missing(name: String)
         case legendKeyIsNotOneCharacter(String)
         case moduleFieldIsNotThreeNumbers(module: String, field: String)
 
-        var description: String {
+        var identifier: ErrorIdentifier {
+            switch self {
+            case .missing:                      return .kitMissing
+            case .legendKeyIsNotOneCharacter:   return .kitLegendKeyNotOneCharacter
+            case .moduleFieldIsNotThreeNumbers: return .kitModuleFieldNotThreeNumbers
+            }
+        }
+
+        var details: String {
             switch self {
             case .missing(let n):
                 return "config/kit/\(n)/legend.json is missing from the bundle"

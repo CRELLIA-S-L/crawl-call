@@ -5,7 +5,7 @@
 // it ignores keys it does not know — so the shape is declared separately and walked
 // before decoding. Standard library only (ART-040).
 //
-// implements: IF-SNAKE-010, IF-MAP-020, IF-VIEW-020, IF-BOT-010
+// implements: IF-SNAKE-010, IF-MAP-020, IF-VIEW-020, IF-BOT-010, FR-TOOL-200
 import Foundation
 
 /// The shape a configuration file must have: which keys exist, and where a caller
@@ -21,13 +21,22 @@ indirect enum Schema {
     case array(of: Schema)
 }
 
-enum SchemaError: Error, CustomStringConvertible, Equatable {
+enum SchemaError: IdentifiedError, Equatable {
     case notAnObject(path: String)
     case unknownKey(String, path: String)
     case missingKey(String, path: String)
     case wrongKind(path: String, expected: String)
 
-    var description: String {
+    var identifier: ErrorIdentifier {
+        switch self {
+        case .notAnObject: return .schemaNotAnObject
+        case .unknownKey:  return .schemaUnknownKey
+        case .missingKey:  return .schemaMissingKey
+        case .wrongKind:   return .schemaWrongKind
+        }
+    }
+
+    var details: String {
         switch self {
         case .notAnObject(let p):           return "\(Self.where_(p)): expected an object"
         case .unknownKey(let k, let p):     return "\(Self.where_(p)): unknown key '\(k)'"

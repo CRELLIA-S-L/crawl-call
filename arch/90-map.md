@@ -7,7 +7,7 @@ What each part of this project is, what it carries and what state it is in.
 | Element | Status | Carries | Requirements |
 |---|---|---|---|
 | **E-010** The prompt bench | `built` | `Sources/PromptBench/PromptBench.swift`, `Sources/PromptBench/PromptVariants.swift`, `Sources/PromptBench/main.swift` | **FR-TOOL-150**, **FR-TOOL-160** (2 realized) |
-| **E-020** Start-up and configuration | `built` | `Sources/CrawlCall/Config`, `Sources/CrawlCall/Launch.swift`, `Sources/CrawlCall/CrawlCallApp.swift` | **IF-SNAKE-010**, **IF-MAP-020**, **IF-VIEW-020**, **IF-BOT-010** (4 realized) |
+| **E-020** Start-up and configuration | `built` | `Sources/CrawlCall/Config`, `Sources/CrawlCall/Launch.swift`, `Sources/CrawlCall/CrawlCallApp.swift` | **IF-SNAKE-010**, **IF-MAP-020**, **IF-VIEW-020**, **IF-BOT-010**, **FR-TOOL-200** (5 realized) |
 | **E-030** The input contract | `built` | `Sources/CrawlCall/Input` | **IF-VIEW-010**, **FR-VIEW-050** (2 realized) |
 | **E-040** The map layer | `built` | `Sources/CrawlCall/Map`, `maps/blockout.map`, `ATTRIBUTION.md` | **IF-MAP-010**, **FR-TOOL-010**, **FR-TOOL-020**, **FR-TOOL-030**, **FR-MAP-010**, **FR-MAP-020**, **FR-MAP-100**, **FR-MAP-090** (8 realized) |
 | **E-050** The view | `built` | `Sources/CrawlCall/View` | **FR-VIEW-010**, **FR-VIEW-130**, **FR-VIEW-020**, **FR-VIEW-060**, **FR-VIEW-070**, **FR-TOOL-070**, **FR-VIEW-100**, **FR-VIEW-120**, **FR-VIEW-140**, **FR-VIEW-150**, **FR-VIEW-155**, **FR-VIEW-160**, **FR-VIEW-170**, **FR-VIEW-180**, **FR-VIEW-190** (15 realized) |
@@ -16,4 +16,4 @@ What each part of this project is, what it carries and what state it is in.
 | **E-080** The runners | `built` | `scripts` | **FR-TOOL-190**, **FR-TOOL-180** (2 realized) |
 | **E-090** The squads | `built` | `Sources/CrawlCall/Bot` | **FR-BOT-010**, **FR-BOT-020**, **FR-BOT-030**, **FR-BOT-050**, **FR-BOT-060**, **FR-BOT-080**, **FR-BOT-090**, **FR-BOT-118**, **FR-BOT-150**, **FR-BOT-160**, **FR-BOT-165**, **FR-BOT-200**, **FR-BOT-210**, **FR-VIEW-170**, **INV-BOT-010**, **INV-BOT-030** (16 realized) |
 
-9 elements, carrying 62 of the 186 requirements this specification holds.
+9 elements, carrying 63 of the 187 requirements this specification holds.

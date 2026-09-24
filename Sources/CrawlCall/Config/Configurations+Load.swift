@@ -1,16 +1,25 @@
 // Reading the configuration files. Paths are relative to the application bundle in
 // the game and to the repository root in the tools (ADR-0012); this is the game half.
 //
-// implements: IF-SNAKE-010, IF-MAP-020, IF-VIEW-020, IF-BOT-010
+// implements: IF-SNAKE-010, IF-MAP-020, IF-VIEW-020, IF-BOT-010, FR-TOOL-200
 import Foundation
 
-enum ConfigurationError: Error, CustomStringConvertible {
+enum ConfigurationError: IdentifiedError {
     case fileMissing(name: String)
     case notJSON(name: String, underlying: Error)
     case badShape(name: String, error: SchemaError)
     case undecodable(name: String, underlying: Error)
 
-    var description: String {
+    var identifier: ErrorIdentifier {
+        switch self {
+        case .fileMissing: return .configFileMissing
+        case .notJSON:     return .configNotJSON
+        case .badShape:    return .configBadShape
+        case .undecodable: return .configUndecodable
+        }
+    }
+
+    var details: String {
         switch self {
         case .fileMissing(let n):          return "config/\(n).json is missing from the bundle"
         case .notJSON(let n, let e):       return "config/\(n).json is not JSON: \(e)"
