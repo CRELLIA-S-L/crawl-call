@@ -130,7 +130,7 @@ derives_from: []
 depends_on: [FR-VIEW-010]
 refines: []
 conflicts_with: []
-code: [Sources/CrawlCall/View/FreeCamera.swift, Sources/CrawlCall/View/FreeCameraControls.swift, Sources/CrawlCall/GameSession.swift, Sources/CrawlCall/CrawlCallApp.swift]
+code: [Sources/CrawlCall/View/FreeCamera.swift, Sources/CrawlCall/View/FreeCameraControls.swift, Sources/CrawlCall/GameSession.swift, Sources/CrawlCall/CrawlCallApp.swift, Sources/CrawlCall/Config/DebugText.swift, Sources/CrawlCall/Config/SymbolName.swift]
 tests: [Tests/CrawlCallTests/FreeCameraTests.swift]
 created: 2026-09-21
 ```

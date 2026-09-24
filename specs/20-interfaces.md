@@ -209,6 +209,28 @@ When the game starts, the system **shall** read from the view configuration — 
 
 **Rationale.** Every VIEW requirement that names a number names it here; the camera pitch is a number the maintainer settles by eye (concept §12), inside the range the concept fixes.
 
+## Text
+
+### IF-VIEW-030 — String catalog
+
+```yaml
+status: implemented
+verification: T
+derives_from: [FR-VIEW-200]
+depends_on: []
+refines: []
+conflicts_with: []
+code: [Sources/CrawlCall/Config/TextKey.swift, Sources/CrawlCall/View/Localizable.xcstrings]
+tests: [Tests/CrawlCallTests/TextCatalogTests.swift]
+created: 2026-09-24
+```
+
+The system **shall** take every text shown to the player from the string catalog `Localizable.xcstrings` (ADR-0024), by a key that names where the text appears — `matchEnd.snakeDied` — with English as the development language and every key translated for each language the game carries.
+
+**Rationale.** A key that names the place rather than the English words stays the same when the words change, so a translation is not orphaned by an edit to the original, and the key is itself the name ART-070 asks every string in code to have.
+Every key translated for each language the game carries, because a language with gaps shows its player English in the middle of their own; a key is only complete when every language has it.
+Text shown only in the debug build is not shown to the player, and stays out of the catalog as a named constant.
+
 ## Model instructions
 
 The instructions the game sends the on-device model are its own interface to it: their wording is tuning, what they must establish is a contract (ADR-0017).

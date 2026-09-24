@@ -1,0 +1,54 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "controls.eat" : {
+      "comment" : "Accessibility label of the button that eats the bot in reach.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eat"
+          }
+        }
+      }
+    },
+    "matchEnd.again" : {
+      "comment" : "The one control on the plate at the end of a match: starts another in the same arena.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Again"
+          }
+        }
+      }
+    },
+    "matchEnd.arenaEmpty" : {
+      "comment" : "Headline of the plate when the snake has eaten every bot there was.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nothing left to eat"
+          }
+        }
+      }
+    },
+    "matchEnd.snakeDied" : {
+      "comment" : "Headline of the plate when the bots have shot the snake down.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shot to pieces"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

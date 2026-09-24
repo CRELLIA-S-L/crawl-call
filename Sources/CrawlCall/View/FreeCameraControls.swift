@@ -35,13 +35,13 @@ struct FreeCameraControls: ViewModifier {
             .overlay(alignment: .topTrailing) {
                 if session?.freeCamera != nil {
                     Button { session?.followSnake() } label: {
-                        Image(systemName: "scope")
+                        Image(systemName: SymbolName.followSnake)
                             .font(.system(size: 26, weight: .semibold))
                             .foregroundStyle(Color.white.opacity(0.9))
                             .frame(width: 64, height: 64)
                             .background(Circle().fill(Color.black.opacity(0.35)))
                     }
-                    .accessibilityLabel("Camera back on the snake")
+                    .accessibilityLabel(DebugText.cameraBackOnTheSnake)
                     .padding(28)
                 }
             }

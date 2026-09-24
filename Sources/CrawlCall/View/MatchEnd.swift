@@ -9,7 +9,7 @@
 // plate and a bold rounded typeface. Words rather than an icon here, because which
 // end it was is the one thing no icon in this style says unambiguously.
 //
-// implements: FR-VIEW-190, FR-VIEW-120
+// implements: FR-VIEW-190, FR-VIEW-120, FR-VIEW-200
 import SwiftUI
 
 struct MatchEnd: View {
@@ -21,22 +21,23 @@ struct MatchEnd: View {
     private let mark = Color.white.opacity(0.85)
 
     /// The line on the plate. One per end, and they say opposite things: the snake
-    /// was shot down, or the snake ate everything there was.
-    static func headline(for outcome: Game.Outcome) -> String {
+    /// was shot down, or the snake ate everything there was. The words are in the
+    /// string catalog, in the player's language (FR-VIEW-200).
+    static func headline(for outcome: Game.Outcome) -> TextKey {
         switch outcome {
-        case .snakeDied: return "Shot to pieces"
-        case .arenaEmpty: return "Nothing left to eat"
+        case .snakeDied: return .matchEndSnakeDied
+        case .arenaEmpty: return .matchEndArenaEmpty
         }
     }
 
     var body: some View {
         VStack(spacing: 18) {
-            Text(MatchEnd.headline(for: outcome))
+            Text(MatchEnd.headline(for: outcome).key)
                 .font(.system(size: 30, weight: .bold, design: .rounded))
                 .foregroundStyle(mark)
                 .multilineTextAlignment(.center)
             Button(action: again) {
-                Text("Again")
+                Text(TextKey.matchEndAgain.key)
                     .font(.system(size: 24, weight: .bold, design: .rounded))
                     .foregroundStyle(mark)
                     .padding(.horizontal, 34)
@@ -45,7 +46,7 @@ struct MatchEnd: View {
                     .overlay(Capsule().strokeBorder(mark, lineWidth: 3))
             }
             .buttonStyle(.plain)
-            .accessibilityLabel("Again")
+            .accessibilityLabel(Text(TextKey.matchEndAgain.key))
         }
         .padding(.horizontal, 40)
         .padding(.vertical, 32)

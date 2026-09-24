@@ -182,8 +182,8 @@ final class MatchEndTests: XCTestCase {
     func testEachEndIsNamedOnThePlate() {
         // FR-VIEW-190 asks which of the two ends it was, so the two must not read
         // the same.
-        let shot = MatchEnd.headline(for: .snakeDied)
-        let empty = MatchEnd.headline(for: .arenaEmpty)
+        let shot = MatchEnd.headline(for: .snakeDied).text()
+        let empty = MatchEnd.headline(for: .arenaEmpty).text()
         XCTAssertFalse(shot.isEmpty)
         XCTAssertFalse(empty.isEmpty)
         XCTAssertNotEqual(shot, empty, "both ends of a match say the same thing")

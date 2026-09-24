@@ -170,7 +170,7 @@ derives_from: [FR-VIEW-030, CON-PUB-010]
 depends_on: [IF-VIEW-010]
 refines: []
 conflicts_with: []
-code: [Sources/CrawlCall/Input/TouchScheme.swift, Sources/CrawlCall/View/Controls.swift, Sources/CrawlCall/CrawlCallApp.swift]
+code: [Sources/CrawlCall/Input/TouchScheme.swift, Sources/CrawlCall/View/Controls.swift, Sources/CrawlCall/CrawlCallApp.swift, Sources/CrawlCall/Config/SymbolName.swift]
 tests: [Tests/CrawlCallTests/TouchSchemeTests.swift, Tests/CrawlCallTests/ControlsTests.swift]
 created: 2026-09-21
 ```
@@ -424,3 +424,24 @@ Which of the two, because they are opposite results — the snake was shot down,
 The same arena, because stage 1 has one map (concept §13) and a choice of levels is a menu, which the vertical slice does not build.
 In place of the steering controls, because a stick that still answers after the snake is dead says the match is not over.
 "A new match" is the whole of it and not only a new model: played on 2026-09-23, the first restart brought the bots the snake had eaten back the size the last bite had left them, because the drawing kept what the previous match had done to it. Whatever a match changes on screen, starting one puts back.
+
+### FR-VIEW-200 — Text is shown in the player's language
+
+```yaml
+status: implemented
+verification: T
+derives_from: []
+depends_on: []
+refines: []
+conflicts_with: []
+code: [Sources/CrawlCall/Config/TextKey.swift, Sources/CrawlCall/View/Localizable.xcstrings, Sources/CrawlCall/View/MatchEnd.swift, Sources/CrawlCall/View/Controls.swift]
+tests: [Tests/CrawlCallTests/TextCatalogTests.swift]
+created: 2026-09-24
+```
+
+When the game shows text to the player, the system **shall** show it in the first of the device's preferred languages that the game carries, and in English where it carries none of them.
+
+**Rationale.** The maintainer asked on 2026-09-24 for the interface's text to be built for translation from the start, while there are still only a handful of lines to move.
+The first of the preferred languages the game carries, because that is how the device already ranks what its owner reads, and a game that asked again would be answering a question the system has settled.
+English as the fallback because it is the language the game is written in, and the only one it carries for now; a language is added by translating the catalog of IF-VIEW-030, not by changing this requirement.
+What the fighters say is not text shown here: the model's lines, the pre-written ones and the instructions behind them are a question of their own (Q-290).

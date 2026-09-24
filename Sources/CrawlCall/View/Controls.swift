@@ -11,7 +11,7 @@
 // anything (FR-VIEW-160): lit when the head has reached somebody, dim when it has
 // not.
 //
-// implements: FR-VIEW-050, FR-VIEW-120, FR-VIEW-160
+// implements: FR-VIEW-050, FR-VIEW-120, FR-VIEW-160, FR-VIEW-200
 import SwiftUI
 
 struct Controls: View {
@@ -71,7 +71,7 @@ struct Controls: View {
 
     private var button: some View {
         Button(action: eat) {
-            Image(systemName: "fork.knife")
+            Image(systemName: SymbolName.eat)
                 .font(.system(size: 34, weight: .bold, design: .rounded))
                 .foregroundStyle(canEat ? mark : mark.opacity(0.35))
                 .frame(width: 96, height: 96)
@@ -83,6 +83,6 @@ struct Controls: View {
         .buttonStyle(.plain)
         .disabled(!canEat)
         .animation(.easeOut(duration: 0.12), value: canEat)
-        .accessibilityLabel("Eat")
+        .accessibilityLabel(Text(TextKey.controlsEat.key))
     }
 }
