@@ -20,6 +20,9 @@ final class FrameRecorder {
         record = FrameRecord(capacity: capacity)
         began = clock.now
         self.fileURL = fileURL
+        // A record left by an earlier run must not pass for this one's: a run that
+        // writes nothing — a crash, a kill — leaves no file rather than an old one.
+        try? FileManager.default.removeItem(at: fileURL)
     }
 
     /// Whether a launch's environment switches the record on.
@@ -47,18 +50,22 @@ final class FrameRecorder {
         var complete = frame
         complete.time = Self.milliseconds(clock.now - began)
         complete.interval = seconds * FrameRecording.millisecondsPerSecond
-        complete.events &+= pending.events
+        for event in FrameEvent.allCases {
+            complete.add(event, times: pending.count(of: event))
+        }
         pending = FrameRecord.Frame()
         record.record(complete)
     }
 
-    /// Writes the record off the main thread, from a copy taken now: a write is the
-    /// kind of work that stalls a frame.
+    /// Writes the record off the main thread, from a copy taken now: turning a full
+    /// ring into text and writing it are the kind of work that stalls a frame, so both
+    /// happen off it. The copy is the value as it is — the ring's storage is shared
+    /// until a later frame writes to it.
     func writeInBackground() {
-        let text = record.csv()
+        let snapshot = record
         let url = fileURL
         DispatchQueue.global(qos: .utility).async {
-            try? text.write(to: url, atomically: true, encoding: .utf8)
+            try? snapshot.csv().write(to: url, atomically: true, encoding: .utf8)
         }
     }
 

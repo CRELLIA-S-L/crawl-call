@@ -73,6 +73,19 @@ final class PieceIndexTests: XCTestCase {
         }
     }
 
+    func testABoxTheGridCannotHoldIsAnsweredWithEveryPiece() throws {
+        // Not a number, and wider than the map by far: the scan before the index
+        // answered both, so the index must not trap on either.
+        let plan = try Launch.world().get().plan
+        let every = Array(0..<plan.pieces.count)
+        XCTAssertEqual(plan.index.candidates(low: SIMD3(.nan, 0, 0), high: SIMD3(1, 0, 1)), every)
+        XCTAssertEqual(plan.index.candidates(low: SIMD3(0, 0, 0), high: SIMD3(.infinity, 0, 1)), every)
+        XCTAssertEqual(plan.index.candidates(low: SIMD3(-1e18, 0, -1e18), high: SIMD3(1e18, 0, 1e18)), every)
+        // A sight test given such a line answers rather than traps; which answer is
+        // the scan's business, as it was before the index.
+        _ = Sight.isClear(from: SIMD3(.nan, 1, 0), to: SIMD3(0, 1, 0), through: plan)
+    }
+
     func testAPlanWithNoCellSizeHandsBackEveryPiece() {
         let piece = ScenePlan.Piece(module: "wall", size: SIMD3(1, 1, 1), centre: .zero, colour: .zero, level: 0)
         let plan = ScenePlan(pieces: [piece, piece], cellSize: 0, floorHeight: 3)

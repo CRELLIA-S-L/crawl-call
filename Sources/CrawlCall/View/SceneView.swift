@@ -130,9 +130,9 @@ enum SceneView {
         moved.z = min(max(focus.z, head.z - halfZ), head.z + halfZ)
         // And then no further than the arena: ground past its edge is nothing at all,
         // and a match that begins in a corner spends most of the screen on it
-        // (FR-VIEW-020). The window is taken as the vertical span on both axes, the
-        // same conservative measure the region above uses and for the same reason —
-        // this layer does not know the frame's aspect.
+        // (FR-VIEW-020). The window is the span across and the span down that the
+        // region above uses: across narrowed by the frame's aspect where the frame is
+        // taller than it is wide, down taken whole and so conservative.
         moved.x = stopped(moved.x, half: spanAcross * Geometry.half, between: arena.lowest.x, and: arena.highest.x)
         moved.z = stopped(moved.z, half: span * Geometry.half, between: arena.lowest.z, and: arena.highest.z)
         // Height follows the head outright: a floor change is not something to lag

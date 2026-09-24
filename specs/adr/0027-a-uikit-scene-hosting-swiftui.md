@@ -38,4 +38,4 @@ So `AppDelegate` observes `UIScene.willConnectNotification` from launch, and a w
 
 The entry point is a UIKit scene, and the SwiftUI views under it are unchanged.
 A scene restored from the SwiftUI build is taken over as it connects; `WindowTests` gives the suite's own scene a stranger's delegate and checks it is taken back.
-The scene manifest stays generated; the configuration comes from code, so a scene the system restores carries the configuration it was made with.
+The game is one scene: `CrawlCall-Info.plist` sets `UIApplicationSupportsMultipleScenes` to false and is merged with the keys the build generates — generated, the manifest said true, and a second window on an iPad was a second game reading the world again and writing the same frame record. The configuration comes from code, so a scene the system restores carries the configuration it was made with.

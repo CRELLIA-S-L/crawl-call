@@ -148,6 +148,25 @@ final class FrameRecordTests: XCTestCase {
         XCTAssertEqual(try String(contentsOf: url, encoding: .utf8), asked)
     }
 
+    @MainActor
+    func testAnEventNotedTooOftenStopsAtItsLimitInTheFrameToo() {
+        let recorder = FrameRecorder(capacity: 2, fileURL: file)
+        recorder.note(.hit, times: Int(UInt16.max))
+        var frame = frame()
+        frame.add(.hit, times: 7)
+        recorder.add(interval: 1.0 / 60, frame)
+        XCTAssertEqual(recorder.record.frames[0].count(of: .hit), Int(UInt16.max))
+    }
+
+    @MainActor
+    func testStartingARecordRemovesTheOneAnEarlierRunLeft() throws {
+        let url = file
+        try "frame\n1\n".write(to: url, atomically: true, encoding: .utf8)
+        _ = FrameRecorder(capacity: 2, fileURL: url)
+        XCTAssertFalse(FileManager.default.fileExists(atPath: url.path(percentEncoded: false)),
+                       "a record from an earlier run would pass for this one's")
+    }
+
     func testTheRecordIsWrittenToTheDocumentsContainer() {
         XCTAssertEqual(FrameRecorder.defaultFileURL.deletingLastPathComponent().standardizedFileURL,
                        URL.documentsDirectory.standardizedFileURL)
@@ -266,7 +285,11 @@ final class MatchRecordTests: XCTestCase {
             RunLoop.current.run(until: Date().addingTimeInterval(0.01))
         }
         let written = try String(contentsOf: url, encoding: .utf8)
-        XCTAssertTrue(written.contains("match_began;match_ended") || written.contains("match_ended"), written)
+        // The record as it was when the match ended: the header and the one frame the
+        // match began and ended in — the second frame came after the copy was taken.
+        let rows = written.split(separator: "\n")
+        XCTAssertEqual(rows.count, 2, written)
+        XCTAssertTrue(rows[1].hasSuffix(",match_began;match_ended"), String(rows[1]))
     }
 
     func testARestartBeginsAMatchInTheSameRecord() throws {

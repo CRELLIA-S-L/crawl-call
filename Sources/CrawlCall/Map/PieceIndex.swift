@@ -40,10 +40,17 @@ struct PieceIndex: Equatable {
     /// Touching counts: a piece whose edge lies on the box's edge is a candidate, as the
     /// box test after it would keep it.
     func candidates(low: SIMD3<Double>, high: SIMD3<Double>) -> [Int] {
-        guard cellSize > .zero else { return Array(Int.zero..<pieceCount) }
+        // A box the grid cannot hold — no cell size, a coordinate that is not a number,
+        // a span wider than the map has pieces — is answered with every piece, as the
+        // scan before the index answered everything.
+        // Checked without building anything: this runs for every sight test.
+        guard cellSize > .zero,
+              low.x.isFinite, low.z.isFinite, high.x.isFinite, high.z.isFinite,
+              (high.x - low.x) / cellSize < Double(pieceCount),
+              (high.z - low.z) / cellSize < Double(pieceCount) else { return Array(Int.zero..<pieceCount) }
         let xs = Self.cell(low.x, cellSize)...Self.cell(high.x, cellSize)
         let zs = Self.cell(low.z, cellSize)...Self.cell(high.z, cellSize)
-        // A box wider than the map has more cells than the map has pieces: every piece.
+        // Both spans are under the piece count here, so their product cannot overflow.
         guard xs.count * zs.count < pieceCount else { return Array(Int.zero..<pieceCount) }
         var seen = [Bool](repeating: false, count: pieceCount)
         var found: [Int] = []

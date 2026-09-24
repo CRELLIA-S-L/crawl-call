@@ -38,3 +38,18 @@ extension FrameRecording {
     /// The unit the record's times are kept in.
     static let millisecond = Duration.milliseconds(FrameRecording.once)
 }
+
+/// What happened in a frame that its cost might be owed to.
+enum FrameEvent: String, CaseIterable {
+    case matchBegan = "match_began"
+    case matchEnded = "match_ended"
+    case deliberation
+    case mealBegan = "meal_began"
+    case mealEnded = "meal_ended"
+    case hit
+    /// A module drawn through the hole shader for the first time: the moment its
+    /// pipeline may be built on the GPU.
+    case firstHole = "first_hole"
+    /// A module that changed its look — solid, clear or cut open.
+    case lookChanged = "look_changed"
+}

@@ -96,14 +96,30 @@ final class WindowTests: XCTestCase {
         // A device that ran the SwiftUI `App` build restores its scene with SwiftUI's
         // delegate, which draws nothing (ADR-0027). The suite's own scene stands in: given
         // a delegate of another kind, it is taken over and gets the game's window again.
+        // Through the notification the app delegate listens for, as a restored scene
+        // is met; the suite's own delegate is put back afterwards, and the second
+        // window the take-over built is hidden, so the tests after this one see the
+        // scene as they found it.
         final class Stranger: UIResponder, UIWindowSceneDelegate {}
         let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.first as? UIWindowScene)
+        let original = scene.delegate
         let stranger = Stranger()
         scene.delegate = stranger
-        AppDelegate.takeOver(scene)
-        XCTAssertTrue(scene.delegate is SceneDelegate)
-        let root = try XCTUnwrap((scene.delegate as? SceneDelegate)?.window?.rootViewController)
+        NotificationCenter.default.post(name: UIScene.willConnectNotification, object: scene)
+        let taken = scene.delegate as? SceneDelegate
+        taken?.window?.isHidden = true
+        scene.delegate = original
+        let root = try XCTUnwrap(taken?.window?.rootViewController, "the scene was not taken over")
         XCTAssertTrue(String(describing: type(of: root)).hasPrefix("GameHostingController"))
+    }
+
+    func testTheGameIsOneScene() throws {
+        // A second window on an iPad would be a second game writing the same record.
+        let url = try XCTUnwrap(Bundle.main.url(forResource: "Info", withExtension: "plist"))
+        let info = try XCTUnwrap(NSDictionary(contentsOf: url) as? [String: Any])
+        let manifest = try XCTUnwrap(info["UIApplicationSceneManifest"] as? [String: Any])
+        XCTAssertEqual(manifest["UIApplicationSupportsMultipleScenes"] as? Bool, false)
+        XCTAssertFalse(UIApplication.shared.supportsMultipleScenes)
     }
 
     // MARK: FR-VIEW-220 — the lock is asked for on the iPad alone

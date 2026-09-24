@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- What the generated Info.plist cannot say: the game is one scene. A second window
+     on an iPad would be a second game, reading the world again and writing the same
+     frame record over the first (FR-VIEW-210, ADR-0027). Merged with the keys the
+     build generates from CrawlCall.xcconfig. -->
+<plist version="1.0">
+<dict>
+	<key>UIApplicationSceneManifest</key>
+	<dict>
+		<key>UIApplicationSupportsMultipleScenes</key>
+		<false/>
+	</dict>
+</dict>
+</plist>
