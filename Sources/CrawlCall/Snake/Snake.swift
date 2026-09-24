@@ -14,7 +14,7 @@ struct Snake {
     /// How many segments the tail carries.
     private(set) var segments: Int
     /// Damage taken that has not yet cost a whole segment (FR-SNAKE-070).
-    private var unpaid = 0.0
+    private var unpaid: Double = .zero
     /// False once a hit has landed on a snake with nothing left to lose (FR-SNAKE-210).
     private(set) var isAlive = true
     /// The height a climb is still working its way up to, while one is under way.
@@ -42,7 +42,7 @@ struct Snake {
     /// FR-SNAKE-015, FR-SNAKE-220, ADR-0021). Speed is the configuration's
     /// (FR-SNAKE-030).
     mutating func advance(direction: SIMD2<Double>, speed: Double, seconds: Double, over surfaces: Surfaces) {
-        guard speed > 0, seconds > 0 else { return }
+        guard speed > .zero, seconds > .zero else { return }
         var budget = speed * seconds
 
         // A climb already under way is paid for first, and paid for whether or not
@@ -51,15 +51,15 @@ struct Snake {
         // head rather than hanging through the floor.
         if let target = climbingTo {
             let gap = target - head.y
-            let step = min(budget, abs(gap)) * (gap < 0 ? -1 : 1)
+            let step = min(budget, abs(gap)) * (gap < .zero ? Motion.down : Motion.up)
             moveTo(SIMD3(head.x, head.y + step, head.z))
             budget -= abs(step)
-            if abs(target - head.y) < 1e-9 { climbingTo = nil }
-            guard budget > 1e-12 else { return }
+            if abs(target - head.y) < Geometry.samePosition { climbingTo = nil }
+            guard budget > Motion.negligibleDistance else { return }
         }
 
         let length = (direction.x * direction.x + direction.y * direction.y).squareRoot()
-        guard length > 0 else { return }
+        guard length > .zero else { return }
         let unit = SIMD2(direction.x / length, direction.y / length)
 
         // The frame's distance is walked in pieces no longer than half a cell. A whole
@@ -67,8 +67,8 @@ struct Snake {
         // half-second frame is a metre and a half, and a wall in between would go
         // unnoticed. Frames do get long — a pause, a stall, the app coming back — and
         // the snake must not pass through geometry because of it.
-        let longest = max(surfaces.cellSize / 2, 1e-6)
-        while budget > 1e-12 {
+        let longest = max(surfaces.cellSize * Geometry.half, Motion.shortestPiece)
+        while budget > Motion.negligibleDistance {
             let step = min(budget, longest)
             guard let spent = slide(unit: unit, distance: step, over: surfaces) else { return }
             budget -= spent
@@ -97,17 +97,17 @@ struct Snake {
         var moved = false
         // The way asked for; then along what stopped it; then along a second thing,
         // where the first led into a corner.
-        for _ in 0..<3 {
+        for _ in Int.zero..<Motion.slideAttempts {
             guard let step = stepOnce(unit: direction, distance: left, over: surfaces) else {
                 return slideAcrossCells(unit: direction, distance: left, over: surfaces) || moved ? distance : nil
             }
             guard let against = step.against else { return distance }
-            moved = moved || step.covered > 1e-12
+            moved = moved || step.covered > Motion.negligibleDistance
             let pressing = direction.x * against.x + direction.y * against.y
             let along = SIMD2(direction.x - pressing * against.x, direction.y - pressing * against.y)
             let share = (along.x * along.x + along.y * along.y).squareRoot()
             left = (left - step.covered) * share
-            guard share > 1e-9, left > 1e-12 else { break }
+            guard share > Motion.negligibleShare, left > Motion.negligibleDistance else { break }
             direction = along / share
         }
         return moved ? distance : nil
@@ -119,14 +119,14 @@ struct Snake {
         // The larger part first: a head stopped by a corner goes the way the player
         // is leaning, and one stopped by a flat edge has only one part left at all.
         let parts = abs(unit.x) >= abs(unit.y)
-            ? [SIMD2(unit.x, 0.0), SIMD2(0.0, unit.y)]
-            : [SIMD2(0.0, unit.y), SIMD2(unit.x, 0.0)]
+            ? [SIMD2(unit.x, .zero), SIMD2(.zero, unit.y)]
+            : [SIMD2(.zero, unit.y), SIMD2(unit.x, .zero)]
         for part in parts {
             let share = abs(part.x + part.y)
-            guard share > 1e-12 else { continue }
+            guard share > Motion.negligibleDistance else { continue }
             let along = SIMD2(part.x / share, part.y / share)
             if let step = stepOnce(unit: along, distance: distance * share, over: surfaces),
-               step.covered > 1e-12 { return true }
+               step.covered > Motion.negligibleDistance { return true }
         }
         return false
     }
@@ -143,7 +143,7 @@ struct Snake {
         // The body first: as far as it goes before it touches something it cannot
         // pass (FR-SNAKE-010, ADR-0021). What the grid says is asked of where it got to.
         let room = surfaces.room(from: head, floor: floor, along: unit, upTo: distance)
-        guard room.metres > 1e-12 else { return (0, room.against) }
+        guard room.metres > Motion.negligibleDistance else { return (.zero, room.against) }
         let wanted = SIMD3(head.x + unit.x * room.metres, head.y, head.z + unit.y * room.metres)
 
         if surfaces.isWalkable(wanted, floor: floor) {
@@ -184,18 +184,19 @@ struct Snake {
 
     private mutating func moveTo(_ position: SIMD3<Double>) {
         head = position
-        trail.insert(position, at: 0)
+        trail.insert(position, at: trail.startIndex)
         trim()
     }
 
     /// The trail is kept just long enough to carry the tail, and no longer.
     private mutating func trim() {
         let needed = Double(segments) * segmentSpacing
-        var walked = 0.0
-        var keep = 1
+        var walked: Double = .zero
+        // The head's own place is always kept; `keep` is how many places are.
+        var keep = trail.index(after: trail.startIndex)
         while keep < trail.count && walked < needed {
-            walked += distance(trail[keep - 1], trail[keep])
-            keep += 1
+            walked += distance(trail[trail.index(before: keep)], trail[keep])
+            trail.formIndex(after: &keep)
         }
         if trail.count > keep { trail.removeLast(trail.count - keep) }
     }
@@ -203,30 +204,32 @@ struct Snake {
     /// Where each segment sits: walking back along the trail, one spacing at a time,
     /// so that a segment rests on the surface the head crossed (FR-SNAKE-020).
     var tail: [SIMD3<Double>] {
-        guard segments > 0, trail.count > 1 else { return [] }
+        // A tail needs a stretch of path: two places at least.
+        guard segments > .zero, trail.index(after: trail.startIndex) < trail.endIndex else { return [] }
         var result: [SIMD3<Double>] = []
-        var index = 0
-        var carried = 0.0
-        for _ in 0..<segments {
+        var index = trail.startIndex
+        var carried: Double = .zero
+        for _ in Int.zero..<segments {
             var remaining = segmentSpacing
-            while index + 1 < trail.count {
-                let span = distance(trail[index], trail[index + 1]) - carried
+            while trail.index(after: index) < trail.endIndex {
+                let next = trail.index(after: index)
+                let span = distance(trail[index], trail[next]) - carried
                 if span >= remaining {
                     let from = trail[index]
-                    let to = trail[index + 1]
+                    let to = trail[next]
                     let total = distance(from, to)
                     let travelled = carried + remaining
-                    let t = total > 0 ? travelled / total : 0
+                    let t = total > .zero ? travelled / total : .zero
                     result.append(from + (to - from) * t)
                     carried = travelled
-                    remaining = 0
+                    remaining = .zero
                     break
                 }
                 remaining -= span
-                carried = 0
-                index += 1
+                carried = .zero
+                index = next
             }
-            if remaining > 0 { return result }   // the trail is shorter than the tail
+            if remaining > .zero { return result }   // the trail is shorter than the tail
         }
         return result
     }
@@ -240,13 +243,13 @@ struct Snake {
     /// would make them harmless however long they fired.
     @discardableResult
     mutating func take(damage: Double, perSegment: Double) -> Int {
-        guard damage > 0, perSegment > 0 else { return 0 }
+        guard damage > .zero, perSegment > .zero else { return .zero }
         // The tail is the life (ADR-0009), so a hit on a snake with no tail has
         // nothing to take but the snake (FR-SNAKE-210). Banking it would make the
         // last hit the only harmless one there is.
-        guard segments > 0 else {
+        guard segments > .zero else {
             isAlive = false
-            return 0
+            return .zero
         }
         unpaid += damage
         let lost = min(segments, Int(unpaid / perSegment))

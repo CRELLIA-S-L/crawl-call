@@ -35,7 +35,7 @@ struct Surfaces {
         let solid = Set(kit.modules.values.filter { !$0.walkable }.map(\.name))
         self.obstacles = ScenePlan.make(map: map, kit: kit, cellSize: tuning.navigationGraphCellSize).pieces
             .filter { solid.contains($0.module) }
-            .map { (lowest: $0.centre - $0.size / 2, highest: $0.centre + $0.size / 2) }
+            .map { (lowest: $0.centre - $0.size * Geometry.half, highest: $0.centre + $0.size * Geometry.half) }
         self.graph = graph
         self.cellSize = tuning.navigationGraphCellSize
         self.floorHeight = kit.floorHeight
@@ -92,10 +92,10 @@ struct Surfaces {
         // beneath it is walking into a wall, not stepping off an edge — and without
         // this the head drops through the balcony's own walls.
         guard !occupied.contains(cell(of: position, floor: floor)) else { return nil }
-        var candidate = floor - 1
+        var candidate = floor - MapGrid.floorStep
         while elevation(of: floor) - elevation(of: candidate) <= maximumDropHeight {
             if graph.isWalkable(cell(of: position, floor: candidate)) { return candidate }
-            candidate -= 1
+            candidate -= MapGrid.floorStep
         }
         return nil
     }
@@ -113,28 +113,30 @@ struct Surfaces {
     /// of a head on the floor below.
     func clearance(at position: SIMD3<Double>, floor: Int) -> (metres: Double, away: SIMD2<Double>)? {
         let bottom = elevation(of: floor)
-        let top = bottom + 2 * bodyRadius
+        let top = bottom + Motion.heightInRadii * bodyRadius
         var nearest: (metres: Double, away: SIMD2<Double>)?
         for box in obstacles where box.lowest.y < top && box.highest.y > bottom {
-            let offset = SIMD2(position.x - (box.lowest.x + box.highest.x) / 2,
-                               position.z - (box.lowest.z + box.highest.z) / 2)
-            let half = SIMD2((box.highest.x - box.lowest.x) / 2, (box.highest.z - box.lowest.z) / 2)
+            let offset = SIMD2(position.x - (box.lowest.x + box.highest.x) * Geometry.half,
+                               position.z - (box.lowest.z + box.highest.z) * Geometry.half)
+            let half = SIMD2((box.highest.x - box.lowest.x) * Geometry.half,
+                             (box.highest.z - box.lowest.z) * Geometry.half)
             // How far outside the footprint along each axis; negative inside it.
             let beyond = SIMD2(abs(offset.x) - half.x, abs(offset.y) - half.y)
-            let outside = SIMD2(max(beyond.x, 0), max(beyond.y, 0))
+            let outside = SIMD2(max(beyond.x, .zero), max(beyond.y, .zero))
             let length = (outside.x * outside.x + outside.y * outside.y).squareRoot()
             let metres: Double
             let away: SIMD2<Double>
-            if length > 0 {
+            if length > .zero {
                 metres = length
-                away = SIMD2(offset.x < 0 ? -outside.x : outside.x, offset.y < 0 ? -outside.y : outside.y) / length
+                away = SIMD2(offset.x < .zero ? -outside.x : outside.x,
+                             offset.y < .zero ? -outside.y : outside.y) / length
             } else if beyond.x > beyond.y {
                 // Inside: out through the nearest side.
                 metres = beyond.x
-                away = SIMD2(offset.x < 0 ? -1 : 1, 0)
+                away = SIMD2(offset.x < .zero ? Geometry.belowSide : Geometry.aboveSide, .zero)
             } else {
                 metres = beyond.y
-                away = SIMD2(0, offset.y < 0 ? -1 : 1)
+                away = SIMD2(.zero, offset.y < .zero ? Geometry.belowSide : Geometry.aboveSide)
             }
             let gap = metres - bodyRadius
             if nearest == nil || gap < nearest!.metres { nearest = (gap, away) }
@@ -156,19 +158,19 @@ struct Surfaces {
     /// module to the other.
     func room(from position: SIMD3<Double>, floor: Int, along unit: SIMD2<Double>,
               upTo distance: Double) -> (metres: Double, against: SIMD2<Double>?) {
-        let deepest = min(0, clearance(at: position, floor: floor)?.metres ?? 0)
+        let deepest = min(.zero, clearance(at: position, floor: floor)?.metres ?? .zero)
         func at(_ metres: Double) -> SIMD3<Double> {
             SIMD3(position.x + unit.x * metres, position.y, position.z + unit.y * metres)
         }
         func fits(_ metres: Double) -> Bool {
             guard let there = clearance(at: at(metres), floor: floor) else { return true }
-            return there.metres >= deepest - 1e-12
+            return there.metres >= deepest - Motion.negligibleDistance
         }
         if fits(distance) { return (distance, nil) }
-        var low = 0.0
+        var low: Double = .zero
         var high = distance
-        while high - low > 1e-7 {
-            let middle = (low + high) / 2
+        while high - low > Motion.contactPrecision {
+            let middle = (low + high) * Geometry.half
             if fits(middle) { low = middle } else { high = middle }
         }
         // What stopped the body is what it would be inside of just past the contact —
@@ -179,7 +181,7 @@ struct Surfaces {
 
     /// Whether the body can stand at a position without being inside anything.
     func fits(_ position: SIMD3<Double>, floor: Int) -> Bool {
-        (clearance(at: position, floor: floor)?.metres ?? 0) >= -1e-9
+        (clearance(at: position, floor: floor)?.metres ?? .zero) >= -Motion.overlapTolerance
     }
 
     /// A place for the body near a position, clear of what it cannot pass: moved out
@@ -191,9 +193,9 @@ struct Surfaces {
     /// round is a corner, and a body wider than a cell sits in both walls there.
     func clear(_ position: SIMD3<Double>, floor: Int) -> SIMD3<Double> {
         var here = position
-        for _ in 0..<8 {
-            guard let near = clearance(at: here, floor: floor), near.metres < 0 else { break }
-            here += SIMD3(near.away.x, 0, near.away.y) * -near.metres
+        for _ in Int.zero..<Motion.pushOutAttempts {
+            guard let near = clearance(at: here, floor: floor), near.metres < .zero else { break }
+            here += SIMD3(near.away.x, .zero, near.away.y) * -near.metres
         }
         guard cell(of: here, floor: floor) == cell(of: position, floor: floor),
               fits(here, floor: floor) else { return position }

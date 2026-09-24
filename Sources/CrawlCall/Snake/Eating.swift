@@ -42,15 +42,15 @@ struct Eating: Equatable {
     /// A body takes no damage — there is nothing left to hurt — and its meal is over
     /// when its time is spent, which the caller reads from `isFinished`.
     mutating func advance(seconds: Double) -> Double {
-        guard seconds > 0 else { return 0 }
+        guard seconds > .zero else { return .zero }
         guard alive else {
-            left = max(0, (left ?? 0) - seconds)
-            return 0
+            left = max(.zero, (left ?? .zero) - seconds)
+            return .zero
         }
         return bite * seconds
     }
 
     /// Whether a body's meal is over. Live prey is finished by running out of health,
     /// which is the prey's business and not this type's.
-    var isFinished: Bool { alive ? false : (left ?? 0) == 0 }
+    var isFinished: Bool { alive ? false : (left ?? .zero) == .zero }
 }

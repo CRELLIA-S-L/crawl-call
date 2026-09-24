@@ -15,7 +15,7 @@ derives_from: []
 depends_on: []
 refines: []
 conflicts_with: []
-code: [Sources/CrawlCall/Snake/Snake.swift, Sources/CrawlCall/Snake/Surfaces.swift, Sources/CrawlCall/Game.swift, Sources/CrawlCall/View/SnakeEntity.swift]
+code: [Sources/CrawlCall/Snake/Snake.swift, Sources/CrawlCall/Snake/Surfaces.swift, Sources/CrawlCall/Game.swift, Sources/CrawlCall/View/SnakeEntity.swift, Sources/CrawlCall/Config/Motion.swift, Sources/CrawlCall/Config/Geometry.swift]
 tests: [Tests/CrawlCallTests/SnakeTests.swift, Tests/CrawlCallTests/GameTests.swift]
 created: 2026-09-21
 ```
@@ -37,7 +37,7 @@ derives_from: [FR-SNAKE-010]
 depends_on: []
 refines: [FR-SNAKE-010, FR-SNAKE-030]
 conflicts_with: []
-code: [Sources/CrawlCall/Snake/Snake.swift]
+code: [Sources/CrawlCall/Snake/Snake.swift, Sources/CrawlCall/Config/Motion.swift]
 tests: [Tests/CrawlCallTests/SnakeTests.swift]
 created: 2026-09-23
 ```
@@ -59,7 +59,7 @@ derives_from: [FR-SNAKE-010]
 depends_on: []
 refines: []
 conflicts_with: []
-code: [Sources/CrawlCall/Snake/Snake.swift, Sources/CrawlCall/Snake/Surfaces.swift, Sources/CrawlCall/View/SnakeEntity.swift]
+code: [Sources/CrawlCall/Snake/Snake.swift, Sources/CrawlCall/Snake/Surfaces.swift, Sources/CrawlCall/View/SnakeEntity.swift, Sources/CrawlCall/Config/Motion.swift]
 tests: [Tests/CrawlCallTests/SnakeTests.swift, Tests/CrawlCallTests/GameTests.swift]
 created: 2026-09-21
 ```
@@ -78,7 +78,7 @@ derives_from: [FR-SNAKE-010]
 depends_on: [IF-SNAKE-010]
 refines: []
 conflicts_with: []
-code: [Sources/CrawlCall/Snake/Snake.swift, Sources/CrawlCall/Game.swift]
+code: [Sources/CrawlCall/Snake/Snake.swift, Sources/CrawlCall/Game.swift, Sources/CrawlCall/Config/Motion.swift]
 tests: [Tests/CrawlCallTests/SnakeTests.swift, Tests/CrawlCallTests/GameTests.swift]
 created: 2026-09-21
 ```
@@ -453,7 +453,7 @@ derives_from: [FR-SNAKE-010, FR-SNAKE-020]
 depends_on: [IF-MAP-020]
 refines: [FR-SNAKE-020]
 conflicts_with: []
-code: [Sources/CrawlCall/Snake/Snake.swift, Sources/CrawlCall/Snake/Surfaces.swift]
+code: [Sources/CrawlCall/Snake/Snake.swift, Sources/CrawlCall/Snake/Surfaces.swift, Sources/CrawlCall/Config/Motion.swift, Sources/CrawlCall/Config/MapFormat.swift]
 tests: [Tests/CrawlCallTests/SnakeTests.swift]
 created: 2026-09-21
 ```

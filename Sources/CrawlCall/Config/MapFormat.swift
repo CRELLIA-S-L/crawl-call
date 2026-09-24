@@ -1,7 +1,7 @@
 // The words, separators and positions of the map file format (IF-MAP-010) and of a
 // kit's legend (ADR-0012), named once for the parser and for its messages (ART-070).
 //
-// implements: IF-MAP-010, FR-TOOL-010, FR-TOOL-020, FR-TOOL-030, FR-MAP-100
+// implements: IF-MAP-010, FR-TOOL-010, FR-TOOL-020, FR-TOOL-030, FR-MAP-100, FR-SNAKE-220
 import Foundation
 
 enum MapFormat {
@@ -60,4 +60,9 @@ enum MapGrid {
     /// Small enough to be invisible at a cell of half a metre, large enough that no
     /// two faces end up in the same plane (FR-TOOL-020).
     static let surfaceOverlap = 0.01
+}
+
+extension MapGrid {
+    /// Floors are numbered one apart: the floor below floor n is n − floorStep.
+    static let floorStep = 1
 }

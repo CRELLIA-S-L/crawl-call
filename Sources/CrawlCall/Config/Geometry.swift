@@ -2,7 +2,7 @@
 // would tune (ART-070): halves, the ends of a segment, which side of a box a point is
 // on, and how close two numbers must be to count as the same.
 //
-// implements: FR-VIEW-150, FR-BOT-050, FR-TOOL-020, FR-MAP-090
+// implements: FR-VIEW-150, FR-BOT-050, FR-TOOL-020, FR-MAP-090, FR-SNAKE-010
 import Foundation
 
 enum Geometry {
