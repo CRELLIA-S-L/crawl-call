@@ -84,7 +84,7 @@ enum Squads {
             let here = queue[index]
             queue.formIndex(after: &index)
             for next in graph.neighbours(of: here).sorted(by: before) where seen[next] == nil {
-                seen[next] = seen[here]! + MapGrid.neighbourStep
+                seen[next] = seen[here]! + MapGrid.stepsPerNeighbour
                 queue.append(next)
             }
         }

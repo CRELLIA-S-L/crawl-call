@@ -112,7 +112,7 @@ enum Execution {
     private static func advance(_ bot: inout Bot, by distance: Double,
                                 cellSize: Double, floorHeight: Double) {
         var left = distance
-        while left > Geometry.samePosition, let next = bot.path.first {
+        while left > Walking.arrived, let next = bot.path.first {
             let there = SIMD3(Double(next.x) * cellSize,
                               Double(next.floor) * floorHeight,
                               Double(next.z) * cellSize)

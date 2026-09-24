@@ -6,10 +6,6 @@
 import Foundation
 
 enum Utility {
-    /// The whole of something a fraction is a part of: what is left of a magazine is
-    /// the whole less the share spent, and a nearness runs from the whole at arm's
-    /// length to nothing at the limit.
-    static let whole = 1.0
     /// The share of its remaining health that takes from a bot's wish for cover: a
     /// whole bot still wants cover half as much as a bot on its last legs.
     static let coverHealthShare = 0.5
@@ -26,6 +22,12 @@ enum Scheduling {
     /// every step it goes without a slot.
     static let firstWait = 1
     static let waitStep = 1
+}
+
+/// Numbers of a bot walking its route.
+enum Walking {
+    /// Metres of a step left below which a bot has walked it all.
+    static let arrived = 1e-9
 }
 
 /// Numbers of firing (FR-BOT-060).

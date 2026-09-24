@@ -87,7 +87,7 @@ enum Deliberation {
             // Squared, so that the term stays flat while there is a magazine to
             // spend and climbs only as it runs out: a bot that reloaded after every
             // shot would spend a firefight looking at its hands.
-            let spent = Utility.whole - ammunition
+            let spent = Fraction.whole - ammunition
             scored.append((.reload, term.empty * spent * spent))
         }
 
@@ -101,11 +101,11 @@ enum Deliberation {
                     return ally.health < theirs.health
                         && Perception.metres(bot.position, ally.position) <= situation.configuration.groupingDistance
                 }
-            if let worst = hurt.min(by: { $0.health < $1.health }) {
-                // Every ally in `hurt` has an archetype the configuration knows, so the
-                // fallback is never taken; it is the whole a missing share is taken from.
-                let theirs = situation.configuration.archetypes[worst.archetype.rawValue]?.health ?? Utility.whole
-                let missing = theirs > .zero ? Utility.whole - worst.health / theirs : .zero
+            // Every ally in `hurt` has an archetype the configuration knows, so the
+            // second condition holds whenever the first does.
+            if let worst = hurt.min(by: { $0.health < $1.health }),
+               let theirs = situation.configuration.archetypes[worst.archetype.rawValue]?.health {
+                let missing = theirs > .zero ? Fraction.whole - worst.health / theirs : .zero
                 scored.append((.heal(ally: worst.id), term.mercy * missing * bot.weights.selfSacrifice))
             }
         }
@@ -213,6 +213,6 @@ enum Deliberation {
     /// One at arm's length, nothing at the edge of the world.
     private static func nearness(_ metres: Double, within limit: Double) -> Double {
         guard limit > .zero else { return .zero }
-        return max(.zero, Utility.whole - metres / limit)
+        return max(.zero, Fraction.whole - metres / limit)
     }
 }

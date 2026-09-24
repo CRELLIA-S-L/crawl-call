@@ -12,6 +12,9 @@ enum Motion {
     /// The share of a step that runs along an obstacle below which there is nothing
     /// left to slide along.
     static let negligibleShare = 1e-9
+    /// The share of a unit direction along one axis below which that axis carries no
+    /// part of a step worth taking.
+    static let negligibleAxisShare = 1e-12
     /// Metres: the shortest piece a frame is walked in, however small the cells.
     static let shortestPiece = 1e-6
     /// A step is tried the way asked for, then along what stopped it, then along a
@@ -20,6 +23,9 @@ enum Motion {
     /// Metres: the search for where the body touches stops once it has narrowed the
     /// contact to this.
     static let contactPrecision = 1e-7
+    /// Metres of slack in asking whether a step goes no deeper into something than the
+    /// body already is.
+    static let depthSlack = 1e-12
     /// Metres the body may be inside something and still count as standing clear.
     static let overlapTolerance = 1e-9
     /// How many times a body set down inside something is moved out of it before

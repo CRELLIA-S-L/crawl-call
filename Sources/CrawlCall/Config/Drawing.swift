@@ -2,14 +2,8 @@
 // rather than the look (ART-070). What the models themselves look like — sizes,
 // colours, materials — waits for their rework (Q-280).
 //
-// implements: FR-VIEW-100, FR-VIEW-170
+// implements: FR-VIEW-170
 import Foundation
-
-/// The two ends of a share of something: none of it and all of it.
-enum Fraction {
-    static let none = 0.0
-    static let whole = 1.0
-}
 
 /// The pool of tracer bars the shots are drawn with (FR-VIEW-170).
 enum Tracers {

@@ -65,4 +65,6 @@ enum MapGrid {
 extension MapGrid {
     /// Floors are numbered one apart: the floor below floor n is n − floorStep.
     static let floorStep = 1
+    /// A walk over the graph counts one step for every neighbour it moves to.
+    static let stepsPerNeighbour = 1
 }

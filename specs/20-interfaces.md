@@ -181,7 +181,7 @@ derives_from: []
 depends_on: []
 refines: []
 conflicts_with: []
-code: [Sources/CrawlCall/Input/Intent.swift]
+code: [Sources/CrawlCall/Input/Intent.swift, Sources/CrawlCall/Config/IntentName.swift]
 tests: [Tests/CrawlCallTests/IntentTests.swift, Tests/CrawlCallTests/TouchSchemeTests.swift]
 created: 2026-09-21
 ```

@@ -150,7 +150,7 @@ struct Game {
             return aged.left > .zero ? aged : nil
         }
         let steps = slots.steps(after: seconds, period: world.configurations.bot.deliberationPeriod)
-        for _ in 0..<steps {
+        for _ in Int.zero..<steps {
             let holders = slots.next(among: bots, snake: body, configuration: world.configurations.bot)
             let volley = Execution.deliberate(&bots, slots: holders, snake: body, world: world)
             shots += volley.shots

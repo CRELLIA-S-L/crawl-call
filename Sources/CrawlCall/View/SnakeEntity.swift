@@ -20,7 +20,7 @@ enum SnakeEntity {
         let root = Entity()
         root.name = EntityName.snake
         root.addChild(body(radius: radius, colour: headColour, name: EntityName.head))
-        for index in 0..<segments {
+        for index in Int.zero..<segments {
             root.addChild(body(radius: radius * 0.92, colour: bodyColour, name: EntityName.numbered(EntityName.segment, index)))
         }
         return root

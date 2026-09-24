@@ -40,7 +40,7 @@ Total requirements: 189.
 | **FR-BOT-050** A bot notices the snake in view | `implemented` | T | `Sources/CrawlCall/Bot/Perception.swift`<br>`Sources/CrawlCall/Map/Sight.swift`<br>`Sources/CrawlCall/Bot/Bot.swift`<br>`Sources/CrawlCall/Config/Geometry.swift` | `Tests/CrawlCallTests/PerceptionTests.swift` |
 | **FR-BOT-060** A bot fires at its target | `partial` | T | `Sources/CrawlCall/Bot/Execution.swift`<br>`Sources/CrawlCall/Bot/Bot.swift`<br>`Sources/CrawlCall/Config/Utility.swift` | `Tests/CrawlCallTests/ExecutionTests.swift`<br>`Tests/CrawlCallTests/ShotTests.swift` |
 | **FR-BOT-070** Heavy and sapper weapons destroy cover | `deferred` | T | — | — |
-| **FR-BOT-080** Action chosen by maximum utility | `implemented` | T | `Sources/CrawlCall/Bot/Deliberation.swift`<br>`Sources/CrawlCall/Config/Utility.swift` | `Tests/CrawlCallTests/DeliberationTests.swift` |
+| **FR-BOT-080** Action chosen by maximum utility | `implemented` | T | `Sources/CrawlCall/Bot/Deliberation.swift`<br>`Sources/CrawlCall/Config/Utility.swift`<br>`Sources/CrawlCall/Config/Geometry.swift` | `Tests/CrawlCallTests/DeliberationTests.swift` |
 | **FR-BOT-090** Personality weights multiply utility | `implemented` | T | `Sources/CrawlCall/Bot/Deliberation.swift`<br>`Sources/CrawlCall/Config/Utility.swift` | `Tests/CrawlCallTests/DeliberationTests.swift` |
 | **FR-BOT-100** Cover is valued by what is left of it | `deferred` | T | — | — |
 | **FR-BOT-105** Cover is worth less against a wrecking weapon | `deferred` | T | — | — |
@@ -163,7 +163,7 @@ Total requirements: 189.
 | **FR-VIEW-070** Archetype is readable from the silhouette | `implemented` | D | `Sources/CrawlCall/View/Figure.swift`<br>`Sources/CrawlCall/View/BotEntity.swift` | `Tests/CrawlCallTests/FigureTests.swift` |
 | **FR-VIEW-080** Wounded and separated bots stand out | `deferred` | D | — | — |
 | **FR-VIEW-090** Panic is visible on the bot | `deferred` | D | — | — |
-| **FR-VIEW-100** Eating is staged as comedy | `partial` | D | `Sources/CrawlCall/View/BotEntity.swift`<br>`Sources/CrawlCall/GameSession.swift`<br>`Sources/CrawlCall/Config/Drawing.swift`<br>`Sources/CrawlCall/Config/EntityName.swift` | `Tests/CrawlCallTests/BotEntityTests.swift` |
+| **FR-VIEW-100** Eating is staged as comedy | `partial` | D | `Sources/CrawlCall/View/BotEntity.swift`<br>`Sources/CrawlCall/GameSession.swift`<br>`Sources/CrawlCall/Config/EntityName.swift`<br>`Sources/CrawlCall/Config/Geometry.swift` | `Tests/CrawlCallTests/BotEntityTests.swift` |
 | **FR-VIEW-110** The snake squashes and stretches | `deferred` | D | — | — |
 | **FR-VIEW-120** The HUD is drawn in the diorama style | `partial` | I | `Sources/CrawlCall/View/Controls.swift`<br>`Sources/CrawlCall/View/MatchEnd.swift`<br>`Sources/CrawlCall/Config/Interface.swift` | — |
 | **FR-VIEW-130** The arena is lit as bright daylight | `implemented` | D | `Sources/CrawlCall/View/SceneView.swift`<br>`Sources/CrawlCall/Config/Lighting.swift` | `Tests/CrawlCallTests/ScenePlanTests.swift` |
@@ -186,7 +186,7 @@ Total requirements: 189.
 | **IF-MAP-020** Tuning configuration for destruction and maps | `implemented` | T | `Sources/CrawlCall/Config/Configurations.swift`<br>`Sources/CrawlCall/Config/Configurations+Load.swift`<br>`Sources/CrawlCall/Config/Schema.swift`<br>`Sources/CrawlCall/Launch.swift`<br>`Sources/CrawlCall/CrawlCallApp.swift`<br>`Sources/CrawlCall/Config/Resource.swift` | `Tests/CrawlCallTests/ConfigurationTests.swift`<br>`Tests/CrawlCallTests/LaunchTests.swift`<br>`Tests/CrawlCallTests/SchemaTests.swift` |
 | **IF-SCORE-010** Scoring configuration | `deferred` | T | — | — |
 | **IF-SNAKE-010** Snake configuration | `implemented` | T | `Sources/CrawlCall/Config/Configurations.swift`<br>`Sources/CrawlCall/Config/Configurations+Load.swift`<br>`Sources/CrawlCall/Config/Schema.swift`<br>`Sources/CrawlCall/Launch.swift`<br>`Sources/CrawlCall/CrawlCallApp.swift`<br>`Sources/CrawlCall/Config/Resource.swift` | `Tests/CrawlCallTests/ConfigurationTests.swift`<br>`Tests/CrawlCallTests/LaunchTests.swift`<br>`Tests/CrawlCallTests/SchemaTests.swift` |
-| **IF-VIEW-010** Input intents | `implemented` | T | `Sources/CrawlCall/Input/Intent.swift` | `Tests/CrawlCallTests/IntentTests.swift`<br>`Tests/CrawlCallTests/TouchSchemeTests.swift` |
+| **IF-VIEW-010** Input intents | `implemented` | T | `Sources/CrawlCall/Input/Intent.swift`<br>`Sources/CrawlCall/Config/IntentName.swift` | `Tests/CrawlCallTests/IntentTests.swift`<br>`Tests/CrawlCallTests/TouchSchemeTests.swift` |
 | **IF-VIEW-020** View configuration | `implemented` | T | `Sources/CrawlCall/Config/Configurations.swift`<br>`Sources/CrawlCall/Config/Configurations+Load.swift`<br>`Sources/CrawlCall/Config/Schema.swift`<br>`Sources/CrawlCall/Launch.swift`<br>`Sources/CrawlCall/CrawlCallApp.swift`<br>`Sources/CrawlCall/Config/Resource.swift`<br>`Sources/CrawlCall/View/SceneView.swift` | `Tests/CrawlCallTests/ConfigurationTests.swift`<br>`Tests/CrawlCallTests/LaunchTests.swift`<br>`Tests/CrawlCallTests/SchemaTests.swift`<br>`Tests/CrawlCallTests/ViewConfigurationTests.swift` |
 | **IF-VIEW-030** String catalog | `implemented` | T | `Sources/CrawlCall/Config/TextKey.swift`<br>`Sources/CrawlCall/View/Localizable.xcstrings` | `Tests/CrawlCallTests/TextCatalogTests.swift` |
 | **INV-BOT-010** Execution runs every frame for every bot | `implemented` | T | `Sources/CrawlCall/Bot/Execution.swift`<br>`Sources/CrawlCall/Game.swift` | `Tests/CrawlCallTests/ExecutionTests.swift` |
@@ -324,6 +324,6 @@ Verified by means other than testing — or the check has not been set up yet.
 
 ## Code files outside the specification
 
-No requirement references them: 0 of 55.
+No requirement references them: 0 of 56.
 
 

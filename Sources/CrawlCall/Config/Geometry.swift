@@ -2,7 +2,7 @@
 // would tune (ART-070): halves, the ends of a segment, which side of a box a point is
 // on, and how close two numbers must be to count as the same.
 //
-// implements: FR-VIEW-150, FR-BOT-050, FR-TOOL-020, FR-MAP-090, FR-SNAKE-010, FR-VIEW-020
+// implements: FR-VIEW-150, FR-BOT-050, FR-TOOL-020, FR-MAP-090, FR-SNAKE-010, FR-VIEW-020, FR-VIEW-100, FR-BOT-080
 import Foundation
 
 enum Geometry {
@@ -29,6 +29,14 @@ enum Geometry {
     static let squaredSlack = 1e-12
     /// Two cuts of a segment closer than this bound no piece worth measuring.
     static let emptyPiece = 1e-15
+}
+
+/// The two ends of a share of something: none of it and all of it. What is left of a
+/// magazine is the whole less the share spent, and a nearness runs from the whole at
+/// arm's length to nothing at the limit.
+enum Fraction {
+    static let none = 0.0
+    static let whole = 1.0
 }
 
 extension Geometry {

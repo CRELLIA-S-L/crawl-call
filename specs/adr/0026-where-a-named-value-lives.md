@@ -40,12 +40,13 @@ A file per kind of value keeps a name next to the others of its kind, where a re
 | `Resource.swift` | the bundle's directories, extensions and file names, and the paths built from them |
 | `EntityName.swift` | the names the scene's entities are given and found by |
 | `MapFormat.swift` | the map file's words, separators and positions (`MapFormat`), and the grid's numbers (`MapGrid`) |
-| `Geometry.swift` | halves, the ends of a segment, the sides of a box, angles and axes, and the tolerances of comparison |
+| `Geometry.swift` | halves, the ends of a segment and of a share (`Fraction`), the sides of a box, angles and axes, and the tolerances of comparison |
 | `Motion.swift` | how the snake's body is moved: what movement is negligible, how often a step is retried, how precisely a contact is found |
-| `Utility.swift` | how a bot's scores are shaped (`Utility`), who deliberates when (`Scheduling`), what a shot spends (`Firing`) |
+| `Utility.swift` | how a bot's scores are shaped (`Utility`), who deliberates when (`Scheduling`), when a bot has walked its step (`Walking`), what a shot spends (`Firing`) |
 | `Interface.swift` | how the interface is drawn and a thumb is read: plates, the stick, the eat button, the plate at the end, debug mode's controls |
 | `Lighting.swift` | how the scene's light is built (`AmbientImage`, `SunShadow`, `Colour`) and the longest frame (`Frame`) |
-| `Drawing.swift` | the ends of a share (`Fraction`) and the pool of tracer bars (`Tracers`) |
+| `Drawing.swift` | the pool of tracer bars (`Tracers`) |
+| `IntentName.swift` | the names of the input contract's intents |
 
 Each file claims, with `implements:`, the requirements whose code uses its values.
 
@@ -59,6 +60,6 @@ It also stops where one constant serves two meanings that happen to share a valu
 
 ### Consequences
 
-Changes to the arithmetic keep results bit for bit: a division by two became a multiplication by `Geometry.half`, which IEEE 754 computes exactly alike, and the suite passed unchanged.
+Changes to the arithmetic keep results bit for bit: a division by two became a multiplication by `Geometry.half`, which IEEE 754 computes exactly alike, and the suite's assertions passed as they were — the tests changed only where a name they called had moved.
 A value moved into configuration adds a key to its file and a phrase to its interface requirement in the same change.
 Tests stay outside ART-070 and state their expected numbers themselves, which is what makes them a check on the code rather than a copy of it.

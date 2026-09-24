@@ -123,7 +123,7 @@ struct Snake {
             : [SIMD2(.zero, unit.y), SIMD2(unit.x, .zero)]
         for part in parts {
             let share = abs(part.x + part.y)
-            guard share > Motion.negligibleDistance else { continue }
+            guard share > Motion.negligibleAxisShare else { continue }
             let along = SIMD2(part.x / share, part.y / share)
             if let step = stepOnce(unit: along, distance: distance * share, over: surfaces),
                step.covered > Motion.negligibleDistance { return true }

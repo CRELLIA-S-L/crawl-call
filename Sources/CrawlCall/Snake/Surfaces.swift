@@ -164,7 +164,7 @@ struct Surfaces {
         }
         func fits(_ metres: Double) -> Bool {
             guard let there = clearance(at: at(metres), floor: floor) else { return true }
-            return there.metres >= deepest - Motion.negligibleDistance
+            return there.metres >= deepest - Motion.depthSlack
         }
         if fits(distance) { return (distance, nil) }
         var low: Double = .zero

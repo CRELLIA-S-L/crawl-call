@@ -288,7 +288,7 @@ derives_from: []
 depends_on: [FR-SNAKE-090]
 refines: []
 conflicts_with: []
-code: [Sources/CrawlCall/View/BotEntity.swift, Sources/CrawlCall/GameSession.swift, Sources/CrawlCall/Config/Drawing.swift, Sources/CrawlCall/Config/EntityName.swift]
+code: [Sources/CrawlCall/View/BotEntity.swift, Sources/CrawlCall/GameSession.swift, Sources/CrawlCall/Config/EntityName.swift, Sources/CrawlCall/Config/Geometry.swift]
 tests: [Tests/CrawlCallTests/BotEntityTests.swift]
 created: 2026-09-21
 ```

@@ -78,7 +78,9 @@ enum SceneView {
         let pitch = radians(view.cameraPitch)
         camera.orientation = simd_quatf(angle: -pitch, axis: Geometry.xAxis)
         let target = plan.bounds.centre
-        let back = Float(distance(framing: plan, view: view))
+        // In Float, as RealityKit takes it; `distance(framing:view:)` is the same
+        // product in Double, for what the match computes in Double.
+        let back = Float(max(plan.bounds.extent.x, plan.bounds.extent.z)) * Float(view.cameraDistanceInMapWidths)
         camera.position = SIMD3(Float(target.x),
                                 Float(target.y) + back * sin(pitch),
                                 Float(target.z) + back * cos(pitch))

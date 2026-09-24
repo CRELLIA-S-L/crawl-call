@@ -21,5 +21,5 @@ enum Intent: Equatable {
 
     /// The five the contract names. A scheme is complete when it can produce each of
     /// them, and the logic is honest when it consumes nothing else.
-    static let all: [String] = ["move", "useAbility", "point", "pause", "eat"]
+    static let all: [String] = IntentName.all
 }
