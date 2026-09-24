@@ -192,9 +192,10 @@ tests: []
 created: 2026-09-21
 ```
 
-The game **shall** target iOS 27 and macOS 27 or later on devices that support Apple Intelligence — iPhone 15 Pro and later, Apple silicon Macs — from one code base.
+The game **shall** target iOS 27, iPadOS 27 and macOS 27 or later on devices that support Apple Intelligence — iPhone 15 Pro and later, the iPads that support it, Apple silicon Macs — from one code base.
 
 **Rationale.** Concept preamble and §10: iOS 27+ / macOS 27+, one build for every Apple platform; iPhone is the primary target, the Mac the development environment (concept §15).
+iPadOS joined on 2026-09-24 by the maintainer's decision, which closed Q-210: the overview had named it from the start and the constraint had not.
 Older devices are out, knowingly; the line sits at the iPhone 15 Pro rather than at iOS 27's own floor because the system language model is not available below it (ADR-0015).
 
 ### CON-PUB-020 — Source under the MIT licence

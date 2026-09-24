@@ -10,6 +10,7 @@ Q-220 — what lies under a wall when a cell holds one module — was opened and
 Two more were opened and settled on 2026-09-22 by the maintainer: Q-190 — whether a severed tail segment stays in the arena — became H-080, and Q-200 — the hypothesis the shedding requirements rest on — became H-070, both in `grounds/10-h-mechanics.md`; a question that turns into a measurement is closed here and answered there.
 One more was opened and settled on 2026-09-23, when the kit's wall came down to a fence: Q-240 — whether a bot sees over what the player sees over — became the second paragraph of FR-BOT-050's rationale, which ADR-0022 rewrote on 2026-09-24 when bots got eyes to look from.
 Q-230 — the head kept to walkable cells by its centre while its body, wider than a cell, sank into the wall beside it — was opened on 2026-09-22 and settled on 2026-09-24 by ADR-0021: the body is kept out of walls by their geometry. The entry offered a finer grid as one way out and had it backwards; the ADR says why.
+Q-210 — whether the game targets iPadOS — was settled on 2026-09-24 by the maintainer: it does, CON-PUB-010 names iPadOS 27, and the target builds for iPhone and iPad alike (`TARGETED_DEVICE_FAMILY = 1,2`); the macOS half was never a divergence, only a sequence, and FR-VIEW-040 still brings it.
 What remains is what a decision inside the repository cannot close.
 
 ### Q-120 — The name is chosen; the search that clears it is not done
@@ -32,12 +33,6 @@ What remains is what a decision inside the repository cannot close.
 - **Found:** IF-BOT-010; NFR-PERF-060, NFR-PERF-070.
 - **What diverged:** the threshold has a default the spike measured — `serious`, which a twenty-minute run on the iPhone 16 Pro never reached — but the factor by which the commander intervals stretch once it is crossed has none. The concept asks for the mechanism (§15) and names no number, and the spike never entered the state the factor applies to, so nothing in the repository measures it.
 - **Still needed:** a number from the maintainer, or a session long enough to reach `serious` on the baseline device and read what interval keeps the frame rate. Until then `config/match.json` carries whatever value the build ships and the requirement is unverifiable against a default.
-
-### Q-210 — Does the game target iPadOS, and when does the target learn about macOS?
-
-- **Found:** CON-PUB-010; `specs/02-overview.md` line 7; `ChompCompany.xcconfig`.
-- **What diverged:** the overview says the code base targets "iOS, iPadOS and macOS", while the normative constraint names only iOS 27 and macOS 27 on devices with Apple Intelligence — the iPhone 15 Pro and later, and Apple silicon Macs. iPadOS appears in no requirement. The game target created on 2026-09-22 builds for iPhone alone (`TARGETED_DEVICE_FAMILY = 1`, `SUPPORTED_PLATFORMS = iphoneos iphonesimulator`), which settles the question by exclusion rather than by decision.
-- **Still needed:** the maintainer says whether iPadOS is a target. If it is, CON-PUB-010 gains it and the device family becomes `1,2`; if it is not, the overview's sentence is corrected. Either way the answer is cheap now and expensive once a second input scheme exists. The macOS half is not a divergence but a sequence: the slice defers FR-VIEW-040, so the target stays iOS-only until the stage that adds keyboard and mouse, and `SUPPORTED_PLATFORMS` grows then.
 
 ### Q-250 — The frame rate has been looked at, not measured
 
@@ -69,3 +64,9 @@ What remains is what a decision inside the repository cannot close.
 - **Found:** FR-VIEW-200; the maintainer on 2026-09-24, when the interface was set up for translation.
 - **What diverged:** nothing yet; the game carries English alone. FR-VIEW-200 covers the text the interface shows and deliberately leaves out speech: the lines the model generates, the pre-written lines of IF-CMD-030, and the instructions of IF-CMD-040 and IF-CMD-050 that make the model speak. Translating those is not a matter of a catalog: the model has to be asked to speak the player's language, every measurement ADR-0017 rests on was taken with English instructions, and FR-TOOL-170 carries none of them across a change to the configuration.
 - **Still needed:** a decision on whether the fighters speak the player's language, and if they do, the instructions in each language measured again by the unattended run, the pre-written lines translated, and the content list of IF-CMD-060 written for each language. Taken up when the game carries a second language.
+
+### Q-300 — Xcode's AppIntents tool warns about a framework the game does not use
+
+- **Found:** ART-080; the build log on 2026-09-24.
+- **What diverged:** every build prints `appintentsmetadataprocessor … warning: Metadata extraction skipped, no AppIntents.framework dependency found`, once per target. ART-080 asks for a build with no warning. The notice is Xcode's own build phase saying there is nothing for it to do, since the game does not link AppIntents; no build setting of the project was found that turns it off — `xcodebuild -showBuildSettings` lists none for the phase — and linking a framework the game does not use to quiet a notice would be a dependency added for nothing, which ART-040 asks an ADR to justify and none could.
+- **Still needed:** nothing from inside the repository. The entry stands, as ART-080 allows, until a version of Xcode stops printing it or offers a setting for it; FR-TOOL-220 does not list it among the build's warnings because it names no file or setting of the project.
