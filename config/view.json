@@ -4,5 +4,9 @@
   "seeThroughMargin": 0.15,
   "visibilityRadius": 1.6,
   "stragglerDistance": 8.0,
-  "visiblePanicThreshold": 0.6
+  "visiblePanicThreshold": 0.6,
+  "freeCameraNearest": 2.0,
+  "freeCameraFarthest": 20.0,
+  "freeCameraLowestPitch": 10,
+  "freeCameraHighestPitch": 90
 }

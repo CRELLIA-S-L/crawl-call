@@ -130,14 +130,27 @@ enum SceneView {
         return min(max(value, low + half), high - half)
     }
 
-    /// The camera that looks at a focus point from the fixed pitch.
+    /// The camera that looks at a focus point from a pitch and, in debug mode's free
+    /// camera, a yaw (ADR-0023). At no yaw the camera stands on the +z side of the
+    /// focus, as every match has it (FR-VIEW-010); a yaw turns it round the focus,
+    /// anticlockwise seen from above for a positive one.
     @MainActor
     static func place(_ camera: Entity, lookingAt focus: SIMD3<Double>,
-                      pitchDegrees: Double, distance: Double) {
+                      pitchDegrees: Double, yawDegrees: Double = 0, distance: Double) {
         let pitch = Float(pitchDegrees * .pi / 180)
-        camera.orientation = simd_quatf(angle: -pitch, axis: SIMD3(1, 0, 0))
-        camera.position = SIMD3(Float(focus.x),
+        let yaw = Float(yawDegrees * .pi / 180)
+        camera.orientation = simd_quatf(angle: yaw, axis: SIMD3(0, 1, 0))
+            * simd_quatf(angle: -pitch, axis: SIMD3(1, 0, 0))
+        let across = Float(distance) * cos(pitch)
+        camera.position = SIMD3(Float(focus.x) + across * sin(yaw),
                                 Float(focus.y) + Float(distance) * sin(pitch),
-                                Float(focus.z) + Float(distance) * cos(pitch))
+                                Float(focus.z) + across * cos(yaw))
+    }
+
+    /// Which way on the ground the screen's right and the screen's down point, for a
+    /// camera turned by a yaw: at none, +x and +z.
+    static func screenAxes(yawDegrees: Double) -> (right: SIMD2<Double>, down: SIMD2<Double>) {
+        let yaw = yawDegrees * .pi / 180
+        return (right: SIMD2(cos(yaw), -sin(yaw)), down: SIMD2(sin(yaw), cos(yaw)))
     }
 }

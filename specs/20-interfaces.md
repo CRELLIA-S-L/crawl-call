@@ -205,7 +205,7 @@ tests: [Tests/CrawlCallTests/ConfigurationTests.swift, Tests/CrawlCallTests/Laun
 created: 2026-09-21
 ```
 
-When the game starts, the system **shall** read from the view configuration — the JSON file `config/view.json` (ADR-0012) — the camera pitch within the range FR-VIEW-010 allows; the central region the head is kept in; the see-through margin of FR-VIEW-150; the visibility radius of FR-VIEW-155; the straggler distance; and the visible-panic threshold.
+When the game starts, the system **shall** read from the view configuration — the JSON file `config/view.json` (ADR-0012) — the camera pitch within the range FR-VIEW-010 allows; the central region the head is kept in; the see-through margin of FR-VIEW-150; the visibility radius of FR-VIEW-155; the straggler distance; the visible-panic threshold; and how near and how far, and how low and how steep, the free camera of FR-TOOL-070 may be taken.
 
 **Rationale.** Every VIEW requirement that names a number names it here; the camera pitch is a number the maintainer settles by eye (concept §12), inside the range the concept fixes.
 

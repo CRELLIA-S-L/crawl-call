@@ -5,7 +5,7 @@
 // measured with — `specs/50-verification.md` says why, and the two are different
 // questions asked of the same number.
 //
-// implements: FR-VIEW-020, FR-VIEW-030, FR-VIEW-060, FR-VIEW-100, FR-VIEW-140, FR-VIEW-150, FR-VIEW-155, FR-VIEW-160, FR-VIEW-170, FR-VIEW-180, FR-VIEW-190
+// implements: FR-TOOL-070, FR-VIEW-020, FR-VIEW-030, FR-VIEW-060, FR-VIEW-100, FR-VIEW-140, FR-VIEW-150, FR-VIEW-155, FR-VIEW-160, FR-VIEW-170, FR-VIEW-180, FR-VIEW-190
 import Foundation
 import Observation
 import RealityKit
@@ -25,6 +25,9 @@ final class GameSession {
     private var focus: SIMD3<Double>
     private let distance: Double
     private let fieldOfView: Double
+    /// The camera the user has taken off the snake in debug mode (FR-TOOL-070), or nil
+    /// while it follows the head (FR-VIEW-020).
+    private(set) var freeCamera: FreeCamera?
 
     init(game: Game, snakeEntity: Entity, botEntities: Entity, shotEntities: Entity,
          camera: Entity, seeThrough: SeeThrough, distance: Double, fieldOfView: Double) {
@@ -41,6 +44,59 @@ final class GameSession {
     }
 
     func apply(_ intent: Intent) { game.apply(intent) }
+
+    // MARK: the free camera of debug mode (FR-TOOL-070, ADR-0023)
+
+    /// Pinched: the camera comes off the snake, if it was on it, and goes nearer or
+    /// further.
+    func zoomCamera(by factor: Double) {
+        var camera = freeCamera ?? detached()
+        camera.zoom(by: factor)
+        freeCamera = camera
+        place()
+    }
+
+    /// Dragged with two fingers: the camera comes off the snake, if it was on it, and
+    /// the ground moves with the fingers.
+    func panCamera(by points: SIMD2<Double>, screenHeight: Double) {
+        var camera = freeCamera ?? detached()
+        camera.pan(by: points, screenHeight: screenHeight, fieldOfViewDegrees: fieldOfView)
+        freeCamera = camera
+        place()
+    }
+
+    /// Twisted with two fingers: the camera comes off the snake, if it was on it, and
+    /// turns round what it looks at, the ground turning with the fingers.
+    func turnCamera(by radians: Double) {
+        var camera = freeCamera ?? detached()
+        camera.turn(by: radians)
+        freeCamera = camera
+        place()
+    }
+
+    /// Dragged up or down with three fingers: the camera comes off the snake, if it was
+    /// on it, and tilts towards the horizon or towards looking straight down.
+    func tiltCamera(by points: Double, screenHeight: Double) {
+        var camera = freeCamera ?? detached()
+        camera.tilt(by: points, screenHeight: screenHeight)
+        freeCamera = camera
+        place()
+    }
+
+    /// Back on the snake, as the match has it.
+    func followSnake() {
+        freeCamera = nil
+        place()
+    }
+
+    /// The camera where it is now, taken off the snake.
+    private func detached() -> FreeCamera {
+        let view = game.world.configurations.view
+        return FreeCamera(focus: focus, distance: distance, pitch: view.cameraPitch,
+                          nearest: view.freeCameraNearest, farthest: view.freeCameraFarthest,
+                          lowestPitch: view.freeCameraLowestPitch, highestPitch: view.freeCameraHighestPitch,
+                          arena: game.world.plan.bounds)
+    }
 
     /// Another match in the same arena (FR-VIEW-190). The scene is kept and brought
     /// back into line with the new match rather than built again: every entity in it
@@ -82,8 +138,13 @@ final class GameSession {
                                 distance: distance,
                                 fieldOfViewDegrees: fieldOfView,
                                 within: game.world.plan.bounds)
-        SceneView.place(camera, lookingAt: focus, pitchDegrees: game.world.configurations.view.cameraPitch,
-                        distance: distance)
+        // Where the camera looks: after the head, or where the user left it. The
+        // following goes on underneath either way, so that the camera comes back to
+        // where the match would have had it.
+        SceneView.place(camera, lookingAt: freeCamera?.focus ?? focus,
+                        pitchDegrees: freeCamera?.pitch ?? game.world.configurations.view.cameraPitch,
+                        yawDegrees: freeCamera?.yaw ?? 0,
+                        distance: freeCamera?.distance ?? distance)
         // After the camera has moved, not before: what hides the snake is judged from
         // where the camera is now (FR-VIEW-150), and the floor above the head is a lid
         // wherever the camera stands (FR-VIEW-140).

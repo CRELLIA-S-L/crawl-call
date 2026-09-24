@@ -124,14 +124,14 @@ When given a map specification, the plan tool **shall** render one image per flo
 ### FR-TOOL-070 — Free camera
 
 ```yaml
-status: deferred
+status: implemented
 verification: D
 derives_from: []
 depends_on: [FR-VIEW-010]
 refines: []
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/View/FreeCamera.swift, Sources/CrawlCall/View/FreeCameraControls.swift, Sources/CrawlCall/GameSession.swift, Sources/CrawlCall/CrawlCallApp.swift]
+tests: [Tests/CrawlCallTests/FreeCameraTests.swift]
 created: 2026-09-21
 ```
 
@@ -139,6 +139,7 @@ Where debug mode is enabled, the system **shall** let the user detach the camera
 
 **Rationale.** Concept §11.3: an external viewer cannot answer "does the tail fit", "where does it catch"; the debug build can.
 One requirement per debug facility because each can be built and used without the others.
+Debug mode is the Debug build configuration; the camera is zoomed by a pinch, panned by a two-finger drag, turned by a two-finger twist and tilted by a three-finger drag, within the limits of the view configuration, and put back on the snake by a button; ADR-0023 says why.
 
 ### FR-TOOL-080 — Navigation graph overlay
 

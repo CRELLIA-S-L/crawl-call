@@ -21,10 +21,11 @@ tests: [Tests/CrawlCallTests/ScenePlanTests.swift]
 created: 2026-09-21
 ```
 
-While a match is running, the system **shall** render the arena through a perspective camera whose pitch below the horizontal is between 50 and 60 degrees and whose yaw does not change.
+While a match is running and the camera is not held by the user in debug mode (FR-TOOL-070), the system **shall** render the arena through a perspective camera whose pitch below the horizontal is between 50 and 60 degrees and whose yaw does not change.
 
 **Rationale.** Concept §3: the main camera is perspective, 50–60° from above as in the references, not strict isometry, fixed angle.
 A fixed yaw is what lets height and sight lines be learnt once (concept §2, "space is exact").
+The exception is the maintainer's, asked for on 2026-09-24: a camera taken off the snake in debug mode is there to look at the arena from wherever the maintainer wants, tilted and turned, and a player never has it (ADR-0023). The camera goes back to this pitch and this yaw when it is given back to the snake.
 
 ### FR-VIEW-020 — The camera follows the head
 

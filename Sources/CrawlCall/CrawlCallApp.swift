@@ -1,7 +1,7 @@
 // The game's entry point. Starting the app is the moment the interface requirements
 // name for reading the configurations, and the moment a match begins.
 //
-// implements: IF-SNAKE-010, IF-MAP-020, IF-VIEW-020, IF-BOT-010, FR-VIEW-050, FR-VIEW-060, FR-VIEW-160, FR-VIEW-190
+// implements: IF-SNAKE-010, IF-MAP-020, IF-VIEW-020, IF-BOT-010, FR-TOOL-070, FR-VIEW-050, FR-VIEW-060, FR-VIEW-160, FR-VIEW-190
 import RealityKit
 import SwiftUI
 
@@ -78,6 +78,9 @@ struct MatchView: View {
             }
         }
         .ignoresSafeArea()
+        // Debug mode's free camera (FR-TOOL-070): pinch and two-finger drag on the
+        // arena, and a button back to the snake; nothing at all in a Release build.
+        .freeCamera(session)
         // One or the other, never both (FR-VIEW-190): while the match is on, the
         // controls; once it is over, the plate that says how it ended and starts
         // another.

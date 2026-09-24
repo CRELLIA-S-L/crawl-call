@@ -105,6 +105,14 @@ struct ViewConfiguration: Decodable, Equatable {
     let visibilityRadius: Double
     let stragglerDistance: Double
     let visiblePanicThreshold: Double
+    /// How close to and how far from what it looks at the free camera of debug mode
+    /// may be taken, in metres (FR-TOOL-070, ADR-0023).
+    let freeCameraNearest: Double
+    let freeCameraFarthest: Double
+    /// How low towards the horizon and how steeply down the free camera may be
+    /// tilted, in degrees below the horizontal (FR-TOOL-070, ADR-0023).
+    let freeCameraLowestPitch: Double
+    let freeCameraHighestPitch: Double
 
     static let schema = Schema.object([
         "cameraPitch": .value,
@@ -113,6 +121,10 @@ struct ViewConfiguration: Decodable, Equatable {
         "visibilityRadius": .value,
         "stragglerDistance": .value,
         "visiblePanicThreshold": .value,
+        "freeCameraNearest": .value,
+        "freeCameraFarthest": .value,
+        "freeCameraLowestPitch": .value,
+        "freeCameraHighestPitch": .value,
     ])
 }
 

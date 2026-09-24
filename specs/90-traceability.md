@@ -8,9 +8,9 @@ Total requirements: 186.
 | Status | Requirements |
 |---|---|
 | `draft` | 4 |
-| `deferred` | 121 |
+| `deferred` | 120 |
 | `partial` | 6 |
-| `implemented` | 55 |
+| `implemented` | 56 |
 | `superseded` | 0 |
 | `withdrawn` | 0 |
 
@@ -140,7 +140,7 @@ Total requirements: 186.
 | **FR-TOOL-040** Validate the map | `deferred` | T | — | — |
 | **FR-TOOL-050** Export to the level editor | `deferred` | T | — | — |
 | **FR-TOOL-060** Render a 2D plan per floor | `deferred` | T | — | — |
-| **FR-TOOL-070** Free camera | `deferred` | D | — | — |
+| **FR-TOOL-070** Free camera | `implemented` | D | `Sources/CrawlCall/View/FreeCamera.swift`<br>`Sources/CrawlCall/View/FreeCameraControls.swift`<br>`Sources/CrawlCall/GameSession.swift`<br>`Sources/CrawlCall/CrawlCallApp.swift` | `Tests/CrawlCallTests/FreeCameraTests.swift` |
 | **FR-TOOL-080** Navigation graph overlay | `deferred` | D | — | — |
 | **FR-TOOL-090** Disconnected regions and seams highlighted | `deferred` | D | — | — |
 | **FR-TOOL-100** Teleport by pointing | `deferred` | D | — | — |
@@ -320,6 +320,6 @@ Verified by means other than testing — or the check has not been set up yet.
 
 ## Code files outside the specification
 
-No requirement references them: 0 of 40.
+No requirement references them: 0 of 42.
 
 
