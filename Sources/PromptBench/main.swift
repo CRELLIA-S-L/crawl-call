@@ -46,11 +46,7 @@ struct Bench {
         let results = await PromptBench.run(variants: variants, repeats: repeats, explainRefusals: true, schema: schema, includeSchema: includeSchema, scenarioFilter: filter, maxOutput: ProcessInfo.processInfo.environment["BENCH_MAX_OUT"].flatMap { Int($0) }) { print($0) }
 
         // A CSV beside the log, so a run can be compared with the next one.
-        var csv = "variant,scenario,ok,kind,ms,input_tokens,output_tokens,threat,order,panic,line,detail\n"
-        for r in results {
-            func q(_ s: String) -> String { "\"" + s.replacingOccurrences(of: "\"", with: "'") + "\"" }
-            csv += "\(r.variant),\(r.scenario),\(r.ok),\(r.kind),\(r.ms),\(r.inputTokens),\(r.outputTokens),\(r.threat),\(r.order),\(r.panic),\(q(r.line)),\(q(r.detail))\n"
-        }
+        let csv = BenchReport.csv(results)
         let f = ProcessInfo.processInfo.environment["BENCH_CSV"] ?? "bench.csv"
         try? csv.write(toFile: f, atomically: true, encoding: .utf8)
         print("csv: \(f)")

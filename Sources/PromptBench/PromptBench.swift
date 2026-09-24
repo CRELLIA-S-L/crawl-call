@@ -94,20 +94,7 @@ enum PromptBench {
         ("gulped-live", "crew: Davis, Pike up; Beans just went down the snake head-first, boots waving\nrival crew: 3 up, laughing at us\nsnake: chewing, one crate away\nawareness: everyone saw it happen\nyour last call: disperse"),
     ]
 
-    struct Result {
-        var variant: String
-        var scenario: String
-        var ok: Bool
-        var kind: String       // "ok", "refusal", "guardrail", other error
-        var detail: String
-        var ms: Int
-        var inputTokens: Int
-        var outputTokens: Int
-        var line: String
-        var threat: String = ""
-        var order: String = ""
-        var panic: Double = -1
-    }
+    typealias Result = BenchResult
 
     /// Runs every variant over every scenario `repeats` times, fresh session per call so
     /// a refusal cannot poison the next one and every call measures the same prompt.
@@ -178,22 +165,14 @@ enum PromptBench {
                     log("bench \(v.name)/\(name) \(out.last!.kind) \(out.last!.ms)ms in=\(out.last!.inputTokens) out=\(out.last!.outputTokens) \(out.last!.kind == "ok" ? "\"\(out.last!.line)\"" : out.last!.detail.prefix(160))")
                 }
             }
-            let mine = out.filter { $0.variant == v.name }
-            let bad = mine.filter { !$0.ok }
-            let toks = mine.filter(\.ok).map(\.inputTokens)
-            if v.isControl && bad.isEmpty {
-                log("RUN VOID: the control \(v.name) was not blocked in any of its \(mine.count) calls, so this run measured nothing — see FR-TOOL-160")
+            if let void = BenchReport.controlVerdict(variant: v.name, isControl: v.isControl, results: out) {
+                log(void)
             }
-            log("BENCH SUMMARY \(v.name) [\(schema.rawValue)\(includeSchema ? "" : ", schema not in prompt")\(maxOutput.map { ", max out \($0)" } ?? "")]: \(mine.count - bad.count)/\(mine.count) ok, refusals \(bad.filter { $0.kind == "refusal" }.count), guardrail \(bad.filter { $0.kind == "guardrail" }.count), other \(bad.filter { $0.kind != "refusal" && $0.kind != "guardrail" }.count), input tokens \(toks.min() ?? 0)–\(toks.max() ?? 0), median latency \(median(mine.filter(\.ok).map(\.ms)))ms, output tokens \(mine.filter(\.ok).map(\.outputTokens).max() ?? 0) max")
+            let setting = "\(schema.rawValue)\(includeSchema ? "" : ", schema not in prompt")\(maxOutput.map { ", max out \($0)" } ?? "")"
+            log(BenchReport.summary(variant: v.name, setting: setting, results: out))
         }
-        let controls = variants.filter(\.isControl)
-        if !controls.isEmpty {
-            let unblocked = controls.filter { c in out.filter { $0.variant == c.name }.allSatisfy(\.ok) }
-            if !unblocked.isEmpty {
-                log("RUN VOID: \(unblocked.map(\.name).joined(separator: ", ")) was expected to be blocked and was not; no number in this run is a measurement")
-            }
-        } else {
-            log("NOTE: no control in this run — a block could go undetected (FR-TOOL-160)")
+        if let verdict = BenchReport.runVerdict(controls: variants.filter(\.isControl).map(\.name), results: out) {
+            log(verdict)
         }
         return out
     }
@@ -202,10 +181,6 @@ enum PromptBench {
         Int(d.components.seconds) * 1000 + Int(d.components.attoseconds / 1_000_000_000_000_000)
     }
 
-    private static func median(_ xs: [Int]) -> Int {
-        guard !xs.isEmpty else { return 0 }
-        let s = xs.sorted(); return s[s.count / 2]
-    }
 }
 
 // MARK: token anatomy

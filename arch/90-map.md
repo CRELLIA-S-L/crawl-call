@@ -6,7 +6,7 @@ What each part of this project is, what it carries and what state it is in.
 
 | Element | Status | Carries | Requirements |
 |---|---|---|---|
-| **E-010** The prompt bench | `built` | `Sources/PromptBench/PromptBench.swift`, `Sources/PromptBench/PromptVariants.swift`, `Sources/PromptBench/main.swift` | **FR-TOOL-150**, **FR-TOOL-160** (2 realized) |
+| **E-010** The prompt bench | `built` | `Sources/PromptBench/PromptBench.swift`, `Sources/PromptBench/PromptVariants.swift`, `Sources/PromptBench/main.swift`, `Sources/PromptBench/BenchReport.swift` | **FR-TOOL-150**, **FR-TOOL-160** (2 realized) |
 | **E-020** Start-up and configuration | `built` | `Sources/CrawlCall/Config`, `Sources/CrawlCall/Launch.swift`, `Sources/CrawlCall/CrawlCallApp.swift` | **IF-SNAKE-010**, **IF-MAP-020**, **IF-VIEW-020**, **IF-BOT-010**, **FR-TOOL-200** (5 realized) |
 | **E-030** The input contract | `built` | `Sources/CrawlCall/Input` | **IF-VIEW-010**, **FR-VIEW-050** (2 realized) |
 | **E-040** The map layer | `built` | `Sources/CrawlCall/Map`, `maps/blockout.map`, `ATTRIBUTION.md` | **IF-MAP-010**, **FR-TOOL-010**, **FR-TOOL-020**, **FR-TOOL-030**, **FR-MAP-010**, **FR-MAP-020**, **FR-MAP-100**, **FR-MAP-090** (8 realized) |

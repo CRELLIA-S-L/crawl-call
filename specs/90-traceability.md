@@ -148,8 +148,8 @@ Total requirements: 191.
 | **FR-TOOL-120** Bot sight lines drawn | `deferred` | D | — | — |
 | **FR-TOOL-130** Concept renders are built by script | `deferred` | I | — | — |
 | **FR-TOOL-140** Pre-commit check for a Team ID in the project file | `deferred` | T | — | — |
-| **FR-TOOL-150** The prompt bench | `implemented` | T | `Sources/PromptBench/PromptBench.swift`<br>`Sources/PromptBench/main.swift` | — |
-| **FR-TOOL-160** The bench carries a control that must be blocked | `implemented` | T | `Sources/PromptBench/PromptBench.swift`<br>`Sources/PromptBench/PromptVariants.swift` | — |
+| **FR-TOOL-150** The prompt bench | `implemented` | T | `Sources/PromptBench/PromptBench.swift`<br>`Sources/PromptBench/main.swift`<br>`Sources/PromptBench/BenchReport.swift` | `Tests/PromptBenchTests/main.swift`<br>`scripts/prompt-bench-selftest.sh` |
+| **FR-TOOL-160** The bench carries a control that must be blocked | `implemented` | T | `Sources/PromptBench/PromptBench.swift`<br>`Sources/PromptBench/PromptVariants.swift`<br>`Sources/PromptBench/BenchReport.swift` | `Tests/PromptBenchTests/main.swift`<br>`scripts/prompt-bench-selftest.sh` |
 | **FR-TOOL-170** A bench measurement names the configuration it covers | `deferred` | T | — | — |
 | **FR-TOOL-180** An unattended run closes the app it started | `implemented` | T | `scripts/run-on-device.sh` | `scripts/run-on-device-selftest.sh` |
 | **FR-TOOL-190** A phase that stops making progress is killed and reported | `implemented` | T | `scripts/run-tests.sh` | `scripts/run-tests-selftest.sh` |
@@ -322,12 +322,10 @@ Who links to each requirement. Computed; not stored in the requirements themselv
 
 Verified by means other than testing — or the check has not been set up yet.
 
-- **FR-TOOL-150** (`implemented`, method `T`) — The prompt bench
-- **FR-TOOL-160** (`implemented`, method `T`) — The bench carries a control that must be blocked
 - **FR-VIEW-120** (`partial`, method `I`) — The HUD is drawn in the diorama style
 
 ## Code files outside the specification
 
-No requirement references them: 0 of 56.
+No requirement references them: 0 of 57.
 
 

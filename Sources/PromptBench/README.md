@@ -20,6 +20,12 @@ BENCH_CSV=out.csv ./bench all 5   # the run always writes a CSV; this names it (
 
 The machine needs Apple Intelligence enabled: the bench checks the model's availability before the first call and exits 3 with the reason, so an unavailable model can never be read as a run with no blocks.
 
+What a run reports is built apart from the model, in `BenchReport.swift`, and checked without it:
+
+```
+sh scripts/prompt-bench-selftest.sh   # the summary, the CSV and the control's verdict, on results made in the test
+```
+
 ## What a run must include
 
 **The control.** Every run includes `v4-provocative`, written to be blocked (FR-TOOL-160): a bench that cannot detect a block reports zero blocks for every configuration, which is the same reading as success. A run whose control was not blocked prints `RUN VOID` and is not a measurement; a run with no control at all prints a `NOTE` saying so.

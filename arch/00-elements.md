@@ -14,7 +14,7 @@ The format is in `arch/README.md`.
 
 ```yaml
 status: built
-carries: [Sources/PromptBench/PromptBench.swift, Sources/PromptBench/PromptVariants.swift, Sources/PromptBench/main.swift]
+carries: [Sources/PromptBench/PromptBench.swift, Sources/PromptBench/PromptVariants.swift, Sources/PromptBench/main.swift, Sources/PromptBench/BenchReport.swift]
 requirements: [FR-TOOL-150, FR-TOOL-160]
 depends_on: []
 interface: a command line — variants and repeats in, one summary line per configuration out, optionally a CSV

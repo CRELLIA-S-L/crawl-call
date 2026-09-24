@@ -285,8 +285,8 @@ derives_from: []
 depends_on: [IF-CMD-040, IF-CMD-050, IF-CMD-060, CON-CMD-020]
 refines: []
 conflicts_with: []
-code: [Sources/PromptBench/PromptBench.swift, Sources/PromptBench/main.swift]
-tests: []
+code: [Sources/PromptBench/PromptBench.swift, Sources/PromptBench/main.swift, Sources/PromptBench/BenchReport.swift]
+tests: [Tests/PromptBenchTests/main.swift, scripts/prompt-bench-selftest.sh]
 created: 2026-09-22
 ```
 
@@ -305,8 +305,8 @@ derives_from: [FR-TOOL-150]
 depends_on: []
 refines: [FR-TOOL-150]
 conflicts_with: []
-code: [Sources/PromptBench/PromptBench.swift, Sources/PromptBench/PromptVariants.swift]
-tests: []
+code: [Sources/PromptBench/PromptBench.swift, Sources/PromptBench/PromptVariants.swift, Sources/PromptBench/BenchReport.swift]
+tests: [Tests/PromptBenchTests/main.swift, scripts/prompt-bench-selftest.sh]
 created: 2026-09-22
 ```
 
