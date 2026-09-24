@@ -11,8 +11,7 @@
     "PUB"
   ],
   "code_roots": [
-    "Sources",
-    "materials/render"
+    "Sources"
   ],
   "test_roots": [
     "Tests"
