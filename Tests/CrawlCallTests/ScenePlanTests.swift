@@ -195,7 +195,11 @@ final class SceneBuilderTests: XCTestCase {
         let ambient = try XCTUnwrap(try scene().children.first { $0.name == "ambient" })
         let component = ambient.components[ImageBasedLightComponent.self]
         XCTAssertNotNil(component, "the scene has no ambient light")
-        if case .none = component?.source { XCTFail("the ambient light carries no environment") }
+        // The component's own "no source" case, not a missing component: that is the
+        // assertion above.
+        if case ImageBasedLightComponent.Source.none? = component?.source {
+            XCTFail("the ambient light carries no environment")
+        }
     }
 }
 
