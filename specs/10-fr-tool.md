@@ -379,6 +379,27 @@ Killing is the easy half; the report is the point. "The tests phase gave up afte
 The limit belongs to the caller rather than to the script, because a clean build and an incremental one are not the same wait, and a machine slower than this one is not wrong.
 Its test takes the watchdog out of the runner rather than restating it, so a copy that drifted from what ships would prove nothing: the self-test reads `watch()` out of `run-tests.sh`, gives it a command that finishes and one that does not, and checks the timeout code, the report's three facts, and that the stuck command is actually gone.
 
+### FR-TOOL-210 — A test run says how it ended, whatever the ending
+
+```yaml
+status: implemented
+verification: T
+derives_from: []
+depends_on: [FR-TOOL-190]
+refines: []
+conflicts_with: []
+code: [scripts/run-tests.sh]
+tests: [scripts/run-tests-selftest.sh]
+created: 2026-09-24
+```
+
+When a test run ends — its build failed, its tests failed, it passed, or its watchdog cut it short — the test runner **shall** print the build's errors where the build failed, otherwise the number of tests executed with the number that failed and the name of every failed test, and exit with a status that is zero only where every test executed and passed.
+
+**Rationale.** On 2026-09-24 two runs with failing tests printed nothing but their phase times: the runner stops at the first command that fails, and the lines that print the result come after it. The failures had to be dug out of `tests.log`. A failed build said even less — only that it had failed, and not what.
+The run is also ended on the suite's own last line, `Test Suite 'All tests' passed` or `failed`: when tests fail, `xcodebuild` has been seen printing that line and its counts and then hanging without the `** TEST FAILED` verdict, and the watchdog then killed a run that had already said everything.
+The exit status is read from what the run printed, not from the process that printed it, because that process is the one known to hang after its verdict (FR-TOOL-190).
+The maintainer asked for the runner to be fixed on 2026-09-24.
+
 ## Diagnostics
 
 ### FR-TOOL-200 — An error or a log line opens with the identifier of its kind

@@ -81,11 +81,51 @@ echo "simulator ${SIM%%-*}…, watchdog ${LIMIT}s, derived data $DERIVED"
 xcrun simctl boot "$SIM" 2>/dev/null || true
 xcrun simctl bootstatus "$SIM" -b > /dev/null
 
-watch build '^\*\* TEST BUILD (SUCCEEDED|FAILED)' xcodebuild -project CrawlCall.xcodeproj -scheme CrawlCall \
-  -destination "id=$SIM" -derivedDataPath "$DERIVED" build-for-testing
-grep -E '^\*\* TEST BUILD (SUCCEEDED|FAILED)' "$DERIVED/build.log" || true
+# What a run prints at its end, and how it exits (FR-TOOL-210). Both read the phase's
+# log rather than trusting the process's status: the process is the one seen hanging
+# after its verdict (FR-TOOL-190). `-a` because a log is text even where a test put
+# an odd byte into it, and grep would otherwise answer "binary file matches".
+#
+# implements: FR-TOOL-210
 
-watch tests '^\*\* TEST (SUCCEEDED|FAILED)' xcodebuild -project CrawlCall.xcodeproj -scheme CrawlCall \
-  -destination "id=$SIM" -derivedDataPath "$DERIVED" test-without-building
-grep -E 'Executed [0-9]+ tests|^\*\* TEST (SUCCEEDED|FAILED)' "$DERIVED/tests.log" | tail -2
-grep -E "Test Case.*failed \(" "$DERIVED/tests.log" | sed 's/.*CrawlCallTests\.//' | sort -u || true
+# The build's verdict, and its errors where it failed. Returns 0 where it succeeded.
+build_report() {
+  log="$1"; status="$2"
+  LC_ALL=C grep -aE '^\*\* TEST BUILD (SUCCEEDED|FAILED)' "$log" || true
+  if [ "$status" -eq 0 ] && LC_ALL=C grep -qaE '^\*\* TEST BUILD SUCCEEDED' "$log"; then return 0; fi
+  echo "build failed; its errors:" >&2
+  LC_ALL=C grep -aE ': error: ' "$log" | sort -u | head -40 >&2 || true
+  [ "$status" -ne 0 ] && return "$status"
+  return 65
+}
+
+# The count of tests run and failed, and the name of each that failed. Returns 0 only
+# where the log counts the whole suite and no failure in it.
+tests_report() {
+  log="$1"; status="$2"
+  summary=$(LC_ALL=C grep -aE 'Executed [0-9]+ tests?, with [0-9]+ failures?' "$log" | tail -1)
+  if [ -z "$summary" ]; then
+    echo "no test count in the log: the suite did not report" >&2
+    [ "$status" -ne 0 ] && return "$status"
+    return 1
+  fi
+  echo "$summary"
+  LC_ALL=C grep -aE "Test Case .*failed \(" "$log" | sed 's/.*CrawlCallTests\.//' | sort -u >&2 || true
+  case "$summary" in
+    *"with 0 failures"*) return 0 ;;
+    *) return 65 ;;
+  esac
+}
+
+build_status=0
+watch build '^\*\* TEST BUILD (SUCCEEDED|FAILED)' xcodebuild -project CrawlCall.xcodeproj -scheme CrawlCall \
+  -destination "id=$SIM" -derivedDataPath "$DERIVED" build-for-testing || build_status=$?
+build_report "$DERIVED/build.log" "$build_status" || exit $?
+
+# The suite's own last line ends the phase too: with failing tests xcodebuild has been
+# seen printing it and its counts, then hanging without the `** TEST FAILED` verdict.
+tests_status=0
+watch tests "^\*\* TEST (SUCCEEDED|FAILED)|^Test Suite 'All tests' (passed|failed)" \
+  xcodebuild -project CrawlCall.xcodeproj -scheme CrawlCall \
+  -destination "id=$SIM" -derivedDataPath "$DERIVED" test-without-building || tests_status=$?
+tests_report "$DERIVED/tests.log" "$tests_status"

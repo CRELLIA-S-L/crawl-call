@@ -3,7 +3,7 @@
 # phase that outlives its limit, and reports which one, how long it had, and what the
 # process was doing. Standard tools only (ART-040).
 #
-# verifies: FR-TOOL-190
+# verifies: FR-TOOL-190, FR-TOOL-210
 set -eu
 
 here=$(dirname "$0")
@@ -64,6 +64,39 @@ elapsed=$(( $(date +%s) - started ))
 check "a phase that reports completion succeeds" "$spoken" "0"
 check "and says it ended on its own report" "$(grep -c 'ended by its own report' "$work/spoken.out")" "1"
 [ "$elapsed" -lt 15 ] || { echo "FAIL  waited ${elapsed}s for a phase that had already reported"; failures=$((failures + 1)); }
+
+# 4. What a run prints at its end and how it exits (FR-TOOL-210), taken from the
+# runner like the watchdog and fed logs of each kind of ending.
+sed -n '/^build_report() {/,/^}/p;/^tests_report() {/,/^}/p' "$here/run-tests.sh" > "$work/report.sh"
+grep -q '^tests_report() {' "$work/report.sh" || { echo "FAIL  the runner has no tests_report() to test"; exit 1; }
+. "$work/report.sh"
+
+printf "Test Suite 'All tests' failed at now.\n\t Executed 12 tests, with 2 failures (0 unexpected) in 1.0 (1.0) seconds\n" > "$work/failed.log"
+printf "Test Case '-[CrawlCallTests.ATests testOne]' failed (0.1 seconds).\nTest Case '-[CrawlCallTests.BTests testTwo]' failed (0.1 seconds).\n" >> "$work/failed.log"
+if tests_report "$work/failed.log" 124 > "$work/failed.out" 2>&1; then got=0; else got=$?; fi
+check "a run with failures exits non-zero though its watchdog cut it short" "$got" "65"
+check "and prints its count" "$(grep -c 'Executed 12 tests, with 2 failures' "$work/failed.out")" "1"
+check "and names each failed test" "$(grep -cE 'ATests testOne|BTests testTwo' "$work/failed.out")" "2"
+
+printf "** TEST SUCCEEDED **\n\t Executed 12 tests, with 0 failures (0 unexpected) in 1.0 (1.0) seconds\n" > "$work/passed.log"
+if tests_report "$work/passed.log" 124 > "$work/passed.out" 2>&1; then got=0; else got=$?; fi
+check "a run that counted every test passing exits zero, hang or not" "$got" "0"
+
+printf "Test Suite 'All tests' started\n" > "$work/silent.log"
+if tests_report "$work/silent.log" 0 > "$work/silent.out" 2>&1; then got=0; else got=$?; fi
+check "a run with no count in its log is not a pass" "$got" "1"
+
+# A test that prints an odd byte makes grep call the whole log binary and answer
+# "Binary file matches" in place of the line — which would fail a run that passed.
+printf "\0odd byte\n\t Executed 3 tests, with 0 failures (0 unexpected) in 1.0 (1.0) seconds\n" > "$work/binary.log"
+if tests_report "$work/binary.log" 0 > "$work/binary.out" 2>&1; then got=0; else got=$?; fi
+check "a passing log with an odd byte in it still passes" "$got" "0"
+check "and prints its count, not a binary-file notice" "$(grep -c 'Executed 3 tests' "$work/binary.out")" "1"
+
+printf "/x/A.swift:3:5: error: cannot find 'q' in scope\n** TEST BUILD FAILED **\n" > "$work/build.log"
+if build_report "$work/build.log" 0 > "$work/build.out" 2>&1; then got=0; else got=$?; fi
+check "a failed build is a failure even when its process said nothing" "$got" "65"
+check "and prints its errors" "$(grep -c "cannot find 'q' in scope" "$work/build.out")" "1"
 
 [ "$failures" -eq 0 ] && echo "watchdog self-test passed" || echo "$failures check(s) failed"
 exit "$failures"
