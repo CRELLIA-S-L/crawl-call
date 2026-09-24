@@ -251,7 +251,7 @@ created: 2026-09-21
 The repository **shall** hold, under `materials/render/`, the scripts that assemble the concept scene in Blender and render the concept images.
 
 **Rationale.** Concept §2.1: the visual is assembled by script as a 3D scene, not drawn; the renders of §2.2 were made this way and the scripts stay the tool for concept renders and possibly for generating models.
-The three renders are in the repository; the scripts that made them are not yet, which is why this is a draft.
+The three renders are in the repository; the scripts that made them are not.
 Exempt from `unlinked`: the scripts serve the concept document, not another requirement, and a link invented to satisfy the rule would say otherwise.
 
 ## Repository guards
