@@ -21,7 +21,7 @@ enum SceneBuilder {
     @MainActor
     static func scene(for plan: ScenePlan, pitchDegrees: Double) -> (root: Entity, seeThrough: SeeThrough) {
         let root = Entity()
-        root.name = "scene"
+        root.name = EntityName.scene
         let ambient = SceneView.ambient(for: plan)
         let (map, seeThrough) = entity(for: plan)
         // A directional light leaves what it cannot reach unlit, and unlit is black on
@@ -42,14 +42,14 @@ enum SceneBuilder {
     @MainActor
     static func entity(for plan: ScenePlan) -> (root: Entity, seeThrough: SeeThrough) {
         let root = Entity()
-        root.name = "map"
+        root.name = EntityName.map
         var modules: [SeeThrough.Module] = []
         // A map is hundreds of cells and a kit is a handful of module types, so both
         // looks are made once per type and shared. Making a material per piece was
         // the suite's largest cost: its test phase ran in 5.6 s with one look built
         // per piece and in 1.3 s with two looks built per type.
         var looks: [String: (solid: [any Material], clear: [any Material], holed: [any Material]?)] = [:]
-        for piece in plan.pieces where piece.size.x > 0 && piece.size.y > 0 && piece.size.z > 0 {
+        for piece in plan.pieces where piece.size.min() > .zero {
             let mesh = MeshResource.generateBox(width: Float(piece.size.x),
                                                 height: Float(piece.size.y),
                                                 depth: Float(piece.size.z))

@@ -77,7 +77,7 @@ derives_from: [FR-VIEW-010]
 depends_on: [FR-SNAKE-010, FR-VIEW-020, IF-VIEW-020]
 refines: []
 conflicts_with: []
-code: [Sources/CrawlCall/View/SeeThrough.swift, Sources/CrawlCall/Map/Sight.swift, Sources/CrawlCall/Map/SceneBuilder.swift, Sources/CrawlCall/GameSession.swift, Sources/CrawlCall/View/SeeThroughHole.metal]
+code: [Sources/CrawlCall/View/SeeThrough.swift, Sources/CrawlCall/Map/Sight.swift, Sources/CrawlCall/Map/SceneBuilder.swift, Sources/CrawlCall/GameSession.swift, Sources/CrawlCall/View/SeeThroughHole.metal, Sources/CrawlCall/Config/Geometry.swift]
 tests: [Tests/CrawlCallTests/SeeThroughTests.swift]
 created: 2026-09-22
 ```

@@ -51,7 +51,7 @@ enum Sight {
     static func crossing(centre: SIMD3<Double>, size: SIMD3<Double>,
                          from eye: SIMD3<Double>, to point: SIMD3<Double>,
                          margin: Double) -> (SIMD3<Double>, SIMD3<Double>)? {
-        if eye.y >= point.y, centre.y + size.y / 2 <= point.y + 1e-9 { return nil }
+        if eye.y >= point.y, centre.y + size.y * Geometry.half <= point.y + Geometry.samePosition { return nil }
         var direction = point - eye
         // The margin is room to the side of the line, never room past its end. Grown
         // in every direction at once, a box swallows the point the line stops at, so
@@ -61,19 +61,19 @@ enum Sight {
         // margin buys reaches the body and no further.
         let reach = (direction.x * direction.x + direction.y * direction.y
                      + direction.z * direction.z).squareRoot()
-        if margin > 0, reach > margin { direction *= (reach - margin) / reach }
+        if margin > .zero, reach > margin { direction *= (reach - margin) / reach }
 
-        var near = 0.0
-        var far = 1.0
-        for axis in 0..<3 {
+        var near = Geometry.segmentStart
+        var far = Geometry.segmentEnd
+        for axis in direction.indices {
             let step = direction[axis]
-            let half = size[axis] / 2 + margin
+            let half = size[axis] * Geometry.half + margin
             let low = centre[axis] - half - eye[axis]
             let high = centre[axis] + half - eye[axis]
-            if abs(step) < 1e-12 {
+            if abs(step) < Geometry.parallel {
                 // Parallel to this pair of faces: either inside them for the whole
                 // segment, or never.
-                if low > 0 || high < 0 { return nil }
+                if low > .zero || high < .zero { return nil }
                 continue
             }
             let first = min(low / step, high / step)
@@ -83,9 +83,9 @@ enum Sight {
             if near > far { return nil }
         }
         let stretch = (eye + direction * near, eye + direction * far)
-        guard margin > 0 else { return stretch }
-        let reached = nearestSquared(lowest: centre - size / 2, highest: centre + size / 2,
-                                     from: eye, along: direction) <= margin * margin + 1e-12
+        guard margin > .zero else { return stretch }
+        let reached = nearestSquared(lowest: centre - size * Geometry.half, highest: centre + size * Geometry.half,
+                                     from: eye, along: direction) <= margin * margin + Geometry.squaredSlack
         return reached ? stretch : nil
     }
 
@@ -103,45 +103,44 @@ enum Sight {
     private static func nearestSquared(lowest: SIMD3<Double>, highest: SIMD3<Double>,
                                        from eye: SIMD3<Double>,
                                        along direction: SIMD3<Double>) -> Double {
-        var cuts: [Double] = [0, 1]
-        for axis in 0..<3 where abs(direction[axis]) > 1e-12 {
+        var cuts: [Double] = [Geometry.segmentStart, Geometry.segmentEnd]
+        for axis in direction.indices where abs(direction[axis]) > Geometry.parallel {
             for face in [lowest[axis], highest[axis]] {
                 let t = (face - eye[axis]) / direction[axis]
-                if t > 0, t < 1 { cuts.append(t) }
+                if t > Geometry.segmentStart, t < Geometry.segmentEnd { cuts.append(t) }
             }
         }
         cuts.sort()
 
         var best = Double.greatestFiniteMagnitude
-        for piece in 1..<cuts.count {
-            let from = cuts[piece - 1], to = cuts[piece]
-            guard to - from > 1e-15 else { continue }
+        for (from, to) in zip(cuts, cuts.dropFirst()) {
+            guard to - from > Geometry.emptyPiece else { continue }
             // Which side of the box each axis is on holds for the whole piece, so it
             // is read once, in the middle of it.
-            let middle = eye + direction * ((from + to) / 2)
-            var constant = 0.0, slope = 0.0, squares = 0.0
-            for axis in 0..<3 {
+            let middle = eye + direction * ((from + to) * Geometry.half)
+            var constant: Double = .zero, slope: Double = .zero, squares: Double = .zero
+            for axis in direction.indices {
                 let outward: Double
-                if middle[axis] < lowest[axis] { outward = -1 }
-                else if middle[axis] > highest[axis] { outward = 1 }
+                if middle[axis] < lowest[axis] { outward = Geometry.belowSide }
+                else if middle[axis] > highest[axis] { outward = Geometry.aboveSide }
                 else { continue }
                 // How far outside, as a straight line of the parameter.
-                let start = outward * (eye[axis] - (outward < 0 ? lowest[axis] : highest[axis]))
+                let start = outward * (eye[axis] - (outward < .zero ? lowest[axis] : highest[axis]))
                 let rate = outward * direction[axis]
                 squares += rate * rate
                 constant += start * start
-                slope += 2 * start * rate
+                slope += Geometry.squareCrossFactor * start * rate
             }
             func value(_ t: Double) -> Double { squares * t * t + slope * t + constant }
             best = min(best, min(value(from), value(to)))
-            if squares > 0 {
-                let vertex = -slope / (2 * squares)
+            if squares > .zero {
+                let vertex = -slope / (Geometry.squareCrossFactor * squares)
                 if vertex > from, vertex < to { best = min(best, value(vertex)) }
             }
         }
         // A quadratic read at its own vertex can come out a hair below zero where the
         // true answer is zero, and a negative square of a distance is not a thing.
-        return max(best, 0)
+        return max(best, .zero)
     }
 
     /// Whether nothing the plan placed stands between the two points.
@@ -160,12 +159,12 @@ enum Sight {
         // same either way: this rejects only what the slab test would reject too.
         let low = SIMD3(min(eye.x, point.x), min(eye.y, point.y), min(eye.z, point.z))
         let high = SIMD3(max(eye.x, point.x), max(eye.y, point.y), max(eye.z, point.z))
-        for piece in plan.pieces where piece.size.x > 0 && piece.size.y > 0 && piece.size.z > 0 {
-            let half = piece.size / 2
+        for piece in plan.pieces where piece.size.min() > .zero {
+            let half = piece.size * Geometry.half
             if piece.centre.x + half.x < low.x || piece.centre.x - half.x > high.x { continue }
             if piece.centre.y + half.y < low.y || piece.centre.y - half.y > high.y { continue }
             if piece.centre.z + half.z < low.z || piece.centre.z - half.z > high.z { continue }
-            if blocks(centre: piece.centre, size: piece.size, from: eye, to: point, margin: 0) {
+            if blocks(centre: piece.centre, size: piece.size, from: eye, to: point, margin: .zero) {
                 return false
             }
         }

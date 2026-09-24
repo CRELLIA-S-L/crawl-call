@@ -109,9 +109,9 @@ enum MapParser {
     /// first is what makes that impossible rather than merely unlikely.
     static func lines(of text: String) -> [Substring] {
         text
-            .replacingOccurrences(of: "\r\n", with: "\n")
-            .replacingOccurrences(of: "\r", with: "\n")
-            .split(separator: "\n", omittingEmptySubsequences: false)
+            .replacingOccurrences(of: MapFormat.windowsLineBreak, with: MapFormat.lineBreak)
+            .replacingOccurrences(of: MapFormat.classicMacLineBreak, with: MapFormat.lineBreak)
+            .split(separator: MapFormat.lineBreak, omittingEmptySubsequences: false)
     }
 
     /// Reads a map file against the kit it names. The kit comes from the caller
@@ -125,7 +125,7 @@ enum MapParser {
         var current: Int?
 
         for (index, raw) in lines(of: text).enumerated() {
-            let line = index + 1
+            let line = index + MapFormat.firstLine
             // A comment is a whole line beginning with `;`. It cannot be a trailing
             // one: `#` is the wall module and a trailing marker would eat a grid row,
             // and trailing spaces in a grid are cells, not whitespace to strip.
@@ -134,31 +134,32 @@ enum MapParser {
             // A line with nothing on it separates sections. A line of spaces does not:
             // inside a grid those are cells with no module (IF-MAP-010), and trimming
             // them away would shorten the floor and move everything below it.
-            if content.isEmpty || trimmed.hasPrefix(";") { continue }
+            if content.isEmpty || trimmed.hasPrefix(MapFormat.commentPrefix) { continue }
             if trimmed.isEmpty && current == nil { continue }
 
-            let words = trimmed.split(separator: " ", omittingEmptySubsequences: true)
-            switch words.first ?? "" {
-            case "kit":
+            let words = trimmed.split(separator: MapFormat.wordSeparator, omittingEmptySubsequences: true)
+            switch words.first.map(String.init) {
+            case MapFormat.kitDirective:
                 guard kitName == nil else { throw MapParseError.repeatedKit(line: line) }
-                guard words.count == 2 else { throw MapParseError.unknownDirective(trimmed, line: line) }
-                kitName = String(words[1])
-            case "transition":
-                guard words.count == 4,
-                      let cell = Self.cell(String(words[1])),
-                      let from = Int(words[2]), let to = Int(words[3]) else {
+                guard words.count == MapFormat.kitWords else { throw MapParseError.unknownDirective(trimmed, line: line) }
+                kitName = String(words[MapFormat.kitNameWord])
+            case MapFormat.transitionDirective:
+                guard words.count == MapFormat.transitionWords,
+                      let cell = Self.cell(String(words[MapFormat.transitionCellWord])),
+                      let from = Int(words[MapFormat.transitionFromWord]),
+                      let to = Int(words[MapFormat.transitionToWord]) else {
                     throw MapParseError.badTransition(trimmed, line: line)
                 }
                 transitions.append((.init(x: cell.x, z: cell.z, from: from, to: to), line))
-            case "floor":
-                guard words.count == 2 else { throw MapParseError.unknownDirective(trimmed, line: line) }
-                guard let level = Int(words[1]) else {
-                    throw MapParseError.badFloorNumber(String(words[1]), line: line)
+            case MapFormat.floorDirective:
+                guard words.count == MapFormat.floorWords else { throw MapParseError.unknownDirective(trimmed, line: line) }
+                guard let level = Int(words[MapFormat.floorLevelWord]) else {
+                    throw MapParseError.badFloorNumber(String(words[MapFormat.floorLevelWord]), line: line)
                 }
                 guard floorLine[level] == nil else { throw MapParseError.repeatedFloor(level, line: line) }
                 floorLine[level] = line
                 floors.append((level: level, rows: []))
-                current = floors.count - 1
+                current = floors.indices.last
             default:
                 let row = String(content)
                 // Where the line sits decides what it is. Before the first `floor` the
@@ -166,7 +167,7 @@ enum MapParser {
                 // nobody knows — unless it would pass for a grid, which is the other
                 // mistake worth naming precisely.
                 guard let index = current else {
-                    let looksLikeAGrid = row.allSatisfy { $0 == " " || kit.module(for: $0) != nil }
+                    let looksLikeAGrid = row.allSatisfy { $0 == MapFormat.emptyCell || kit.module(for: $0) != nil }
                     throw looksLikeAGrid ? MapParseError.gridBeforeAnyFloor(line: line)
                                          : MapParseError.unknownDirective(trimmed, line: line)
                 }
@@ -178,9 +179,9 @@ enum MapParser {
                 // A space is empty space, not a module (IF-MAP-010), so the kit's
                 // legend is not asked about it.
                 for (column, character) in row.enumerated()
-                where character != " " && kit.module(for: character) == nil {
+                where character != MapFormat.emptyCell && kit.module(for: character) == nil {
                     throw MapParseError.unknownCharacter(character, floor: level,
-                                                         line: line, column: column + 1)
+                                                         line: line, column: column + MapFormat.firstColumn)
                 }
                 floors[index].rows.append(row)
             }
@@ -189,7 +190,9 @@ enum MapParser {
         guard let name = kitName else { throw MapParseError.noKit }
         guard !floors.isEmpty else { throw MapParseError.noFloors }
         for floor in floors where floor.rows.isEmpty {
-            throw MapParseError.emptyFloor(floor.level, line: floorLine[floor.level] ?? 0)
+            // Every floor was entered in `floorLine` when its line was read, so the
+            // fallback is never taken; it is the line a message names when there is none.
+            throw MapParseError.emptyFloor(floor.level, line: floorLine[floor.level] ?? .zero)
         }
         let levels = Set(floors.map(\.level))
         for (transition, line) in transitions {
@@ -203,7 +206,7 @@ enum MapParser {
             for (z, row) in floor.rows.enumerated() {
                 for (x, character) in row.enumerated() {
                     // Empty space places nothing; the cell exists and holds no module.
-                    guard character != " ", let module = kit.module(for: character) else { continue }
+                    guard character != MapFormat.emptyCell, let module = kit.module(for: character) else { continue }
                     placements.append(.init(module: module.name, character: character,
                                             walkable: module.walkable,
                                             floor: floor.level, x: x, z: z))
@@ -220,20 +223,24 @@ enum MapParser {
     static func kitName(in text: String) throws -> String {
         for (index, raw) in lines(of: text).enumerated() {
             let trimmed = raw.trimmingCharacters(in: .whitespaces)
-            if trimmed.isEmpty || trimmed.hasPrefix(";") { continue }
-            let words = trimmed.split(separator: " ", omittingEmptySubsequences: true)
-            if words[0] == "kit" {
-                guard words.count == 2 else { throw MapParseError.unknownDirective(trimmed, line: index + 1) }
-                return String(words[1])
+            if trimmed.isEmpty || trimmed.hasPrefix(MapFormat.commentPrefix) { continue }
+            let words = trimmed.split(separator: MapFormat.wordSeparator, omittingEmptySubsequences: true)
+            let directive = words.first.map(String.init)
+            if directive == MapFormat.kitDirective {
+                guard words.count == MapFormat.kitWords else {
+                    throw MapParseError.unknownDirective(trimmed, line: index + MapFormat.firstLine)
+                }
+                return String(words[MapFormat.kitNameWord])
             }
-            if words[0] == "floor" { break }
+            if directive == MapFormat.floorDirective { break }
         }
         throw MapParseError.noKit
     }
 
     private static func cell(_ text: String) -> (x: Int, z: Int)? {
-        let parts = text.split(separator: ",")
-        guard parts.count == 2, let x = Int(parts[0]), let z = Int(parts[1]) else { return nil }
+        let parts = text.split(separator: MapFormat.coordinateSeparator)
+        guard parts.count == MapFormat.coordinates,
+              let x = Int(parts[MapFormat.xCoordinate]), let z = Int(parts[MapFormat.zCoordinate]) else { return nil }
         return (x, z)
     }
 }

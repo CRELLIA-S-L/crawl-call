@@ -18,7 +18,7 @@ derives_from: []
 depends_on: []
 refines: []
 conflicts_with: []
-code: [Sources/CrawlCall/Config/Configurations.swift, Sources/CrawlCall/Config/Configurations+Load.swift, Sources/CrawlCall/Config/Schema.swift, Sources/CrawlCall/Launch.swift, Sources/CrawlCall/CrawlCallApp.swift]
+code: [Sources/CrawlCall/Config/Configurations.swift, Sources/CrawlCall/Config/Configurations+Load.swift, Sources/CrawlCall/Config/Schema.swift, Sources/CrawlCall/Launch.swift, Sources/CrawlCall/CrawlCallApp.swift, Sources/CrawlCall/Config/Resource.swift]
 tests: [Tests/CrawlCallTests/ConfigurationTests.swift, Tests/CrawlCallTests/LaunchTests.swift, Tests/CrawlCallTests/SchemaTests.swift]
 created: 2026-09-21
 ```
@@ -37,7 +37,7 @@ derives_from: []
 depends_on: []
 refines: []
 conflicts_with: []
-code: [Sources/CrawlCall/Config/Configurations.swift, Sources/CrawlCall/Config/Configurations+Load.swift, Sources/CrawlCall/Config/Schema.swift, Sources/CrawlCall/Launch.swift, Sources/CrawlCall/CrawlCallApp.swift]
+code: [Sources/CrawlCall/Config/Configurations.swift, Sources/CrawlCall/Config/Configurations+Load.swift, Sources/CrawlCall/Config/Schema.swift, Sources/CrawlCall/Launch.swift, Sources/CrawlCall/CrawlCallApp.swift, Sources/CrawlCall/Config/Resource.swift]
 tests: [Tests/CrawlCallTests/ConfigurationTests.swift, Tests/CrawlCallTests/LaunchTests.swift, Tests/CrawlCallTests/SchemaTests.swift]
 created: 2026-09-21
 ```
@@ -73,7 +73,7 @@ derives_from: []
 depends_on: []
 refines: []
 conflicts_with: []
-code: [Sources/CrawlCall/Config/Configurations.swift, Sources/CrawlCall/Config/Configurations+Load.swift, Sources/CrawlCall/Config/Schema.swift, Sources/CrawlCall/Launch.swift, Sources/CrawlCall/CrawlCallApp.swift]
+code: [Sources/CrawlCall/Config/Configurations.swift, Sources/CrawlCall/Config/Configurations+Load.swift, Sources/CrawlCall/Config/Schema.swift, Sources/CrawlCall/Launch.swift, Sources/CrawlCall/CrawlCallApp.swift, Sources/CrawlCall/Config/Resource.swift]
 tests: [Tests/CrawlCallTests/ConfigurationTests.swift, Tests/CrawlCallTests/LaunchTests.swift, Tests/CrawlCallTests/SchemaTests.swift]
 created: 2026-09-21
 ```
@@ -160,7 +160,7 @@ derives_from: []
 depends_on: []
 refines: []
 conflicts_with: []
-code: [Sources/CrawlCall/Map/MapSpecification.swift]
+code: [Sources/CrawlCall/Map/MapSpecification.swift, Sources/CrawlCall/Config/Resource.swift, Sources/CrawlCall/Config/MapFormat.swift]
 tests: [Tests/CrawlCallTests/MapParserTests.swift]
 created: 2026-09-21
 ```
@@ -200,7 +200,7 @@ derives_from: []
 depends_on: []
 refines: []
 conflicts_with: []
-code: [Sources/CrawlCall/Config/Configurations.swift, Sources/CrawlCall/Config/Configurations+Load.swift, Sources/CrawlCall/Config/Schema.swift, Sources/CrawlCall/Launch.swift, Sources/CrawlCall/CrawlCallApp.swift]
+code: [Sources/CrawlCall/Config/Configurations.swift, Sources/CrawlCall/Config/Configurations+Load.swift, Sources/CrawlCall/Config/Schema.swift, Sources/CrawlCall/Launch.swift, Sources/CrawlCall/CrawlCallApp.swift, Sources/CrawlCall/Config/Resource.swift]
 tests: [Tests/CrawlCallTests/ConfigurationTests.swift, Tests/CrawlCallTests/LaunchTests.swift, Tests/CrawlCallTests/SchemaTests.swift]
 created: 2026-09-21
 ```

@@ -57,7 +57,7 @@ final class PerceptionTests: XCTestCase {
     private func kerb(at x: Int, height: Double) throws -> ScenePlan {
         let floor = try plan("............")
         let box = ScenePlan.Piece(module: "kerb", size: SIMD3(cell, height, cell),
-                                  centre: SIMD3(Double(x) * cell, height / 2 - ScenePlan.surfaceOverlap, 0),
+                                  centre: SIMD3(Double(x) * cell, height / 2 - MapGrid.surfaceOverlap, 0),
                                   colour: SIMD3(0.5, 0.5, 0.5), level: 0)
         return ScenePlan(pieces: floor.pieces + [box], cellSize: floor.cellSize, floorHeight: floor.floorHeight)
     }

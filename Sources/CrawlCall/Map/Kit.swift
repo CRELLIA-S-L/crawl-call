@@ -53,7 +53,7 @@ struct Kit: Decodable, Equatable {
         var details: String {
             switch self {
             case .missing(let n):
-                return "config/kit/\(n)/legend.json is missing from the bundle"
+                return "\(Resource.configurationFile(Resource.legend(ofKit: n))) is missing from the bundle"
             case .legendKeyIsNotOneCharacter(let k):
                 return "the legend key '\(k)' is not a single character; a grid cell is one character"
             case .moduleFieldIsNotThreeNumbers(let m, let f):
@@ -63,22 +63,27 @@ struct Kit: Decodable, Equatable {
     }
 
     static func load(named name: String, from bundle: Bundle) throws -> Kit {
-        guard let url = bundle.url(forResource: "legend", withExtension: "json",
-                                   subdirectory: "config/kit/\(name)"),
+        guard let url = bundle.url(forResource: Resource.legendName,
+                                   withExtension: Resource.configurationExtension,
+                                   subdirectory: Resource.kitDirectory(name)),
               let data = try? Data(contentsOf: url) else {
             throw KitError.missing(name: name)
         }
-        let kit = try Configurations.decode(Kit.self, named: "kit/\(name)/legend",
+        let kit = try Configurations.decode(Kit.self, named: Resource.legend(ofKit: name),
                                             schema: Kit.schema, from: data)
         // A grid cell is one character, so a legend key that is not one character could
         // never be matched — an error at load rather than a module nobody can place.
-        for key in kit.modules.keys where key.count != 1 {
+        for key in kit.modules.keys where key.count != MapFormat.charactersPerCell {
             throw KitError.legendKeyIsNotOneCharacter(key)
         }
         for (key, module) in kit.modules {
             let named = "\(key) (\(module.name))"
-            if module.size.count != 3 { throw KitError.moduleFieldIsNotThreeNumbers(module: named, field: "size") }
-            if module.colour.count != 3 { throw KitError.moduleFieldIsNotThreeNumbers(module: named, field: "colour") }
+            if module.size.count != SIMD3<Double>.scalarCount {
+                throw KitError.moduleFieldIsNotThreeNumbers(module: named, field: MapFormat.moduleSize)
+            }
+            if module.colour.count != SIMD3<Double>.scalarCount {
+                throw KitError.moduleFieldIsNotThreeNumbers(module: named, field: MapFormat.moduleColour)
+            }
         }
         return kit
     }

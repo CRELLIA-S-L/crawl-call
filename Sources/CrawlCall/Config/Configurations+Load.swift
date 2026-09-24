@@ -21,10 +21,10 @@ enum ConfigurationError: IdentifiedError {
 
     var details: String {
         switch self {
-        case .fileMissing(let n):          return "config/\(n).json is missing from the bundle"
-        case .notJSON(let n, let e):       return "config/\(n).json is not JSON: \(e)"
-        case .badShape(let n, let e):      return "config/\(n).json — \(e)"
-        case .undecodable(let n, let e):   return "config/\(n).json does not decode: \(e)"
+        case .fileMissing(let n):          return "\(Resource.configurationFile(n)) is missing from the bundle"
+        case .notJSON(let n, let e):       return "\(Resource.configurationFile(n)) is not JSON: \(e)"
+        case .badShape(let n, let e):      return "\(Resource.configurationFile(n)) — \(e)"
+        case .undecodable(let n, let e):   return "\(Resource.configurationFile(n)) does not decode: \(e)"
         }
     }
 }
@@ -40,16 +40,18 @@ struct Configurations {
 
     static func load(from bundle: Bundle) throws -> Configurations {
         Configurations(
-            snake:  try read(SnakeConfiguration.self,  "snake",  SnakeConfiguration.schema,  bundle),
-            tuning: try read(TuningConfiguration.self, "tuning", TuningConfiguration.schema, bundle),
-            view:   try read(ViewConfiguration.self,   "view",   ViewConfiguration.schema,   bundle),
-            bot:    try read(BotConfiguration.self,    "bot",    BotConfiguration.schema,    bundle),
-            match:  try read(MatchConfiguration.self,  "match",  MatchConfiguration.schema,  bundle))
+            snake:  try read(SnakeConfiguration.self,  .snake,  SnakeConfiguration.schema,  bundle),
+            tuning: try read(TuningConfiguration.self, .tuning, TuningConfiguration.schema, bundle),
+            view:   try read(ViewConfiguration.self,   .view,   ViewConfiguration.schema,   bundle),
+            bot:    try read(BotConfiguration.self,    .bot,    BotConfiguration.schema,    bundle),
+            match:  try read(MatchConfiguration.self,  .match,  MatchConfiguration.schema,  bundle))
     }
 
-    private static func read<T: Decodable>(_ type: T.Type, _ name: String,
+    private static func read<T: Decodable>(_ type: T.Type, _ file: Resource.Configuration,
                                            _ schema: Schema, _ bundle: Bundle) throws -> T {
-        guard let url = bundle.url(forResource: name, withExtension: "json", subdirectory: "config"),
+        let name = file.rawValue
+        guard let url = bundle.url(forResource: name, withExtension: Resource.configurationExtension,
+                                   subdirectory: Resource.configurationDirectory),
               let data = try? Data(contentsOf: url) else {
             throw ConfigurationError.fileMissing(name: name)
         }

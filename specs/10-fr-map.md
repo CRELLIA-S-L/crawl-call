@@ -194,7 +194,7 @@ derives_from: [FR-MAP-020]
 depends_on: [FR-SNAKE-020]
 refines: []
 conflicts_with: []
-code: [Sources/CrawlCall/Map/ScenePlan.swift]
+code: [Sources/CrawlCall/Map/ScenePlan.swift, Sources/CrawlCall/Config/Geometry.swift]
 tests: [Tests/CrawlCallTests/ScenePlanTests.swift]
 created: 2026-09-21
 ```
@@ -214,7 +214,7 @@ derives_from: []
 depends_on: [IF-MAP-010]
 refines: []
 conflicts_with: []
-code: [Sources/CrawlCall/Map/Kit.swift, ATTRIBUTION.md]
+code: [Sources/CrawlCall/Map/Kit.swift, ATTRIBUTION.md, Sources/CrawlCall/Config/Resource.swift, Sources/CrawlCall/Config/MapFormat.swift]
 tests: [Tests/CrawlCallTests/MapParserTests.swift, Tests/CrawlCallTests/ScenePlanTests.swift]
 created: 2026-09-21
 ```

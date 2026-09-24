@@ -33,14 +33,15 @@ struct ScenePlan: Equatable {
     /// Measured between the facing edges of the two pieces, so a kit whose floor
     /// module is narrower than a cell shows up here rather than under the snake.
     func widestGap(along graph: NavigationGraph) -> Double {
-        var widest = 0.0
+        var widest: Double = .zero
         for node in graph.nodes {
             guard let here = surface(at: node) else { continue }
             for next in graph.neighbours(of: node) where next.floor == node.floor {
                 guard let there = surface(at: next) else { continue }
                 let alongX = next.x != node.x
                 let centres = alongX ? abs(there.centre.x - here.centre.x) : abs(there.centre.z - here.centre.z)
-                let halves = alongX ? (here.size.x + there.size.x) / 2 : (here.size.z + there.size.z) / 2
+                let halves = alongX ? (here.size.x + there.size.x) * Geometry.half
+                                    : (here.size.z + there.size.z) * Geometry.half
                 widest = max(widest, centres - halves)
             }
         }
@@ -53,8 +54,8 @@ struct ScenePlan: Equatable {
         let z = Double(node.z) * cellSize
         let top = Double(node.floor) * floorHeight
         return pieces.first { piece in
-            abs(piece.centre.x - x) < 1e-9 && abs(piece.centre.z - z) < 1e-9
-                && abs(piece.centre.y + piece.size.y / 2 - top) < 1e-9
+            abs(piece.centre.x - x) < Geometry.samePosition && abs(piece.centre.z - z) < Geometry.samePosition
+                && abs(piece.centre.y + piece.size.y * Geometry.half - top) < Geometry.samePosition
         }
     }
 
@@ -63,7 +64,7 @@ struct ScenePlan: Equatable {
     struct Bounds: Equatable {
         let lowest: SIMD3<Double>
         let highest: SIMD3<Double>
-        var centre: SIMD3<Double> { (lowest + highest) / 2 }
+        var centre: SIMD3<Double> { (lowest + highest) * Geometry.half }
         var extent: SIMD3<Double> { highest - lowest }
     }
 
@@ -74,54 +75,46 @@ struct ScenePlan: Equatable {
     /// Empty where there are no pieces, so a caller need not special-case an empty map.
     var bounds: Bounds {
         guard let first = pieces.first else { return Bounds(lowest: .zero, highest: .zero) }
-        var low = first.centre - first.size / 2
-        var high = first.centre + first.size / 2
+        var low = first.centre - first.size * Geometry.half
+        var high = first.centre + first.size * Geometry.half
         for piece in pieces.dropFirst() {
-            low = SIMD3(min(low.x, piece.centre.x - piece.size.x / 2),
-                        min(low.y, piece.centre.y - piece.size.y / 2),
-                        min(low.z, piece.centre.z - piece.size.z / 2))
-            high = SIMD3(max(high.x, piece.centre.x + piece.size.x / 2),
-                         max(high.y, piece.centre.y + piece.size.y / 2),
-                         max(high.z, piece.centre.z + piece.size.z / 2))
+            low = pointwiseMin(low, piece.centre - piece.size * Geometry.half)
+            high = pointwiseMax(high, piece.centre + piece.size * Geometry.half)
         }
         return Bounds(lowest: low, highest: high)
     }
 
-    /// How far a standing module is sunk into the surface it stands on, in metres.
-    /// Small enough to be invisible at a cell of half a metre, large enough that no
-    /// two faces end up in the same plane.
-    static let surfaceOverlap = 0.01
-
     static func make(map: MapSpecification, kit: Kit, cellSize: Double) -> ScenePlan {
         var pieces: [Piece] = []
         for placement in map.placements {
-            guard let module = kit.module(for: placement.character), module.size.count == 3 else { continue }
-            let size = SIMD3(module.size[0], module.size[1], module.size[2])
+            guard let module = kit.module(for: placement.character),
+                  module.size.count == SIMD3<Double>.scalarCount else { continue }
+            let size = SIMD3<Double>(module.size)
             let elevation = Double(placement.floor) * kit.floorHeight
             // A cell holds one module, so a cell holding a wall holds no floor and the
             // scene would have a hole under it. The floor is implied (FR-TOOL-020); a
             // deliberate hole is a different thing and a map will say so (FR-MAP-110).
-            if !module.walkable, let floor = kit.floor, floor.size.count == 3 {
-                let floorSize = SIMD3(floor.size[0], floor.size[1], floor.size[2])
+            if !module.walkable, let floor = kit.floor, floor.size.count == SIMD3<Double>.scalarCount {
+                let floorSize = SIMD3<Double>(floor.size)
                 pieces.append(Piece(module: floor.name,
                                     size: floorSize,
                                     centre: SIMD3(Double(placement.x) * cellSize,
-                                                  elevation - floorSize.y / 2,
+                                                  elevation - floorSize.y * Geometry.half,
                                                   Double(placement.z) * cellSize),
-                                    colour: SIMD3(floor.colour[0], floor.colour[1], floor.colour[2]),
+                                    colour: SIMD3<Double>(floor.colour),
                                     level: placement.floor))
             }
             // A walkable module *is* the surface, so its top sits at the floor's
             // elevation; anything else stands on that surface, sunk into it by
-            // `surfaceOverlap` so that its underside and the slab's top are not the
+            // `MapGrid.surfaceOverlap` so that its underside and the slab's top are not the
             // same plane — two coplanar faces fight for the depth buffer.
             let y = module.walkable
-                ? elevation - size.y / 2
-                : elevation + size.y / 2 - Self.surfaceOverlap
+                ? elevation - size.y * Geometry.half
+                : elevation + size.y * Geometry.half - MapGrid.surfaceOverlap
             pieces.append(Piece(module: module.name,
                                 size: size,
                                 centre: SIMD3(Double(placement.x) * cellSize, y, Double(placement.z) * cellSize),
-                                colour: SIMD3(module.colour[0], module.colour[1], module.colour[2]),
+                                colour: SIMD3<Double>(module.colour),
                                 level: placement.floor))
         }
         return ScenePlan(pieces: pieces, cellSize: cellSize, floorHeight: kit.floorHeight)

@@ -37,7 +37,7 @@ Total requirements: 189.
 | **FR-BOT-020** Two squads at war | `implemented` | T | `Sources/CrawlCall/Bot/Squads.swift`<br>`Sources/CrawlCall/Game.swift` | `Tests/CrawlCallTests/BotTests.swift` |
 | **FR-BOT-030** Archetype sets base personality weights | `implemented` | T | `Sources/CrawlCall/Bot/Bot.swift` | `Tests/CrawlCallTests/BotTests.swift` |
 | **FR-BOT-040** One bot per squad holds the commander role | `deferred` | T | — | — |
-| **FR-BOT-050** A bot notices the snake in view | `implemented` | T | `Sources/CrawlCall/Bot/Perception.swift`<br>`Sources/CrawlCall/Map/Sight.swift`<br>`Sources/CrawlCall/Bot/Bot.swift` | `Tests/CrawlCallTests/PerceptionTests.swift` |
+| **FR-BOT-050** A bot notices the snake in view | `implemented` | T | `Sources/CrawlCall/Bot/Perception.swift`<br>`Sources/CrawlCall/Map/Sight.swift`<br>`Sources/CrawlCall/Bot/Bot.swift`<br>`Sources/CrawlCall/Config/Geometry.swift` | `Tests/CrawlCallTests/PerceptionTests.swift` |
 | **FR-BOT-060** A bot fires at its target | `partial` | T | `Sources/CrawlCall/Bot/Execution.swift`<br>`Sources/CrawlCall/Bot/Bot.swift` | `Tests/CrawlCallTests/ExecutionTests.swift`<br>`Tests/CrawlCallTests/ShotTests.swift` |
 | **FR-BOT-070** Heavy and sapper weapons destroy cover | `deferred` | T | — | — |
 | **FR-BOT-080** Action chosen by maximum utility | `implemented` | T | `Sources/CrawlCall/Bot/Deliberation.swift` | `Tests/CrawlCallTests/DeliberationTests.swift` |
@@ -89,8 +89,8 @@ Total requirements: 189.
 | **FR-MAP-060** What can and cannot be destroyed is declared per module type | `deferred` | I | — | — |
 | **FR-MAP-070** Stairs the snake can block | `deferred` | I | — | — |
 | **FR-MAP-080** Trap corridors | `deferred` | I | — | — |
-| **FR-MAP-090** Every reachable surface is continuous for the tail | `implemented` | T | `Sources/CrawlCall/Map/ScenePlan.swift` | `Tests/CrawlCallTests/ScenePlanTests.swift` |
-| **FR-MAP-100** Maps are assembled from a modular kit | `implemented` | I | `Sources/CrawlCall/Map/Kit.swift`<br>`ATTRIBUTION.md` | `Tests/CrawlCallTests/MapParserTests.swift`<br>`Tests/CrawlCallTests/ScenePlanTests.swift` |
+| **FR-MAP-090** Every reachable surface is continuous for the tail | `implemented` | T | `Sources/CrawlCall/Map/ScenePlan.swift`<br>`Sources/CrawlCall/Config/Geometry.swift` | `Tests/CrawlCallTests/ScenePlanTests.swift` |
+| **FR-MAP-100** Maps are assembled from a modular kit | `implemented` | I | `Sources/CrawlCall/Map/Kit.swift`<br>`ATTRIBUTION.md`<br>`Sources/CrawlCall/Config/Resource.swift`<br>`Sources/CrawlCall/Config/MapFormat.swift` | `Tests/CrawlCallTests/MapParserTests.swift`<br>`Tests/CrawlCallTests/ScenePlanTests.swift` |
 | **FR-MAP-110** A cell can declare that it has no floor | `draft` | T | — | — |
 | **FR-SCORE-010** Consuming a bot awards points | `deferred` | T | — | — |
 | **FR-SCORE-020** Live prey has the higher base value | `deferred` | T | — | — |
@@ -134,9 +134,9 @@ Total requirements: 189.
 | **FR-SNAKE-230** The snake bites off its own tail | `draft` | T | — | — |
 | **FR-SNAKE-240** Biting off takes time and holds the snake in place | `draft` | T | — | — |
 | **FR-SNAKE-250** A severed segment leaves nothing behind | `draft` | T | — | — |
-| **FR-TOOL-010** Parse a map specification | `implemented` | T | `Sources/CrawlCall/Map/MapSpecification.swift` | `Tests/CrawlCallTests/MapParserTests.swift` |
-| **FR-TOOL-020** Assemble the scene from the kit | `implemented` | T | `Sources/CrawlCall/Map/ScenePlan.swift`<br>`Sources/CrawlCall/Map/SceneBuilder.swift` | `Tests/CrawlCallTests/ScenePlanTests.swift`<br>`Tests/CrawlCallTests/MapParserTests.swift`<br>`Tests/CrawlCallTests/LaunchTests.swift` |
-| **FR-TOOL-030** Derive the navigation graph | `implemented` | T | `Sources/CrawlCall/Map/NavigationGraph.swift` | `Tests/CrawlCallTests/NavigationGraphTests.swift`<br>`Tests/CrawlCallTests/LaunchTests.swift`<br>`Tests/CrawlCallTests/MapParserTests.swift` |
+| **FR-TOOL-010** Parse a map specification | `implemented` | T | `Sources/CrawlCall/Map/MapSpecification.swift`<br>`Sources/CrawlCall/Config/MapFormat.swift` | `Tests/CrawlCallTests/MapParserTests.swift` |
+| **FR-TOOL-020** Assemble the scene from the kit | `implemented` | T | `Sources/CrawlCall/Map/ScenePlan.swift`<br>`Sources/CrawlCall/Map/SceneBuilder.swift`<br>`Sources/CrawlCall/Config/EntityName.swift`<br>`Sources/CrawlCall/Config/MapFormat.swift`<br>`Sources/CrawlCall/Config/Geometry.swift` | `Tests/CrawlCallTests/ScenePlanTests.swift`<br>`Tests/CrawlCallTests/MapParserTests.swift`<br>`Tests/CrawlCallTests/LaunchTests.swift` |
+| **FR-TOOL-030** Derive the navigation graph | `implemented` | T | `Sources/CrawlCall/Map/NavigationGraph.swift`<br>`Sources/CrawlCall/Config/MapFormat.swift` | `Tests/CrawlCallTests/NavigationGraphTests.swift`<br>`Tests/CrawlCallTests/LaunchTests.swift`<br>`Tests/CrawlCallTests/MapParserTests.swift` |
 | **FR-TOOL-040** Validate the map | `deferred` | T | — | — |
 | **FR-TOOL-050** Export to the level editor | `deferred` | T | — | — |
 | **FR-TOOL-060** Render a 2D plan per floor | `deferred` | T | — | — |
@@ -168,26 +168,26 @@ Total requirements: 189.
 | **FR-VIEW-120** The HUD is drawn in the diorama style | `partial` | I | `Sources/CrawlCall/View/Controls.swift`<br>`Sources/CrawlCall/View/MatchEnd.swift` | — |
 | **FR-VIEW-130** The arena is lit as bright daylight | `implemented` | D | `Sources/CrawlCall/View/SceneView.swift` | `Tests/CrawlCallTests/ScenePlanTests.swift` |
 | **FR-VIEW-140** A floor above the head is drawn see-through | `implemented` | D | `Sources/CrawlCall/View/SeeThrough.swift`<br>`Sources/CrawlCall/Map/SceneBuilder.swift`<br>`Sources/CrawlCall/GameSession.swift` | `Tests/CrawlCallTests/SeeThroughTests.swift` |
-| **FR-VIEW-150** Nothing between the camera and the snake stays solid | `implemented` | D | `Sources/CrawlCall/View/SeeThrough.swift`<br>`Sources/CrawlCall/Map/Sight.swift`<br>`Sources/CrawlCall/Map/SceneBuilder.swift`<br>`Sources/CrawlCall/GameSession.swift`<br>`Sources/CrawlCall/View/SeeThroughHole.metal` | `Tests/CrawlCallTests/SeeThroughTests.swift` |
+| **FR-VIEW-150** Nothing between the camera and the snake stays solid | `implemented` | D | `Sources/CrawlCall/View/SeeThrough.swift`<br>`Sources/CrawlCall/Map/Sight.swift`<br>`Sources/CrawlCall/Map/SceneBuilder.swift`<br>`Sources/CrawlCall/GameSession.swift`<br>`Sources/CrawlCall/View/SeeThroughHole.metal`<br>`Sources/CrawlCall/Config/Geometry.swift` | `Tests/CrawlCallTests/SeeThroughTests.swift` |
 | **FR-VIEW-155** The ground around the head is kept in sight | `implemented` | D | `Sources/CrawlCall/View/SeeThrough.swift`<br>`Sources/CrawlCall/Map/SceneBuilder.swift`<br>`Sources/CrawlCall/GameSession.swift`<br>`Sources/CrawlCall/View/SeeThroughHole.metal` | `Tests/CrawlCallTests/SeeThroughTests.swift` |
 | **FR-VIEW-160** The eat button says whether there is anything to eat | `implemented` | D | `Sources/CrawlCall/View/Controls.swift`<br>`Sources/CrawlCall/GameSession.swift`<br>`Sources/CrawlCall/CrawlCallApp.swift` | `Tests/CrawlCallTests/ControlsTests.swift` |
 | **FR-VIEW-170** A shot is drawn where it went | `implemented` | T | `Sources/CrawlCall/Bot/Shot.swift`<br>`Sources/CrawlCall/Bot/Execution.swift`<br>`Sources/CrawlCall/Game.swift`<br>`Sources/CrawlCall/View/ShotEntity.swift`<br>`Sources/CrawlCall/GameSession.swift` | `Tests/CrawlCallTests/ShotTests.swift` |
 | **FR-VIEW-180** The tail on screen is as long as the tail | `implemented` | T | `Sources/CrawlCall/View/SnakeEntity.swift`<br>`Sources/CrawlCall/GameSession.swift` | `Tests/CrawlCallTests/GameTests.swift` |
 | **FR-VIEW-190** A finished match says so and starts again on a press | `implemented` | T | `Sources/CrawlCall/View/MatchEnd.swift`<br>`Sources/CrawlCall/Game.swift`<br>`Sources/CrawlCall/GameSession.swift`<br>`Sources/CrawlCall/View/BotEntity.swift`<br>`Sources/CrawlCall/CrawlCallApp.swift` | `Tests/CrawlCallTests/MatchEndTests.swift` |
 | **FR-VIEW-200** Text is shown in the player's language | `implemented` | T | `Sources/CrawlCall/Config/TextKey.swift`<br>`Sources/CrawlCall/View/Localizable.xcstrings`<br>`Sources/CrawlCall/View/MatchEnd.swift`<br>`Sources/CrawlCall/View/Controls.swift` | `Tests/CrawlCallTests/TextCatalogTests.swift` |
-| **IF-BOT-010** Bot and match configuration | `implemented` | T | `Sources/CrawlCall/Config/Configurations.swift`<br>`Sources/CrawlCall/Config/Configurations+Load.swift`<br>`Sources/CrawlCall/Config/Schema.swift`<br>`Sources/CrawlCall/Launch.swift`<br>`Sources/CrawlCall/CrawlCallApp.swift` | `Tests/CrawlCallTests/ConfigurationTests.swift`<br>`Tests/CrawlCallTests/LaunchTests.swift`<br>`Tests/CrawlCallTests/SchemaTests.swift` |
+| **IF-BOT-010** Bot and match configuration | `implemented` | T | `Sources/CrawlCall/Config/Configurations.swift`<br>`Sources/CrawlCall/Config/Configurations+Load.swift`<br>`Sources/CrawlCall/Config/Schema.swift`<br>`Sources/CrawlCall/Launch.swift`<br>`Sources/CrawlCall/CrawlCallApp.swift`<br>`Sources/CrawlCall/Config/Resource.swift` | `Tests/CrawlCallTests/ConfigurationTests.swift`<br>`Tests/CrawlCallTests/LaunchTests.swift`<br>`Tests/CrawlCallTests/SchemaTests.swift` |
 | **IF-CMD-010** Commander input | `deferred` | T | — | — |
 | **IF-CMD-020** Commander output | `deferred` | T | — | — |
 | **IF-CMD-030** Speech configuration | `deferred` | T | — | — |
 | **IF-CMD-040** Instructions for a commander's decision | `deferred` | I | — | — |
 | **IF-CMD-050** Instructions for a bot's line | `deferred` | I | — | — |
 | **IF-CMD-060** What a generated line may and may not contain | `deferred` | T | — | — |
-| **IF-MAP-010** The map specification file | `implemented` | T | `Sources/CrawlCall/Map/MapSpecification.swift` | `Tests/CrawlCallTests/MapParserTests.swift` |
-| **IF-MAP-020** Tuning configuration for destruction and maps | `implemented` | T | `Sources/CrawlCall/Config/Configurations.swift`<br>`Sources/CrawlCall/Config/Configurations+Load.swift`<br>`Sources/CrawlCall/Config/Schema.swift`<br>`Sources/CrawlCall/Launch.swift`<br>`Sources/CrawlCall/CrawlCallApp.swift` | `Tests/CrawlCallTests/ConfigurationTests.swift`<br>`Tests/CrawlCallTests/LaunchTests.swift`<br>`Tests/CrawlCallTests/SchemaTests.swift` |
+| **IF-MAP-010** The map specification file | `implemented` | T | `Sources/CrawlCall/Map/MapSpecification.swift`<br>`Sources/CrawlCall/Config/Resource.swift`<br>`Sources/CrawlCall/Config/MapFormat.swift` | `Tests/CrawlCallTests/MapParserTests.swift` |
+| **IF-MAP-020** Tuning configuration for destruction and maps | `implemented` | T | `Sources/CrawlCall/Config/Configurations.swift`<br>`Sources/CrawlCall/Config/Configurations+Load.swift`<br>`Sources/CrawlCall/Config/Schema.swift`<br>`Sources/CrawlCall/Launch.swift`<br>`Sources/CrawlCall/CrawlCallApp.swift`<br>`Sources/CrawlCall/Config/Resource.swift` | `Tests/CrawlCallTests/ConfigurationTests.swift`<br>`Tests/CrawlCallTests/LaunchTests.swift`<br>`Tests/CrawlCallTests/SchemaTests.swift` |
 | **IF-SCORE-010** Scoring configuration | `deferred` | T | — | — |
-| **IF-SNAKE-010** Snake configuration | `implemented` | T | `Sources/CrawlCall/Config/Configurations.swift`<br>`Sources/CrawlCall/Config/Configurations+Load.swift`<br>`Sources/CrawlCall/Config/Schema.swift`<br>`Sources/CrawlCall/Launch.swift`<br>`Sources/CrawlCall/CrawlCallApp.swift` | `Tests/CrawlCallTests/ConfigurationTests.swift`<br>`Tests/CrawlCallTests/LaunchTests.swift`<br>`Tests/CrawlCallTests/SchemaTests.swift` |
+| **IF-SNAKE-010** Snake configuration | `implemented` | T | `Sources/CrawlCall/Config/Configurations.swift`<br>`Sources/CrawlCall/Config/Configurations+Load.swift`<br>`Sources/CrawlCall/Config/Schema.swift`<br>`Sources/CrawlCall/Launch.swift`<br>`Sources/CrawlCall/CrawlCallApp.swift`<br>`Sources/CrawlCall/Config/Resource.swift` | `Tests/CrawlCallTests/ConfigurationTests.swift`<br>`Tests/CrawlCallTests/LaunchTests.swift`<br>`Tests/CrawlCallTests/SchemaTests.swift` |
 | **IF-VIEW-010** Input intents | `implemented` | T | `Sources/CrawlCall/Input/Intent.swift` | `Tests/CrawlCallTests/IntentTests.swift`<br>`Tests/CrawlCallTests/TouchSchemeTests.swift` |
-| **IF-VIEW-020** View configuration | `implemented` | T | `Sources/CrawlCall/Config/Configurations.swift`<br>`Sources/CrawlCall/Config/Configurations+Load.swift`<br>`Sources/CrawlCall/Config/Schema.swift`<br>`Sources/CrawlCall/Launch.swift`<br>`Sources/CrawlCall/CrawlCallApp.swift` | `Tests/CrawlCallTests/ConfigurationTests.swift`<br>`Tests/CrawlCallTests/LaunchTests.swift`<br>`Tests/CrawlCallTests/SchemaTests.swift` |
+| **IF-VIEW-020** View configuration | `implemented` | T | `Sources/CrawlCall/Config/Configurations.swift`<br>`Sources/CrawlCall/Config/Configurations+Load.swift`<br>`Sources/CrawlCall/Config/Schema.swift`<br>`Sources/CrawlCall/Launch.swift`<br>`Sources/CrawlCall/CrawlCallApp.swift`<br>`Sources/CrawlCall/Config/Resource.swift` | `Tests/CrawlCallTests/ConfigurationTests.swift`<br>`Tests/CrawlCallTests/LaunchTests.swift`<br>`Tests/CrawlCallTests/SchemaTests.swift` |
 | **IF-VIEW-030** String catalog | `implemented` | T | `Sources/CrawlCall/Config/TextKey.swift`<br>`Sources/CrawlCall/View/Localizable.xcstrings` | `Tests/CrawlCallTests/TextCatalogTests.swift` |
 | **INV-BOT-010** Execution runs every frame for every bot | `implemented` | T | `Sources/CrawlCall/Bot/Execution.swift`<br>`Sources/CrawlCall/Game.swift` | `Tests/CrawlCallTests/ExecutionTests.swift` |
 | **INV-BOT-020** Squads never remove bodies | `deferred` | T | — | — |
@@ -324,6 +324,6 @@ Verified by means other than testing — or the check has not been set up yet.
 
 ## Code files outside the specification
 
-No requirement references them: 0 of 46.
+No requirement references them: 0 of 50.
 
 

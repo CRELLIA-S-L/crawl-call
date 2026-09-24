@@ -35,7 +35,7 @@ final class ScenePlanTests: XCTestCase {
         // maintainer changed the one that matters.
         let height = try XCTUnwrap(kit.module(for: "#")).size[1]
         XCTAssertEqual(wall.size.y, height, accuracy: 1e-9)
-        XCTAssertEqual(wall.centre.y, height / 2 - ScenePlan.surfaceOverlap, accuracy: 1e-9)
+        XCTAssertEqual(wall.centre.y, height / 2 - MapGrid.surfaceOverlap, accuracy: 1e-9)
         // Which is what matters: the two faces are not in one plane.
         let wallBottom = wall.centre.y - wall.size.y / 2
         XCTAssertLessThan(wallBottom, slab.centre.y + slab.size.y / 2)
@@ -244,7 +244,7 @@ final class ImpliedFloorTests: XCTestCase {
         // A walkable module is a surface itself and stands on nothing; everything else
         // has to have one under it.
         for piece in world.plan.pieces where !isWalkable(piece.module) {
-            let base = piece.centre.y - piece.size.y / 2 + ScenePlan.surfaceOverlap
+            let base = piece.centre.y - piece.size.y / 2 + MapGrid.surfaceOverlap
             let stands = floors.contains { floor in
                 abs(floor.centre.x - piece.centre.x) < 1e-9
                     && abs(floor.centre.z - piece.centre.z) < 1e-9

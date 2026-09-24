@@ -21,7 +21,7 @@ struct NavigationGraph: Equatable {
 
     var nodes: Set<Node> { Set(neighbours.keys) }
     var nodeCount: Int { neighbours.count }
-    var edgeCount: Int { neighbours.values.reduce(0) { $0 + $1.count } / 2 }
+    var edgeCount: Int { neighbours.values.reduce(.zero) { $0 + $1.count } / MapGrid.endsPerEdge }
 
     func isWalkable(_ node: Node) -> Bool { neighbours[node] != nil }
     func neighbours(of node: Node) -> Set<Node> { neighbours[node] ?? [] }
@@ -41,8 +41,8 @@ struct NavigationGraph: Equatable {
         }
 
         for node in neighbours.keys {
-            link(node, Node(floor: node.floor, x: node.x + 1, z: node.z))
-            link(node, Node(floor: node.floor, x: node.x, z: node.z + 1))
+            link(node, Node(floor: node.floor, x: node.x + MapGrid.neighbourStep, z: node.z))
+            link(node, Node(floor: node.floor, x: node.x, z: node.z + MapGrid.neighbourStep))
         }
         for transition in map.transitions {
             link(Node(floor: transition.from, x: transition.x, z: transition.z),

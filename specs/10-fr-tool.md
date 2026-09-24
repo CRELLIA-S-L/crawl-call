@@ -15,7 +15,7 @@ derives_from: []
 depends_on: [IF-MAP-010]
 refines: []
 conflicts_with: []
-code: [Sources/CrawlCall/Map/MapSpecification.swift]
+code: [Sources/CrawlCall/Map/MapSpecification.swift, Sources/CrawlCall/Config/MapFormat.swift]
 tests: [Tests/CrawlCallTests/MapParserTests.swift]
 created: 2026-09-21
 ```
@@ -33,7 +33,7 @@ derives_from: [FR-TOOL-010]
 depends_on: [FR-MAP-100]
 refines: []
 conflicts_with: []
-code: [Sources/CrawlCall/Map/ScenePlan.swift, Sources/CrawlCall/Map/SceneBuilder.swift]
+code: [Sources/CrawlCall/Map/ScenePlan.swift, Sources/CrawlCall/Map/SceneBuilder.swift, Sources/CrawlCall/Config/EntityName.swift, Sources/CrawlCall/Config/MapFormat.swift, Sources/CrawlCall/Config/Geometry.swift]
 tests: [Tests/CrawlCallTests/ScenePlanTests.swift, Tests/CrawlCallTests/MapParserTests.swift, Tests/CrawlCallTests/LaunchTests.swift]
 created: 2026-09-21
 ```
@@ -55,7 +55,7 @@ derives_from: [FR-TOOL-020]
 depends_on: []
 refines: []
 conflicts_with: []
-code: [Sources/CrawlCall/Map/NavigationGraph.swift]
+code: [Sources/CrawlCall/Map/NavigationGraph.swift, Sources/CrawlCall/Config/MapFormat.swift]
 tests: [Tests/CrawlCallTests/NavigationGraphTests.swift, Tests/CrawlCallTests/LaunchTests.swift, Tests/CrawlCallTests/MapParserTests.swift]
 created: 2026-09-21
 ```

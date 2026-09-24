@@ -50,7 +50,7 @@ final class ShotTests: XCTestCase {
         let floor = ScenePlan.make(map: map, kit: base.kit, cellSize: cell)
         let low = base.configurations.bot.eyeHeight / 2
         let box = ScenePlan.Piece(module: "kerb", size: SIMD3(cell, low, cell),
-                                  centre: SIMD3(cell, low / 2 - ScenePlan.surfaceOverlap, 0),
+                                  centre: SIMD3(cell, low / 2 - MapGrid.surfaceOverlap, 0),
                                   colour: SIMD3(0.5, 0.5, 0.5), level: 0)
         let plan = ScenePlan(pieces: floor.pieces + [box], cellSize: floor.cellSize, floorHeight: floor.floorHeight)
         let world = World(configurations: base.configurations, kit: base.kit, map: map,

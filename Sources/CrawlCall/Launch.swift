@@ -25,10 +25,11 @@ enum Launch {
     /// Reads everything the game starts on: the configurations, then the kit the map
     /// names, then the map itself, then what is derived from them.
     static func world(from bundle: Bundle = .main,
-                      map name: String = "blockout") -> Result<World, Error> {
+                      map name: String = Resource.startingMap) -> Result<World, Error> {
         do {
             let configurations = try Configurations.load(from: bundle)
-            guard let url = bundle.url(forResource: name, withExtension: "map", subdirectory: "maps") else {
+            guard let url = bundle.url(forResource: name, withExtension: Resource.mapExtension,
+                                       subdirectory: Resource.mapDirectory) else {
                 throw MapLoadError.missing(name: name)
             }
             let text: String
@@ -60,7 +61,7 @@ enum Launch {
         } catch {
             // Configurations.load throws nothing else; this keeps that a fact rather
             // than an assumption, and says so if it ever stops being true.
-            return .failure(.undecodable(name: "unknown", underlying: error))
+            return .failure(.undecodable(name: Resource.unknownConfiguration, underlying: error))
         }
     }
 }
@@ -82,8 +83,8 @@ enum MapLoadError: IdentifiedError, Equatable {
 
     var details: String {
         switch self {
-        case .missing(let n):          return "maps/\(n).map is missing from the bundle"
-        case .unreadable(let n, let e): return "maps/\(n).map could not be read as UTF-8 text: \(e)"
+        case .missing(let n):          return "\(Resource.mapFile(n)) is missing from the bundle"
+        case .unreadable(let n, let e): return "\(Resource.mapFile(n)) could not be read as UTF-8 text: \(e)"
         }
     }
 
