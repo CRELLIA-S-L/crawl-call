@@ -123,11 +123,11 @@ Counted by quarter, which is what `period` says in the register's configuration.
 
 | quarter | arrived unclaimed | areas |
 |---|---|---|
-| 2026-Q3 | 119 | BOT 22, MAP 11, PERF 4, PUB 12, SCORE 7, SNAKE 21, TOOL 18, VIEW 24 |
+| 2026-Q3 | 120 | BOT 22, MAP 11, PERF 4, PUB 12, SCORE 7, SNAKE 21, TOOL 19, VIEW 24 |
 
 ## Requirements resting on no hypothesis
 
-119 of 190 requirements. Weight is what stands on them: how many
+120 of 191 requirements. Weight is what stands on them: how many
 requirements link to them, plus how many files their `code` field names.
 
 | Requirement | Incoming | Code files | Weight |
@@ -192,6 +192,7 @@ requirements link to them, plus how many files their `code` field names.
 | FR-SNAKE-015 | 0 | 2 | 2 |
 | FR-SNAKE-210 | 1 | 1 | 2 |
 | FR-TOOL-190 | 1 | 1 | 2 |
+| FR-TOOL-210 | 1 | 1 | 2 |
 | FR-VIEW-070 | 0 | 2 | 2 |
 | FR-VIEW-130 | 0 | 2 | 2 |
 | FR-VIEW-180 | 0 | 2 | 2 |
@@ -209,7 +210,7 @@ requirements link to them, plus how many files their `code` field names.
 | FR-TOOL-040 | 1 | 0 | 1 |
 | FR-TOOL-080 | 1 | 0 | 1 |
 | FR-TOOL-180 | 0 | 1 | 1 |
-| FR-TOOL-210 | 0 | 1 | 1 |
+| FR-TOOL-220 | 0 | 1 | 1 |
 | INV-MAP-010 | 1 | 0 | 1 |
 | NFR-PERF-020 | 1 | 0 | 1 |
 | NFR-PERF-080 | 1 | 0 | 1 |

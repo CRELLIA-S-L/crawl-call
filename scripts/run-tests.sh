@@ -117,10 +117,30 @@ tests_report() {
   esac
 }
 
+# The build's warnings about the project's own files and settings, and how many
+# (FR-TOOL-220, ART-080): a line that starts with a path inside the repository, or a
+# setting's warning that names this project's target. Notices of Xcode's own tools
+# carry a timestamp and name no file of ours, so they are not among them. Printed,
+# never failed: the maintainer's choice.
+#
+# implements: FR-TOOL-220
+warnings_report() {
+  log="$1"; root="$2"
+  found=$(LC_ALL=C grep -aE "^$root/[^ ]+: warning: |^warning: .*\(in target '[^']+' from project 'CrawlCall'\)" "$log" \
+            | sed "s|^$root/||" | sort -u)
+  if [ -z "$found" ]; then
+    echo "build warnings: 0"
+  else
+    echo "build warnings: $(printf '%s\n' "$found" | wc -l | tr -d ' ')"
+    printf '%s\n' "$found"
+  fi
+}
+
 build_status=0
 watch build '^\*\* TEST BUILD (SUCCEEDED|FAILED)' xcodebuild -project CrawlCall.xcodeproj -scheme CrawlCall \
   -destination "id=$SIM" -derivedDataPath "$DERIVED" build-for-testing || build_status=$?
 build_report "$DERIVED/build.log" "$build_status" || exit $?
+warnings_report "$DERIVED/build.log" "$PWD"
 
 # The suite's own last line ends the phase too: with failing tests xcodebuild has been
 # seen printing it and its counts, then hanging without the `** TEST FAILED` verdict.

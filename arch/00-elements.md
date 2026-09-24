@@ -140,7 +140,7 @@ It leans on start-up for the numbers an archetype is made of (IF-BOT-010) and on
 ```yaml
 status: built
 carries: [scripts]
-requirements: [FR-TOOL-190, FR-TOOL-180, FR-TOOL-210]
+requirements: [FR-TOOL-190, FR-TOOL-180, FR-TOOL-210, FR-TOOL-220]
 depends_on: []
 interface: a simulator or a device identifier in; each phase's time, its verdict, a named timeout, and an app that is not left running out
 ```

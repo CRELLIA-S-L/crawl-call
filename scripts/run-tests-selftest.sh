@@ -3,7 +3,7 @@
 # phase that outlives its limit, and reports which one, how long it had, and what the
 # process was doing. Standard tools only (ART-040).
 #
-# verifies: FR-TOOL-190, FR-TOOL-210
+# verifies: FR-TOOL-190, FR-TOOL-210, FR-TOOL-220
 set -eu
 
 here=$(dirname "$0")
@@ -97,6 +97,27 @@ printf "/x/A.swift:3:5: error: cannot find 'q' in scope\n** TEST BUILD FAILED **
 if build_report "$work/build.log" 0 > "$work/build.out" 2>&1; then got=0; else got=$?; fi
 check "a failed build is a failure even when its process said nothing" "$got" "65"
 check "and prints its errors" "$(grep -c "cannot find 'q' in scope" "$work/build.out")" "1"
+
+# 5. The build's warnings about the project, and only those (FR-TOOL-220).
+sed -n '/^warnings_report() {/,/^}/p' "$here/run-tests.sh" > "$work/warnings.sh"
+grep -q '^warnings_report() {' "$work/warnings.sh" || { echo "FAIL  the runner has no warnings_report() to test"; exit 1; }
+. "$work/warnings.sh"
+root=/repo
+{
+  echo "/repo/Tests/A.swift:3:5: warning: variable 'x' was never used"
+  echo "/repo/Tests/A.swift:3:5: warning: variable 'x' was never used"
+  echo "    |- warning: a note under the first, not a warning of its own"
+  echo "warning: 'UIOldKey' has been deprecated (in target 'CrawlCall' from project 'CrawlCall')"
+  echo "2026-09-24 17:06:49.798 appintentsmetadataprocessor[1:2] warning: Metadata extraction skipped"
+  echo "/elsewhere/Lib.swift:1:1: warning: not ours"
+} > "$work/warned.log"
+warnings_report "$work/warned.log" "$root" > "$work/warned.out"
+check "the project's warnings are counted once each" "$(head -1 "$work/warned.out")" "build warnings: 2"
+check "a file's warning is named by its path in the repository" "$(grep -c '^Tests/A.swift:3:5: warning' "$work/warned.out")" "1"
+check "a setting's warning is named" "$(grep -c 'UIOldKey' "$work/warned.out")" "1"
+check "a tool's notice is not among them" "$(grep -c 'appintents' "$work/warned.out")" "0"
+echo "/repo/A.swift:1:1: error: nothing to warn about here" > "$work/clean.log"
+check "a build with none says so" "$(warnings_report "$work/clean.log" "$root")" "build warnings: 0"
 
 [ "$failures" -eq 0 ] && echo "watchdog self-test passed" || echo "$failures check(s) failed"
 exit "$failures"

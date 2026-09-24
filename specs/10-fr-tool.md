@@ -400,6 +400,26 @@ The run is also ended on the suite's own last line, `Test Suite 'All tests' pass
 The exit status is read from what the run printed, not from the process that printed it, because that process is the one known to hang after its verdict (FR-TOOL-190).
 The maintainer asked for the runner to be fixed on 2026-09-24.
 
+### FR-TOOL-220 — A test run lists the build's warnings
+
+```yaml
+status: implemented
+verification: T
+derives_from: []
+depends_on: [FR-TOOL-210]
+refines: []
+conflicts_with: []
+code: [scripts/run-tests.sh]
+tests: [scripts/run-tests-selftest.sh]
+created: 2026-09-24
+```
+
+When a test run's build succeeds, the test runner **shall** print every warning the build reported about the project's own files and settings, and how many there were.
+
+**Rationale.** ART-080 asks a build to report no warning, and a warning nobody sees is not cleared: the two this build carried on 2026-09-24 were found by reading its log by hand, and one of them hid a test that could not fail for the reason it states.
+Printed and not failed — the maintainer's choice on 2026-09-24 over failing the build on a warning, which would stop all work the day a new SDK deprecates something.
+The project's own files and settings, because the build also prints notices of Xcode's own tools about frameworks the project does not use; those are named in `specs/91-open-issues.md` under ART-080 rather than repeated on every run.
+
 ## Diagnostics
 
 ### FR-TOOL-200 — An error or a log line opens with the identifier of its kind

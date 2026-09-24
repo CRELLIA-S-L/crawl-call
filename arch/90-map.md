@@ -13,7 +13,7 @@ What each part of this project is, what it carries and what state it is in.
 | **E-050** The view | `built` | `Sources/CrawlCall/View` | **FR-VIEW-010**, **FR-VIEW-130**, **FR-VIEW-020**, **FR-VIEW-060**, **FR-VIEW-070**, **FR-TOOL-070**, **FR-VIEW-100**, **FR-VIEW-120**, **FR-VIEW-140**, **FR-VIEW-150**, **FR-VIEW-155**, **FR-VIEW-160**, **FR-VIEW-170**, **FR-VIEW-180**, **FR-VIEW-190**, **FR-VIEW-200**, **IF-VIEW-030** (17 realized) |
 | **E-060** The snake | `built` | `Sources/CrawlCall/Snake` | **FR-SNAKE-010**, **FR-SNAKE-015**, **FR-SNAKE-020**, **FR-SNAKE-030**, **FR-SNAKE-060**, **FR-SNAKE-070**, **FR-SNAKE-090**, **FR-SNAKE-100**, **FR-SNAKE-210**, **FR-SNAKE-220**, **FR-MAP-025** (11 realized) |
 | **E-070** The match | `built` | `Sources/CrawlCall/Game.swift`, `Sources/CrawlCall/GameSession.swift` | **FR-VIEW-030**, **FR-VIEW-170**, **FR-VIEW-180**, **FR-VIEW-190**, **FR-SCORE-140**, **FR-SCORE-150** (6 realized) |
-| **E-080** The runners | `built` | `scripts` | **FR-TOOL-190**, **FR-TOOL-180**, **FR-TOOL-210** (3 realized) |
+| **E-080** The runners | `built` | `scripts` | **FR-TOOL-190**, **FR-TOOL-180**, **FR-TOOL-210**, **FR-TOOL-220** (4 realized) |
 | **E-090** The squads | `built` | `Sources/CrawlCall/Bot` | **FR-BOT-010**, **FR-BOT-020**, **FR-BOT-030**, **FR-BOT-050**, **FR-BOT-060**, **FR-BOT-080**, **FR-BOT-090**, **FR-BOT-118**, **FR-BOT-150**, **FR-BOT-160**, **FR-BOT-165**, **FR-BOT-200**, **FR-BOT-210**, **FR-VIEW-170**, **INV-BOT-010**, **INV-BOT-030** (16 realized) |
 
-9 elements, carrying 66 of the 190 requirements this specification holds.
+9 elements, carrying 67 of the 191 requirements this specification holds.
