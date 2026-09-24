@@ -5,7 +5,7 @@
 // measured with — `specs/50-verification.md` says why, and the two are different
 // questions asked of the same number.
 //
-// implements: FR-TOOL-070, FR-VIEW-020, FR-VIEW-030, FR-VIEW-060, FR-VIEW-100, FR-VIEW-140, FR-VIEW-150, FR-VIEW-155, FR-VIEW-160, FR-VIEW-170, FR-VIEW-180, FR-VIEW-190, FR-VIEW-230, FR-VIEW-210
+// implements: FR-TOOL-070, FR-VIEW-020, FR-VIEW-030, FR-VIEW-060, FR-VIEW-100, FR-VIEW-140, FR-VIEW-150, FR-VIEW-155, FR-VIEW-160, FR-VIEW-170, FR-VIEW-180, FR-VIEW-190, FR-VIEW-230, FR-VIEW-210, FR-TOOL-230, FR-TOOL-240
 import Foundation
 import Observation
 import RealityKit
@@ -120,20 +120,68 @@ final class GameSession {
     /// tail grown long is drawn short.
     func restart() {
         game = game.restarted()
+        recorder?.note(.matchBegan)
+        eatingAtLastFrame = false
         focus = game.snake.head
         place()
     }
 
-    /// One frame: the world moves, then what is drawn catches up with it.
+    /// Where the frame record goes when the launch switched it on (FR-TOOL-230); nil
+    /// otherwise, and then nothing is timed. A recorder given to a session begins its
+    /// match in the record.
+    var recorder: FrameRecorder? {
+        didSet { recorder?.note(.matchBegan) }
+    }
+    /// Whether a meal was under way when the last frame was recorded: a meal is asked
+    /// for between frames, so its beginning is seen by comparing frames.
+    private var eatingAtLastFrame = false
+
+    /// One frame: the world moves, then what is drawn catches up with it. `seconds` is
+    /// the interval since the last frame, as the renderer measured it.
     func step(seconds: Double) {
+        let clock = ContinuousClock()
+        let wasOver = game.outcome != nil
+        let stepping = clock.now
         // A frame long enough to be a stall is not a frame the snake should cross the
         // room in; the model refuses to pass through walls whatever it is given, and
         // this keeps the picture from lurching as well.
-        game.advance(seconds: min(seconds, Frame.longest))
-        place()
+        let report = game.advance(seconds: min(seconds, Frame.longest))
+        let stepTime = clock.now - stepping
+        let placed = place()
+        guard let recorder else { return }
+
+        var frame = FrameRecord.Frame()
+        frame[.step] = FrameRecorder.milliseconds(stepTime)
+        frame[.deliberation] = FrameRecorder.milliseconds(report.deliberationTime)
+        frame[.seeThrough] = FrameRecorder.milliseconds(placed.seeThroughTime)
+        frame[.draw] = FrameRecorder.milliseconds(placed.drawTime)
+        frame.add(.deliberation, times: report.deliberations)
+        frame.add(.hit, times: report.hits)
+        frame.add(.firstHole, times: placed.look.firstHoles)
+        frame.add(.lookChanged, times: placed.look.lookChanges)
+        let eating = game.eating != nil
+        if eating && !eatingAtLastFrame { frame.add(.mealBegan) }
+        if !eating && eatingAtLastFrame { frame.add(.mealEnded) }
+        eatingAtLastFrame = eating
+        let ended = !wasOver && game.outcome != nil
+        if ended { frame.add(.matchEnded) }
+        recorder.add(interval: seconds, frame)
+        // FR-TOOL-240: the end of a match is one of the moments the record is written.
+        if ended { recorder.writeInBackground() }
     }
 
-    private func place() {
+    /// What drawing a frame cost: the see-through check apart from the rest, and what
+    /// the check changed (FR-TOOL-230).
+    struct Placed {
+        var seeThroughTime = Duration.zero
+        var drawTime = Duration.zero
+        var look = SeeThrough.Report()
+    }
+
+    @discardableResult
+    private func place() -> Placed {
+        let clock = ContinuousClock()
+        let drawing = clock.now
         canEat = Game.preyWithinReach(of: game.snake.head, among: game.bots,
                                       tuning: game.world.configurations.tuning) != nil
         SnakeEntity.update(snakeEntity, from: game.snake,
@@ -167,7 +215,9 @@ final class GameSession {
         let eye = SIMD3(Double(camera.position.x), Double(camera.position.y), Double(camera.position.z))
         // Floors above fade whole; what stands in the way of the snake, or near the
         // head, is cut open where it matters and stands everywhere else (ADR-0020).
-        seeThrough.show(headOn: game.snake.floor, head: game.snake.head,
+        let seeing = clock.now
+        var placed = Placed()
+        placed.look = seeThrough.show(headOn: game.snake.floor, head: game.snake.head,
                         surface: Double(game.snake.floor) * game.world.plan.floorHeight,
                         snake: [game.snake.head] + game.snake.tail,
                         from: eye,
@@ -177,6 +227,10 @@ final class GameSession {
                         margin: game.world.configurations.tuning.bodyRadius
                             + game.world.configurations.view.seeThroughMargin,
                         visibilityRadius: game.world.configurations.view.visibilityRadius)
+        let seen = clock.now
+        placed.seeThroughTime = seen - seeing
+        placed.drawTime = seeing - drawing
+        return placed
     }
 
     /// How much of the prey is still outside the snake: one at the first bite, zero

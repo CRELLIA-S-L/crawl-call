@@ -12,7 +12,7 @@
 // The looks of a module are made once, when the map is built, and swapped as the
 // rules change their mind: a material is cheap to keep and not cheap to make.
 //
-// implements: FR-VIEW-140, FR-VIEW-150, FR-VIEW-155
+// implements: FR-VIEW-140, FR-VIEW-150, FR-VIEW-155, FR-TOOL-230
 import CoreGraphics
 import Foundation
 import Metal
@@ -43,6 +43,8 @@ struct SeeThrough {
     /// snake, so a module that has one is written every frame regardless.
     private var lids: Set<Int> = []
     private var cut: Set<Int> = []
+    /// Modules drawn through the hole shader at least once (FR-TOOL-230).
+    private var everHoled: Set<Int> = []
 
     init(_ modules: [Module]) {
         self.modules = modules
@@ -245,12 +247,21 @@ struct SeeThrough {
         return (d.x * d.x + d.y * d.y + d.z * d.z).squareRoot()
     }
 
+    /// What a `show` changed that the frame record counts (FR-TOOL-230): modules that
+    /// changed their look, and modules drawn through the hole shader for the first time.
+    struct Report: Equatable {
+        var lookChanges = Int.zero
+        var firstHoles = Int.zero
+    }
+
     /// The map as it should be drawn now: solid, except for the floors above the
     /// head, which fade whole (FR-VIEW-140), and whatever `holes` chooses, which is cut
     /// open (FR-VIEW-150, FR-VIEW-155, ADR-0020).
+    @discardableResult
     mutating func show(headOn level: Int, head: SIMD3<Double>, surface: Double,
                        snake: [SIMD3<Double>], from eye: SIMD3<Double>,
-                       margin: Double, visibilityRadius: Double) {
+                       margin: Double, visibilityRadius: Double) -> Report {
+        var report = Report()
         let nowLids = Set(boxes.indices.filter { boxes[$0].level > level })
         let holes = Self.holes(in: boxes, headOn: level, head: head, surface: surface,
                                snake: snake, from: eye, margin: margin,
@@ -263,11 +274,16 @@ struct SeeThrough {
                 modules[index].model.model?.materials = [holed]
                 // It still stands; only a patch of it is see-through (ADR-0020).
                 modules[index].model.components.set(DynamicLightShadowComponent(castsShadow: true))
+                if !cut.contains(index) { report.lookChanges += FrameRecording.once }
+                if everHoled.insert(index).inserted { report.firstHoles += FrameRecording.once }
             } else if !cut.contains(index) {
                 modules[index].model.model?.materials = modules[index].clear
                 modules[index].model.components.set(DynamicLightShadowComponent(castsShadow: false))
+                report.lookChanges += FrameRecording.once
             }
         }
+        report.lookChanges += nowLids.subtracting(lids).count
+        report.lookChanges += lids.union(cut).subtracting(nowLids).subtracting(nowCut).count
         for index in nowLids.subtracting(lids) {
             modules[index].model.model?.materials = modules[index].clear
             // A module that went on casting a solid shadow would darken the very
@@ -280,5 +296,6 @@ struct SeeThrough {
         }
         lids = nowLids
         cut = nowCut
+        return report
     }
 }

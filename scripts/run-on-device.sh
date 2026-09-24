@@ -24,12 +24,37 @@
 # Usage: CRAWLCALL_DEVICE=<udid> scripts/run-on-device.sh <app> [screenshot]
 #   CRAWLCALL_DEVICE   the device to install on; required
 #   CRAWLCALL_WATCH    seconds to leave the app running before closing it (default 6)
+#   CRAWLCALL_RECORD   where to put the frame record: the app records its frames, and
+#                      the record is taken off the device and summed up (FR-TOOL-250)
+#   CRAWLCALL_RECORD_TOP  how many of the slowest frames the summary names (default 5)
 set -eu
 
 APP="${1:-}"
 SHOT="${2:-}"
 DEVICE="${CRAWLCALL_DEVICE:-}"
 WATCH="${CRAWLCALL_WATCH:-6}"
+RECORD="${CRAWLCALL_RECORD:-}"
+TOP="${CRAWLCALL_RECORD_TOP:-5}"
+
+# The frame record's summary (FR-TOOL-250): how many frames, how many came late, and
+# the slowest by name with where their time went. Late is one and a half frame periods
+# at 60 a second, 25 ms: an on-time frame is 16.7 ms, one after a skipped frame 33.
+# The columns are the app's own (FrameRecording.header): frame, time, interval, step,
+# deliberation, see-through, draw, events.
+#
+# implements: FR-TOOL-250
+LATE_MS=25
+frames_report() {
+  file="$1"; top="$2"
+  frames=$(awk 'NR > 1' "$file" | wc -l | tr -d ' ')
+  late=$(awk -F, -v late="$LATE_MS" 'NR > 1 && $3 + 0 > late + 0 { n++ } END { print n + 0 }' "$file")
+  echo "frames: $frames, late (over ${LATE_MS} ms): $late"
+  awk 'NR > 1' "$file" | sort -t, -k3,3 -g -r | head -n "$top" | awk -F, '{
+    printf "  frame %s at %s ms: interval %s ms — step %s (deliberation %s), see-through %s, draw %s", $1, $2, $3, $4, $5, $6, $7
+    if ($8 != "") printf " — %s", $8
+    printf "\n"
+  }'
+}
 
 if [ -z "$APP" ]; then
   echo "usage: CRAWLCALL_DEVICE=<udid> $0 <app> [screenshot]" >&2
@@ -79,7 +104,13 @@ started=$(date +%s)
 xcrun devicectl device install app --device "$DEVICE" "$APP" > /dev/null
 echo "installed in $(( $(date +%s) - started ))s"
 
-xcrun devicectl device process launch --device "$DEVICE" "$BUNDLE" \
+# The record is switched on in the app by its launch environment (FR-TOOL-230).
+if [ -n "$RECORD" ]; then
+  set -- --environment-variables '{"CRAWLCALL_FRAMES":"1"}'
+else
+  set --
+fi
+xcrun devicectl device process launch --device "$DEVICE" "$@" "$BUNDLE" \
   --json-output "$work/launch.json" > /dev/null
 launched=$(plutil -extract result.process.processIdentifier raw -o - "$work/launch.json")
 echo "launched"
@@ -93,3 +124,16 @@ fi
 
 # Before it reports, not after: a step past the report is a step that gets skipped.
 close
+
+# The app wrote its record when it was asked to terminate (FR-TOOL-240); it is taken
+# off the device now that the app has gone, and summed up.
+if [ -n "$RECORD" ]; then
+  if xcrun devicectl device copy from --device "$DEVICE" --domain-type appDataContainer \
+       --domain-identifier "$BUNDLE" --source Documents/frames.csv --destination "$RECORD" > /dev/null 2>&1 \
+     && [ -s "$RECORD" ]; then
+    echo "frame record: $RECORD"
+    frames_report "$RECORD" "$TOP"
+  else
+    echo "no frame record on the device"
+  fi
+fi

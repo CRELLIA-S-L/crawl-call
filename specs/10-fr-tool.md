@@ -444,3 +444,65 @@ An identifier is what a search, a filter or a test holds on to when the wording 
 Unique across the game, because an identifier two kinds share would send a search to the wrong one.
 The identifiers are declared once, in the catalogue ART-070 places under `Sources/CrawlCall/Config/`.
 Exempt from `unlinked`: the format serves every error the game reports rather than one requirement, and a link to any single one would say otherwise.
+
+## Frame record
+
+The game's own instrument for where a frame's time goes, asked for by Q-250 and built first of its parts on 2026-09-24, when the freezes behind a long snake had been found by measurement on the simulator and one was still seen on the phone that no measurement placed.
+
+### FR-TOOL-230 — A match records its frames when asked
+
+```yaml
+status: implemented
+verification: T
+derives_from: [NFR-PERF-010]
+depends_on: []
+refines: []
+conflicts_with: []
+code: [Sources/CrawlCall/Record/FrameRecord.swift, Sources/CrawlCall/Record/FrameRecorder.swift, Sources/CrawlCall/Config/FrameRecording.swift, Sources/CrawlCall/GameSession.swift, Sources/CrawlCall/Game.swift, Sources/CrawlCall/View/SeeThrough.swift, Sources/CrawlCall/View/MatchHost.swift, Sources/CrawlCall/CrawlCallApp.swift]
+tests: [Tests/CrawlCallTests/FrameRecordTests.swift]
+created: 2026-09-24
+```
+
+When the game is launched with the frame record switched on, the system **shall** record for every frame the interval since the previous frame, the time its own step took in each of its phases — the match's step, the bots' deliberation, the see-through and the update of what is drawn — and the events of the match in that frame.
+
+**Rationale.** A freeze the HUD shows is a spike with no name. The interval is what RealityKit measured between its frames; the phases are what this game spent of it. A long interval over short phases puts the time in the renderer or on the GPU — a shader compiled on first use, a material swapped on many modules at once — where moving the game's work to another thread would change nothing; a long phase puts it in the game. The events say what happened in the frame the time went: a bite, a segment grown, a module cut open for the first time, materials swapped, a bot's deliberation, a match beginning or ending.
+Switched on by the launch rather than built in, so that the build measured is the build played, Debug or Release alike; and kept in memory of a fixed size, so that recording costs no allocation on a frame and cannot itself be the spike it looks for.
+The maintainer asked for the instrument on 2026-09-24, before moving the match's work off the main thread.
+
+### FR-TOOL-240 — The frame record is written where the run tool can take it
+
+```yaml
+status: implemented
+verification: T
+derives_from: [FR-TOOL-230]
+depends_on: [FR-TOOL-230]
+refines: []
+conflicts_with: []
+code: [Sources/CrawlCall/Record/FrameRecorder.swift, Sources/CrawlCall/Record/TerminationRecord.swift, Sources/CrawlCall/Record/FrameRecord.swift, Sources/CrawlCall/Config/FrameRecording.swift, Sources/CrawlCall/GameSession.swift, Sources/CrawlCall/CrawlCallApp.swift]
+tests: [Tests/CrawlCallTests/FrameRecordTests.swift]
+created: 2026-09-24
+```
+
+When a match with the frame record switched on ends, when the app leaves the foreground, or when it is asked to terminate, the system **shall** write the record as a CSV file in the app's documents container.
+
+**Rationale.** Written at those moments and not per frame, because a write is exactly the kind of work that stalls one. When it is asked to terminate, because that is how a run on the device ends (FR-TOOL-180): the run tool sends SIGTERM, and a process that dies of it leaves nothing behind. A signal dispatch source only reports the arrival of a signal and "cannot catch signals to prevent termination" (Apple, *Concurrency Programming Guide*), so the default action is set aside with `signal(SIGTERM, SIG_IGN)` while the record is switched on, and the app ends itself once the file is written.
+The documents container is where `devicectl device copy from --domain-type appDataContainer` reaches.
+
+### FR-TOOL-250 — A run on the device reports its slowest frames
+
+```yaml
+status: implemented
+verification: T
+derives_from: [FR-TOOL-230]
+depends_on: [FR-TOOL-240]
+refines: []
+conflicts_with: []
+code: [scripts/run-on-device.sh]
+tests: [scripts/run-on-device-selftest.sh]
+created: 2026-09-24
+```
+
+When a run on the device ends, the run tool **shall** copy the frame record from the device where there is one, and print the number of frames, how many came more than one and a half frame periods of 60 per second after the one before, and for each of the slowest frames its interval, its phases and its events.
+
+**Rationale.** The record is read where the run is, so that a freeze is named the minute it was seen rather than after somebody opens a spreadsheet.
+Late is one and a half frame periods at 60 per second, 25 ms: a frame of 16.67 ms is on time at NFR-PERF-010's rate, and a frame that came after a skipped one is at least 33 ms, so the line between them falls where no on-time frame reaches and every skipped one does. "More than 16.6 ms", as first drafted, would have called every frame late.

@@ -2,13 +2,20 @@
 // orientation lock comes or goes, and the match on screen is what pauses (FR-VIEW-230).
 // The session is created inside the view, so it is handed here when it exists.
 //
-// implements: FR-VIEW-230
+// implements: FR-VIEW-230, FR-TOOL-230
 import Foundation
 
 @MainActor
 final class MatchHost {
     /// The match being played, once the scene has built one.
     weak var session: GameSession?
+    /// The frame record, where the launch switched it on (FR-TOOL-230): it outlives any
+    /// one match, so that a restart continues the same record.
+    let recorder: FrameRecorder?
+
+    init(recorder: FrameRecorder? = nil) {
+        self.recorder = recorder
+    }
 
     /// The lock before a change of the scene's geometry and after it. A change of the
     /// lock pauses a match the player has steered; a change of geometry that leaves the

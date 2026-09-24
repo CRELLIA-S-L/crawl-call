@@ -4,7 +4,7 @@
 # replaced on the path by one that records what it was asked to do, so what is under
 # test is the script that ships rather than a description of it.
 #
-# verifies: FR-TOOL-180
+# verifies: FR-TOOL-180, FR-TOOL-250
 # Standard tools only (ART-040).
 set -eu
 
@@ -52,6 +52,9 @@ case "$*" in
     : > "$dest" ;;
   *"info processes"*)
     [ "${FAKE_STILL_UP:-0}" = 0 ] || echo "test.crawlcall.fake  4321" ;;
+  *"copy from"*)
+    [ -n "${FAKE_RECORD:-}" ] || exit 1
+    cp "$FAKE_RECORD" "$dest" ;;
 esac
 exit 0
 FAKE
@@ -119,6 +122,56 @@ FAKELOG="$work/nodevice.log"; export FAKELOG; : > "$FAKELOG"
 if CRAWLCALL_DEVICE= sh "$here/run-on-device.sh" "$work/Fake.app" > "$work/out.txt" 2>&1; then code=0; else code=$?; fi
 check "a run with no device refuses" "$code" "2"
 check "and installs nothing" "$(grep -c 'install app' "$work/nodevice.log")" "0"
+
+# 6. The frame record's summary (FR-TOOL-250), taken from the runner like the rest.
+cat > "$work/frames.csv" <<'CSV'
+frame,time_ms,interval_ms,step_ms,deliberation_ms,see_through_ms,draw_ms,events
+1,0.000,16.667,0.400,0.000,0.100,0.200,match_began
+2,16.700,25.000,0.500,0.000,0.100,0.200,
+3,33.400,25.001,0.500,0.000,0.100,0.200,
+4,50.100,100.000,12.000,11.500,0.300,0.200,deliberation*2;first_hole
+5,66.800,33.300,0.500,0.000,9.000,0.200,look_changed
+CSV
+sed -n '/^LATE_MS=/p;/^frames_report() {/,/^}/p' "$here/run-on-device.sh" > "$work/report.sh"
+grep -q '^frames_report() {' "$work/report.sh" || { echo "FAIL  the runner has no frames_report() to test"; exit 1; }
+( . "$work/report.sh"; frames_report "$work/frames.csv" 2 ) > "$work/report.txt"
+check "it counts the frames" "$(grep -c '^frames: 5,' "$work/report.txt")" "1"
+# 25.000 is on the line and not late; 25.001, 33.3 and 100 are.
+check "late is more than 25 ms, not 25 itself" "$(grep -c 'late (over 25 ms): 3$' "$work/report.txt")" "1"
+# By number, not by text: 100 comes before 33.3, as "100" would not.
+check "the slowest comes first" "$(sed -n 2p "$work/report.txt" | grep -c 'frame 4 at 50.100 ms: interval 100.000')" "1"
+check "then the next slowest" "$(sed -n 3p "$work/report.txt" | grep -c 'frame 5 ')" "1"
+check "and no more than asked" "$(wc -l < "$work/report.txt" | tr -d ' ')" "3"
+check "with where its time went and what happened in it" \
+  "$(sed -n 2p "$work/report.txt" | grep -c 'step 12.000 (deliberation 11.500), see-through 0.300, draw 0.200 — deliberation\*2;first_hole')" "1"
+
+# 7. A run asked for the record switches it on in the app, takes it off the device
+#    after the app has gone — the app writes it when it is terminated — and sums it up.
+export CRAWLCALL_RECORD="$work/taken.csv" FAKE_RECORD="$work/frames.csv"
+code=$(run record "$work/Fake.app")
+check "a recorded run succeeds" "$code" "0"
+check "it launched the app with the record switched on" \
+  "$(grep -c 'process launch .*--environment-variables {"CRAWLCALL_FRAMES":"1"}' "$work/record.log")" "1"
+check "it took the record from the app's container" \
+  "$(grep -c 'copy from .*--domain-type appDataContainer --domain-identifier test.crawlcall.fake --source Documents/frames.csv' "$work/record.log")" "1"
+terminate=$(grep -n 'process terminate' "$work/record.log" | cut -d: -f1)
+copied=$(grep -n 'copy from' "$work/record.log" | cut -d: -f1)
+[ "$terminate" -lt "$copied" ] \
+  || { echo "FAIL  it took the record before the app had written it on its way out"; failures=$((failures + 1)); }
+check "and printed its summary" "$(grep -c '^frames: 5, late (over 25 ms): 3$' "$work/out.txt")" "1"
+unset FAKE_RECORD
+
+# 8. No record on the device is said, and the run still succeeds: a run need not have
+#    one (FR-TOOL-250, "where there is one").
+code=$(run norecord "$work/Fake.app")
+check "a run with no record on the device still succeeds" "$code" "0"
+check "and says there was none" "$(tail -1 "$work/out.txt")" "no frame record on the device"
+unset CRAWLCALL_RECORD
+
+# 9. A run not asked for the record does not switch it on.
+code=$(run plain "$work/Fake.app")
+check "a plain run launches without the record" "$(grep -c 'environment-variables' "$work/plain.log")" "0"
+check "and takes nothing off the device" "$(grep -c 'copy from' "$work/plain.log")" "0"
 
 [ "$failures" -eq 0 ] && echo "device runner self-test passed" || echo "$failures check(s) failed"
 exit "$failures"

@@ -107,8 +107,8 @@ It leans on the map layer for what is walkable and for the boxes of what is not,
 
 ```yaml
 status: built
-carries: [Sources/CrawlCall/Game.swift, Sources/CrawlCall/GameSession.swift]
-requirements: [FR-VIEW-030, FR-VIEW-170, FR-VIEW-180, FR-VIEW-190, FR-SCORE-140, FR-SCORE-150]
+carries: [Sources/CrawlCall/Game.swift, Sources/CrawlCall/GameSession.swift, Sources/CrawlCall/Record]
+requirements: [FR-VIEW-030, FR-VIEW-170, FR-VIEW-180, FR-VIEW-190, FR-SCORE-140, FR-SCORE-150, FR-TOOL-230, FR-TOOL-240]
 depends_on: [E-020, E-060, E-050]
 interface: intents in, a frame advanced, the scene and the camera moved to follow
 ```
@@ -140,7 +140,7 @@ It leans on start-up for the numbers an archetype is made of (IF-BOT-010) and on
 ```yaml
 status: built
 carries: [scripts]
-requirements: [FR-TOOL-190, FR-TOOL-180, FR-TOOL-210, FR-TOOL-220]
+requirements: [FR-TOOL-190, FR-TOOL-180, FR-TOOL-210, FR-TOOL-220, FR-TOOL-250]
 depends_on: []
 interface: a simulator or a device identifier in; each phase's time, its verdict, a named timeout, and an app that is not left running out
 ```

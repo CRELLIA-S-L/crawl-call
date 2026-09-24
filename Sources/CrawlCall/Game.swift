@@ -5,7 +5,7 @@
 // or a key: the schemes produce intents (FR-VIEW-050), the logic consumes them, and
 // neither knows about the other.
 //
-// implements: FR-VIEW-030, FR-VIEW-170, FR-VIEW-190, FR-SNAKE-010, FR-SNAKE-030, FR-BOT-020, FR-BOT-150, FR-SNAKE-060, FR-SNAKE-070, FR-SNAKE-090, FR-SCORE-140, FR-SCORE-150, INV-BOT-010, FR-VIEW-230
+// implements: FR-VIEW-030, FR-VIEW-170, FR-VIEW-190, FR-SNAKE-010, FR-SNAKE-030, FR-BOT-020, FR-BOT-150, FR-SNAKE-060, FR-SNAKE-070, FR-SNAKE-090, FR-SCORE-140, FR-SCORE-150, INV-BOT-010, FR-VIEW-230, FR-TOOL-230
 import Foundation
 
 struct Game {
@@ -117,13 +117,23 @@ struct Game {
         begin(eating: prey)
     }
 
+    /// What one step did that the frame record counts (FR-TOOL-230): how many bots
+    /// deliberated and how long that took, and how many volleys hit the snake.
+    struct StepReport: Equatable {
+        var deliberations = Int.zero
+        var deliberationTime = Duration.zero
+        var hits = Int.zero
+    }
+
     /// One frame: a meal under way is chewed and nothing else of the snake moves, or
     /// the snake moves where it is steered; either way the bots see what there is to
     /// see, whoever holds a slot decides, and every bot walks whatever it decided.
-    mutating func advance(seconds: Double) {
+    @discardableResult
+    mutating func advance(seconds: Double) -> StepReport {
+        var report = StepReport()
         // A match that is over stays where it stopped: the arena is still drawn, and
         // nothing in it moves again until a new one is started (FR-VIEW-190).
-        guard !isPaused, outcome == nil else { return }
+        guard !isPaused, outcome == nil else { return report }
         if eating != nil {
             // FR-SNAKE-090: the head stays where it is until the meal is over, which
             // is what makes eating a choice with a price. Live prey is chewed through
@@ -154,18 +164,23 @@ struct Game {
             return aged.left > .zero ? aged : nil
         }
         let steps = slots.steps(after: seconds, period: world.configurations.bot.deliberationPeriod)
+        let clock = ContinuousClock()
         for _ in Int.zero..<steps {
             let holders = slots.next(among: bots, snake: body, configuration: world.configurations.bot)
+            let deciding = clock.now
             let volley = Execution.deliberate(&bots, slots: holders, snake: body, world: world)
+            report.deliberationTime += clock.now - deciding
+            report.deliberations += holders.count
             shots += volley.shots
             if volley.damage > .zero {
+                report.hits += volley.shots.count
                 snake.take(damage: volley.damage, perSegment: world.configurations.snake.damagePerSegment)
                 // FR-SCORE-140. Checked inside the loop rather than after it: the
                 // remaining deliberation steps of a long frame belong to a match that
                 // is already over.
                 if !snake.isAlive {
                     outcome = .snakeDied
-                    return
+                    return report
                 }
             }
         }
@@ -182,6 +197,7 @@ struct Game {
         // stay behind (INV-SCORE-020) the match must still end when the last one that
         // could shoot back is gone.
         if !bots.contains(where: { $0.health > .zero }) { outcome = .arenaEmpty }
+        return report
     }
 
     /// The meal is over: the bot is gone from the map — squads do not remove bodies,

@@ -6,7 +6,7 @@
 // the window no smaller than the controls (FR-VIEW-210) and hears when the lock comes
 // or goes (FR-VIEW-230), and SwiftUI's own `App` offers none of the three (ADR-0027).
 //
-// implements: IF-SNAKE-010, IF-MAP-020, IF-VIEW-020, IF-BOT-010, FR-TOOL-070, FR-VIEW-050, FR-VIEW-060, FR-VIEW-160, FR-VIEW-190, FR-VIEW-210, FR-VIEW-220, FR-VIEW-230
+// implements: IF-SNAKE-010, IF-MAP-020, IF-VIEW-020, IF-BOT-010, FR-TOOL-070, FR-VIEW-050, FR-VIEW-060, FR-VIEW-160, FR-VIEW-190, FR-VIEW-210, FR-VIEW-220, FR-VIEW-230, FR-TOOL-230, FR-TOOL-240
 import RealityKit
 import SwiftUI
 import UIKit
@@ -56,8 +56,13 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     let world = Launch.world()
 
     /// Where the window's news reaches the match: a change of the orientation lock
-    /// pauses it (FR-VIEW-230).
-    @MainActor let host = MatchHost()
+    /// pauses it (FR-VIEW-230). It carries the frame record where the launch switched
+    /// it on (FR-TOOL-230).
+    @MainActor let host = MatchHost(recorder: FrameRecorder.isSwitchedOn(ProcessInfo.processInfo.environment)
+                                        ? FrameRecorder() : nil)
+    /// Kept while the record is on, so that a SIGTERM writes it before the app ends
+    /// (FR-TOOL-240).
+    private var termination: DispatchSourceSignal?
 
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession,
                options connectionOptions: UIScene.ConnectionOptions) {
@@ -74,6 +79,15 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         window.rootViewController = GameHostingController(rootView: GameRoot(world: world, host: host))
         self.window = window
         window.makeKeyAndVisible()
+        if let recorder = host.recorder, termination == nil {
+            termination = TerminationRecord.install(writing: recorder)
+        }
+    }
+
+    /// FR-TOOL-240: leaving the foreground is one of the moments the record is written,
+    /// and written here before returning — the app may be suspended straight after.
+    func sceneDidEnterBackground(_ scene: UIScene) {
+        try? host.recorder?.writeNow()
     }
 
     /// The scene's geometry changed: resized, moved to the whole screen or off it, or
@@ -151,6 +165,7 @@ struct MatchView: View {
                                                                    view: world.configurations.view),
                                       fieldOfView: world.configurations.view.cameraFieldOfView)
             session.aspect = aspect
+            session.recorder = host.recorder
             self.session = session
             host.session = session
             // One step per frame, from the frame's own delta.
