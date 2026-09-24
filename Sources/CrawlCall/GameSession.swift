@@ -5,7 +5,7 @@
 // measured with — `specs/50-verification.md` says why, and the two are different
 // questions asked of the same number.
 //
-// implements: FR-TOOL-070, FR-VIEW-020, FR-VIEW-030, FR-VIEW-060, FR-VIEW-100, FR-VIEW-140, FR-VIEW-150, FR-VIEW-155, FR-VIEW-160, FR-VIEW-170, FR-VIEW-180, FR-VIEW-190
+// implements: FR-TOOL-070, FR-VIEW-020, FR-VIEW-030, FR-VIEW-060, FR-VIEW-100, FR-VIEW-140, FR-VIEW-150, FR-VIEW-155, FR-VIEW-160, FR-VIEW-170, FR-VIEW-180, FR-VIEW-190, FR-VIEW-230, FR-VIEW-210
 import Foundation
 import Observation
 import RealityKit
@@ -44,6 +44,21 @@ final class GameSession {
     }
 
     func apply(_ intent: Intent) { game.apply(intent) }
+
+    /// Whether the match is paused, and asking for it without toggling: the pause
+    /// intent flips the state, and a pause that arrives while paused must not resume
+    /// (FR-VIEW-230). Both go through `apply`, the one door the player's asks come by.
+    var isPaused: Bool { game.isPaused }
+
+    /// The frame's width over its height, as the view last laid it out: what the camera
+    /// can show across against what it shows down (FR-VIEW-210).
+    var aspect: Double = Fraction.whole
+    func pause() { if !game.isPaused { apply(.pause) } }
+    func resume() { if game.isPaused { apply(.pause) } }
+
+    /// A pause for a change of the window: only a match the player has steered has
+    /// anything to lose to one (FR-VIEW-230).
+    func pauseIfUnderWay() { if game.hasBeenSteered { pause() } }
 
     // MARK: the free camera of debug mode (FR-TOOL-070, ADR-0023)
 
@@ -137,6 +152,7 @@ final class GameSession {
                                 from: focus,
                                 distance: distance,
                                 fieldOfViewDegrees: fieldOfView,
+                                aspect: aspect,
                                 within: game.world.plan.bounds)
         // Where the camera looks: after the head, or where the user left it. The
         // following goes on underneath either way, so that the camera comes back to

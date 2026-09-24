@@ -2,7 +2,7 @@
 // and gestures (ART-070). Part of how the interface looks rather than of the world it
 // shows, so named here and not in the configuration (ADR-0026).
 //
-// implements: FR-VIEW-050, FR-VIEW-120, FR-VIEW-160, FR-VIEW-190, FR-TOOL-070
+// implements: FR-VIEW-050, FR-VIEW-120, FR-VIEW-160, FR-VIEW-190, FR-TOOL-070, FR-VIEW-210
 import Foundation
 
 /// The look every plate and mark shares (FR-VIEW-120): a light, translucent plate and
@@ -67,4 +67,18 @@ enum DebugControls {
     /// A pinch reads its scale as a factor since the last reading, so it is set back
     /// to the factor that changes nothing after each one.
     static let unscaled = 1.0
+}
+
+/// The window the game is played in on an iPad (FR-VIEW-210).
+enum GameWindow {
+    /// Across, the stick's plate and the eat button side by side, with a margin at each
+    /// edge and one between them; down, the taller of the two with a margin above and
+    /// below. Any narrower and the controls would overlap.
+    static let marginsAcross = 3.0
+    static let marginsDown = 2.0
+    static var minimumSize: CGSize {
+        let stick = Stick.radius * Stick.plateInRadii
+        return CGSize(width: stick + EatButton.size + Interface.screenMargin * marginsAcross,
+                      height: max(stick, EatButton.size) + Interface.screenMargin * marginsDown)
+    }
 }

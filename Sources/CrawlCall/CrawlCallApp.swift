@@ -1,30 +1,74 @@
 // The game's entry point. Starting the app is the moment the interface requirements
 // name for reading the configurations, and the moment a match begins.
 //
-// implements: IF-SNAKE-010, IF-MAP-020, IF-VIEW-020, IF-BOT-010, FR-TOOL-070, FR-VIEW-050, FR-VIEW-060, FR-VIEW-160, FR-VIEW-190
+// The app is a UIKit scene hosting SwiftUI rather than a SwiftUI `App`: on an iPad the
+// window's root controller asks iPadOS to lock the orientation (FR-VIEW-220), keeps
+// the window no smaller than the controls (FR-VIEW-210) and hears when the lock comes
+// or goes (FR-VIEW-230), and SwiftUI's own `App` offers none of the three (ADR-0027).
+//
+// implements: IF-SNAKE-010, IF-MAP-020, IF-VIEW-020, IF-BOT-010, FR-TOOL-070, FR-VIEW-050, FR-VIEW-060, FR-VIEW-160, FR-VIEW-190, FR-VIEW-210, FR-VIEW-220, FR-VIEW-230
 import RealityKit
 import SwiftUI
+import UIKit
 
 @main
-struct CrawlCallApp: App {
+final class AppDelegate: UIResponder, UIApplicationDelegate {
+    /// Every scene is the game's, and its delegate builds the window.
+    func application(_ application: UIApplication,
+                     configurationForConnecting connectingSceneSession: UISceneSession,
+                     options: UIScene.ConnectionOptions) -> UISceneConfiguration {
+        let configuration = UISceneConfiguration(name: nil, sessionRole: connectingSceneSession.role)
+        configuration.delegateClass = SceneDelegate.self
+        return configuration
+    }
+}
+
+final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
+    var window: UIWindow?
+
     /// Read once, at start, because that is the moment the interface requirements name.
-    /// Not private: a test constructs the app to check that starting it reads them.
+    /// Not private: a test constructs the delegate to check that starting reads them.
     let world = Launch.world()
 
-    // `Scene` is qualified: SwiftUI and RealityKit both export that name, and
-    // App.Body is constrained to SwiftUI's (App, SwiftUI documentation).
-    var body: some SwiftUI.Scene {
-        WindowGroup {
-            switch world {
-            case .success(let world):
-                MatchView(world: world)
-            case .failure(let error):
-                // A launch that cannot read its tuning or its map says so instead of
-                // running on numbers nobody chose.
-                Text(String(describing: error))
-                    .font(.system(.body, design: .monospaced))
-                    .padding()
-            }
+    /// Where the window's news reaches the match: a change of the orientation lock
+    /// pauses it (FR-VIEW-230).
+    @MainActor let host = MatchHost()
+
+    func scene(_ scene: UIScene, willConnectTo session: UISceneSession,
+               options connectionOptions: UIScene.ConnectionOptions) {
+        guard let windowScene = scene as? UIWindowScene else { return }
+        // Nil where the platform does not resize scenes: an iPhone's is the screen.
+        windowScene.sizeRestrictions?.minimumSize = GameWindow.minimumSize
+        let window = UIWindow(windowScene: windowScene)
+        window.rootViewController = GameHostingController(rootView: GameRoot(world: world, host: host))
+        self.window = window
+        window.makeKeyAndVisible()
+    }
+
+    /// The scene's geometry changed: resized, moved to the whole screen or off it, or
+    /// turned. Only a change of the orientation lock is news to the match.
+    func windowScene(_ windowScene: UIWindowScene,
+                     didUpdateEffectiveGeometry previousEffectiveGeometry: UIWindowScene.Geometry) {
+        host.orientationLock(was: previousEffectiveGeometry.isInterfaceOrientationLocked,
+                             is: windowScene.effectiveGeometry.isInterfaceOrientationLocked)
+    }
+}
+
+/// What the window shows: the match, or why there is none.
+struct GameRoot: View {
+    let world: Result<World, Error>
+    let host: MatchHost
+
+    var body: some View {
+        switch world {
+        case .success(let world):
+            MatchView(world: world, host: host)
+        case .failure(let error):
+            // A launch that cannot read its tuning or its map says so instead of
+            // running on numbers nobody chose.
+            Text(String(describing: error))
+                .font(.system(.body, design: .monospaced))
+                .padding()
         }
     }
 }
@@ -32,7 +76,11 @@ struct CrawlCallApp: App {
 /// A match on screen: the arena, the snake in it, and a finger steering.
 struct MatchView: View {
     let world: World
+    let host: MatchHost
     @State private var session: GameSession?
+    /// The frame's width over its height, kept here because the session is made after
+    /// the view is first laid out (FR-VIEW-210).
+    @State private var aspect = Fraction.whole
 
     var body: some View {
         RealityView { content in
@@ -71,13 +119,21 @@ struct MatchView: View {
                                       distance: SceneView.distance(framing: world.plan,
                                                                    view: world.configurations.view),
                                       fieldOfView: world.configurations.view.cameraFieldOfView)
+            session.aspect = aspect
             self.session = session
+            host.session = session
             // One step per frame, from the frame's own delta.
             _ = content.subscribe(to: SceneEvents.Update.self) { event in
                 session.step(seconds: event.deltaTime)
             }
         }
         .ignoresSafeArea()
+        .onGeometryChange(for: Double.self) { geometry in
+            geometry.size.height > .zero ? geometry.size.width / geometry.size.height : Fraction.whole
+        } action: { newAspect in
+            aspect = newAspect
+            session?.aspect = newAspect
+        }
         // Debug mode's free camera (FR-TOOL-070): pinch and two-finger drag on the
         // arena, and a button back to the snake; nothing at all in a Release build.
         .freeCamera(session)
@@ -87,6 +143,9 @@ struct MatchView: View {
         .overlay {
             if let outcome = session?.game.outcome {
                 MatchEnd(outcome: outcome, again: { session?.restart() })
+            } else if session?.isPaused == true {
+                // FR-VIEW-230: a paused match says so, and one press resumes it.
+                ChoicePlate(headline: .pauseHeadline, control: .pauseResume, action: { session?.resume() })
             } else {
                 // FR-VIEW-050: a stick on the left steers and a button on the right
                 // eats, each in a corner of its own so that one cannot be taken for

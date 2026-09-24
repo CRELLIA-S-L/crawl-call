@@ -48,6 +48,30 @@
           }
         }
       }
+    },
+    "pause.headline" : {
+      "comment" : "Headline of the plate while the match is paused.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paused"
+          }
+        }
+      }
+    },
+    "pause.resume" : {
+      "comment" : "The one control on the pause plate: resumes the match.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Continue"
+          }
+        }
+      }
     }
   },
   "version" : "1.0"

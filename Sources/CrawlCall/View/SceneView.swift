@@ -2,7 +2,7 @@
 // by. Separate from the map layer because they answer a different question — the map
 // is what the arena is, this is how it reaches the player.
 //
-// implements: FR-VIEW-010, FR-VIEW-020, FR-VIEW-130, FR-TOOL-200, IF-VIEW-020
+// implements: FR-VIEW-010, FR-VIEW-020, FR-VIEW-130, FR-TOOL-200, IF-VIEW-020, FR-VIEW-210
 import CoreGraphics
 import Foundation
 import RealityKit
@@ -108,17 +108,22 @@ enum SceneView {
     /// moves inside it, which is what a fixed-angle camera is for.
     ///
     /// The region's fractions are applied to the ground span of the vertical field of
-    /// view on both axes. Along the depth axis that is conservative, because the pitch
-    /// foreshortens it; the alternative needs the frame's aspect, which this layer does
-    /// not know and the configuration does not carry.
+    /// view, along the depth axis always — conservative, because the pitch
+    /// foreshortens it — and across as well for a frame at least as wide as it is
+    /// tall. A frame narrower than that, an iPad held upright or a slim window beside
+    /// another app (FR-VIEW-210), shows less across than down, and the span across is
+    /// narrowed by the frame's aspect, width over height, so the head stays in it.
     static func focus(keeping head: SIMD3<Double>,
                       inside region: ViewConfiguration.CentralRegion,
                       from focus: SIMD3<Double>,
                       distance: Double,
                       fieldOfViewDegrees: Double,
+                      aspect: Double = Fraction.whole,
                       within arena: ScenePlan.Bounds) -> SIMD3<Double> {
-        let span = groundSpan(distance: distance, fieldOfViewDegrees: fieldOfViewDegrees)
-        let halfX = span * region.width * Geometry.half
+        let spanDown = groundSpan(distance: distance, fieldOfViewDegrees: fieldOfViewDegrees)
+        let spanAcross = spanDown * min(aspect, Fraction.whole)
+        let span = spanDown
+        let halfX = spanAcross * region.width * Geometry.half
         let halfZ = span * region.height * Geometry.half
         var moved = focus
         moved.x = min(max(focus.x, head.x - halfX), head.x + halfX)
@@ -128,7 +133,7 @@ enum SceneView {
         // (FR-VIEW-020). The window is taken as the vertical span on both axes, the
         // same conservative measure the region above uses and for the same reason —
         // this layer does not know the frame's aspect.
-        moved.x = stopped(moved.x, half: span * Geometry.half, between: arena.lowest.x, and: arena.highest.x)
+        moved.x = stopped(moved.x, half: spanAcross * Geometry.half, between: arena.lowest.x, and: arena.highest.x)
         moved.z = stopped(moved.z, half: span * Geometry.half, between: arena.lowest.z, and: arena.highest.z)
         // Height follows the head outright: a floor change is not something to lag
         // behind, or the snake leaves the frame downwards.

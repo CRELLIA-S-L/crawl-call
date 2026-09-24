@@ -371,7 +371,7 @@ derives_from: []
 depends_on: [IF-VIEW-010]
 refines: []
 conflicts_with: []
-code: [Sources/CrawlCall/View/Controls.swift, Sources/CrawlCall/View/MatchEnd.swift, Sources/CrawlCall/Config/Interface.swift]
+code: [Sources/CrawlCall/View/Controls.swift, Sources/CrawlCall/View/MatchEnd.swift, Sources/CrawlCall/Config/Interface.swift, Sources/CrawlCall/View/ChoicePlate.swift]
 tests: []
 created: 2026-09-21
 ```
@@ -412,7 +412,7 @@ derives_from: [FR-SCORE-140, FR-SCORE-150]
 depends_on: [FR-VIEW-120]
 refines: []
 conflicts_with: []
-code: [Sources/CrawlCall/View/MatchEnd.swift, Sources/CrawlCall/Game.swift, Sources/CrawlCall/GameSession.swift, Sources/CrawlCall/View/BotEntity.swift, Sources/CrawlCall/CrawlCallApp.swift, Sources/CrawlCall/Config/Interface.swift]
+code: [Sources/CrawlCall/View/MatchEnd.swift, Sources/CrawlCall/Game.swift, Sources/CrawlCall/GameSession.swift, Sources/CrawlCall/View/BotEntity.swift, Sources/CrawlCall/CrawlCallApp.swift, Sources/CrawlCall/Config/Interface.swift, Sources/CrawlCall/View/ChoicePlate.swift]
 tests: [Tests/CrawlCallTests/MatchEndTests.swift]
 created: 2026-09-23
 ```
@@ -434,7 +434,7 @@ derives_from: []
 depends_on: []
 refines: []
 conflicts_with: []
-code: [Sources/CrawlCall/Config/TextKey.swift, Sources/CrawlCall/View/Localizable.xcstrings, Sources/CrawlCall/View/MatchEnd.swift, Sources/CrawlCall/View/Controls.swift]
+code: [Sources/CrawlCall/Config/TextKey.swift, Sources/CrawlCall/View/Localizable.xcstrings, Sources/CrawlCall/View/MatchEnd.swift, Sources/CrawlCall/View/Controls.swift, Sources/CrawlCall/View/ChoicePlate.swift]
 tests: [Tests/CrawlCallTests/TextCatalogTests.swift]
 created: 2026-09-24
 ```
@@ -446,3 +446,61 @@ The first of the preferred languages the game carries, because that is how the d
 English as the fallback because it is the language the game is written in, and the only one it carries for now; a language is added by translating the catalog of IF-VIEW-030, not by changing this requirement.
 What the fighters say is not text shown here: the model's lines, the pre-written ones and the instructions behind them are a question of their own (Q-290).
 An error line is not either: it is a diagnosis for whoever fixes the build, searched for by its identifier, and a released build shows none — the screen that shows one appears only where the bundle cannot start. Translating it would split one identifier's message into as many wordings as there are languages. Found in review on 2026-09-24, when the launch screen was seen printing an error line verbatim.
+
+### FR-VIEW-210 — On an iPad the game plays in the window it is given
+
+```yaml
+status: implemented
+verification: T
+derives_from: [CON-PUB-010]
+depends_on: [FR-VIEW-050]
+refines: []
+conflicts_with: []
+code: [Sources/CrawlCall/CrawlCallApp.swift, Sources/CrawlCall/Config/Interface.swift, Sources/CrawlCall/View/SceneView.swift, Sources/CrawlCall/GameSession.swift]
+tests: [Tests/CrawlCallTests/WindowTests.swift]
+created: 2026-09-24
+```
+
+On an iPad, the system **shall** play in whatever size and orientation of window the player gives it, never smaller than the controls need.
+
+**Rationale.** The maintainer asked on 2026-09-24 for the iPad to play full screen, and Apple's documentation for the installed SDK leaves no way to: "Because `UIRequiresFullScreen` is deprecated, you can no longer opt out of iPad multitasking and dynamic resizing", and in iOS 27 an app's supported orientations are "a preference provided to the system" that "will be ignored when your app is running in a resizable environment". The maintainer took what Apple's guidance for Metal games on iPadOS leaves: any window and any orientation for now, with the orientation locked while the game has the whole screen (FR-VIEW-220) and a pause when that changes (FR-VIEW-230).
+Never smaller than the controls need, because a window too narrow for the stick and the eat button side by side is a match the player cannot steer.
+The iPhone is untouched: it plays landscape, full screen, as before (FR-VIEW-050).
+
+### FR-VIEW-220 — A game that fills an iPad's screen keeps its orientation
+
+```yaml
+status: implemented
+verification: T
+derives_from: [FR-VIEW-210]
+depends_on: []
+refines: []
+conflicts_with: []
+code: [Sources/CrawlCall/View/GameHostingController.swift, Sources/CrawlCall/CrawlCallApp.swift]
+tests: [Tests/CrawlCallTests/WindowTests.swift]
+created: 2026-09-24
+```
+
+While the game fills an iPad's screen, the system **shall** request that the interface orientation be locked.
+
+**Rationale.** A thumb on the stick tilts the device, and a scene that rotates under it turns the arena a quarter round in the middle of a chase. iPadOS grants the lock only while the scene is centred, as large as the screen and not covered by another, and withdraws it by itself when that stops being so (`prefersInterfaceOrientationLocked`, iOS 26), so the request is the whole of what the game can do and all it needs to.
+
+### FR-VIEW-230 — A change of the orientation lock pauses the match
+
+```yaml
+status: implemented
+verification: T
+derives_from: [FR-VIEW-220]
+depends_on: [FR-VIEW-190]
+refines: []
+conflicts_with: []
+code: [Sources/CrawlCall/View/MatchHost.swift, Sources/CrawlCall/CrawlCallApp.swift, Sources/CrawlCall/GameSession.swift, Sources/CrawlCall/Game.swift, Sources/CrawlCall/View/ChoicePlate.swift]
+tests: [Tests/CrawlCallTests/WindowTests.swift]
+created: 2026-09-24
+```
+
+When the interface orientation lock is gained or lost on an iPad during a match the player has steered, the system **shall** pause the match and show, in place of the steering controls, a plate with one control that resumes it.
+
+**Rationale.** The moment the lock comes or goes is the moment the scene's geometry changes under the player's thumbs — the window grows to the whole screen, shrinks back beside another app, or turns — and a match that ran on through it would be lost to a change the player did not make in the game. Apple's own example for games does this ("pauseIfNeeded(isInterfaceOrientationLocked:)"), and the maintainer asked for it on 2026-09-24.
+A match the player has steered, because iPadOS grants the lock as the scene becomes active full screen — in the same millisecond, in the log of the first build on 2026-09-24 — so every launch would have opened on a paused match nobody had played; a match not yet steered has nothing to lose to the change. Coming back to a match from the background is a change like the others, and pauses it.
+The plate is what makes the pause a pause rather than a freeze: the game could pause and had nothing to leave a pause by. It stands where the controls stood, drawn as the plate at the end of a match is (FR-VIEW-190), for the same reason — a stick that answers while the match is paused says it is not.

@@ -17,9 +17,6 @@ struct MatchEnd: View {
     /// What the one control asks for: another match in the same arena.
     let again: () -> Void
 
-    private let plate = Color.white.opacity(Interface.plateOpacity)
-    private let mark = Color.white.opacity(Interface.markOpacity)
-
     /// The line on the plate. One per end, and they say opposite things: the snake
     /// was shot down, or the snake ate everything there was. The words are in the
     /// string catalog, in the player's language (FR-VIEW-200).
@@ -31,26 +28,6 @@ struct MatchEnd: View {
     }
 
     var body: some View {
-        VStack(spacing: MatchEndPlate.spacing) {
-            Text(MatchEnd.headline(for: outcome).key)
-                .font(.system(size: MatchEndPlate.headlineSize, weight: .bold, design: .rounded))
-                .foregroundStyle(mark)
-                .multilineTextAlignment(.center)
-            Button(action: again) {
-                Text(TextKey.matchEndAgain.key)
-                    .font(.system(size: MatchEndPlate.controlTextSize, weight: .bold, design: .rounded))
-                    .foregroundStyle(mark)
-                    .padding(.horizontal, MatchEndPlate.controlHorizontalPadding)
-                    .padding(.vertical, MatchEndPlate.controlVerticalPadding)
-                    .background(Capsule().fill(plate.opacity(Interface.litPlateOpacity)))
-                    .overlay(Capsule().strokeBorder(mark, lineWidth: Interface.ringWidth))
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel(Text(TextKey.matchEndAgain.key))
-        }
-        .padding(.horizontal, MatchEndPlate.horizontalPadding)
-        .padding(.vertical, MatchEndPlate.verticalPadding)
-        .background(RoundedRectangle(cornerRadius: MatchEndPlate.cornerRadius, style: .continuous).fill(plate))
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        ChoicePlate(headline: MatchEnd.headline(for: outcome), control: .matchEndAgain, action: again)
     }
 }

@@ -5,7 +5,7 @@
 // or a key: the schemes produce intents (FR-VIEW-050), the logic consumes them, and
 // neither knows about the other.
 //
-// implements: FR-VIEW-030, FR-VIEW-170, FR-VIEW-190, FR-SNAKE-010, FR-SNAKE-030, FR-BOT-020, FR-BOT-150, FR-SNAKE-060, FR-SNAKE-070, FR-SNAKE-090, FR-SCORE-140, FR-SCORE-150, INV-BOT-010
+// implements: FR-VIEW-030, FR-VIEW-170, FR-VIEW-190, FR-SNAKE-010, FR-SNAKE-030, FR-BOT-020, FR-BOT-150, FR-SNAKE-060, FR-SNAKE-070, FR-SNAKE-090, FR-SCORE-140, FR-SCORE-150, INV-BOT-010, FR-VIEW-230
 import Foundation
 
 struct Game {
@@ -28,6 +28,9 @@ struct Game {
     /// What the player is holding now, on the map plane. Zero when nothing is held.
     private(set) var held: SIMD2<Double> = .zero
     private(set) var isPaused = false
+    /// Whether the player has steered this match yet: a match nobody has steered has
+    /// nothing to lose to a change of the window, and is not paused by one (FR-VIEW-230).
+    private(set) var hasBeenSteered = false
     private let surfaces: Surfaces
     /// The bots' own clock, which the frame rate does not set (FR-BOT-150).
     private var slots = Slots()
@@ -60,6 +63,7 @@ struct Game {
         switch intent {
         case .move(let direction):
             held = direction
+            if direction != .zero { hasBeenSteered = true }
         case .pause:
             isPaused.toggle()
         case .useAbility:

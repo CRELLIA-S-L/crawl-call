@@ -53,7 +53,7 @@ final class LaunchTests: XCTestCase {
 final class AppStartTests: XCTestCase {
     @MainActor
     func testStartingTheAppReadsTheConfigurations() {
-        let app = CrawlCallApp()
+        let app = SceneDelegate()
         guard case .success(let world) = app.world else {
             return XCTFail("the app did not read its world at start: \(app.world)")
         }

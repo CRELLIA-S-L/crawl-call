@@ -14,6 +14,8 @@ enum TextKey: String, CaseIterable {
     case matchEndArenaEmpty = "matchEnd.arenaEmpty"
     case matchEndAgain = "matchEnd.again"
     case controlsEat = "controls.eat"
+    case pauseHeadline = "pause.headline"
+    case pauseResume = "pause.resume"
 
     /// For a view: SwiftUI looks the key up in the catalog, in the language the
     /// environment asks for (FR-VIEW-200).
