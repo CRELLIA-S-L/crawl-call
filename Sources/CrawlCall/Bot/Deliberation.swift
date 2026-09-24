@@ -7,14 +7,9 @@
 // each of them can be varied on its own and the choice watched to move, which is
 // what its rationale asks of a test.
 //
-// The weight of one term against another is tuning, and tuning has a home for the
-// numbers an interface names (IF-BOT-010) and none for these. They sit here as
-// named constants rather than as magic numbers in expressions, said out loud: when
-// the maintainer wants to tune the mix, this table moves into the bot configuration
-// and the interface requirement gains a line. One number has already made that move —
-// how much an unhurt bot fears the snake (FR-BOT-210), which is what decides whether
-// an archetype holds its ground or bolts, and is therefore read from the
-// configuration rather than from here.
+// The weight of one term against another is tuning, and is read from the bot
+// configuration (IF-BOT-010), as is how much an unhurt bot fears the snake
+// (FR-BOT-210). What shapes each term — a share, a whole — is in `Utility`.
 //
 // implements: FR-BOT-080, FR-BOT-090, FR-BOT-118, FR-BOT-200, FR-BOT-210
 import Foundation
@@ -24,16 +19,6 @@ enum Deliberation {
     /// still one group (IF-BOT-010), because cover further off than that is somebody
     /// else's.
     static func coverSearch(_ configuration: BotConfiguration) -> Double { configuration.groupingDistance }
-
-    /// The mix. Each is the weight of one named input in one action's score.
-    enum Term {
-        static let attack = 1.0
-        static let threat = 1.0
-        static let wounded = 1.0
-        static let obedience = 1.0
-        static let mercy = 1.0
-        static let empty = 1.2
-    }
 
     /// What a bot can see and reach when it comes to decide.
     struct Situation {
@@ -53,19 +38,21 @@ enum Deliberation {
     static func scores(for bot: Bot, in situation: Situation) -> [(action: Action, utility: Double)] {
         var scored: [(Action, Double)] = []
         guard let entry = situation.configuration.archetypes[bot.archetype.rawValue] else { return [] }
+        // The mix: the weight of one named input in one action's score.
+        let term = situation.configuration.utilityTermWeights
 
         let nearest = situation.snake
             .map { (point: $0, metres: Perception.metres(bot.position, $0)) }
             .min { $0.metres < $1.metres }
-        let health = entry.health > 0 ? bot.health / entry.health : 0
-        let ammunition = entry.magazine > 0 ? Double(bot.ammunition) / Double(entry.magazine) : 0
+        let health = entry.health > .zero ? bot.health / entry.health : .zero
+        let ammunition = entry.magazine > .zero ? Double(bot.ammunition) / Double(entry.magazine) : .zero
 
         // Fire: needs something to shoot at, a line to it and a round to send.
-        if let nearest, bot.ammunition > 0,
+        if let nearest, bot.ammunition > .zero,
            Sight.isClear(from: bot.eye, to: nearest.point, through: situation.plan) {
             let closeness = nearness(nearest.metres, within: entry.detectionRange)
             scored.append((.fire(at: .snake(at: nearest.point)),
-                           Term.attack * closeness * ammunition * bot.weights.aggression))
+                           term.attack * closeness * ammunition * bot.weights.aggression))
         }
 
         // Cover: worth more the nearer it is, the nearer the snake is and the less
@@ -75,7 +62,8 @@ enum Deliberation {
             let closeness = nearness(nearest.metres, within: entry.detectionRange)
             let handy = nearness(Perception.metres(bot.position, centre(of: cover.node, in: situation)), within: reach)
             scored.append((.takeCover(at: cover.node),
-                           Term.threat * closeness * handy * (Term.wounded - health / 2) * bot.weights.panic))
+                           term.threat * closeness * handy * (term.wounded - health * Utility.coverHealthShare)
+                               * bot.weights.panic))
         }
 
         // Flight: the same fear, spent on distance rather than on a wall. A whole bot
@@ -83,8 +71,8 @@ enum Deliberation {
         // wound adds, not the whole of what there is to be afraid of.
         if let nearest, let away = away(from: nearest.point, for: bot, in: situation) {
             let closeness = nearness(nearest.metres, within: entry.detectionRange)
-            let fear = situation.configuration.fearWhenUnhurt + (Term.wounded - health)
-            scored.append((.flee(to: away), Term.threat * closeness * fear * bot.weights.panic))
+            let fear = situation.configuration.fearWhenUnhurt + (term.wounded - health)
+            scored.append((.flee(to: away), term.threat * closeness * fear * bot.weights.panic))
         }
 
         // An order to obey is the one thing discipline scales; without a commander
@@ -92,15 +80,15 @@ enum Deliberation {
         if let zone = situation.orderedZone {
             // Obeying does not get better or worse with distance in anything the
             // specification says; what varies it is how disciplined the bot is.
-            scored.append((.moveToOrderedZone(zone), Term.obedience * bot.weights.discipline))
+            scored.append((.moveToOrderedZone(zone), term.obedience * bot.weights.discipline))
         }
 
         if bot.ammunition < entry.magazine {
             // Squared, so that the term stays flat while there is a magazine to
             // spend and climbs only as it runs out: a bot that reloaded after every
             // shot would spend a firefight looking at its hands.
-            let spent = 1 - ammunition
-            scored.append((.reload, Term.empty * spent * spent))
+            let spent = Utility.whole - ammunition
+            scored.append((.reload, term.empty * spent * spent))
         }
 
         // Only a medic heals, and only somebody who needs it and is within the
@@ -114,9 +102,11 @@ enum Deliberation {
                         && Perception.metres(bot.position, ally.position) <= situation.configuration.groupingDistance
                 }
             if let worst = hurt.min(by: { $0.health < $1.health }) {
-                let theirs = situation.configuration.archetypes[worst.archetype.rawValue]?.health ?? 1
-                let missing = theirs > 0 ? 1 - worst.health / theirs : 0
-                scored.append((.heal(ally: worst.id), Term.mercy * missing * bot.weights.selfSacrifice))
+                // Every ally in `hurt` has an archetype the configuration knows, so the
+                // fallback is never taken; it is the whole a missing share is taken from.
+                let theirs = situation.configuration.archetypes[worst.archetype.rawValue]?.health ?? Utility.whole
+                let missing = theirs > .zero ? Utility.whole - worst.health / theirs : .zero
+                scored.append((.heal(ally: worst.id), term.mercy * missing * bot.weights.selfSacrifice))
             }
         }
 
@@ -152,14 +142,14 @@ enum Deliberation {
 
         var seen: Set<NavigationGraph.Node> = [here]
         var queue = [here]
-        var index = 0
-        while index < queue.count {
+        var index = queue.startIndex
+        while index < queue.endIndex {
             let node = queue[index]
-            index += 1
+            queue.formIndex(after: &index)
             let there = centre(of: node, in: situation)
             let metres = Perception.metres(bot.position, there)
             guard metres <= reach else { continue }
-            if metres > 0 {
+            if metres > .zero {
                 let watched = snake.contains { Sight.isClear(from: $0, to: there, through: situation.plan) }
                 if !watched { return (node: node, metres: metres) }
             }
@@ -189,11 +179,11 @@ enum Deliberation {
 
         var seen: Set<NavigationGraph.Node> = [here]
         var queue = [here]
-        var index = 0
+        var index = queue.startIndex
         var best: (NavigationGraph.Node, Double)?
-        while index < queue.count {
+        while index < queue.endIndex {
             let node = queue[index]
-            index += 1
+            queue.formIndex(after: &index)
             let there = centre(of: node, in: situation)
             // Out of reach is also as far as the walk goes: what lies beyond is only
             // approached through cells the bot would have to cross to get there.
@@ -222,7 +212,7 @@ enum Deliberation {
 
     /// One at arm's length, nothing at the edge of the world.
     private static func nearness(_ metres: Double, within limit: Double) -> Double {
-        guard limit > 0 else { return 0 }
-        return max(0, 1 - metres / limit)
+        guard limit > .zero else { return .zero }
+        return max(.zero, Utility.whole - metres / limit)
     }
 }

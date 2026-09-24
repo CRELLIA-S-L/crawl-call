@@ -38,10 +38,10 @@ Total requirements: 189.
 | **FR-BOT-030** Archetype sets base personality weights | `implemented` | T | `Sources/CrawlCall/Bot/Bot.swift` | `Tests/CrawlCallTests/BotTests.swift` |
 | **FR-BOT-040** One bot per squad holds the commander role | `deferred` | T | — | — |
 | **FR-BOT-050** A bot notices the snake in view | `implemented` | T | `Sources/CrawlCall/Bot/Perception.swift`<br>`Sources/CrawlCall/Map/Sight.swift`<br>`Sources/CrawlCall/Bot/Bot.swift`<br>`Sources/CrawlCall/Config/Geometry.swift` | `Tests/CrawlCallTests/PerceptionTests.swift` |
-| **FR-BOT-060** A bot fires at its target | `partial` | T | `Sources/CrawlCall/Bot/Execution.swift`<br>`Sources/CrawlCall/Bot/Bot.swift` | `Tests/CrawlCallTests/ExecutionTests.swift`<br>`Tests/CrawlCallTests/ShotTests.swift` |
+| **FR-BOT-060** A bot fires at its target | `partial` | T | `Sources/CrawlCall/Bot/Execution.swift`<br>`Sources/CrawlCall/Bot/Bot.swift`<br>`Sources/CrawlCall/Config/Utility.swift` | `Tests/CrawlCallTests/ExecutionTests.swift`<br>`Tests/CrawlCallTests/ShotTests.swift` |
 | **FR-BOT-070** Heavy and sapper weapons destroy cover | `deferred` | T | — | — |
-| **FR-BOT-080** Action chosen by maximum utility | `implemented` | T | `Sources/CrawlCall/Bot/Deliberation.swift` | `Tests/CrawlCallTests/DeliberationTests.swift` |
-| **FR-BOT-090** Personality weights multiply utility | `implemented` | T | `Sources/CrawlCall/Bot/Deliberation.swift` | `Tests/CrawlCallTests/DeliberationTests.swift` |
+| **FR-BOT-080** Action chosen by maximum utility | `implemented` | T | `Sources/CrawlCall/Bot/Deliberation.swift`<br>`Sources/CrawlCall/Config/Utility.swift` | `Tests/CrawlCallTests/DeliberationTests.swift` |
+| **FR-BOT-090** Personality weights multiply utility | `implemented` | T | `Sources/CrawlCall/Bot/Deliberation.swift`<br>`Sources/CrawlCall/Config/Utility.swift` | `Tests/CrawlCallTests/DeliberationTests.swift` |
 | **FR-BOT-100** Cover is valued by what is left of it | `deferred` | T | — | — |
 | **FR-BOT-105** Cover is worth less against a wrecking weapon | `deferred` | T | — | — |
 | **FR-BOT-110** Height advantage enters position scoring | `deferred` | T | — | — |
@@ -50,15 +50,15 @@ Total requirements: 189.
 | **FR-BOT-120** Nearby snake overrides the commander's priority | `deferred` | T | — | — |
 | **FR-BOT-130** Discipline decides how far an order is kept | `deferred` | T | — | — |
 | **FR-BOT-140** Target choice has hysteresis | `deferred` | T | — | — |
-| **FR-BOT-150** Deliberation runs on a fixed step, not per frame | `implemented` | T | `Sources/CrawlCall/Bot/Slots.swift`<br>`Sources/CrawlCall/Game.swift` | `Tests/CrawlCallTests/ExecutionTests.swift` |
-| **FR-BOT-160** Slots go by priority, not round-robin | `implemented` | T | `Sources/CrawlCall/Bot/Slots.swift` | `Tests/CrawlCallTests/ExecutionTests.swift` |
+| **FR-BOT-150** Deliberation runs on a fixed step, not per frame | `implemented` | T | `Sources/CrawlCall/Bot/Slots.swift`<br>`Sources/CrawlCall/Game.swift`<br>`Sources/CrawlCall/Config/Utility.swift` | `Tests/CrawlCallTests/ExecutionTests.swift` |
+| **FR-BOT-160** Slots go by priority, not round-robin | `implemented` | T | `Sources/CrawlCall/Bot/Slots.swift`<br>`Sources/CrawlCall/Config/Utility.swift` | `Tests/CrawlCallTests/ExecutionTests.swift` |
 | **FR-BOT-165** At most one path is computed per frame | `implemented` | T | `Sources/CrawlCall/Bot/Route.swift`<br>`Sources/CrawlCall/Bot/Execution.swift` | `Tests/CrawlCallTests/ExecutionTests.swift` |
 | **FR-BOT-167** An unreachable target sends the bot back to deliberation | `deferred` | T | — | — |
 | **FR-BOT-170** Interrupts grant a slot at once | `deferred` | T | — | — |
 | **FR-BOT-180** Calm squads do not hunt the snake | `deferred` | T | — | — |
 | **FR-BOT-190** Alarmed squads keep together | `deferred` | T | — | — |
 | **FR-BOT-200** The actions a bot can choose from | `implemented` | T | `Sources/CrawlCall/Bot/Action.swift`<br>`Sources/CrawlCall/Bot/Deliberation.swift` | `Tests/CrawlCallTests/DeliberationTests.swift` |
-| **FR-BOT-210** A whole bot is still afraid of the snake | `implemented` | T | `Sources/CrawlCall/Bot/Deliberation.swift` | `Tests/CrawlCallTests/DeliberationTests.swift` |
+| **FR-BOT-210** A whole bot is still afraid of the snake | `implemented` | T | `Sources/CrawlCall/Bot/Deliberation.swift`<br>`Sources/CrawlCall/Config/Utility.swift` | `Tests/CrawlCallTests/DeliberationTests.swift` |
 | **FR-CMD-010** One commander per squad | `deferred` | T | — | — |
 | **FR-CMD-020** The commander is called on an interval | `deferred` | T | — | — |
 | **FR-CMD-025** Each commander call is its own session | `deferred` | T | — | — |
@@ -175,7 +175,7 @@ Total requirements: 189.
 | **FR-VIEW-180** The tail on screen is as long as the tail | `implemented` | T | `Sources/CrawlCall/View/SnakeEntity.swift`<br>`Sources/CrawlCall/GameSession.swift` | `Tests/CrawlCallTests/GameTests.swift` |
 | **FR-VIEW-190** A finished match says so and starts again on a press | `implemented` | T | `Sources/CrawlCall/View/MatchEnd.swift`<br>`Sources/CrawlCall/Game.swift`<br>`Sources/CrawlCall/GameSession.swift`<br>`Sources/CrawlCall/View/BotEntity.swift`<br>`Sources/CrawlCall/CrawlCallApp.swift` | `Tests/CrawlCallTests/MatchEndTests.swift` |
 | **FR-VIEW-200** Text is shown in the player's language | `implemented` | T | `Sources/CrawlCall/Config/TextKey.swift`<br>`Sources/CrawlCall/View/Localizable.xcstrings`<br>`Sources/CrawlCall/View/MatchEnd.swift`<br>`Sources/CrawlCall/View/Controls.swift` | `Tests/CrawlCallTests/TextCatalogTests.swift` |
-| **IF-BOT-010** Bot and match configuration | `implemented` | T | `Sources/CrawlCall/Config/Configurations.swift`<br>`Sources/CrawlCall/Config/Configurations+Load.swift`<br>`Sources/CrawlCall/Config/Schema.swift`<br>`Sources/CrawlCall/Launch.swift`<br>`Sources/CrawlCall/CrawlCallApp.swift`<br>`Sources/CrawlCall/Config/Resource.swift` | `Tests/CrawlCallTests/ConfigurationTests.swift`<br>`Tests/CrawlCallTests/LaunchTests.swift`<br>`Tests/CrawlCallTests/SchemaTests.swift` |
+| **IF-BOT-010** Bot and match configuration | `implemented` | T | `Sources/CrawlCall/Config/Configurations.swift`<br>`Sources/CrawlCall/Config/Configurations+Load.swift`<br>`Sources/CrawlCall/Config/Schema.swift`<br>`Sources/CrawlCall/Launch.swift`<br>`Sources/CrawlCall/CrawlCallApp.swift`<br>`Sources/CrawlCall/Config/Resource.swift` | `Tests/CrawlCallTests/ConfigurationTests.swift`<br>`Tests/CrawlCallTests/LaunchTests.swift`<br>`Tests/CrawlCallTests/SchemaTests.swift`<br>`Tests/CrawlCallTests/DeliberationTests.swift` |
 | **IF-CMD-010** Commander input | `deferred` | T | — | — |
 | **IF-CMD-020** Commander output | `deferred` | T | — | — |
 | **IF-CMD-030** Speech configuration | `deferred` | T | — | — |
@@ -324,6 +324,6 @@ Verified by means other than testing — or the check has not been set up yet.
 
 ## Code files outside the specification
 
-No requirement references them: 0 of 51.
+No requirement references them: 0 of 52.
 
 

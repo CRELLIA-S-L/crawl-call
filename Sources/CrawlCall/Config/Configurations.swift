@@ -160,6 +160,19 @@ struct BotConfiguration: Decodable, Equatable {
     /// number is where the line runs between an archetype that holds and one that
     /// bolts.
     let fearWhenUnhurt: Double
+    /// The weight of each term in an action's score against the others (FR-BOT-080):
+    /// attacking, the threat, a wound, an order, an ally's need and an emptying
+    /// magazine. `wounded` is the fear of a bot with nothing left, from which its
+    /// remaining health is taken.
+    struct UtilityTermWeights: Decodable, Equatable {
+        let attack: Double
+        let threat: Double
+        let wounded: Double
+        let obedience: Double
+        let mercy: Double
+        let empty: Double
+    }
+    let utilityTermWeights: UtilityTermWeights
     /// How tall a bot's figure is drawn, in metres, at its tallest (FR-VIEW-070).
     /// The figure is a model in its own proportions; this is the size it is set down
     /// at (ADR-0022).
@@ -190,6 +203,10 @@ struct BotConfiguration: Decodable, Equatable {
         "perFrameSlotMaximum": .value,
         "collapsePanicIncrement": .value,
         "fearWhenUnhurt": .value,
+        "utilityTermWeights": .object([
+            "attack": .value, "threat": .value, "wounded": .value,
+            "obedience": .value, "mercy": .value, "empty": .value,
+        ]),
         "figureHeight": .value,
         "eyeHeight": .value,
     ])

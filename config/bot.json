@@ -195,6 +195,14 @@
   "perFrameSlotMaximum": 2,
   "collapsePanicIncrement": 0.3,
   "fearWhenUnhurt": 1.2,
+  "utilityTermWeights": {
+    "attack": 1.0,
+    "threat": 1.0,
+    "wounded": 1.0,
+    "obedience": 1.0,
+    "mercy": 1.0,
+    "empty": 1.2
+  },
   "figureHeight": 1.12,
   "eyeHeight": 0.875
 }

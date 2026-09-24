@@ -4,7 +4,7 @@
 // The arena is built here rather than loaded, so that what is in the way, where the
 // cover is and how far the snake stands are all known quantities.
 //
-// verifies: FR-BOT-080, FR-BOT-090, FR-BOT-118, FR-BOT-200, FR-BOT-210
+// verifies: FR-BOT-080, FR-BOT-090, FR-BOT-118, FR-BOT-200, FR-BOT-210, IF-BOT-010
 import XCTest
 @testable import CrawlCall
 
@@ -295,5 +295,36 @@ final class DeliberationTests: XCTestCase {
         situation.allies = [hurt]
         let soldier = try bot(.assault, at: 1, 0)
         XCTAssertNil(utility(of: isHeal, for: soldier, in: situation))
+    }
+
+    // MARK: the mix is the configuration's (IF-BOT-010)
+
+    /// The shipped bot configuration with one term's weight replaced.
+    private func configuration(obedience: Double) throws -> BotConfiguration {
+        let url = try XCTUnwrap(Bundle.main.url(forResource: "bot", withExtension: "json", subdirectory: "config"))
+        var json = try XCTUnwrap(JSONSerialization.jsonObject(with: Data(contentsOf: url)) as? [String: Any])
+        var terms = try XCTUnwrap(json["utilityTermWeights"] as? [String: Any])
+        terms["obedience"] = obedience
+        json["utilityTermWeights"] = terms
+        return try Configurations.decode(BotConfiguration.self, named: "bot", schema: BotConfiguration.schema,
+                                         from: JSONSerialization.data(withJSONObject: json))
+    }
+
+    func testTheWeightOfATermIsReadFromTheConfiguration() throws {
+        // Obeying is worth the obedience weight times the bot's discipline and
+        // nothing else, so doubling the weight in the file doubles the score — which
+        // it cannot do if the weight is anywhere but in the file.
+        var situation = try arena("..........")
+        situation.orderedZone = NavigationGraph.Node(floor: 0, x: 8, z: 0)
+        let soldier = try bot(.assault, at: 1, 0)
+
+        let once = try XCTUnwrap(utility(of: isZone, for: soldier, in: Deliberation.Situation(
+            orderedZone: situation.orderedZone, plan: situation.plan, graph: situation.graph,
+            configuration: try configuration(obedience: 1), cellSize: cell)))
+        let twice = try XCTUnwrap(utility(of: isZone, for: soldier, in: Deliberation.Situation(
+            orderedZone: situation.orderedZone, plan: situation.plan, graph: situation.graph,
+            configuration: try configuration(obedience: 2), cellSize: cell)))
+        XCTAssertGreaterThan(once, 0)
+        XCTAssertEqual(twice, 2 * once, accuracy: 1e-12)
     }
 }

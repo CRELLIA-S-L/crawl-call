@@ -14,10 +14,10 @@ enum Route {
         guard start != goal, graph.isWalkable(start), graph.isWalkable(goal) else { return [] }
         var cameFrom: [NavigationGraph.Node: NavigationGraph.Node] = [:]
         var queue = [start]
-        var index = 0
-        while index < queue.count {
+        var index = queue.startIndex
+        while index < queue.endIndex {
             let here = queue[index]
-            index += 1
+            queue.formIndex(after: &index)
             if here == goal { break }
             for next in graph.neighbours(of: here).sorted(by: order) where cameFrom[next] == nil && next != start {
                 cameFrom[next] = here

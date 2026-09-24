@@ -16,7 +16,7 @@ enum Execution {
     /// What one deliberation step did: the damage the snake takes, and the shots that
     /// dealt it, to be drawn where they went (FR-VIEW-170).
     struct Volley: Equatable {
-        var damage = 0.0
+        var damage: Double = .zero
         var shots: [Shot] = []
     }
 
@@ -43,9 +43,9 @@ enum Execution {
             switch chosen {
             case .fire(let target):
                 guard case .snake(let point) = target else { break }
-                guard bots[index].ammunition > 0,
+                guard bots[index].ammunition > .zero,
                       Sight.isClear(from: bots[index].eye, to: point, through: world.plan) else { break }
-                bots[index].ammunition -= 1
+                bots[index].ammunition -= Firing.roundsPerShot
                 volley.damage += entry.weaponDamage
                 // Drawn for one deliberation period, which is also how long it is
                 // until this bot may fire again (FR-VIEW-170).
@@ -112,7 +112,7 @@ enum Execution {
     private static func advance(_ bot: inout Bot, by distance: Double,
                                 cellSize: Double, floorHeight: Double) {
         var left = distance
-        while left > 1e-9, let next = bot.path.first {
+        while left > Geometry.samePosition, let next = bot.path.first {
             let there = SIMD3(Double(next.x) * cellSize,
                               Double(next.floor) * floorHeight,
                               Double(next.z) * cellSize)
@@ -125,7 +125,7 @@ enum Execution {
             } else {
                 let step = (there - bot.position) / gap * left
                 bot.position += step
-                left = 0
+                left = .zero
             }
         }
         if bot.path.isEmpty, Execution.destination(of: bot.action) != nil { bot.action = nil }

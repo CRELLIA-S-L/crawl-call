@@ -24,7 +24,7 @@ enum Squads {
     /// by floor, then z, then x, so the same map always produces the same match.
     static func spawn(in world: World, snakeStart: NavigationGraph.Node) -> [Bot] {
         let size = world.configurations.match.squadSize
-        guard size > 0 else { return [] }
+        guard size > .zero else { return [] }
         let cell = world.configurations.tuning.navigationGraphCellSize
         let height = world.kit.floorHeight
 
@@ -77,14 +77,14 @@ enum Squads {
     static func distances(in graph: NavigationGraph,
                           from start: NavigationGraph.Node) -> [NavigationGraph.Node: Int] {
         guard graph.isWalkable(start) else { return [:] }
-        var seen = [start: 0]
+        var seen = [start: Int.zero]
         var queue = [start]
-        var index = 0
-        while index < queue.count {
+        var index = queue.startIndex
+        while index < queue.endIndex {
             let here = queue[index]
-            index += 1
+            queue.formIndex(after: &index)
             for next in graph.neighbours(of: here).sorted(by: before) where seen[next] == nil {
-                seen[next] = seen[here]! + 1
+                seen[next] = seen[here]! + MapGrid.neighbourStep
                 queue.append(next)
             }
         }
@@ -104,15 +104,15 @@ enum Squads {
     private static func nearest(_ count: Int, to anchor: NavigationGraph.Node,
                                 in graph: NavigationGraph,
                                 avoiding taken: inout Set<NavigationGraph.Node>,
-                                keeping distance: Double = 0,
+                                keeping distance: Double = .zero,
                                 from others: [SIMD3<Double>] = [],
-                                cellSize: Double = 0,
-                                floorHeight: Double = 0) -> [NavigationGraph.Node] {
+                                cellSize: Double = .zero,
+                                floorHeight: Double = .zero) -> [NavigationGraph.Node] {
         let reach = distances(in: graph, from: anchor)
         let free = reach.keys
             .filter { !taken.contains($0) }
             .filter { node in
-                guard distance > 0, !others.isEmpty else { return true }
+                guard distance > .zero, !others.isEmpty else { return true }
                 let there = centre(of: node, cellSize: cellSize, floorHeight: floorHeight)
                 return others.allSatisfy { Perception.metres(there, $0) >= distance }
             }

@@ -114,7 +114,7 @@ derives_from: []
 depends_on: [FR-BOT-080]
 refines: []
 conflicts_with: []
-code: [Sources/CrawlCall/Bot/Execution.swift, Sources/CrawlCall/Bot/Bot.swift]
+code: [Sources/CrawlCall/Bot/Execution.swift, Sources/CrawlCall/Bot/Bot.swift, Sources/CrawlCall/Config/Utility.swift]
 tests: [Tests/CrawlCallTests/ExecutionTests.swift, Tests/CrawlCallTests/ShotTests.swift]
 created: 2026-09-21
 ```
@@ -158,7 +158,7 @@ derives_from: []
 depends_on: []
 refines: []
 conflicts_with: []
-code: [Sources/CrawlCall/Bot/Deliberation.swift]
+code: [Sources/CrawlCall/Bot/Deliberation.swift, Sources/CrawlCall/Config/Utility.swift]
 tests: [Tests/CrawlCallTests/DeliberationTests.swift]
 created: 2026-09-21
 ```
@@ -177,7 +177,7 @@ derives_from: [FR-BOT-080]
 depends_on: [FR-BOT-030]
 refines: [FR-BOT-080]
 conflicts_with: []
-code: [Sources/CrawlCall/Bot/Deliberation.swift]
+code: [Sources/CrawlCall/Bot/Deliberation.swift, Sources/CrawlCall/Config/Utility.swift]
 tests: [Tests/CrawlCallTests/DeliberationTests.swift]
 created: 2026-09-21
 ```
@@ -347,7 +347,7 @@ derives_from: []
 depends_on: []
 refines: []
 conflicts_with: []
-code: [Sources/CrawlCall/Bot/Slots.swift, Sources/CrawlCall/Game.swift]
+code: [Sources/CrawlCall/Bot/Slots.swift, Sources/CrawlCall/Game.swift, Sources/CrawlCall/Config/Utility.swift]
 tests: [Tests/CrawlCallTests/ExecutionTests.swift]
 created: 2026-09-21
 ```
@@ -366,7 +366,7 @@ derives_from: [FR-BOT-150]
 depends_on: []
 refines: []
 conflicts_with: []
-code: [Sources/CrawlCall/Bot/Slots.swift]
+code: [Sources/CrawlCall/Bot/Slots.swift, Sources/CrawlCall/Config/Utility.swift]
 tests: [Tests/CrawlCallTests/ExecutionTests.swift]
 created: 2026-09-21
 ```
@@ -484,7 +484,7 @@ derives_from: [FR-BOT-080]
 depends_on: [FR-BOT-050, IF-BOT-010]
 refines: [FR-BOT-080]
 conflicts_with: []
-code: [Sources/CrawlCall/Bot/Deliberation.swift]
+code: [Sources/CrawlCall/Bot/Deliberation.swift, Sources/CrawlCall/Config/Utility.swift]
 tests: [Tests/CrawlCallTests/DeliberationTests.swift]
 created: 2026-09-23
 ```

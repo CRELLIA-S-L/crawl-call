@@ -7,7 +7,7 @@ import Foundation
 
 struct Slots {
     /// Time that has passed without being spent on a step yet.
-    private(set) var carried = 0.0
+    private(set) var carried: Double = .zero
     /// How many steps each bot has gone without a slot, by bot id.
     private(set) var waited: [Int: Int] = [:]
 
@@ -15,7 +15,7 @@ struct Slots {
     /// period. Time left over is carried, so that a run of short frames and a run of
     /// long ones deliberate the same number of times per second.
     mutating func steps(after seconds: Double, period: Double) -> Int {
-        guard period > 0, seconds > 0 else { return 0 }
+        guard period > .zero, seconds > .zero else { return .zero }
         carried += seconds
         let steps = Int(carried / period)
         carried -= Double(steps) * period
@@ -29,8 +29,8 @@ struct Slots {
                configuration: BotConfiguration) -> [Int] {
         bots.map { bot -> (id: Int, claim: Int) in
             let near = snake.contains { Perception.metres(bot.position, $0) <= configuration.interruptDistance }
-            let importance = (bot.knowsSnake || near) ? 3 : 1
-            return (bot.id, (waited[bot.id] ?? 1) * importance)
+            let importance = (bot.knowsSnake || near) ? Scheduling.urgentImportance : Scheduling.ordinaryImportance
+            return (bot.id, (waited[bot.id] ?? Scheduling.firstWait) * importance)
         }
         .sorted { $0.claim != $1.claim ? $0.claim > $1.claim : $0.id < $1.id }
         .map(\.id)
@@ -44,11 +44,13 @@ struct Slots {
     /// requirement asks for, taken at its word rather than stretched.
     mutating func next(among bots: [Bot], snake: [SIMD3<Double>],
                        configuration: BotConfiguration) -> [Int] {
-        for bot in bots where waited[bot.id] == nil { waited[bot.id] = 1 }
+        for bot in bots where waited[bot.id] == nil { waited[bot.id] = Scheduling.firstWait }
         let chosen = order(among: bots, snake: snake, configuration: configuration)
-            .prefix(max(0, configuration.perFrameSlotMaximum))
+            .prefix(max(.zero, configuration.perFrameSlotMaximum))
         for bot in bots {
-            waited[bot.id] = chosen.contains(bot.id) ? 1 : (waited[bot.id] ?? 1) + 1
+            waited[bot.id] = chosen.contains(bot.id)
+                ? Scheduling.firstWait
+                : (waited[bot.id] ?? Scheduling.firstWait) + Scheduling.waitStep
         }
         return Array(chosen)
     }
