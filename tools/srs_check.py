@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# SRS-DD-0.19.0 — the framework release this file came from
+# SRS-DD-0.20.1 — the framework release this file came from
 """Specification integrity checker and traceability matrix generator.
 
 Standard library only, compatible with Python 3.9. The specification

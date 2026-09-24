@@ -1,5 +1,5 @@
 # Crawl Call: Chomp Company — agent guide
-<!-- SRS-DD-0.19.0 — installed by the framework; --force overwrites local edits -->
+<!-- SRS-DD-0.20.1 — installed by the framework; --force overwrites local edits -->
 
 A summary for coding agents; the project follows the SRS-DD standard.
 On any conflict, `specs/README.md` wins — it is the single normative document on the specification.
@@ -28,8 +28,9 @@ A change to behavior starts at the loop below.
 1. Before changing behavior, find the requirements that describe it: `python3 tools/srs_view.py --code <path/to/file>`, or the tables in `specs/90-traceability.md`. None exist — create one first, with the initial status per the Lifecycle section of `specs/README.md`.
 2. Plans reference requirement IDs, not prose.
 3. Implement.
-4. Close the loop: status, `code`, `tests` — in the same set of edits as the code.
-5. Run the checker.
+4. Record what you chose: each way the change met a requirement that could have been met another way is a decision — *Workflow* in `specs/README.md` says what counts — and goes into `specs/adr/`; when there was none, the report says so.
+5. Close the loop: status, `code`, `tests` — in the same set of edits as the code.
+6. Run the checker.
 
 ## The rules most easily broken
 
@@ -42,3 +43,5 @@ A change to behavior starts at the loop below.
 6. Reporting to a person — write in sentences that follow one another, and keep a list or a table for what the reader has to count or compare. A label with a fragment after it is a note to yourself.
 7. Saying what the project's files say — read the source in the same message and match the sentence to it before sending, not to what you remember. A count is derived over the current files, a claim that something is nowhere written names what was searched, and a paraphrase is checked against the passage it paraphrases.
 8. Putting something to a person for a decision — a sentence for a document, a requirement's text, a step of a plan: the message that asks carries the text as it would be written, quoted in a block where it is long; "as shown above" is a key handed over instead of the thing, the same failure as a bare identifier.
+9. A rule the conversation settles — where something agreed will bind the work after this task is over and no requirement says it, offer to author the requirement, naming what it would oblige and the area it belongs to. Offered, never written: the maintainer decides whether it is written at all.
+10. A commit that alters behavior names the requirement identifiers it implements, bare, in a trailing parenthesis — ART-060 asks the commit or the pull request for them, and the identifiers are the ones the change was planned from.

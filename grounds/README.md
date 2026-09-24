@@ -1,10 +1,10 @@
 # The grounds register
 
-<!-- SRS-DD-0.19.0 — installed by the framework; --force overwrites local edits -->
+<!-- SRS-DD-0.20.1 — installed by the framework; --force overwrites local edits -->
 
 A specification records what the system must do.
 It does not record why anyone thought those were the right things to build.
-That reasoning lives in rationale prose, which is asked for only where a decision is not obvious and which no rule checks: delete a requirement's rationale and a strict run reports nothing at all.
+That reasoning lives in rationale prose, which is asked for only where a requirement is not obvious and which no rule checks: delete a requirement's rationale and a strict run reports nothing at all.
 
 This register is where that reasoning goes.
 Most of it is claims about the world — who needs the thing, what they will pay for, what they do today instead.

@@ -1,6 +1,6 @@
 # The architecture layer
 
-<!-- SRS-DD-0.19.0 — installed by the framework; --force overwrites local edits -->
+<!-- SRS-DD-0.20.1 — installed by the framework; --force overwrites local edits -->
 
 A specification records what the system must do.
 It does not record what the system is made of: which parts exist, what each one is responsible for, which files are that part, and which parts lean on which.

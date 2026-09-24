@@ -45,7 +45,12 @@ Every requirement carries a `verification` method and the paths that verify it, 
 
 4. **Run what was approved, all of it,** and report per check: passed, failed with the output, or not run and why.
 
-5. **Say what is left to eyes.**
+5. **After a repair, offer the whole set again.**
+   A fix is a change like any other: rerunning the check that was red says it is no longer red and nothing about what the fix broke beside it.
+   The list is the one from step 2, unchanged — a repair does not narrow the change it belongs to — and it is offered, not run (ART-030).
+   Where the repair touched the specification, the checker is in that list too.
+
+6. **Say what is left to eyes.**
    The inspection list from step 2 does not disappear because the suites are green.
    A change verified by inspection and never inspected is unverified.
 

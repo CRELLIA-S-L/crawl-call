@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# SRS-DD-0.19.0 — the framework release this file came from
+# SRS-DD-0.20.1 — the framework release this file came from
 """The architecture layer's checker: reads arch/, holds it to the specification, writes the map.
 
     python3 tools/srs_arch.py              read, report, regenerate arch/90-map.md

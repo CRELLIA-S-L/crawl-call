@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# SRS-DD-0.19.0 — the framework release this file came from
+# SRS-DD-0.20.1 — the framework release this file came from
 """Upgrade SRS-DD in this project — one command, no clone to keep around.
 
     python3 tools/srs_upgrade.py              show the change, then ask

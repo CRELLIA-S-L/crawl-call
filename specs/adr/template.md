@@ -18,6 +18,11 @@ Why a decision is needed at all.
 
 Chosen option and why it beat the neighbors.
 
+### How it works
+
+Only where the chosen option is an algorithm or a mechanism: its steps in words, the invariants it keeps, the inputs where it stops working.
+The code is how it is done today; this is what a rewrite must keep.
+
 ### Consequences
 
 What becomes easier, what becomes harder, what debt is accepted knowingly.

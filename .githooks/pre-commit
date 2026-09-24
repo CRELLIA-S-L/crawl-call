@@ -1,5 +1,5 @@
 #!/bin/sh
-# SRS-DD-0.19.0 pre-commit gate.
+# SRS-DD-0.20.1 pre-commit gate.
 # Template copied into target projects as .githooks/pre-commit by
 # tools/srs_init.py. One-time activation in the target repository:
 #     git config core.hooksPath .githooks

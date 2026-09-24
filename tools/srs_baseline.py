@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# SRS-DD-0.19.0 — the framework release this file came from
+# SRS-DD-0.20.1 — the framework release this file came from
 """Freeze the specification: write the baseline row.
 
     python3 tools/srs_baseline.py 1.2.0 --dry-run

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# SRS-DD-0.19.0 — the framework release this file came from
+# SRS-DD-0.20.1 — the framework release this file came from
 """The grounds checker: reads the register beside specs/ and reports on it.
 
     python3 tools/srs_grounds.py             check and rewrite 90-dashboard.md

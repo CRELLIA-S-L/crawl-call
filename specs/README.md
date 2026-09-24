@@ -1,5 +1,5 @@
 # Specification
-<!-- SRS-DD-0.19.0 — installed by the framework; --force overwrites local edits -->
+<!-- SRS-DD-0.20.1 — installed by the framework; --force overwrites local edits -->
 
 This describes what the system is obliged to do.
 It is the single normative document on how the specification is maintained: if a rule here contradicts something elsewhere, this file wins.
@@ -182,8 +182,8 @@ Ask instead whether the items are separable:
 could each be built and called done while the others were missing, with a reader unable to tell?
 That is the compound one.
 
-A rationale is written whenever the decision is not obvious.
-It answers “why this way”, and six months later it is the only thing that saves you from redoing the debate in circles.
+A rationale is written whenever the requirement is not obvious.
+It answers “why this way” about the statement — why this obligation, this boundary, this number — and six months later it is the only thing that saves you from redoing the debate in circles.
 
 ## Line breaks
 
@@ -218,8 +218,15 @@ A new task goes like this:
 When changing existing behavior, first find the requirements that describe it: search by the `code` field or through `90-traceability.md`.
 If there is no requirement — create it first rather than writing code silently.
 
-An architecture decision (choosing a storage engine, rejecting an approach, working around a platform limitation) is recorded separately in `adr/`.
-A requirement says “what”; a decision says “why this path and not the neighboring one”.
+An architecture decision is recorded separately in `adr/`, and it is not only a choice somebody weighed — a storage engine chosen, an approach rejected, a platform limitation worked around.
+Where a requirement could have been met another way, the way the change took is a decision too, whether or not alternatives were weighed — an algorithm or an order of steps, a heuristic, a threshold or a constant, a format, a fallback.
+What the requirement or an existing decision already fixes, and what is plain idiom, is not.
+A value such a decision leaves to tuning — a speed, a radius, a timing kept where the project keeps its tunables — is not a decision either: the decision is where those values live and how they are tuned, and it is written once.
+Where the requirement could be read two ways, the reading taken is not a decision but a gap in the requirement, and it is written into the statement.
+When the loop is closed, each decision the change made is written into `adr/`, or the report says the change made none.
+A requirement says “what”; a decision names the path taken and says why it and not the neighboring one.
+The two divide by what they explain: a rationale, why the requirement says what it says; a decision, why the system meets it the way it does. A choice between ways of meeting a requirement goes to `adr/` even where a rationale mentions it.
+Where the path is an algorithm or a mechanism, the decision describes it in words — its steps, the invariants it keeps, the inputs where it stops working — because the code shows what it does, not what a rewrite must keep doing.
 A decision is a markdown file under `adr/` whose first heading is `# ADR-NNNN — <title>`; nothing but a front matter — a block between two `---` lines of `key: value` pairs — and blank lines may stand before it.
 Its status is the front matter's `status` key or a `- **Status:** <status>` line among the first lines after the heading, whichever the file carries, and is cited as written, in whatever language the project writes.
 A file under `adr/` with no such heading — an index, a template — is not a decision.
