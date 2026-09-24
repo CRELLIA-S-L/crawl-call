@@ -163,7 +163,7 @@ final class FreeCameraTests: XCTestCase {
     @MainActor
     func testAPinchTakesTheCameraOffTheSnakeAndItStaysWhereItWasPut() throws {
         let world = try Launch.world().get()
-        let built = SceneBuilder.scene(for: world.plan, pitchDegrees: world.configurations.view.cameraPitch)
+        let built = SceneBuilder.scene(for: world.plan, view: world.configurations.view)
         let game = Game(world: world, start: try XCTUnwrap(Game.start(in: world)))
         let camera = try XCTUnwrap(built.root.children.first { $0.name == "camera" })
         let session = GameSession(game: game,
@@ -205,7 +205,7 @@ final class FreeCameraTests: XCTestCase {
                                             bot: configurations.bot, match: configurations.match)
         }
         let world = World(configurations: configurations, kit: base.kit, map: base.map, graph: base.graph, plan: base.plan)
-        let built = SceneBuilder.scene(for: world.plan, pitchDegrees: world.configurations.view.cameraPitch)
+        let built = SceneBuilder.scene(for: world.plan, view: world.configurations.view)
         let game = Game(world: world, start: try XCTUnwrap(Game.start(in: world)))
         let camera = try XCTUnwrap(built.root.children.first { $0.name == "camera" })
         let session = GameSession(game: game,
@@ -287,7 +287,7 @@ final class FreeCameraTests: XCTestCase {
         // back: once it is back, the two cameras stand in the same place.
         func build() throws -> (GameSession, Entity) {
             let world = try Launch.world().get()
-            let built = SceneBuilder.scene(for: world.plan, pitchDegrees: world.configurations.view.cameraPitch)
+            let built = SceneBuilder.scene(for: world.plan, view: world.configurations.view)
             let game = Game(world: world, start: try XCTUnwrap(Game.start(in: world)))
             let camera = try XCTUnwrap(built.root.children.first { $0.name == "camera" })
             let s = GameSession(game: game,

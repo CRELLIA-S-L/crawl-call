@@ -46,6 +46,11 @@ enum ErrorIdentifier: String, CaseIterable {
     case mapRaggedGrid = "MAP_RAGGED_GRID"
     case mapUnknownCharacter = "MAP_UNKNOWN_CHARACTER"
     case mapEmptyFloor = "MAP_EMPTY_FLOOR"
+
+    // Building the scene's light.
+    case sceneAmbientBitmapNotCreated = "SCENE_AMBIENT_BITMAP_NOT_CREATED"
+    case sceneAmbientBitmapNotReadBack = "SCENE_AMBIENT_BITMAP_NOT_READ_BACK"
+    case sceneAmbientLightNotGenerated = "SCENE_AMBIENT_LIGHT_NOT_GENERATED"
 }
 
 /// What stands between an error's identifier and its message (FR-TOOL-200).

@@ -95,6 +95,22 @@ struct ViewConfiguration: Decodable, Equatable {
     struct CentralRegion: Decodable, Equatable { let width: Double; let height: Double }
 
     let cameraPitch: Double
+    /// The camera's vertical field of view, in degrees (FR-VIEW-010).
+    let cameraFieldOfView: Double
+    /// How far the camera stands from what it looks at, in lengths of the map's
+    /// larger side: far enough back that the whole map fits before there is a snake
+    /// to follow (FR-VIEW-020).
+    let cameraDistanceInMapWidths: Double
+    /// The light the scene is read by (FR-VIEW-130): the ambient light's colour, red,
+    /// green and blue in 0…1, and its brightness as a power of two; the sun's
+    /// intensity in lux, how far below the horizontal it shines from and how far
+    /// round from straight ahead, in degrees.
+    struct Colour: Decodable, Equatable { let red: Double; let green: Double; let blue: Double }
+    let ambientColour: Colour
+    let ambientIntensityExponent: Double
+    let sunIntensity: Double
+    let sunElevation: Double
+    let sunAzimuth: Double
     let centralRegion: CentralRegion
     /// Metres beyond the body itself at which a module stops hiding the snake and
     /// starts being drawn through (FR-VIEW-150).
@@ -116,6 +132,13 @@ struct ViewConfiguration: Decodable, Equatable {
 
     static let schema = Schema.object([
         "cameraPitch": .value,
+        "cameraFieldOfView": .value,
+        "cameraDistanceInMapWidths": .value,
+        "ambientColour": .object(["red": .value, "green": .value, "blue": .value]),
+        "ambientIntensityExponent": .value,
+        "sunIntensity": .value,
+        "sunElevation": .value,
+        "sunAzimuth": .value,
         "centralRegion": .object(["width": .value, "height": .value]),
         "seeThroughMargin": .value,
         "visibilityRadius": .value,

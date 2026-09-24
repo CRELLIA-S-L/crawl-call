@@ -11,21 +11,14 @@ import CoreGraphics
 import Foundation
 
 enum TouchScheme {
-    /// How far the knob may travel from the stick's centre, and how far a thumb must
-    /// push before it counts. Neither number is named by any requirement; they are
-    /// the size of a thumb on a phone and are said here rather than buried in the
-    /// view's geometry.
-    static let stickRadius = 60.0
-    static let stickDeadZone = 8.0
-
     /// The stick's reading: where to draw the knob, and the direction it asks for.
     ///
     /// The knob never leaves the base — a thumb that slides off the plate keeps
     /// steering in the direction it left by, which is what a physical stick does and
     /// what a thumb expects.
     static func stick(_ offset: CGSize,
-                      radius: Double = stickRadius,
-                      deadZone: Double = stickDeadZone) -> (knob: CGSize, direction: SIMD2<Double>) {
+                      radius: Double = Stick.radius,
+                      deadZone: Double = Stick.deadZone) -> (knob: CGSize, direction: SIMD2<Double>) {
         let heading = direction(of: offset, deadZone: deadZone)
         guard heading != .zero else { return (.zero, .zero) }
         let length = (Double(offset.width) * Double(offset.width)
@@ -37,7 +30,7 @@ enum TouchScheme {
     /// An offset from the stick's centre becomes a direction. Below the dead zone it
     /// is no direction at all rather than a jittery one: a thumb resting on glass is
     /// not a command.
-    static func direction(of offset: CGSize, deadZone: Double = stickDeadZone) -> SIMD2<Double> {
+    static func direction(of offset: CGSize, deadZone: Double = Stick.deadZone) -> SIMD2<Double> {
         let x = Double(offset.width)
         let z = Double(offset.height)
         let length = (x * x + z * z).squareRoot()

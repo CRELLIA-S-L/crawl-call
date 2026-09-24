@@ -18,10 +18,10 @@ enum SnakeEntity {
     @MainActor
     static func make(radius: Double, segments: Int) -> Entity {
         let root = Entity()
-        root.name = "snake"
-        root.addChild(body(radius: radius, colour: headColour, name: "head"))
+        root.name = EntityName.snake
+        root.addChild(body(radius: radius, colour: headColour, name: EntityName.head))
         for index in 0..<segments {
-            root.addChild(body(radius: radius * 0.92, colour: bodyColour, name: "segment\(index)"))
+            root.addChild(body(radius: radius * 0.92, colour: bodyColour, name: EntityName.numbered(EntityName.segment, index)))
         }
         return root
     }
@@ -37,13 +37,13 @@ enum SnakeEntity {
     /// body off screen costs less than one built twice a second under fire.
     @MainActor
     static func update(_ entity: Entity, from snake: Snake, radius: Double) {
-        guard let head = entity.children.first(where: { $0.name == "head" }) else { return }
+        guard let head = entity.children.first(where: { $0.name == EntityName.head }) else { return }
         head.position = SIMD3(Float(snake.head.x), Float(snake.head.y), Float(snake.head.z))
         let tail = snake.tail
 
-        var bodies = entity.children.filter { $0.name.hasPrefix("segment") }
+        var bodies = entity.children.filter { $0.name.hasPrefix(EntityName.segment) }
         while bodies.count < tail.count {
-            let made = body(radius: radius * 0.92, colour: bodyColour, name: "segment\(bodies.count)")
+            let made = body(radius: radius * 0.92, colour: bodyColour, name: EntityName.numbered(EntityName.segment, bodies.count))
             // Whatever lights the head lights the new body; a segment that missed the
             // scene's light would arrive in a different world from the rest of it.
             if let light = head.components[ImageBasedLightReceiverComponent.self] {

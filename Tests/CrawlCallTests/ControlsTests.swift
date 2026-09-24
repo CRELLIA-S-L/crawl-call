@@ -12,7 +12,7 @@ final class StickTests: XCTestCase {
         XCTAssertEqual(still.direction, .zero)
         XCTAssertEqual(still.knob, .zero)
         // And a thumb that has barely moved is a thumb resting, not a command.
-        let resting = TouchScheme.stick(CGSize(width: TouchScheme.stickDeadZone * 0.5, height: 0))
+        let resting = TouchScheme.stick(CGSize(width: Stick.deadZone * 0.5, height: 0))
         XCTAssertEqual(resting.direction, .zero)
         XCTAssertEqual(resting.knob, .zero)
     }
@@ -43,7 +43,7 @@ final class StickTests: XCTestCase {
         let outside = TouchScheme.stick(CGSize(width: 400, height: 300))
         let travelled = (Double(outside.knob.width) * Double(outside.knob.width)
                          + Double(outside.knob.height) * Double(outside.knob.height)).squareRoot()
-        XCTAssertEqual(travelled, TouchScheme.stickRadius, accuracy: 1e-9)
+        XCTAssertEqual(travelled, Stick.radius, accuracy: 1e-9)
         // And it still steers that way: a thumb sliding off the plate keeps its
         // direction rather than dropping it.
         XCTAssertGreaterThan(outside.direction.x, 0)
@@ -63,8 +63,7 @@ final class EatButtonTests: XCTestCase {
     /// A session over the shipped map, with the scene it needs to exist.
     private func session() throws -> GameSession {
         let world = try Launch.world().get()
-        let built = SceneBuilder.scene(for: world.plan,
-                                       pitchDegrees: world.configurations.view.cameraPitch)
+        let built = SceneBuilder.scene(for: world.plan, view: world.configurations.view)
         let start = try XCTUnwrap(Game.start(in: world))
         let game = Game(world: world, start: start)
         let snake = SnakeEntity.make(radius: world.configurations.tuning.bodyRadius,

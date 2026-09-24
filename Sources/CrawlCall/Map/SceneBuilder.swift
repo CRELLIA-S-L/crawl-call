@@ -19,10 +19,10 @@ enum SceneBuilder {
     /// the match runs (FR-VIEW-140, FR-VIEW-150), and the thing that knows where the
     /// snake and the camera are is the match, not the builder.
     @MainActor
-    static func scene(for plan: ScenePlan, pitchDegrees: Double) -> (root: Entity, seeThrough: SeeThrough) {
+    static func scene(for plan: ScenePlan, view: ViewConfiguration) -> (root: Entity, seeThrough: SeeThrough) {
         let root = Entity()
         root.name = EntityName.scene
-        let ambient = SceneView.ambient(for: plan)
+        let ambient = SceneView.ambient(for: plan, view: view)
         let (map, seeThrough) = entity(for: plan)
         // A directional light leaves what it cannot reach unlit, and unlit is black on
         // screen — which FR-VIEW-130 forbids. The ambient light is what fills those in,
@@ -32,8 +32,8 @@ enum SceneBuilder {
         }
         root.addChild(ambient)
         root.addChild(map)
-        root.addChild(SceneView.light(for: plan))
-        root.addChild(SceneView.camera(for: plan, pitchDegrees: pitchDegrees))
+        root.addChild(SceneView.light(for: plan, view: view))
+        root.addChild(SceneView.camera(for: plan, view: view))
         return (root, seeThrough)
     }
 

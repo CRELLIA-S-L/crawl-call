@@ -36,13 +36,13 @@ struct FreeCameraControls: ViewModifier {
                 if session?.freeCamera != nil {
                     Button { session?.followSnake() } label: {
                         Image(systemName: SymbolName.followSnake)
-                            .font(.system(size: 26, weight: .semibold))
-                            .foregroundStyle(Color.white.opacity(0.9))
-                            .frame(width: 64, height: 64)
-                            .background(Circle().fill(Color.black.opacity(0.35)))
+                            .font(.system(size: DebugControls.symbolSize, weight: .semibold))
+                            .foregroundStyle(Color.white.opacity(DebugControls.markOpacity))
+                            .frame(width: DebugControls.buttonSize, height: DebugControls.buttonSize)
+                            .background(Circle().fill(Color.black.opacity(DebugControls.plateOpacity)))
                     }
                     .accessibilityLabel(DebugText.cameraBackOnTheSnake)
-                    .padding(28)
+                    .padding(Interface.screenMargin)
                 }
             }
         #else
@@ -73,7 +73,7 @@ struct PinchToZoom: UIGestureRecognizerRepresentable {
     func handleUIGestureRecognizerAction(_ recognizer: UIPinchGestureRecognizer, context: Context) {
         guard recognizer.state == .changed else { return }
         zoom(Double(recognizer.scale))
-        recognizer.scale = 1
+        recognizer.scale = DebugControls.unscaled
     }
 }
 
@@ -85,8 +85,8 @@ struct TwoFingerPan: UIGestureRecognizerRepresentable {
 
     func makeUIGestureRecognizer(context: Context) -> UIPanGestureRecognizer {
         let drag = UIPanGestureRecognizer()
-        drag.minimumNumberOfTouches = 2
-        drag.maximumNumberOfTouches = 2
+        drag.minimumNumberOfTouches = DebugControls.panTouches
+        drag.maximumNumberOfTouches = DebugControls.panTouches
         drag.delegate = context.coordinator
         return drag
     }
@@ -114,7 +114,7 @@ struct TwistToTurn: UIGestureRecognizerRepresentable {
     func handleUIGestureRecognizerAction(_ recognizer: UIRotationGestureRecognizer, context: Context) {
         guard recognizer.state == .changed else { return }
         turn(Double(recognizer.rotation))
-        recognizer.rotation = 0
+        recognizer.rotation = .zero
     }
 }
 
@@ -127,8 +127,8 @@ struct ThreeFingerTilt: UIGestureRecognizerRepresentable {
 
     func makeUIGestureRecognizer(context: Context) -> UIPanGestureRecognizer {
         let drag = UIPanGestureRecognizer()
-        drag.minimumNumberOfTouches = 3
-        drag.maximumNumberOfTouches = 3
+        drag.minimumNumberOfTouches = DebugControls.tiltTouches
+        drag.maximumNumberOfTouches = DebugControls.tiltTouches
         drag.delegate = context.coordinator
         return drag
     }

@@ -51,7 +51,7 @@ struct Game {
         self.snake = Snake(head: surfaces.clear(centre, floor: start.floor),
                            floor: start.floor,
                            segments: world.configurations.snake.startingSegmentCount,
-                           segmentSpacing: world.configurations.tuning.bodyRadius * 2)
+                           segmentSpacing: world.configurations.tuning.bodyRadius * Motion.widthInRadii)
         self.bots = Squads.spawn(in: world, snakeStart: start)
     }
 
@@ -80,7 +80,7 @@ struct Game {
     /// caller; this is the act itself.
     mutating func begin(eating id: Int) {
         guard eating == nil, let prey = bots.first(where: { $0.id == id }) else { return }
-        eating = Eating(prey: id, alive: prey.health > 0, archetype: prey.archetype,
+        eating = Eating(prey: id, alive: prey.health > .zero, archetype: prey.archetype,
                         configuration: world.configurations.snake)
     }
 
@@ -92,7 +92,7 @@ struct Game {
     /// somebody wants to feel it out.
     static func preyWithinReach(of head: SIMD3<Double>, among bots: [Bot],
                                 tuning: TuningConfiguration) -> Int? {
-        let reach = tuning.bodyRadius + tuning.navigationGraphCellSize / 2
+        let reach = tuning.bodyRadius + tuning.navigationGraphCellSize * Geometry.half
         var nearest: Int?
         var best = Double.infinity
         for bot in bots {
@@ -126,9 +126,9 @@ struct Game {
             // rather than waited out, and it shoots back while it has anything left
             // (FR-SNAKE-100).
             let bite = eating!.advance(seconds: seconds)
-            if bite > 0, let index = bots.firstIndex(where: { $0.id == eating!.prey }) {
-                bots[index].health = max(0, bots[index].health - bite)
-                if bots[index].health == 0 { finishEating() }
+            if bite > .zero, let index = bots.firstIndex(where: { $0.id == eating!.prey }) {
+                bots[index].health = max(.zero, bots[index].health - bite)
+                if bots[index].health == .zero { finishEating() }
             } else if eating?.isFinished == true || !bots.contains(where: { $0.id == eating!.prey }) {
                 finishEating()
             }
@@ -147,14 +147,14 @@ struct Game {
         shots = shots.compactMap { shot in
             var aged = shot
             aged.left -= seconds
-            return aged.left > 0 ? aged : nil
+            return aged.left > .zero ? aged : nil
         }
         let steps = slots.steps(after: seconds, period: world.configurations.bot.deliberationPeriod)
         for _ in 0..<steps {
             let holders = slots.next(among: bots, snake: body, configuration: world.configurations.bot)
             let volley = Execution.deliberate(&bots, slots: holders, snake: body, world: world)
             shots += volley.shots
-            if volley.damage > 0 {
+            if volley.damage > .zero {
                 snake.take(damage: volley.damage, perSegment: world.configurations.snake.damagePerSegment)
                 // FR-SCORE-140. Checked inside the loop rather than after it: the
                 // remaining deliberation steps of a long frame belong to a match that
@@ -177,7 +177,7 @@ struct Game {
         // is only removed when the snake has finished eating it, and the day bodies
         // stay behind (INV-SCORE-020) the match must still end when the last one that
         // could shoot back is gone.
-        if !bots.contains(where: { $0.health > 0 }) { outcome = .arenaEmpty }
+        if !bots.contains(where: { $0.health > .zero }) { outcome = .arenaEmpty }
     }
 
     /// The meal is over: the bot is gone from the map — squads do not remove bodies,
@@ -187,7 +187,7 @@ struct Game {
         guard let meal = eating else { return }
         eating = nil
         bots.removeAll { $0.id == meal.prey }
-        snake.grow(by: world.configurations.snake.segmentsPerArchetype[meal.archetype.rawValue] ?? 0)
+        snake.grow(by: world.configurations.snake.segmentsPerArchetype[meal.archetype.rawValue] ?? .zero)
     }
 
     /// Another match in the same arena, from the same starting cell: the world is

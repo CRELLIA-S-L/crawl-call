@@ -38,7 +38,8 @@ final class ErrorIdentifierTests: XCTestCase {
         let mapLoad: [MapLoadError] = [
             .missing(name: "blockout"), .unreadable(name: "blockout", underlying: Underlying()),
         ]
-        return mapParse + kit + schemaErrors + configuration + mapLoad
+        let scene: [SceneError] = SceneError.allCases
+        return mapParse + kit + schemaErrors + configuration + mapLoad + scene
     }
 
     func testEveryErrorLineOpensWithItsIdentifierAColonAndASpace() {

@@ -84,7 +84,7 @@ struct SeeThrough {
     /// throw the shader's opacity away.
     static func holed(from solid: any Material) -> CustomMaterial? {
         guard let library = holeLibrary else { return nil }
-        let shader = CustomMaterial.SurfaceShader(named: "crawlCallHole", in: library)
+        let shader = CustomMaterial.SurfaceShader(named: Resource.holeShader, in: library)
         guard var holed = try? CustomMaterial(from: solid, surfaceShader: shader) else { return nil }
         holed.blending = .transparent(opacity: 1.0)
         return holed
@@ -113,9 +113,9 @@ struct SeeThrough {
         let reach = (awayX * awayX + awayZ * awayZ).squareRoot()
         // A camera directly overhead has no direction across the ground, and nothing
         // it sees is beyond anything else.
-        guard reach > 1e-12 else { return false }
+        guard reach > Geometry.negligibleLength else { return false }
         let unitX = awayX / reach, unitZ = awayZ / reach
-        let halfX = size.x / 2, halfZ = size.z / 2
+        let halfX = size.x * Geometry.half, halfZ = size.z * Geometry.half
         var nearest = Double.greatestFiniteMagnitude
         for stepX in [-halfX, halfX] {
             for stepZ in [-halfZ, halfZ] {
@@ -123,7 +123,7 @@ struct SeeThrough {
                                      + (centre.z + stepZ - head.z) * unitZ)
             }
         }
-        return nearest > 0
+        return nearest > .zero
     }
 
     /// A hole cut in a module (ADR-0020), and the shape it is cut in.
@@ -195,8 +195,8 @@ struct SeeThrough {
             // The ground around the head (FR-VIEW-155): near enough, higher than the
             // floor the head is on so that floor is never opened onto the void, and not
             // wholly beyond the head.
-            let window = visibilityRadius > 0
-                && box.centre.y + box.size.y / 2 > surface + 1e-9
+            let window = visibilityRadius > .zero
+                && box.centre.y + box.size.y * Geometry.half > surface + Geometry.samePosition
                 && !beyond(centre: box.centre, size: box.size, from: eye, past: head)
                 && distance(from: head, to: box) <= visibilityRadius
 
@@ -211,7 +211,7 @@ struct SeeThrough {
                 // camera and spread towards the snake, so where they pass the module
                 // they are no further apart than at the snake itself.
                 let aim = hidden.reduce(SIMD3<Double>.zero) { $0 + $1.part } / Double(hidden.count)
-                let spread = hidden.map { length($0.part - aim) }.max() ?? 0
+                let spread = hidden.map { length($0.part - aim) }.max() ?? .zero
                 answer[index] = Hole(shape: .along(aim), radius: margin + spread)
             case (false, true):
                 // Both at once, which is the ordinary case beside the head: one sphere
@@ -219,11 +219,11 @@ struct SeeThrough {
                 // window. Wider than either needs, never narrower (ADR-0020).
                 var spheres = hidden.map { entry -> (SIMD3<Double>, Double) in
                     let (from, to) = entry.crossing
-                    return ((from + to) / 2, margin + length(to - from) / 2)
+                    return ((from + to) * Geometry.half, margin + length(to - from) * Geometry.half)
                 }
                 spheres.append((head, visibilityRadius))
                 let centre = spheres.reduce(SIMD3<Double>.zero) { $0 + $1.0 } / Double(spheres.count)
-                let reach = spheres.map { length($0.0 - centre) + $0.1 }.max() ?? 0
+                let reach = spheres.map { length($0.0 - centre) + $0.1 }.max() ?? .zero
                 answer[index] = Hole(shape: .around(centre), radius: reach)
             }
         }
@@ -236,8 +236,8 @@ struct SeeThrough {
 
     /// How far a point is from the nearest part of a box; nothing, where it is inside.
     nonisolated static func distance(from point: SIMD3<Double>, to box: Box) -> Double {
-        let low = box.centre - box.size / 2
-        let high = box.centre + box.size / 2
+        let low = box.centre - box.size * Geometry.half
+        let high = box.centre + box.size * Geometry.half
         let nearest = SIMD3(min(max(point.x, low.x), high.x),
                             min(max(point.y, low.y), high.y),
                             min(max(point.z, low.z), high.z))

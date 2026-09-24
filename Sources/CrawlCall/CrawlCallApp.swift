@@ -36,14 +36,13 @@ struct MatchView: View {
 
     var body: some View {
         RealityView { content in
-            let (scene, seeThrough) = SceneBuilder.scene(for: world.plan,
-                                                         pitchDegrees: world.configurations.view.cameraPitch)
+            let (scene, seeThrough) = SceneBuilder.scene(for: world.plan, view: world.configurations.view)
             content.add(scene)
 
             guard let start = Game.start(in: world),
-                  let camera = scene.children.first(where: { $0.name == "camera" }),
-                  let map = scene.children.first(where: { $0.name == "map" }),
-                  let ambient = scene.children.first(where: { $0.name == "ambient" }) else { return }
+                  let camera = scene.children.first(where: { $0.name == EntityName.camera }),
+                  let map = scene.children.first(where: { $0.name == EntityName.map }),
+                  let ambient = scene.children.first(where: { $0.name == EntityName.ambient }) else { return }
 
             let game = Game(world: world, start: start)
             let snake = SnakeEntity.make(radius: world.configurations.tuning.bodyRadius,
@@ -69,8 +68,9 @@ struct MatchView: View {
             let session = GameSession(game: game, snakeEntity: snake, botEntities: squads,
                                       shotEntities: shots,
                                       camera: camera, seeThrough: seeThrough,
-                                      distance: max(world.plan.bounds.extent.x, world.plan.bounds.extent.z) * 1.1,
-                                      fieldOfView: 50)
+                                      distance: SceneView.distance(framing: world.plan,
+                                                                   view: world.configurations.view),
+                                      fieldOfView: world.configurations.view.cameraFieldOfView)
             self.session = session
             // One step per frame, from the frame's own delta.
             _ = content.subscribe(to: SceneEvents.Update.self) { event in

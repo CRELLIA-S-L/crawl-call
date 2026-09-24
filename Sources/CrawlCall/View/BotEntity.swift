@@ -21,13 +21,13 @@ enum BotEntity {
     @MainActor
     static func make(for bots: [Bot], height: Double) -> Entity {
         let root = Entity()
-        root.name = "bots"
+        root.name = EntityName.bots
         let paints: [Squad: [Figure.Paint: any Material]] = [
             .red: Figure.materials(for: .red), .blue: Figure.materials(for: .blue),
         ]
         for bot in bots {
             let figure = Figure.make(bot.archetype, height: height, materials: paints[bot.squad] ?? Figure.materials(for: bot.squad))
-            figure.name = "bot\(bot.id)"
+            figure.name = EntityName.numbered(EntityName.bot, bot.id)
             root.addChild(figure)
         }
         update(root, from: bots)
@@ -58,7 +58,7 @@ enum BotEntity {
     @MainActor
     static func update(_ entity: Entity, from bots: [Bot]) {
         var standing: [String: Bot] = [:]
-        for bot in bots { standing["bot\(bot.id)"] = bot }
+        for bot in bots { standing[EntityName.numbered(EntityName.bot, bot.id)] = bot }
         for body in entity.children {
             guard let bot = standing[body.name] else {
                 body.isEnabled = false
@@ -85,9 +85,9 @@ enum BotEntity {
     /// build did.
     @MainActor
     static func swallow(_ entity: Entity, prey id: Int, head: SIMD3<Double>, left: Double) {
-        guard let body = entity.children.first(where: { $0.name == "bot\(id)" }) else { return }
-        let gone = min(max(1 - left, 0), 1)
-        let scale = Float(max(0.15, 1 - gone))
+        guard let body = entity.children.first(where: { $0.name == EntityName.numbered(EntityName.bot, id) }) else { return }
+        let gone = min(max(Fraction.whole - left, Fraction.none), Fraction.whole)
+        let scale = Float(max(0.15, Fraction.whole - gone))
         body.scale = SIMD3(repeating: scale)
         // Towards the head, and down into it as it goes: the snake's mouth is at the
         // floor, and the figure stands on its feet there, shrinking towards them.
@@ -97,7 +97,7 @@ enum BotEntity {
     }
 
     private static func bot(_ from: Float, towards target: Float, by part: Float) -> Float {
-        from + (target - from) * min(part, 1)
+        from + (target - from) * min(part, Float(Fraction.whole))
     }
 
     /// One colour a side, told apart at a glance and from the snake's green and the

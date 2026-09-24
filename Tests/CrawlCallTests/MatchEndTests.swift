@@ -219,8 +219,7 @@ final class RestartOnScreenTests: XCTestCase {
         // (FR-VIEW-190).
         let world = try Launch.world().get()
         let game = Game(world: world, start: try XCTUnwrap(Game.start(in: world)))
-        let built = SceneBuilder.scene(for: world.plan,
-                                       pitchDegrees: world.configurations.view.cameraPitch)
+        let built = SceneBuilder.scene(for: world.plan, view: world.configurations.view)
         let camera = try XCTUnwrap(built.root.children.first { $0.name == "camera" })
         let squads = BotEntity.make(for: game.bots, height: world.configurations.bot.figureHeight)
         let session = GameSession(game: game,

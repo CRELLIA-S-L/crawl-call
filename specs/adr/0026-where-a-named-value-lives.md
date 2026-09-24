@@ -40,9 +40,14 @@ A file per kind of value keeps a name next to the others of its kind, where a re
 | `Resource.swift` | the bundle's directories, extensions and file names, and the paths built from them |
 | `EntityName.swift` | the names the scene's entities are given and found by |
 | `MapFormat.swift` | the map file's words, separators and positions (`MapFormat`), and the grid's numbers (`MapGrid`) |
-| `Geometry.swift` | halves, the ends of a segment, the sides of a box, and the tolerances of comparison |
+| `Geometry.swift` | halves, the ends of a segment, the sides of a box, angles and axes, and the tolerances of comparison |
+| `Motion.swift` | how the snake's body is moved: what movement is negligible, how often a step is retried, how precisely a contact is found |
+| `Utility.swift` | how a bot's scores are shaped (`Utility`), who deliberates when (`Scheduling`), what a shot spends (`Firing`) |
+| `Interface.swift` | how the interface is drawn and a thumb is read: plates, the stick, the eat button, the plate at the end, debug mode's controls |
+| `Lighting.swift` | how the scene's light is built (`AmbientImage`, `SunShadow`, `Colour`) and the longest frame (`Frame`) |
+| `Drawing.swift` | the ends of a share (`Fraction`) and the pool of tracer bars (`Tracers`) |
 
-Further subsystems add files of their own kind as the pass reaches them; each file claims, with `implements:`, the requirements whose code uses its values.
+Each file claims, with `implements:`, the requirements whose code uses its values.
 
 A value goes to the configuration under `config/` when it shapes how the game plays or what the picture shows and a person sets it by playing or by looking — a speed, a distance, a duration, a threshold, the camera's framing, the light; its key is described in the interface requirement for that file (ADR-0012).
 It is a constant under `Config/` when the arithmetic, a format or a unit fixes it, when it guards the arithmetic — a tolerance —, or when it is part of how the interface is drawn rather than of the world it shows.

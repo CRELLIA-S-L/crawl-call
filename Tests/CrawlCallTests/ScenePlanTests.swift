@@ -124,7 +124,7 @@ final class ScenePlanBoundsTests: XCTestCase {
 final class SceneBuilderTests: XCTestCase {
     private func scene() throws -> Entity {
         let world = try Launch.world().get()
-        return SceneBuilder.scene(for: world.plan, pitchDegrees: world.configurations.view.cameraPitch).root
+        return SceneBuilder.scene(for: world.plan, view: world.configurations.view).root
     }
 
     func testTheSceneCarriesTheMapTheLightsTheAmbientAndTheCamera() throws {
@@ -151,7 +151,7 @@ final class SceneBuilderTests: XCTestCase {
 
     func testTheCameraSitsAtThePitchTheConfigurationSets() throws {
         let world = try Launch.world().get()
-        let scene = SceneBuilder.scene(for: world.plan, pitchDegrees: world.configurations.view.cameraPitch).root
+        let scene = SceneBuilder.scene(for: world.plan, view: world.configurations.view).root
         let camera = try XCTUnwrap(scene.children.first { $0.name == "camera" })
         // Pitch read back off the orientation, in degrees below the horizontal.
         let forward = camera.orientation.act(SIMD3<Float>(0, 0, -1))
@@ -166,8 +166,7 @@ final class SceneBuilderTests: XCTestCase {
         // height and sight lines be learnt once. A camera that starts turned would
         // make "does not change" true and the requirement pointless.
         let world = try Launch.world().get()
-        let camera = try XCTUnwrap(SceneView.camera(for: world.plan,
-                                                    pitchDegrees: world.configurations.view.cameraPitch)
+        let camera = try XCTUnwrap(SceneView.camera(for: world.plan, view: world.configurations.view)
             as Entity?)
         let forward = camera.orientation.act(SIMD3<Float>(0, 0, -1))
         // Looking straight down the -Z axis in plan: no sideways component.

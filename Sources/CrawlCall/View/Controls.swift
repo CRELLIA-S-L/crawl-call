@@ -26,8 +26,8 @@ struct Controls: View {
 
     @State private var knob: CGSize = .zero
 
-    private let plate = Color.white.opacity(0.28)
-    private let mark = Color.white.opacity(0.85)
+    private let plate = Color.white.opacity(Interface.plateOpacity)
+    private let mark = Color.white.opacity(Interface.markOpacity)
 
     var body: some View {
         HStack {
@@ -35,8 +35,8 @@ struct Controls: View {
             Spacer()
             button
         }
-        .padding(.horizontal, 28)
-        .padding(.bottom, 28)
+        .padding(.horizontal, Interface.screenMargin)
+        .padding(.bottom, Interface.screenMargin)
         .frame(maxHeight: .infinity, alignment: .bottom)
         // The controls sit over the arena; the arena is what is being steered, so
         // nothing here takes a touch that is not on a control.
@@ -44,19 +44,19 @@ struct Controls: View {
     }
 
     private var stick: some View {
-        let radius = TouchScheme.stickRadius
+        let radius = Stick.radius
         return ZStack {
             Circle()
                 .fill(plate)
-                .frame(width: radius * 2, height: radius * 2)
+                .frame(width: radius * Stick.plateInRadii, height: radius * Stick.plateInRadii)
             Circle()
                 .fill(mark)
-                .frame(width: radius * 0.8, height: radius * 0.8)
+                .frame(width: radius * Stick.knobInRadii, height: radius * Stick.knobInRadii)
                 .offset(knob)
         }
         .contentShape(Circle())
         .gesture(
-            DragGesture(minimumDistance: 0)
+            DragGesture(minimumDistance: .zero)
                 .onChanged { value in
                     let reading = TouchScheme.stick(value.translation)
                     knob = reading.knob
@@ -72,17 +72,18 @@ struct Controls: View {
     private var button: some View {
         Button(action: eat) {
             Image(systemName: SymbolName.eat)
-                .font(.system(size: 34, weight: .bold, design: .rounded))
-                .foregroundStyle(canEat ? mark : mark.opacity(0.35))
-                .frame(width: 96, height: 96)
-                .background(Circle().fill(canEat ? plate.opacity(0.9) : plate.opacity(0.4)))
+                .font(.system(size: EatButton.symbolSize, weight: .bold, design: .rounded))
+                .foregroundStyle(canEat ? mark : mark.opacity(Interface.dimMarkOpacity))
+                .frame(width: EatButton.size, height: EatButton.size)
+                .background(Circle().fill(canEat ? plate.opacity(Interface.litPlateOpacity)
+                                                 : plate.opacity(Interface.dimPlateOpacity)))
                 // Lit means reachable, and the ring is what makes it read as a
                 // button that is on rather than one that is merely brighter.
-                .overlay(Circle().strokeBorder(mark, lineWidth: canEat ? 3 : 0))
+                .overlay(Circle().strokeBorder(mark, lineWidth: canEat ? Interface.ringWidth : .zero))
         }
         .buttonStyle(.plain)
         .disabled(!canEat)
-        .animation(.easeOut(duration: 0.12), value: canEat)
+        .animation(.easeOut(duration: Interface.changeDuration), value: canEat)
         .accessibilityLabel(Text(TextKey.controlsEat.key))
     }
 }

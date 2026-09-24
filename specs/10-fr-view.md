@@ -36,7 +36,7 @@ derives_from: [FR-VIEW-010]
 depends_on: [FR-SNAKE-010, IF-VIEW-020]
 refines: []
 conflicts_with: []
-code: [Sources/CrawlCall/View/SceneView.swift, Sources/CrawlCall/GameSession.swift]
+code: [Sources/CrawlCall/View/SceneView.swift, Sources/CrawlCall/GameSession.swift, Sources/CrawlCall/Config/Geometry.swift, Sources/CrawlCall/Config/EntityName.swift]
 tests: [Tests/CrawlCallTests/ScenePlanTests.swift]
 created: 2026-09-21
 ```
@@ -77,7 +77,7 @@ derives_from: [FR-VIEW-010]
 depends_on: [FR-SNAKE-010, FR-VIEW-020, IF-VIEW-020]
 refines: []
 conflicts_with: []
-code: [Sources/CrawlCall/View/SeeThrough.swift, Sources/CrawlCall/Map/Sight.swift, Sources/CrawlCall/Map/SceneBuilder.swift, Sources/CrawlCall/GameSession.swift, Sources/CrawlCall/View/SeeThroughHole.metal, Sources/CrawlCall/Config/Geometry.swift]
+code: [Sources/CrawlCall/View/SeeThrough.swift, Sources/CrawlCall/Map/Sight.swift, Sources/CrawlCall/Map/SceneBuilder.swift, Sources/CrawlCall/GameSession.swift, Sources/CrawlCall/View/SeeThroughHole.metal, Sources/CrawlCall/Config/Geometry.swift, Sources/CrawlCall/Config/Resource.swift]
 tests: [Tests/CrawlCallTests/SeeThroughTests.swift]
 created: 2026-09-22
 ```
@@ -133,7 +133,7 @@ derives_from: []
 depends_on: [IF-VIEW-010]
 refines: []
 conflicts_with: []
-code: [Sources/CrawlCall/Game.swift, Sources/CrawlCall/Input/Intent.swift, Sources/CrawlCall/GameSession.swift]
+code: [Sources/CrawlCall/Game.swift, Sources/CrawlCall/Input/Intent.swift, Sources/CrawlCall/GameSession.swift, Sources/CrawlCall/Config/Lighting.swift]
 tests: [Tests/CrawlCallTests/GameTests.swift]
 created: 2026-09-21
 ```
@@ -170,7 +170,7 @@ derives_from: [FR-VIEW-030, CON-PUB-010]
 depends_on: [IF-VIEW-010]
 refines: []
 conflicts_with: []
-code: [Sources/CrawlCall/Input/TouchScheme.swift, Sources/CrawlCall/View/Controls.swift, Sources/CrawlCall/CrawlCallApp.swift, Sources/CrawlCall/Config/SymbolName.swift]
+code: [Sources/CrawlCall/Input/TouchScheme.swift, Sources/CrawlCall/View/Controls.swift, Sources/CrawlCall/CrawlCallApp.swift, Sources/CrawlCall/Config/SymbolName.swift, Sources/CrawlCall/Config/Interface.swift]
 tests: [Tests/CrawlCallTests/TouchSchemeTests.swift, Tests/CrawlCallTests/ControlsTests.swift]
 created: 2026-09-21
 ```
@@ -190,7 +190,7 @@ derives_from: [FR-VIEW-050]
 depends_on: [FR-SNAKE-090]
 refines: []
 conflicts_with: []
-code: [Sources/CrawlCall/View/Controls.swift, Sources/CrawlCall/GameSession.swift, Sources/CrawlCall/CrawlCallApp.swift]
+code: [Sources/CrawlCall/View/Controls.swift, Sources/CrawlCall/GameSession.swift, Sources/CrawlCall/CrawlCallApp.swift, Sources/CrawlCall/Config/Interface.swift]
 tests: [Tests/CrawlCallTests/ControlsTests.swift]
 created: 2026-09-23
 ```
@@ -288,7 +288,7 @@ derives_from: []
 depends_on: [FR-SNAKE-090]
 refines: []
 conflicts_with: []
-code: [Sources/CrawlCall/View/BotEntity.swift, Sources/CrawlCall/GameSession.swift]
+code: [Sources/CrawlCall/View/BotEntity.swift, Sources/CrawlCall/GameSession.swift, Sources/CrawlCall/Config/Drawing.swift, Sources/CrawlCall/Config/EntityName.swift]
 tests: [Tests/CrawlCallTests/BotEntityTests.swift]
 created: 2026-09-21
 ```
@@ -329,7 +329,7 @@ derives_from: [FR-BOT-060]
 depends_on: [IF-BOT-010, FR-VIEW-060]
 refines: []
 conflicts_with: []
-code: [Sources/CrawlCall/Bot/Shot.swift, Sources/CrawlCall/Bot/Execution.swift, Sources/CrawlCall/Game.swift, Sources/CrawlCall/View/ShotEntity.swift, Sources/CrawlCall/GameSession.swift]
+code: [Sources/CrawlCall/Bot/Shot.swift, Sources/CrawlCall/Bot/Execution.swift, Sources/CrawlCall/Game.swift, Sources/CrawlCall/View/ShotEntity.swift, Sources/CrawlCall/GameSession.swift, Sources/CrawlCall/Config/Drawing.swift, Sources/CrawlCall/Config/EntityName.swift]
 tests: [Tests/CrawlCallTests/ShotTests.swift]
 created: 2026-09-23
 ```
@@ -371,7 +371,7 @@ derives_from: []
 depends_on: [IF-VIEW-010]
 refines: []
 conflicts_with: []
-code: [Sources/CrawlCall/View/Controls.swift, Sources/CrawlCall/View/MatchEnd.swift]
+code: [Sources/CrawlCall/View/Controls.swift, Sources/CrawlCall/View/MatchEnd.swift, Sources/CrawlCall/Config/Interface.swift]
 tests: []
 created: 2026-09-21
 ```
@@ -392,7 +392,7 @@ derives_from: []
 depends_on: [FR-VIEW-010]
 refines: []
 conflicts_with: []
-code: [Sources/CrawlCall/View/SceneView.swift]
+code: [Sources/CrawlCall/View/SceneView.swift, Sources/CrawlCall/Config/Lighting.swift]
 tests: [Tests/CrawlCallTests/ScenePlanTests.swift]
 created: 2026-09-22
 ```
@@ -412,7 +412,7 @@ derives_from: [FR-SCORE-140, FR-SCORE-150]
 depends_on: [FR-VIEW-120]
 refines: []
 conflicts_with: []
-code: [Sources/CrawlCall/View/MatchEnd.swift, Sources/CrawlCall/Game.swift, Sources/CrawlCall/GameSession.swift, Sources/CrawlCall/View/BotEntity.swift, Sources/CrawlCall/CrawlCallApp.swift]
+code: [Sources/CrawlCall/View/MatchEnd.swift, Sources/CrawlCall/Game.swift, Sources/CrawlCall/GameSession.swift, Sources/CrawlCall/View/BotEntity.swift, Sources/CrawlCall/CrawlCallApp.swift, Sources/CrawlCall/Config/Interface.swift]
 tests: [Tests/CrawlCallTests/MatchEndTests.swift]
 created: 2026-09-23
 ```

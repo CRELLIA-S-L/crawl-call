@@ -31,3 +31,8 @@ enum Motion {
     static let down = -1.0
     static let up = 1.0
 }
+
+extension Motion {
+    /// The tail's segments are spaced a body's width apart along the path: two radii.
+    static let widthInRadii = 2.0
+}

@@ -2,7 +2,7 @@
 // would tune (ART-070): halves, the ends of a segment, which side of a box a point is
 // on, and how close two numbers must be to count as the same.
 //
-// implements: FR-VIEW-150, FR-BOT-050, FR-TOOL-020, FR-MAP-090, FR-SNAKE-010
+// implements: FR-VIEW-150, FR-BOT-050, FR-TOOL-020, FR-MAP-090, FR-SNAKE-010, FR-VIEW-020
 import Foundation
 
 enum Geometry {
@@ -29,4 +29,21 @@ enum Geometry {
     static let squaredSlack = 1e-12
     /// Two cuts of a segment closer than this bound no piece worth measuring.
     static let emptyPiece = 1e-15
+}
+
+extension Geometry {
+    /// Degrees in half a turn and in a whole one: an angle in degrees becomes radians
+    /// by `.pi / halfTurnDegrees`.
+    static let halfTurnDegrees = 180.0
+    static let fullTurnDegrees = 360.0
+    /// A width measured out to both sides of a centre line is this many times what
+    /// lies to one side.
+    static let bothSides = 2.0
+    /// Metres below which a line has no length and no direction.
+    static let negligibleLength = 1e-12
+    /// A sine below this is looking along the ground rather than down at it.
+    static let grazing = 1e-6
+    /// The scene's axes: x across, y up.
+    static let xAxis = SIMD3<Float>(1, 0, 0)
+    static let yAxis = SIMD3<Float>(0, 1, 0)
 }

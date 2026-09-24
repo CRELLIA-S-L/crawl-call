@@ -18,7 +18,7 @@ struct FreeCamera: Equatable {
     private(set) var pitch: Double
     /// How far it has been turned round the focus from the match's heading, in degrees;
     /// positive turns it anticlockwise seen from above.
-    private(set) var yaw: Double = 0
+    private(set) var yaw: Double = .zero
     /// How near and how far it may be taken, and how low and how steep it may look
     /// (IF-VIEW-020).
     let nearest: Double
@@ -46,7 +46,7 @@ struct FreeCamera: Equatable {
     /// Pinched by a factor: apart is above one and brings the camera nearer, together
     /// is below one and takes it further, within the limits.
     mutating func zoom(by factor: Double) {
-        guard factor > 0, factor.isFinite else { return }
+        guard factor > .zero, factor.isFinite else { return }
         distance = min(max(distance / factor, nearest), farthest)
     }
 
@@ -56,12 +56,12 @@ struct FreeCamera: Equatable {
     /// the distance the camera is now, along the screen's own axes as the camera is
     /// turned.
     mutating func pan(by points: SIMD2<Double>, screenHeight height: Double, fieldOfViewDegrees: Double) {
-        guard height > 0 else { return }
+        guard height > .zero else { return }
         let metresPerPoint = SceneView.groundSpan(distance: distance, fieldOfViewDegrees: fieldOfViewDegrees) / height
         // Across the screen is across the ground. Up and down the screen is the ground
         // seen at the pitch, so a point of it covers more ground than a point across.
-        let down = sin(pitch * .pi / 180)
-        let depth = down > 1e-6 ? metresPerPoint / down : metresPerPoint
+        let down = sin(pitch * .pi / Geometry.halfTurnDegrees)
+        let depth = down > Geometry.grazing ? metresPerPoint / down : metresPerPoint
         let axes = SceneView.screenAxes(yawDegrees: yaw)
         var moved = focus
         moved.x -= points.x * metresPerPoint * axes.right.x + points.y * depth * axes.down.x
@@ -74,14 +74,14 @@ struct FreeCamera: Equatable {
     /// point it looks at. No limit: round is round.
     mutating func turn(by radians: Double) {
         guard radians.isFinite else { return }
-        yaw = (yaw + radians * 180 / .pi).truncatingRemainder(dividingBy: 360)
+        yaw = (yaw + radians * Geometry.halfTurnDegrees / .pi).truncatingRemainder(dividingBy: Geometry.fullTurnDegrees)
     }
 
     /// Dragged up or down by three fingers, in points on a screen `height` points tall:
     /// up lowers the camera towards the horizon, down raises it to look straight down,
     /// and the whole height of the screen is the whole range the limits allow.
     mutating func tilt(by points: Double, screenHeight height: Double) {
-        guard height > 0, points.isFinite else { return }
+        guard height > .zero, points.isFinite else { return }
         let degreesPerPoint = (highestPitch - lowestPitch) / height
         pitch = min(max(pitch + points * degreesPerPoint, lowestPitch), highestPitch)
     }

@@ -23,15 +23,18 @@ enum ShotEntity {
     @MainActor
     static func make(for bots: [Bot]) -> Entity {
         let root = Entity()
-        root.name = "shots"
+        root.name = EntityName.shots
         let materials: [Squad: PhysicallyBasedMaterial] = [
             .red: BotEntity.material(for: .red), .blue: BotEntity.material(for: .blue),
         ]
-        let mesh = MeshResource.generateBox(width: Float(thickness), height: Float(thickness), depth: 1)
-        for index in 0..<max(1, bots.count * 2) {
-            let squad: Squad = index % 2 == 0 ? .red : .blue
+        let mesh = MeshResource.generateBox(width: Float(thickness), height: Float(thickness),
+                                            depth: Tracers.unitLength)
+        for index in Int.zero..<max(Tracers.least, bots.count * Tracers.perBot) {
+            // The squads take turns down the pool, so each has half of it.
+            let squad = Squad.allCases[index % Squad.allCases.count]
             let bar = ModelEntity(mesh: mesh, materials: [materials[squad] ?? BotEntity.material(for: squad)])
-            bar.name = "shot\(index)\(squad == .red ? "r" : "b")"
+            bar.name = EntityName.numbered(EntityName.shot, index)
+                + (squad == .red ? EntityName.redSquadSuffix : EntityName.blueSquadSuffix)
             bar.isEnabled = false
             root.addChild(bar)
         }
@@ -49,7 +52,7 @@ enum ShotEntity {
         var free: [Squad: [Entity]] = [.red: [], .blue: []]
         for bar in entity.children {
             bar.isEnabled = false
-            free[bar.name.hasSuffix("r") ? .red : .blue, default: []].append(bar)
+            free[bar.name.hasSuffix(EntityName.redSquadSuffix) ? .red : .blue, default: []].append(bar)
         }
         for shot in shots {
             guard let bar = free[shot.squad]?.popLast() else { continue }
@@ -67,16 +70,18 @@ enum ShotEntity {
         let end = SIMD3<Float>(Float(to.x), Float(to.y), Float(to.z))
         let along = end - start
         let length = simd_length(along)
-        guard length > 1e-6 else {
+        guard length > Tracers.shortest else {
             bar.isEnabled = false
             return
         }
-        bar.position = (start + end) / 2
+        bar.position = (start + end) * Float(Geometry.half)
         // The box is a metre deep and its depth is +z, so the bar is scaled to the
         // length and turned from +z onto the line. `simd_quatf(from:to:)` wants both
         // normalized and handles the opposite-directions case by picking an arbitrary
         // axis, which for a bar that is square in section changes nothing.
-        bar.orientation = simd_quatf(from: SIMD3<Float>(0, 0, 1), to: along / length)
-        bar.scale = SIMD3<Float>(1, 1, length)
+        bar.orientation = simd_quatf(from: Tracers.lengthAxis, to: along / length)
+        var stretch = SIMD3<Float>.one
+        stretch.z = length
+        bar.scale = stretch
     }
 }

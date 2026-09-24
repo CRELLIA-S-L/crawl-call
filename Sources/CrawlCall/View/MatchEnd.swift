@@ -17,8 +17,8 @@ struct MatchEnd: View {
     /// What the one control asks for: another match in the same arena.
     let again: () -> Void
 
-    private let plate = Color.white.opacity(0.28)
-    private let mark = Color.white.opacity(0.85)
+    private let plate = Color.white.opacity(Interface.plateOpacity)
+    private let mark = Color.white.opacity(Interface.markOpacity)
 
     /// The line on the plate. One per end, and they say opposite things: the snake
     /// was shot down, or the snake ate everything there was. The words are in the
@@ -31,26 +31,26 @@ struct MatchEnd: View {
     }
 
     var body: some View {
-        VStack(spacing: 18) {
+        VStack(spacing: MatchEndPlate.spacing) {
             Text(MatchEnd.headline(for: outcome).key)
-                .font(.system(size: 30, weight: .bold, design: .rounded))
+                .font(.system(size: MatchEndPlate.headlineSize, weight: .bold, design: .rounded))
                 .foregroundStyle(mark)
                 .multilineTextAlignment(.center)
             Button(action: again) {
                 Text(TextKey.matchEndAgain.key)
-                    .font(.system(size: 24, weight: .bold, design: .rounded))
+                    .font(.system(size: MatchEndPlate.controlTextSize, weight: .bold, design: .rounded))
                     .foregroundStyle(mark)
-                    .padding(.horizontal, 34)
-                    .padding(.vertical, 14)
-                    .background(Capsule().fill(plate.opacity(0.9)))
-                    .overlay(Capsule().strokeBorder(mark, lineWidth: 3))
+                    .padding(.horizontal, MatchEndPlate.controlHorizontalPadding)
+                    .padding(.vertical, MatchEndPlate.controlVerticalPadding)
+                    .background(Capsule().fill(plate.opacity(Interface.litPlateOpacity)))
+                    .overlay(Capsule().strokeBorder(mark, lineWidth: Interface.ringWidth))
             }
             .buttonStyle(.plain)
             .accessibilityLabel(Text(TextKey.matchEndAgain.key))
         }
-        .padding(.horizontal, 40)
-        .padding(.vertical, 32)
-        .background(RoundedRectangle(cornerRadius: 36, style: .continuous).fill(plate))
+        .padding(.horizontal, MatchEndPlate.horizontalPadding)
+        .padding(.vertical, MatchEndPlate.verticalPadding)
+        .background(RoundedRectangle(cornerRadius: MatchEndPlate.cornerRadius, style: .continuous).fill(plate))
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }

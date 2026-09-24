@@ -1,5 +1,12 @@
 {
   "cameraPitch": 55,
+  "cameraFieldOfView": 50,
+  "cameraDistanceInMapWidths": 1.1,
+  "ambientColour": { "red": 0.62, "green": 0.68, "blue": 0.78 },
+  "ambientIntensityExponent": 1.0,
+  "sunIntensity": 12000,
+  "sunElevation": 60,
+  "sunAzimuth": 36,
   "centralRegion": { "width": 0.4, "height": 0.4 },
   "seeThroughMargin": 0.15,
   "visibilityRadius": 1.6,

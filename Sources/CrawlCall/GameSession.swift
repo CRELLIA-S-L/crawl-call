@@ -114,7 +114,7 @@ final class GameSession {
         // A frame long enough to be a stall is not a frame the snake should cross the
         // room in; the model refuses to pass through walls whatever it is given, and
         // this keeps the picture from lurching as well.
-        game.advance(seconds: min(seconds, 1.0 / 20))
+        game.advance(seconds: min(seconds, Frame.longest))
         place()
     }
 
@@ -143,7 +143,7 @@ final class GameSession {
         // where the match would have had it.
         SceneView.place(camera, lookingAt: freeCamera?.focus ?? focus,
                         pitchDegrees: freeCamera?.pitch ?? game.world.configurations.view.cameraPitch,
-                        yawDegrees: freeCamera?.yaw ?? 0,
+                        yawDegrees: freeCamera?.yaw ?? .zero,
                         distance: freeCamera?.distance ?? distance)
         // After the camera has moved, not before: what hides the snake is judged from
         // where the camera is now (FR-VIEW-150), and the floor above the head is a lid
@@ -169,11 +169,11 @@ final class GameSession {
     private func remaining(of meal: Eating) -> Double? {
         guard meal.alive else {
             let whole = game.world.configurations.snake.bodyEatingDuration
-            return whole > 0 ? (meal.left ?? 0) / whole : 0
+            return whole > .zero ? (meal.left ?? .zero) / whole : .zero
         }
         guard let prey = game.bots.first(where: { $0.id == meal.prey }),
               let entry = game.world.configurations.bot.archetypes[prey.archetype.rawValue],
-              entry.health > 0 else { return nil }
+              entry.health > .zero else { return nil }
         return prey.health / entry.health
     }
 }
