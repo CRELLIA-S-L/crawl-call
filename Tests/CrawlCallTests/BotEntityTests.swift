@@ -16,23 +16,59 @@ final class BotEntityTests: XCTestCase {
 
     func testEveryBotGetsABodyOfItsOwn() throws {
         let bots = try squads()
-        let entity = BotEntity.make(for: bots)
+        let entity = BotEntity.make(for: bots, height: 1.12)
         XCTAssertEqual(entity.children.count, bots.count)
         XCTAssertEqual(Set(entity.children.map(\.name)), Set(bots.map { "bot\($0.id)" }))
     }
 
     func testABodyStandsOnTheFloorRatherThanInsideIt() throws {
         let bots = try squads()
-        let entity = BotEntity.make(for: bots)
+        let entity = BotEntity.make(for: bots, height: 1.12)
         for bot in bots {
             let body = try XCTUnwrap(entity.children.first { $0.name == "bot\(bot.id)" })
-            XCTAssertEqual(Double(body.position.y), bot.position.y + BotEntity.height / 2, accuracy: 1e-6)
+            XCTAssertEqual(Double(body.position.y), bot.position.y, accuracy: 1e-6)
+            // The figure's feet on the floor, and nothing of it below it.
+            let bounds = body.visualBounds(relativeTo: nil)
+            XCTAssertEqual(Double(bounds.min.y), bot.position.y, accuracy: 0.01,
+                           "the \(bot.archetype) figure does not stand on the floor")
+        }
+    }
+
+    func testTheFiguresAreDrawnAtTheHeightTheSceneIsGiven() throws {
+        // The height is the caller's — the bot configuration's in the game — and a
+        // figure drawn at a height nobody ships is that height tall.
+        // Which archetypes a squad holds is not this test's business, so it compares
+        // the same squads drawn at two heights: every figure grows by their ratio.
+        let bots = try squads()
+        let tall = BotEntity.make(for: bots, height: 2.0)
+        let short = BotEntity.make(for: bots, height: 1.0)
+        for bot in bots {
+            let a = try XCTUnwrap(tall.children.first { $0.name == "bot\(bot.id)" })
+            let b = try XCTUnwrap(short.children.first { $0.name == "bot\(bot.id)" })
+            let ratio = a.visualBounds(relativeTo: a).max.y / b.visualBounds(relativeTo: b).max.y
+            XCTAssertEqual(Double(ratio), 2.0, accuracy: 1e-3, "the \(bot.archetype) did not grow with its height")
+        }
+    }
+
+    func testEveryPartOfEveryFigureIsLitByTheAmbientLight() throws {
+        // What is drawn is the parts, so a light set on the figure's group alone
+        // reaches nothing on the screen.
+        let bots = try squads()
+        let entity = BotEntity.make(for: bots, height: 1.12)
+        let ambient = Entity()
+        BotEntity.light(entity, by: ambient)
+        for figure in entity.children {
+            XCTAssertFalse(figure.children.isEmpty, "\(figure.name) has no parts, so this proves nothing")
+            for part in figure.children {
+                let light = part.components[ImageBasedLightReceiverComponent.self]
+                XCTAssertTrue(light?.imageBasedLight === ambient, "a part of \(figure.name) is unlit")
+            }
         }
     }
 
     func testABodyFollowsItsBot() throws {
         var bots = try squads()
-        let entity = BotEntity.make(for: bots)
+        let entity = BotEntity.make(for: bots, height: 1.12)
         let moved = bots[0].position + SIMD3(1.5, 0, 2.5)
         bots[0].position = moved
         BotEntity.update(entity, from: bots)
@@ -45,7 +81,7 @@ final class BotEntityTests: XCTestCase {
         // The model drops an eaten bot; a body left standing where it was swallowed
         // would say the opposite of what happened.
         let bots = try squads()
-        let entity = BotEntity.make(for: bots)
+        let entity = BotEntity.make(for: bots, height: 1.12)
         let eaten = try XCTUnwrap(bots.first)
         BotEntity.update(entity, from: bots.filter { $0.id != eaten.id })
 
@@ -59,7 +95,7 @@ final class BotEntityTests: XCTestCase {
 
     func testABotBeingEatenIsDrawnGoingIntoTheSnake() throws {
         let bots = try squads()
-        let entity = BotEntity.make(for: bots)
+        let entity = BotEntity.make(for: bots, height: 1.12)
         let prey = try XCTUnwrap(bots.first)
         let body = try XCTUnwrap(entity.children.first { $0.name == "bot\(prey.id)" })
         let head = prey.position + SIMD3(2, 0, 0)

@@ -8,9 +8,9 @@ Total requirements: 186.
 | Status | Requirements |
 |---|---|
 | `draft` | 4 |
-| `deferred` | 122 |
-| `partial` | 7 |
-| `implemented` | 53 |
+| `deferred` | 121 |
+| `partial` | 6 |
+| `implemented` | 55 |
 | `superseded` | 0 |
 | `withdrawn` | 0 |
 
@@ -38,7 +38,7 @@ Total requirements: 186.
 | **FR-BOT-030** Archetype sets base personality weights | `implemented` | T | `Sources/CrawlCall/Bot/Bot.swift` | `Tests/CrawlCallTests/BotTests.swift` |
 | **FR-BOT-040** One bot per squad holds the commander role | `deferred` | T | — | — |
 | **FR-BOT-050** A bot notices the snake in view | `implemented` | T | `Sources/CrawlCall/Bot/Perception.swift`<br>`Sources/CrawlCall/Map/Sight.swift`<br>`Sources/CrawlCall/Bot/Bot.swift` | `Tests/CrawlCallTests/PerceptionTests.swift` |
-| **FR-BOT-060** A bot fires at its target | `partial` | T | `Sources/CrawlCall/Bot/Execution.swift` | `Tests/CrawlCallTests/ExecutionTests.swift` |
+| **FR-BOT-060** A bot fires at its target | `partial` | T | `Sources/CrawlCall/Bot/Execution.swift`<br>`Sources/CrawlCall/Bot/Bot.swift` | `Tests/CrawlCallTests/ExecutionTests.swift`<br>`Tests/CrawlCallTests/ShotTests.swift` |
 | **FR-BOT-070** Heavy and sapper weapons destroy cover | `deferred` | T | — | — |
 | **FR-BOT-080** Action chosen by maximum utility | `implemented` | T | `Sources/CrawlCall/Bot/Deliberation.swift` | `Tests/CrawlCallTests/DeliberationTests.swift` |
 | **FR-BOT-090** Personality weights multiply utility | `implemented` | T | `Sources/CrawlCall/Bot/Deliberation.swift` | `Tests/CrawlCallTests/DeliberationTests.swift` |
@@ -158,8 +158,8 @@ Total requirements: 186.
 | **FR-VIEW-030** Game logic reads intents, not device events | `implemented` | I | `Sources/CrawlCall/Game.swift`<br>`Sources/CrawlCall/Input/Intent.swift`<br>`Sources/CrawlCall/GameSession.swift` | `Tests/CrawlCallTests/GameTests.swift` |
 | **FR-VIEW-040** macOS scheme: keyboard and mouse | `deferred` | D | — | — |
 | **FR-VIEW-050** iOS scheme: touch | `implemented` | D | `Sources/CrawlCall/Input/TouchScheme.swift`<br>`Sources/CrawlCall/View/Controls.swift`<br>`Sources/CrawlCall/CrawlCallApp.swift` | `Tests/CrawlCallTests/TouchSchemeTests.swift`<br>`Tests/CrawlCallTests/ControlsTests.swift` |
-| **FR-VIEW-060** Squad affiliation is readable at a glance | `partial` | D | `Sources/CrawlCall/View/BotEntity.swift`<br>`Sources/CrawlCall/GameSession.swift`<br>`Sources/CrawlCall/CrawlCallApp.swift` | `Tests/CrawlCallTests/BotEntityTests.swift` |
-| **FR-VIEW-070** Archetype is readable from the silhouette | `deferred` | D | — | — |
+| **FR-VIEW-060** Squad affiliation is readable at a glance | `implemented` | D | `Sources/CrawlCall/View/BotEntity.swift`<br>`Sources/CrawlCall/View/Figure.swift`<br>`Sources/CrawlCall/GameSession.swift`<br>`Sources/CrawlCall/CrawlCallApp.swift` | `Tests/CrawlCallTests/BotEntityTests.swift`<br>`Tests/CrawlCallTests/FigureTests.swift` |
+| **FR-VIEW-070** Archetype is readable from the silhouette | `implemented` | D | `Sources/CrawlCall/View/Figure.swift`<br>`Sources/CrawlCall/View/BotEntity.swift` | `Tests/CrawlCallTests/FigureTests.swift` |
 | **FR-VIEW-080** Wounded and separated bots stand out | `deferred` | D | — | — |
 | **FR-VIEW-090** Panic is visible on the bot | `deferred` | D | — | — |
 | **FR-VIEW-100** Eating is staged as comedy | `partial` | D | `Sources/CrawlCall/View/BotEntity.swift`<br>`Sources/CrawlCall/GameSession.swift` | `Tests/CrawlCallTests/BotEntityTests.swift` |
@@ -320,6 +320,6 @@ Verified by means other than testing — or the check has not been set up yet.
 
 ## Code files outside the specification
 
-No requirement references them: 0 of 39.
+No requirement references them: 0 of 40.
 
 

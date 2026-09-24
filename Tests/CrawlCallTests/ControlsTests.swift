@@ -71,7 +71,7 @@ final class EatButtonTests: XCTestCase {
                                      segments: game.snake.segments)
         let camera = try XCTUnwrap(built.root.children.first { $0.name == "camera" })
         return GameSession(game: game, snakeEntity: snake,
-                           botEntities: BotEntity.make(for: game.bots),
+                           botEntities: BotEntity.make(for: game.bots, height: world.configurations.bot.figureHeight),
                            shotEntities: ShotEntity.make(for: game.bots),
                            camera: camera, seeThrough: built.seeThrough,
                            distance: 12, fieldOfView: 50)

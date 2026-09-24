@@ -1,7 +1,7 @@
 // A shot has to be visible (FR-VIEW-170): the model has to say one happened and
 // where it went, and the view has to put a line on exactly that.
 //
-// verifies: FR-VIEW-170
+// verifies: FR-VIEW-170, FR-BOT-060
 import RealityKit
 import XCTest
 @testable import CrawlCall
@@ -31,10 +31,64 @@ final class ShotTests: XCTestCase {
         let volley = Execution.deliberate(&bots, slots: [0], snake: [target], world: world)
         let shot = try XCTUnwrap(volley.shots.first)
         XCTAssertEqual(volley.shots.count, 1, "one shot a step is the cadence FR-BOT-060 fixes")
-        XCTAssertEqual(shot.from, bots[0].position)
+        // From the shooter's eyes, which is where it looked and fired from (ADR-0022).
+        XCTAssertEqual(shot.from.x, bots[0].position.x, accuracy: 1e-12)
+        XCTAssertEqual(shot.from.y, bots[0].position.y + world.configurations.bot.eyeHeight, accuracy: 1e-12)
+        XCTAssertEqual(shot.from.z, bots[0].position.z, accuracy: 1e-12)
         XCTAssertEqual(shot.to, target)
         XCTAssertEqual(shot.squad, .red)
         XCTAssertEqual(shot.left, world.configurations.bot.deliberationPeriod)
+    }
+
+    func testABotFiresOverWhatItLooksOver() throws {
+        // A bot that sees the snake over a box lower than its eyes can shoot it there:
+        // the line of fire leaves from the same eyes as the line of sight (ADR-0022).
+        // Fired from the floor, the box would stop the shot the bot could see to take.
+        let base = try world()
+        let map = try MapParser.parse("kit blockout\nfloor 0\n............\n", kit: base.kit)
+        let cell = base.configurations.tuning.navigationGraphCellSize
+        let floor = ScenePlan.make(map: map, kit: base.kit, cellSize: cell)
+        let low = base.configurations.bot.eyeHeight / 2
+        let box = ScenePlan.Piece(module: "kerb", size: SIMD3(cell, low, cell),
+                                  centre: SIMD3(cell, low / 2 - ScenePlan.surfaceOverlap, 0),
+                                  colour: SIMD3(0.5, 0.5, 0.5), level: 0)
+        let plan = ScenePlan(pieces: floor.pieces + [box], cellSize: floor.cellSize, floorHeight: floor.floorHeight)
+        let world = World(configurations: base.configurations, kit: base.kit, map: map,
+                          graph: NavigationGraph.derive(from: map), plan: plan)
+        var bots = [try bot(at: NavigationGraph.Node(floor: 0, x: 0, z: 0), in: world)]
+        let snake = [SIMD3(4.0, 0, 0)]
+        XCTAssertTrue(Sight.isClear(from: bots[0].eye, to: snake[0], through: plan))
+        XCTAssertFalse(Sight.isClear(from: bots[0].position, to: snake[0], through: plan),
+                       "the box does not stand in the way from the floor, so this proves nothing")
+        bots[0].knowsSnake = true
+        let volley = Execution.deliberate(&bots, slots: [0], snake: snake, world: world)
+        XCTAssertEqual(volley.shots.count, 1, "the bot saw the snake over the box and did not fire")
+    }
+
+    func testABotLooksAndFiresFromTheEyeHeightItIsConfiguredWith() throws {
+        // Not the shipped number: a bot configured with its eyes at half a metre fires
+        // from half a metre, so the height comes from the configuration and not from
+        // anywhere in the code (IF-BOT-010, ADR-0022).
+        let base = try world()
+        let url = try XCTUnwrap(Bundle.main.url(forResource: "bot", withExtension: "json", subdirectory: "config"))
+        var json = try XCTUnwrap(JSONSerialization.jsonObject(with: try Data(contentsOf: url)) as? [String: Any])
+        json["eyeHeight"] = 0.5
+        let configuration = try Configurations.decode(BotConfiguration.self, named: "bot", schema: BotConfiguration.schema,
+                                                      from: JSONSerialization.data(withJSONObject: json))
+        XCTAssertNotEqual(configuration.eyeHeight, base.configurations.bot.eyeHeight, accuracy: 1e-9,
+                          "the shipped eye height is half a metre already, so this proves nothing")
+        let world = World(configurations: Configurations(snake: base.configurations.snake, tuning: base.configurations.tuning,
+                                                         view: base.configurations.view, bot: configuration,
+                                                         match: base.configurations.match),
+                          kit: base.kit, map: base.map, graph: base.graph, plan: base.plan)
+        let here = cells(in: world)[0]
+        let cell = world.configurations.tuning.navigationGraphCellSize
+        var bots = [try bot(at: here, in: world)]
+        bots[0].knowsSnake = true
+        let target = SIMD3(Double(here.x) * cell + cell, 0, Double(here.z) * cell)
+        let volley = Execution.deliberate(&bots, slots: [0], snake: [target], world: world)
+        let shot = try XCTUnwrap(volley.shots.first)
+        XCTAssertEqual(shot.from.y, bots[0].position.y + 0.5, accuracy: 1e-12)
     }
 
     func testShotsLastTheirPeriodAndDoNotPileUp() throws {
@@ -87,8 +141,8 @@ final class ShotTests: XCTestCase {
 
     @MainActor
     func testTheLineRunsFromTheShooterToWhatWasAimedAt() throws {
-        let from = SIMD3(1.0, 0, 2.0)
-        let to = SIMD3(4.0, 0, 6.0)          // three by four: a line five metres long
+        let from = SIMD3(1.0, 1.25, 2.0)
+        let to = SIMD3(4.0, 1.25, 6.0)       // three by four: a line five metres long
         let entity = ShotEntity.make(for: [try bot(at: NavigationGraph.Node(floor: 0, x: 0, z: 0),
                                                    in: try world())])
         ShotEntity.update(entity, from: [Shot(from: from, to: to, squad: .red, left: 0.2)])
@@ -102,8 +156,9 @@ final class ShotTests: XCTestCase {
         let half = SIMD3<Float>(0, 0, bar.scale.z / 2)
         let head = bar.position + bar.orientation.act(half)
         let tail = bar.position - bar.orientation.act(half)
-        let start = SIMD3<Float>(Float(from.x), Float(ShotEntity.height), Float(from.z))
-        let end = SIMD3<Float>(Float(to.x), Float(ShotEntity.height), Float(to.z))
+        // Drawn between the two ends exactly as the model has them, adding nothing.
+        let start = SIMD3<Float>(from)
+        let end = SIMD3<Float>(to)
         let ends = simd_distance(head, end) + simd_distance(tail, start)
         let swapped = simd_distance(head, start) + simd_distance(tail, end)
         XCTAssertEqual(min(ends, swapped), 0, accuracy: 1e-3,

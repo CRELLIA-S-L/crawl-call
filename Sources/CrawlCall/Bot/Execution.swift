@@ -44,12 +44,12 @@ enum Execution {
             case .fire(let target):
                 guard case .snake(let point) = target else { break }
                 guard bots[index].ammunition > 0,
-                      Sight.isClear(from: bots[index].position, to: point, through: world.plan) else { break }
+                      Sight.isClear(from: bots[index].eye, to: point, through: world.plan) else { break }
                 bots[index].ammunition -= 1
                 volley.damage += entry.weaponDamage
                 // Drawn for one deliberation period, which is also how long it is
                 // until this bot may fire again (FR-VIEW-170).
-                volley.shots.append(Shot(from: bots[index].position, to: point,
+                volley.shots.append(Shot(from: bots[index].eye, to: point,
                                          squad: bots[index].squad,
                                          left: world.configurations.bot.deliberationPeriod))
             case .reload:

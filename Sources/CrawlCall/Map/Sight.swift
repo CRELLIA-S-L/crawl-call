@@ -146,10 +146,11 @@ enum Sight {
 
     /// Whether nothing the plan placed stands between the two points.
     ///
-    /// No eye height is invented here: a bot and the snake stand on the same surface,
-    /// so the line runs along it, and what cuts it is what cover is — a wall, a
-    /// partition, a crate (glossary). The floor they are both standing on does not,
-    /// by the rule above.
+    /// The two points are whatever the caller asks about: a bot asks from its eyes
+    /// (ADR-0022) to the ground under a part of the snake, and what cuts that line is
+    /// whatever stands higher than the line where it crosses — a fence close in front
+    /// of the snake, and not one the bot looks over. The floor the snake is lying on
+    /// does not, by the rule above.
     static func isClear(from eye: SIMD3<Double>, to point: SIMD3<Double>,
                         through plan: ScenePlan) -> Bool {
         // The line's own box first. A module outside it cannot touch the line, and

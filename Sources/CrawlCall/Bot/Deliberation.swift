@@ -62,7 +62,7 @@ enum Deliberation {
 
         // Fire: needs something to shoot at, a line to it and a round to send.
         if let nearest, bot.ammunition > 0,
-           Sight.isClear(from: bot.position, to: nearest.point, through: situation.plan) {
+           Sight.isClear(from: bot.eye, to: nearest.point, through: situation.plan) {
             let closeness = nearness(nearest.metres, within: entry.detectionRange)
             scored.append((.fire(at: .snake(at: nearest.point)),
                            Term.attack * closeness * ammunition * bot.weights.aggression))

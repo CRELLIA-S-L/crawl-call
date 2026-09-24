@@ -148,6 +148,13 @@ struct BotConfiguration: Decodable, Equatable {
     /// number is where the line runs between an archetype that holds and one that
     /// bolts.
     let fearWhenUnhurt: Double
+    /// How tall a bot's figure is drawn, in metres, at its tallest (FR-VIEW-070).
+    /// The figure is a model in its own proportions; this is the size it is set down
+    /// at (ADR-0022).
+    let figureHeight: Double
+    /// How far above the ground it stands on a bot's eyes are, in metres: where it
+    /// looks and fires from (FR-BOT-050, FR-BOT-060, ADR-0022).
+    let eyeHeight: Double
 
     private static let weights = Schema.object([
         "panic": .value, "discipline": .value, "aggression": .value, "selfSacrifice": .value,
@@ -171,6 +178,8 @@ struct BotConfiguration: Decodable, Equatable {
         "perFrameSlotMaximum": .value,
         "collapsePanicIncrement": .value,
         "fearWhenUnhurt": .value,
+        "figureHeight": .value,
+        "eyeHeight": .value,
     ])
 }
 

@@ -1,42 +1,51 @@
-// The bots on screen. Stage 1 is grey primitives, so a bot is a box the height of a
-// person, and the one thing it has to say at a glance is which side it is on
-// (FR-VIEW-060).
+// The bots on screen: one figure each, the one its archetype is drawn as (FR-VIEW-070),
+// in its squad's colour (FR-VIEW-060), put where the model has it — and, while one is
+// being eaten, a figure going into the snake rather than blinking out (FR-VIEW-100).
 //
-// **Partial, and how.** The requirement asks for three channels that agree — body
-// colour, the silhouette of the equipment, and the colour of the tracers. This is the
-// first: there are no weapons modelled to give a silhouette and no shot drawn to give
-// a tracer, and both arrive with the archetype silhouettes (FR-VIEW-070) and the
-// firing effects. The colours chosen here are the ones those will have to match.
+// The three channels of FR-VIEW-060 are all here and agree: the body and the headgear
+// are in the squad's colour (`Figure`), and the tracers are drawn in the same colour
+// from `material(for:)` (FR-VIEW-170).
 //
-// A bot being eaten is drawn going into the snake rather than blinking out of
-// existence: it is drawn towards the head and shrinks as it goes (FR-VIEW-100).
+// A figure's origin is at its feet, so that it stands on the floor as placed and
+// shrinks into the floor as it is swallowed.
 //
-// implements: FR-VIEW-060, FR-VIEW-100, FR-VIEW-190
+// implements: FR-VIEW-060, FR-VIEW-070, FR-VIEW-100, FR-VIEW-190
 import CoreGraphics
 import Foundation
 import RealityKit
 import UIKit
 
 enum BotEntity {
-    /// How tall a bot stands and how wide it is, in metres. Nothing specifies a bot's
-    /// size; a person on a half-metre grid is this, and it is said out loud rather
-    /// than passed off as a rule.
-    static let height = 1.6
-    static let width = 0.4
-
+    /// One figure for every bot, `height` metres tall — the bot configuration's
+    /// figure height (IF-BOT-010, ADR-0022).
     @MainActor
-    static func make(for bots: [Bot]) -> Entity {
+    static func make(for bots: [Bot], height: Double) -> Entity {
         let root = Entity()
         root.name = "bots"
+        let paints: [Squad: [Figure.Paint: any Material]] = [
+            .red: Figure.materials(for: .red), .blue: Figure.materials(for: .blue),
+        ]
         for bot in bots {
-            let mesh = MeshResource.generateBox(width: Float(width), height: Float(height),
-                                                depth: Float(width), cornerRadius: 0.05)
-            let model = ModelEntity(mesh: mesh, materials: [material(for: bot.squad)])
-            model.name = "bot\(bot.id)"
-            root.addChild(model)
+            let figure = Figure.make(bot.archetype, height: height, materials: paints[bot.squad] ?? Figure.materials(for: bot.squad))
+            figure.name = "bot\(bot.id)"
+            root.addChild(figure)
         }
         update(root, from: bots)
         return root
+    }
+
+    /// Lights every figure by the scene's ambient light. A figure is a group of parts,
+    /// and it is the parts that are drawn, so it is the parts that carry the receiver,
+    /// as every other lit model in the scene does. The first build of the figures set
+    /// it on the groups instead, and the SDK's documentation (iOS 27.0) does not say
+    /// that a receiver on an entity reaches its children.
+    @MainActor
+    static func light(_ entity: Entity, by ambient: Entity) {
+        for figure in entity.children {
+            for part in figure.children {
+                part.components.set(ImageBasedLightReceiverComponent(imageBasedLight: ambient))
+            }
+        }
     }
 
     /// Puts every bot where the model has it, standing on the floor rather than sunk
@@ -63,9 +72,7 @@ enum BotEntity {
             // it sets all of it — the shrinking of FR-VIEW-100 is applied after,
             // every frame, by `swallow`.
             body.scale = .one
-            body.position = SIMD3(Float(bot.position.x),
-                                  Float(bot.position.y + height / 2),
-                                  Float(bot.position.z))
+            body.position = SIMD3(Float(bot.position.x), Float(bot.position.y), Float(bot.position.z))
         }
     }
 
@@ -83,10 +90,10 @@ enum BotEntity {
         let scale = Float(max(0.15, 1 - gone))
         body.scale = SIMD3(repeating: scale)
         // Towards the head, and down into it as it goes: the snake's mouth is at the
-        // floor, and a bot standing at full height beside it is not being eaten.
+        // floor, and the figure stands on its feet there, shrinking towards them.
         let x = bot(body.position.x, towards: Float(head.x), by: Float(gone))
         let z = bot(body.position.z, towards: Float(head.z), by: Float(gone))
-        body.position = SIMD3(x, Float(head.y) + Float(height) * scale / 2, z)
+        body.position = SIMD3(x, Float(head.y), z)
     }
 
     private static func bot(_ from: Float, towards target: Float, by part: Float) -> Float {

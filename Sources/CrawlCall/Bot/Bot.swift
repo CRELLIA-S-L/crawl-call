@@ -2,7 +2,7 @@
 // personality its archetype gave it. No RealityKit here — this is the part a test
 // can read, the same split as `Snake`.
 //
-// implements: FR-BOT-030, FR-BOT-050
+// implements: FR-BOT-030, FR-BOT-050, FR-BOT-060
 import Foundation
 
 /// The two sides. Which one the player is nearer to is never a property of a squad:
@@ -25,6 +25,15 @@ struct Bot: Equatable {
     var weights: BotConfiguration.Weights
     var position: SIMD3<Double>
     var floor: Int
+
+    /// How far above the ground it stands on its eyes are, in metres: where it looks
+    /// from and where it fires from (FR-BOT-050, FR-BOT-060). From the bot
+    /// configuration (IF-BOT-010, ADR-0022), and the same for every bot.
+    let eyeHeight: Double
+
+    /// Where the bot looks from.
+    var eye: SIMD3<Double> { SIMD3(position.x, position.y + eyeHeight, position.z) }
+
     /// What is left of it and what it can fire before reloading — both are utility
     /// inputs (FR-BOT-080), and both start from the archetype's entry (IF-BOT-010).
     var health: Double
@@ -50,5 +59,6 @@ struct Bot: Equatable {
         self.ammunition = entry.magazine
         self.position = position
         self.floor = floor
+        self.eyeHeight = configuration.eyeHeight
     }
 }

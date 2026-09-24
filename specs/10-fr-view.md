@@ -205,14 +205,14 @@ Reach is a distance the player cannot see and would otherwise have to guess at; 
 ### FR-VIEW-060 — Squad affiliation is readable at a glance
 
 ```yaml
-status: partial
+status: implemented
 verification: D
 derives_from: []
 depends_on: [FR-BOT-020]
 refines: []
 conflicts_with: []
-code: [Sources/CrawlCall/View/BotEntity.swift, Sources/CrawlCall/GameSession.swift, Sources/CrawlCall/CrawlCallApp.swift]
-tests: [Tests/CrawlCallTests/BotEntityTests.swift]
+code: [Sources/CrawlCall/View/BotEntity.swift, Sources/CrawlCall/View/Figure.swift, Sources/CrawlCall/GameSession.swift, Sources/CrawlCall/CrawlCallApp.swift]
+tests: [Tests/CrawlCallTests/BotEntityTests.swift, Tests/CrawlCallTests/FigureTests.swift]
 created: 2026-09-21
 ```
 
@@ -220,19 +220,19 @@ While a bot is on screen, the system **shall** show its squad through its body c
 
 **Rationale.** Concept §2: the player decides whom to eat from the balance of power, and if the sides are confused the whole strategic layer fails; three channels because one of them is always occluded or out of frame.
 
-**Partial, and how.** Two of the three channels are built: the body is drawn in its squad's colour, and so is the line of every shot it fires (FR-VIEW-170). The silhouette of the equipment is the third and waits on the archetype models (FR-VIEW-070) — a grey box has no equipment to show.
+The silhouette of the equipment is the same in both squads — six silhouettes and not twelve (concept §8, FR-VIEW-070) — so what it carries of the side is its colour: the headgear, which is the part of the silhouette that names the archetype, is drawn in the squad's colour, like the body and like the line of every shot the bot fires (FR-VIEW-170). The three agree because they are one colour, taken from one place (ADR-0022).
 
 ### FR-VIEW-070 — Archetype is readable from the silhouette
 
 ```yaml
-status: deferred
+status: implemented
 verification: D
 derives_from: []
 depends_on: [FR-BOT-010]
 refines: []
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/View/Figure.swift, Sources/CrawlCall/View/BotEntity.swift]
+tests: [Tests/CrawlCallTests/FigureTests.swift]
 created: 2026-09-21
 ```
 
@@ -240,6 +240,7 @@ While a bot is on screen, the system **shall** make its archetype identifiable f
 
 **Rationale.** Concept §8, §2.2: the silhouette is distinct by headgear and weapon; six silhouettes, not twelve, because both squads share the set.
 The player chooses whom to eat by archetype (FR-SNAKE-110), so this has to be read before the bite.
+The figures are put together from rounded primitives, as ADR-0002 has the whole game assembled, and which headgear and which weapon each archetype has is recorded in ADR-0022. That the six can be told apart at the camera's distance is what `D` judges on the screen; what the tests hold is that they are six different silhouettes.
 
 ### FR-VIEW-080 — Wounded and separated bots stand out
 
@@ -295,7 +296,7 @@ While the snake is consuming a bot, the system **shall** show the bot swallowed 
 
 **Rationale.** Concept §2: in stylisation eating stops being a problem — funny and without gore; F-030 is the boundary this serves.
 
-**Partial, and how.** What is built is the half that says a meal is happening: the bot is drawn towards the head and shrinks as what is left of it does, and it is gone from the screen when it is gone from the match. The bulge travelling down the body and the boots at the mouth need a snake that is more than a chain of spheres and a bot that is more than a box — they arrive with the models, not with this. What is already true is the part that matters for the boundary: whole, no dismemberment, nothing red.
+**Partial, and how.** What is built is the half that says a meal is happening: the bot is drawn towards the head and shrinks as what is left of it does, and it is gone from the screen when it is gone from the match. The bulge travelling down the body and the boots at the mouth need a snake that is more than a chain of spheres: since ADR-0022 a bot is a figure with boots on it, drawn shrinking into the floor at the head, but there is no mouth for the boots to stick out of until the snake has one. What is already true is the part that matters for the boundary: whole, no dismemberment, nothing red.
 Found by playing on 2026-09-23: with none of this, a meal was a bot standing still and then standing still for ever, because the view went on drawing a body the match had already removed.
 
 ### FR-VIEW-110 — The snake squashes and stretches

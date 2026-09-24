@@ -53,10 +53,8 @@ struct MatchView: View {
             }
             map.addChild(snake)
 
-            let squads = BotEntity.make(for: game.bots)
-            for body in squads.children {
-                body.components.set(ImageBasedLightReceiverComponent(imageBasedLight: ambient))
-            }
+            let squads = BotEntity.make(for: game.bots, height: world.configurations.bot.figureHeight)
+            BotEntity.light(squads, by: ambient)
             map.addChild(squads)
 
             // The shots go on the map beside the bodies that fire them (FR-VIEW-170),

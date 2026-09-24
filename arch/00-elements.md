@@ -78,12 +78,12 @@ It depends on start-up because the cell size it measures in is tuning (IF-MAP-02
 ```yaml
 status: built
 carries: [Sources/CrawlCall/View]
-requirements: [FR-VIEW-010, FR-VIEW-130, FR-VIEW-020, FR-VIEW-060, FR-VIEW-100, FR-VIEW-120, FR-VIEW-140, FR-VIEW-150, FR-VIEW-155, FR-VIEW-160, FR-VIEW-170, FR-VIEW-180, FR-VIEW-190]
+requirements: [FR-VIEW-010, FR-VIEW-130, FR-VIEW-020, FR-VIEW-060, FR-VIEW-070, FR-VIEW-100, FR-VIEW-120, FR-VIEW-140, FR-VIEW-150, FR-VIEW-155, FR-VIEW-160, FR-VIEW-170, FR-VIEW-180, FR-VIEW-190]
 depends_on: [E-040]
 interface: a scene plan in; the camera it is seen through and the light it is read by, out
 ```
 
-Decides how the arena reaches the player: one camera at a fixed pitch, one daylight source with the ambient that keeps shadows readable, the looks a map module has — solid; faded whole while it is a floor over the snake; or cut open where a line of sight to the snake goes through it, or around the head (ADR-0020) — and the controls the player's thumbs land on.
+Decides how the arena reaches the player: one camera at a fixed pitch, one daylight source with the ambient that keeps shadows readable, the looks a map module has — solid; faded whole while it is a floor over the snake; or cut open where a line of sight to the snake goes through it, or around the head (ADR-0020) — the figures the bots are drawn as (ADR-0022), and the controls the player's thumbs land on.
 
 **Rationale.** Split from the map layer because the two answer different questions and change for different reasons: the map changes when a level does, the view when the game's look does, and a file holding both invites a camera decision to be made while editing geometry.
 The boundary is also where the specification puts it — the VIEW area owns the angle and the light, the MAP and TOOL areas own what is placed and where.

@@ -21,9 +21,11 @@ enum Perception {
             guard !bots[index].knowsSnake else { continue }
             guard let range = configuration.archetypes[bots[index].archetype.rawValue]?.detectionRange
             else { continue }
-            let eye = bots[index].position
-            for point in snake where metres(eye, point) <= range {
-                if Sight.isClear(from: eye, to: point, through: plan) {
+            // How far is measured where the bot stands; what is in the way is measured
+            // from its eyes, over whatever stands lower than the line (ADR-0022).
+            let standing = bots[index].position
+            for point in snake where metres(standing, point) <= range {
+                if Sight.isClear(from: bots[index].eye, to: point, through: plan) {
                     bots[index].knowsSnake = true
                     break
                 }

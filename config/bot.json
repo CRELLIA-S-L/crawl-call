@@ -194,5 +194,7 @@
   "deliberationPeriod": 0.2,
   "perFrameSlotMaximum": 2,
   "collapsePanicIncrement": 0.3,
-  "fearWhenUnhurt": 1.2
+  "fearWhenUnhurt": 1.2,
+  "figureHeight": 1.12,
+  "eyeHeight": 0.875
 }

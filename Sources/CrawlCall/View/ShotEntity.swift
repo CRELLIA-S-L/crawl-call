@@ -12,10 +12,6 @@ import Foundation
 import RealityKit
 
 enum ShotEntity {
-    /// How high off the floor the line is drawn. Nothing specifies it; a shot leaves
-    /// and lands at something like chest height, which on a body of `BotEntity.height`
-    /// is this, and it is said out loud rather than passed off as a rule.
-    static let height = BotEntity.height * 0.7
     /// How thick the bar is, in metres — thin enough to read as a shot at the game
     /// camera's distance and thick enough to be seen at all.
     static let thickness = 0.03
@@ -65,8 +61,10 @@ enum ShotEntity {
     /// The bar laid along the line, its two ends on the two points.
     @MainActor
     static func place(_ bar: Entity, from: SIMD3<Double>, to: SIMD3<Double>) {
-        let start = SIMD3<Float>(Float(from.x), Float(from.y + height), Float(from.z))
-        let end = SIMD3<Float>(Float(to.x), Float(to.y + height), Float(to.z))
+        // Both ends as the model has them: it fired from the shooter's eyes at a point
+        // of the snake, and the line is the line it took (ADR-0022).
+        let start = SIMD3<Float>(Float(from.x), Float(from.y), Float(from.z))
+        let end = SIMD3<Float>(Float(to.x), Float(to.y), Float(to.z))
         let along = end - start
         let length = simd_length(along)
         guard length > 1e-6 else {

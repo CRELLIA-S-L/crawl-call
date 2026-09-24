@@ -103,8 +103,7 @@ When any segment of the snake is within a bot's field of view and within the det
 **Rationale.** Concept §13 stage 1: bots see the snake, flee, shoot.
 Known-to-a-bot is what deliberation (FR-BOT-080) and the interrupt on sight (FR-BOT-150) read.
 
-A bot's sight is measured along the surface it stands on, and a module's height never enters the answer: a knee-high fence stops a line of sight as completely as a wall does, so the player sees over what a bot cannot.
-That is deliberate while a bot is a box with no head on it — an eye height would be a number measured from nothing — and it is revisited when bots get models.
+A bot looks from the eye height of the bot configuration (IF-BOT-010), which the shipped numbers put on the eyes of the figure it is drawn as (FR-VIEW-070), and what it looks at is the ground under each part of the snake. A module stops that line only where it stands higher than the line at the place the line crosses it: a fence lower than a bot's eyes hides a snake lying close behind it and not a snake across the room, by the same geometry the player's camera sees by, from lower down. Until 2026-09-24 sight was measured along the surface on purpose, as Q-240 settled it, because a bot was a box with no head and an eye height would have been a number measured from nothing; the figure is what gives the eye somewhere to be.
 
 ### FR-BOT-060 — A bot fires at its target
 
@@ -115,8 +114,8 @@ derives_from: []
 depends_on: [FR-BOT-080]
 refines: []
 conflicts_with: []
-code: [Sources/CrawlCall/Bot/Execution.swift]
-tests: [Tests/CrawlCallTests/ExecutionTests.swift]
+code: [Sources/CrawlCall/Bot/Execution.swift, Sources/CrawlCall/Bot/Bot.swift]
+tests: [Tests/CrawlCallTests/ExecutionTests.swift, Tests/CrawlCallTests/ShotTests.swift]
 created: 2026-09-21
 ```
 
@@ -124,6 +123,7 @@ While a bot's chosen action is to fire and it has a line of fire to its target, 
 
 **Rationale.** Concept §1: bots are fast, armed and organised.
 A target may be an enemy bot or any segment of the snake — shooting at the tail is a meaningful action because of FR-SNAKE-070.
+A line of fire leaves from the bot's eyes, the height it looks from (FR-BOT-050): what a bot can see over, it can shoot over, and a line of sight it could not fire along would be a bot that watches the snake and cannot touch it (ADR-0022).
 
 **Partial, and how.** What is built is fire at the snake: a bot whose slot chooses to fire spends a round and deals its weapon's damage to the segment it aimed at. Fire at an enemy bot is not, because nothing yet chooses an enemy bot as a target — that needs the target hysteresis of FR-BOT-140 and a squad war the vertical slice does not ask for (concept §13 stage 1 is the snake and the hunt). The damage side is the same code the day a target is a bot.
 A shot goes off once per deliberation step rather than once per frame, so that the damage a second does not depend on the frame rate. No requirement gives a weapon a rate of fire; when one does, the cadence moves out of the deliberation period and into the bot configuration.

@@ -222,7 +222,7 @@ final class RestartOnScreenTests: XCTestCase {
         let built = SceneBuilder.scene(for: world.plan,
                                        pitchDegrees: world.configurations.view.cameraPitch)
         let camera = try XCTUnwrap(built.root.children.first { $0.name == "camera" })
-        let squads = BotEntity.make(for: game.bots)
+        let squads = BotEntity.make(for: game.bots, height: world.configurations.bot.figureHeight)
         let session = GameSession(game: game,
                                   snakeEntity: SnakeEntity.make(radius: world.configurations.tuning.bodyRadius,
                                                                 segments: game.snake.segments),
@@ -271,7 +271,12 @@ final class RestartOnScreenTests: XCTestCase {
         // Found in play on 2026-09-23: it came back the size the last bite left it.
         XCTAssertEqual(Double(body.scale.x), 1, accuracy: 1e-6,
                        "a bot eaten in the last match is still the size it was swallowed at")
-        XCTAssertEqual(Double(body.position.y), BotEntity.height / 2, accuracy: 1e-6,
+        // And where the new match has it, not where the snake's mouth had pulled it.
+        let again = try XCTUnwrap(session.game.bots.first { $0.id == eaten })
+        XCTAssertEqual(Double(body.position.x), again.position.x, accuracy: 1e-5,
                        "it came back standing where the snake's mouth had pulled it")
+        XCTAssertEqual(Double(body.position.z), again.position.z, accuracy: 1e-5,
+                       "it came back standing where the snake's mouth had pulled it")
+        XCTAssertEqual(Double(body.position.y), again.position.y, accuracy: 1e-6)
     }
 }

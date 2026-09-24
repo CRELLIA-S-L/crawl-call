@@ -49,6 +49,53 @@ final class PerceptionTests: XCTestCase {
         XCTAssertFalse(bots[0].knowsSnake)
     }
 
+    // MARK: from the height of the eyes (ADR-0022)
+
+    /// A floor with one low box on it, lower than a bot's eyes — lower than anything
+    /// the blockout kit has, whose lowest standing module, the fence, is 8 cm short of
+    /// a bot's eyes and hides a snake within seven metres of it.
+    private func kerb(at x: Int, height: Double) throws -> ScenePlan {
+        let floor = try plan("............")
+        let box = ScenePlan.Piece(module: "kerb", size: SIMD3(cell, height, cell),
+                                  centre: SIMD3(Double(x) * cell, height / 2 - ScenePlan.surfaceOverlap, 0),
+                                  colour: SIMD3(0.5, 0.5, 0.5), level: 0)
+        return ScenePlan(pieces: floor.pieces + [box], cellSize: floor.cellSize, floorHeight: floor.floorHeight)
+    }
+
+    func testABotLooksOverWhatIsLowerThanItsEyes() throws {
+        // A box half the eyes' height in the next cell over, and a snake four metres
+        // off: the line from the eyes is still above the box where it crosses it.
+        // Measured along the floor, as sight was until ADR-0022, the box hid it.
+        let low = configuration.eyeHeight / 2
+        var bots = [try bot(at: 0, 0)]
+        Perception.notice(&bots, snake: [at(8, 0)], plan: try kerb(at: 1, height: low), configuration: configuration)
+        XCTAssertTrue(bots[0].knowsSnake, "the bot did not look over a box lower than its eyes")
+    }
+
+    func testAFenceTheBotStandsAgainstHidesTheSnakeAcrossTheRoom() throws {
+        // The blockout's fence is 0.8 m, just below the eyes: over five metres the
+        // line from the eyes comes down below the fence's top before it is past it.
+        var bots = [try bot(at: 0, 0)]
+        Perception.notice(&bots, snake: [at(10, 0)], plan: try plan(".#.........."), configuration: configuration)
+        XCTAssertFalse(bots[0].knowsSnake, "the bot saw over a fence its eyes barely clear")
+    }
+
+    func testAFenceCloseInFrontOfTheSnakeStillHidesIt() throws {
+        // A fence in the cell before the snake: the line has come down to a
+        // seventh of a metre by then.
+        var bots = [try bot(at: 0, 0)]
+        Perception.notice(&bots, snake: [at(9, 0)], plan: try plan("........#..."), configuration: configuration)
+        XCTAssertFalse(bots[0].knowsSnake, "the bot saw through a fence the snake was lying behind")
+    }
+
+    func testWhatStandsTallerThanTheEyesHidesTheSnakeWhereverItStands() throws {
+        // A partition is two metres tall, above the eyes: in the next cell to the bot
+        // it hides what a fence there would not.
+        var bots = [try bot(at: 0, 0)]
+        Perception.notice(&bots, snake: [at(10, 0)], plan: try plan(".=.........."), configuration: configuration)
+        XCTAssertFalse(bots[0].knowsSnake, "the bot saw through a partition")
+    }
+
     func testTheFloorTheyBothStandOnIsNotInTheWay() throws {
         // The failure this guards against makes every bot blind: the slab under them
         // touches the line, and a rule that counted it would end the match at the

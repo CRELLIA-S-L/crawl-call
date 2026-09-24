@@ -89,6 +89,26 @@ final class ConfigurationTests: XCTestCase {
         }
     }
 
+    func testABotConfigurationWithoutTheFiguresHeightOrItsEyesIsRefused() throws {
+        // The size a bot is drawn at and where it looks from are configuration and
+        // nothing else (IF-BOT-010, ADR-0022): without them the file does not load,
+        // rather than falling back on a number kept somewhere in the code.
+        let url = try XCTUnwrap(shipped.url(forResource: "bot", withExtension: "json", subdirectory: "config"))
+        let full = try XCTUnwrap(JSONSerialization.jsonObject(with: try Data(contentsOf: url)) as? [String: Any])
+        for key in ["figureHeight", "eyeHeight"] {
+            var json = full
+            XCTAssertNotNil(json.removeValue(forKey: key), "the shipped file has no \(key), so this proves nothing")
+            XCTAssertThrowsError(try Configurations.decode(BotConfiguration.self, named: "bot",
+                                                           schema: BotConfiguration.schema,
+                                                           from: JSONSerialization.data(withJSONObject: json))) { error in
+                guard case ConfigurationError.badShape(_, let shape)? = error as? ConfigurationError else {
+                    return XCTFail("expected a shape error, got \(error)")
+                }
+                XCTAssertEqual(shape, .missingKey(key, path: ""))
+            }
+        }
+    }
+
     func testTextThatIsNotJSONIsRefusedAsSuch() {
         XCTAssertThrowsError(try Configurations.decode(ViewConfiguration.self, named: "view",
                                                        schema: ViewConfiguration.schema,
