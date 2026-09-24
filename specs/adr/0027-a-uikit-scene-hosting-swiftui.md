@@ -30,12 +30,12 @@ Option 1 reaches the scene but not its root controller: SwiftUI's own hosting co
 `MatchView` reports its frame's aspect to the session, and the camera narrows the span it keeps the head in across a frame taller than it is wide (FR-VIEW-020, FR-VIEW-210).
 Invariants: the window's root is a `GameHostingController`; the scene's minimum size is the controls' — `WindowTests` checks both on the scene the suite itself runs in.
 
-It stops working on a device that ran the build whose entry point was the SwiftUI `App`: iOS restores a scene session with the configuration it was made with, `SwiftUI.AppSceneDelegate`, without asking the app delegate again, and that delegate draws nothing — a black screen, seen on the iPad and iPhone simulators on 2026-09-24.
-Closing such sessions from the app was tried and works on the iPad, but on the iPhone UIKit refuses both halves ("Invalid attempt to call -[UIApplication requestSceneSessionDestruction:] from an unsupported device"; "Cannot request scene session activation because it is not supported on the current device").
-The game has not been released, so the only devices affected are the maintainer's and the simulators: on each, the app is closed once from the app switcher — which discards its scene session — or reinstalled.
+A device that ran the build whose entry point was the SwiftUI `App` restores its scene session with the configuration it was made with, `SwiftUI.AppSceneDelegate`, without asking the app delegate again, and that delegate draws nothing — a black screen, seen on the simulators and on the maintainer's iPhone on 2026-09-24.
+Closing such sessions from the app works on the iPad, but on the iPhone UIKit refuses both halves ("Invalid attempt to call -[UIApplication requestSceneSessionDestruction:] from an unsupported device"; "Cannot request scene session activation because it is not supported on the current device"), and closing the app from the switcher did not discard the session on the maintainer's iPhone on iOS 27 — a probe printed the same restored `SwiftUI.AppSceneDelegate` afterwards.
+So `AppDelegate` observes `UIScene.willConnectNotification` from launch, and a window scene connecting with any delegate other than `SceneDelegate` is given one — `UIScene.delegate` is a strong, settable property — which builds the window at once. The phone opened on the game after it, with the HUD reading 59.99 frames per second.
 
 ### Consequences
 
 The entry point is a UIKit scene, and the SwiftUI views under it are unchanged.
-A device that ran the SwiftUI build is closed from the app switcher once after the update.
+A scene restored from the SwiftUI build is taken over as it connects; `WindowTests` gives the suite's own scene a stranger's delegate and checks it is taken back.
 The scene manifest stays generated; the configuration comes from code, so a scene the system restores carries the configuration it was made with.

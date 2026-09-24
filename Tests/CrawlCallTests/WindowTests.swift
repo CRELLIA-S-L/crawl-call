@@ -92,6 +92,20 @@ final class WindowTests: XCTestCase {
         }
     }
 
+    func testASceneRestoredWithAnotherDelegateIsTakenOver() throws {
+        // A device that ran the SwiftUI `App` build restores its scene with SwiftUI's
+        // delegate, which draws nothing (ADR-0027). The suite's own scene stands in: given
+        // a delegate of another kind, it is taken over and gets the game's window again.
+        final class Stranger: UIResponder, UIWindowSceneDelegate {}
+        let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.first as? UIWindowScene)
+        let stranger = Stranger()
+        scene.delegate = stranger
+        AppDelegate.takeOver(scene)
+        XCTAssertTrue(scene.delegate is SceneDelegate)
+        let root = try XCTUnwrap((scene.delegate as? SceneDelegate)?.window?.rootViewController)
+        XCTAssertTrue(String(describing: type(of: root)).hasPrefix("GameHostingController"))
+    }
+
     // MARK: FR-VIEW-220 — the lock is asked for on the iPad alone
 
     func testTheLockIsAskedForOnTheIPadAndNotOnThePhone() throws {

@@ -13,6 +13,31 @@ import UIKit
 
 @main
 final class AppDelegate: UIResponder, UIApplicationDelegate {
+    /// A scene the system brings back from before the game had a scene delegate of its
+    /// own comes back with the delegate it was made with — SwiftUI's, from the build
+    /// whose entry point was a SwiftUI `App` — which draws nothing. iOS restores it on
+    /// every launch, closing the app from the switcher does not discard it on iOS 27,
+    /// and an iPhone may not close it from inside. So such a scene is taken over as it
+    /// connects: given the game's delegate, which builds the window (ADR-0027).
+    func application(_ application: UIApplication,
+                     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
+        NotificationCenter.default.addObserver(forName: UIScene.willConnectNotification,
+                                               object: nil, queue: nil) { notification in
+            guard let scene = notification.object as? UIWindowScene else { return }
+            MainActor.assumeIsolated { Self.takeOver(scene) }
+        }
+        return true
+    }
+
+    /// Gives a scene the game's delegate where it has another, and builds its window.
+    @MainActor
+    static func takeOver(_ scene: UIWindowScene) {
+        guard !(scene.delegate is SceneDelegate) else { return }
+        let delegate = SceneDelegate()
+        scene.delegate = delegate
+        delegate.connect(scene)
+    }
+
     /// Every scene is the game's, and its delegate builds the window.
     func application(_ application: UIApplication,
                      configurationForConnecting connectingSceneSession: UISceneSession,
@@ -37,6 +62,12 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession,
                options connectionOptions: UIScene.ConnectionOptions) {
         guard let windowScene = scene as? UIWindowScene else { return }
+        connect(windowScene)
+    }
+
+    /// Builds the window in a scene: the root controller around the match, and the
+    /// smallest size the controls fit in.
+    func connect(_ windowScene: UIWindowScene) {
         // Nil where the platform does not resize scenes: an iPhone's is the screen.
         windowScene.sizeRestrictions?.minimumSize = GameWindow.minimumSize
         let window = UIWindow(windowScene: windowScene)
