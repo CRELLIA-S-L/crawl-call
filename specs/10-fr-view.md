@@ -439,9 +439,10 @@ tests: [Tests/CrawlCallTests/TextCatalogTests.swift]
 created: 2026-09-24
 ```
 
-When the game shows text to the player, the system **shall** show it in the first of the device's preferred languages that the game carries, and in English where it carries none of them.
+When the game shows text to the player, other than an error line (FR-TOOL-200), the system **shall** show it in the first of the device's preferred languages that the game carries, and in English where it carries none of them.
 
 **Rationale.** The maintainer asked on 2026-09-24 for the interface's text to be built for translation from the start, while there are still only a handful of lines to move.
 The first of the preferred languages the game carries, because that is how the device already ranks what its owner reads, and a game that asked again would be answering a question the system has settled.
 English as the fallback because it is the language the game is written in, and the only one it carries for now; a language is added by translating the catalog of IF-VIEW-030, not by changing this requirement.
 What the fighters say is not text shown here: the model's lines, the pre-written ones and the instructions behind them are a question of their own (Q-290).
+An error line is not either: it is a diagnosis for whoever fixes the build, searched for by its identifier, and a released build shows none — the screen that shows one appears only where the bundle cannot start. Translating it would split one identifier's message into as many wordings as there are languages. Found in review on 2026-09-24, when the launch screen was seen printing an error line verbatim.
