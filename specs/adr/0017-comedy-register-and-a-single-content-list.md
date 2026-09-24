@@ -36,6 +36,7 @@ Two further facts from the same runs: the model refuses a share of calls about t
 Option 2, at the maintainer's request.
 The register is not a matter of taste: it is what F-030 ("the war stays comedy") and ADR-0002 already decided, it is measurably what makes the lines worth hearing, and the vocabulary it forbids is most of what makes the model refuse.
 So the specification says what the instructions must establish (IF-CMD-040 for the commander, IF-CMD-050 for speech) and what a line may and may not contain (IF-CMD-060), while the words themselves stay in configuration and code.
+Since ART-070 (constitution 1.2.0, 2026-09-24) that is configuration alone: words now in code move there when a change touches them.
 
 One list rather than two: the instructions tell the model what never to produce, and the filter rejects it if it does anyway (FR-CMD-160).
 Two lists would drift, and the drift would show as lines that pass the filter but were never meant to exist, or lines the filter kills every time.
