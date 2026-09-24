@@ -4,11 +4,12 @@ Standing engineering principles of the project.
 Every plan and every diff is checked against them.
 Unlike requirements (what the system does) and ADRs (single decisions with their context), articles apply to all work at all times and change only through the amendment procedure in ART-090.
 
-- **Version:** 1.3.0
+- **Version:** 1.4.0
 - **Ratified:** 2026-08-05
 - **Amended:** 2026-08-05 — v1.1.0: ART-020 tightened to approved requirements; ART-090 taxonomy extended to classify tightening and relaxing (both changes MINOR per ART-090)
 - **Amended:** 2026-09-24 — v1.2.0: ART-070 added, named values in place of literals in code (MINOR per ART-090)
 - **Amended:** 2026-09-24 — v1.3.0: ART-070 sends text a player reads to the string catalog, so that it can be translated (MINOR per ART-090)
+- **Amended:** 2026-09-24 — v1.4.0: ART-080 added, no warnings and nothing deprecated (MINOR per ART-090)
 
 Articles are numbered in steps of 10 and referenced from plans, reviews, and ADRs the same way requirements are: “rejected per ART-040”.
 The set below is a starting point — adapt the articles to your project, but keep the amendment procedure.
@@ -55,6 +56,12 @@ An error or a log line opens with the identifier of its kind — an upper-case n
 The identifier is the named value; the details after it describe and configure nothing, and stay where the line is written.
 Exempt: the literal that declares a name — a constant's value, a configuration key in the schema, an identifier in the catalogue.
 Code written before this article is brought to it when a change touches it.
+
+## ART-080 — No warnings, nothing deprecated
+
+A build of the game and its tests reports no warning, the specification's checkers report none, and the code and its configuration use nothing the SDK they are built with marks deprecated.
+A warning or a deprecation is cleared in the change that brought it; one that arrives with a new SDK or tool is cleared before the next change is called done.
+Where it cannot be cleared from inside the project, it is named in `specs/91-open-issues.md` with the reason, and only then may it stand.
 
 ## ART-090 — Amendments
 
