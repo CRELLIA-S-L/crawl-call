@@ -78,7 +78,7 @@ check "a run with failures exits non-zero though its watchdog cut it short" "$go
 check "and prints its count" "$(grep -c 'Executed 12 tests, with 2 failures' "$work/failed.out")" "1"
 check "and names each failed test" "$(grep -cE 'ATests testOne|BTests testTwo' "$work/failed.out")" "2"
 
-printf "** TEST SUCCEEDED **\n\t Executed 12 tests, with 0 failures (0 unexpected) in 1.0 (1.0) seconds\n" > "$work/passed.log"
+printf "Test Suite 'All tests' passed at now.\n\t Executed 12 tests, with 0 failures (0 unexpected) in 1.0 (1.0) seconds\n** TEST SUCCEEDED **\n" > "$work/passed.log"
 if tests_report "$work/passed.log" 124 > "$work/passed.out" 2>&1; then got=0; else got=$?; fi
 check "a run that counted every test passing exits zero, hang or not" "$got" "0"
 
@@ -86,9 +86,19 @@ printf "Test Suite 'All tests' started\n" > "$work/silent.log"
 if tests_report "$work/silent.log" 0 > "$work/silent.out" 2>&1; then got=0; else got=$?; fi
 check "a run with no count in its log is not a pass" "$got" "1"
 
+# Cut off between the whole suite's verdict and its count: the last count in the log
+# is one suite's, and a failure in another must not pass for want of the total.
+{
+  printf "Test Suite 'ATests' failed at now.\n\t Executed 2 tests, with 1 failure (0 unexpected) in 0.1 (0.1) seconds\n"
+  printf "Test Suite 'BTests' passed at now.\n\t Executed 3 tests, with 0 failures (0 unexpected) in 0.1 (0.1) seconds\n"
+  printf "Test Suite 'All tests' failed at now.\n"
+} > "$work/cut.log"
+if tests_report "$work/cut.log" 0 > "$work/cut.out" 2>&1; then got=0; else got=$?; fi
+check "a run cut off before the whole suite's count is not a pass" "$got" "1"
+
 # A test that prints an odd byte makes grep call the whole log binary and answer
 # "Binary file matches" in place of the line — which would fail a run that passed.
-printf "\0odd byte\n\t Executed 3 tests, with 0 failures (0 unexpected) in 1.0 (1.0) seconds\n" > "$work/binary.log"
+printf "\0odd byte\nTest Suite 'All tests' passed at now.\n\t Executed 3 tests, with 0 failures (0 unexpected) in 1.0 (1.0) seconds\n" > "$work/binary.log"
 if tests_report "$work/binary.log" 0 > "$work/binary.out" 2>&1; then got=0; else got=$?; fi
 check "a passing log with an odd byte in it still passes" "$got" "0"
 check "and prints its count, not a binary-file notice" "$(grep -c 'Executed 3 tests' "$work/binary.out")" "1"
