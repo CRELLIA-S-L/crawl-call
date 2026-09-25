@@ -152,3 +152,10 @@ What remains is what a decision inside the repository cannot close.
 - **The question:** what the time goes to — compiling the two surface shaders when their materials are first made, building the floor's height field and the distance field under it, or the transparent water's first draw — and whether it matters.
 - **Still needed:** a cold launch measured with the shaders and without, and with the floor and without, each run straight after the other on a cool phone that nobody touches; whether a second launch, with the shaders compiled once, is faster; and whether a bound on the time to a match belongs with NFR-PERF-010.
 
+
+### Q-450 — RealityKit's generated sphere is eight thousand triangles, and the shrubs and figures are drawn with it
+
+- **Found:** 2026-09-25, counting the triangles of `MeshResource.generateSphere` before giving the snake eyes (FR-VIEW-260): 8064 at every radius tried, from 5 cm to a metre, on the Mac with the iOS 27.0 SDK. Its cone is 128 and its cylinder 256.
+- **What diverged:** every shrub a map places is a generated sphere (`SceneBuilder.swift`, FR-MAP-210), and so is every sphere a bot's figure is built from (`Figure.swift`, ADR-0022). No requirement bounds their triangles; the snake's eyes are built from a sphere of the game's own instead, and the snake's old body of one generated sphere a segment is gone with FR-VIEW-250.
+- **The question:** whether the shrubs and the figures move to a sphere of the game's own, as the rounded box moved in ADR-0037, and with the same kind of ceiling.
+- **Still needed:** how many triangles a shrub needs at the camera's distance; whether it goes with Q-420, which asks the same of the figures' boxes; and what the blockout's shrubs and eight bots cost in frames before and after.

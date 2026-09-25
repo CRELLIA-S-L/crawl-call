@@ -345,7 +345,8 @@ It lasts the deliberation period because that is the cadence of fire: one line a
 ### FR-VIEW-180 — The tail on screen is as long as the tail
 
 ```yaml
-status: implemented
+status: superseded
+superseded_by: FR-VIEW-250
 verification: T
 derives_from: [FR-SNAKE-060]
 depends_on: [FR-SNAKE-020]
@@ -404,6 +405,7 @@ While a match is running, the system **shall** light the arena with a single bri
 **Rationale.** Concept §2 names the light as part of the style, not as a technical detail: "bright daylight, soft shadows, a saturated palette. No gloom." A diorama is read by its shapes, and shapes are read by their shading.
 It is also what makes a blockout judgeable at all: an unlit scene renders as flat fields of one colour, so a floor, a wall and a crate become indistinguishable and every `D` judgement about a map — whether a corridor is a trap, whether a balcony overlooks the room — has nothing to look at.
 The number of lights is one on purpose: a single source is what casts a readable shadow direction, and the thermal budget of a phone rendering a match is not the place to discover that three were affordable (NFR-PERF-010).
+Superseded on 2026-09-25 by FR-VIEW-250, when the maintainer had the snake drawn as one smooth body instead of a body at each point: the body passes through every point the tail lays down, so what this asked of the length stays asked there.
 
 ### FR-VIEW-190 — A finished match says so and starts again on a press
 
@@ -527,3 +529,88 @@ The system **shall** draw every box that stands for a module, a shot or a bird w
 Each module is rounded on its own, so a wall of many cells and a flight of many steps show a groove between their pieces; the maintainer saw it on the phone the same day and kept it.
 The water beyond the island is not rounded, because its slabs meet edge to edge and a rounded edge shows there as a seam. Neither are bots' figures, which ADR-0022 already rounds (Q-420).
 The ceiling on triangles is what keeps RealityKit's own rounded box, 13 068 triangles at any size, out of the game (ADR-0037).
+
+### FR-VIEW-250 — The snake is one smooth body
+
+```yaml
+status: implemented
+verification: D
+derives_from: [FR-SNAKE-060]
+depends_on: [FR-SNAKE-020]
+refines: []
+conflicts_with: []
+code: [Sources/CrawlCall/View/SnakeBody.swift, Sources/CrawlCall/View/SnakeEntity.swift, Sources/CrawlCall/Config/Drawing.swift, Sources/CrawlCall/GameSession.swift]
+tests: [Tests/CrawlCallTests/SnakeBodyTests.swift, Tests/CrawlCallTests/GameTests.swift]
+created: 2026-09-25
+```
+
+While the snake is on screen, the system **shall** draw it as one smooth body through the head and every point the tail lays down, resting on the surface under it, rounded at the head and narrowing towards the end of the tail, with no more than 64 triangles for each point of the tail and 256 besides.
+
+**Rationale.** The maintainer, 2026-09-25: the snake is to look better, and the first of four steps is a body rather than a chain of balls. The concept draws the snake as a smooth tube tapering to its tail (concept §2.2, `render-01.jpg`) and its opening makes a spline body through `LowLevelMesh` the first of the spike's three checks; the spike built one, rebuilt every frame, and passed (ADR-0001).
+Through every point the tail lays down, because a body that skipped some would show a snake shorter than the model's, which is what FR-VIEW-180 was written against: a snake that has eaten is drawn longer.
+Resting on the surface: the balls it replaces stood with their centres at the ground's height, half inside it.
+The ceiling on triangles is the lesson of ADR-0037: a mesh made in code has its cost set by numbers somebody chose, and a test holds them to it.
+Judged on the phone, and measured there in frames, since the body is rebuilt every frame.
+
+### FR-VIEW-260 — The snake's head has eyes that look where it goes
+
+```yaml
+status: implemented
+verification: D
+derives_from: []
+depends_on: [FR-VIEW-250]
+refines: []
+conflicts_with: []
+code: [Sources/CrawlCall/View/SnakeEntity.swift, Sources/CrawlCall/View/SnakeBody.swift, Sources/CrawlCall/View/LowPolySphere.swift, Sources/CrawlCall/Config/Drawing.swift, Sources/CrawlCall/Config/EntityName.swift]
+tests: [Tests/CrawlCallTests/GameTests.swift, Tests/CrawlCallTests/SnakeBodyTests.swift]
+created: 2026-09-25
+```
+
+While the snake is on screen, the system **shall** draw its head wider than its body, with two eyes on top that face the way the head last moved, the eyes in no more than 1024 triangles.
+
+**Rationale.** The maintainer, 2026-09-25: the second of four steps to a better-looking snake. The concept's snake has a head that reads as a head, with big cartoon eyes on top (concept §2.2, `render-01.jpg`), and at the camera's height the eyes are what make it a character rather than a hose.
+The way it last moved, because a head that has stopped still has somewhere it was going; and on top, because the camera looks down.
+The ceiling is the lesson of ADR-0037 met again: RealityKit's own sphere is 8064 triangles at any size (Q-450), so the eyes are built from a sphere of the game's own, and a test holds them to it.
+Judged on the phone.
+
+### FR-VIEW-270 — The snake is green and spotted
+
+```yaml
+status: implemented
+verification: D
+derives_from: []
+depends_on: [FR-VIEW-250]
+refines: []
+conflicts_with: []
+code: [Sources/CrawlCall/View/SnakeSkin.metal, Sources/CrawlCall/View/SnakeEntity.swift, Sources/CrawlCall/View/SnakeBody.swift, Sources/CrawlCall/Config/Drawing.swift, Sources/CrawlCall/Config/Resource.swift]
+tests: [Tests/CrawlCallTests/GameTests.swift, Tests/CrawlCallTests/SnakeBodyTests.swift]
+created: 2026-09-25
+```
+
+While the snake is on screen, the system **shall** draw its body a saturated green, paler along its belly, with darker spots on its back and sides that stay where they are on the body as it moves.
+
+**Rationale.** The maintainer, 2026-09-25: the third of four steps to a better-looking snake. The concept's snake is a bright green with darker spots and a sheen (concept §2.2, `render-01.jpg`), and a saturated palette is part of the style (concept §2).
+Where they are on the body: a spot fixed to the world would slide along the snake as it crawled, and read as the ground showing through; one fixed to the body goes where the snake goes.
+Paler along the belly because a cartoon animal is two-toned, and the camera, looking down, sees the belly only where the body rolls on its side down a drop.
+Judged on the phone.
+
+### FR-VIEW-280 — A meal is a swelling that travels down the body
+
+```yaml
+status: implemented
+verification: D
+derives_from: []
+depends_on: [FR-VIEW-250, FR-SNAKE-090, FR-VIEW-100]
+refines: []
+conflicts_with: []
+code: [Sources/CrawlCall/View/Digestion.swift, Sources/CrawlCall/View/SnakeBody.swift, Sources/CrawlCall/View/SnakeEntity.swift, Sources/CrawlCall/GameSession.swift, Sources/CrawlCall/Config/Drawing.swift]
+tests: [Tests/CrawlCallTests/DigestionTests.swift]
+created: 2026-09-25
+```
+
+While the snake is eating, and after that for as long as the meal takes to pass along the body, the system **shall** draw a swelling on the body that grows behind the head as the prey goes in and then travels down the body to the end of the tail.
+
+**Rationale.** The maintainer, 2026-09-25: the last of four steps to a better-looking snake. The concept names eating as what the style makes funny rather than grim — swallowed whole, a bulge along the body — and squash and stretch as the snake's own subject (concept §2).
+Growing as the prey goes in, because the prey is drawn shrinking into the head at the same time (FR-VIEW-100), and the two together say where it went. Travelling on after the meal, at a pace of its own, so that the snake goes on carrying what it ate for a moment after it is free to move.
+The swelling changes only how thick the body is along its length, so it adds no triangles to FR-VIEW-250's ceiling.
+Judged on the phone.

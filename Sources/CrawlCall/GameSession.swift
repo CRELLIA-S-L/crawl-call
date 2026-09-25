@@ -5,7 +5,7 @@
 // measured with — `specs/50-verification.md` says why, and the two are different
 // questions asked of the same number.
 //
-// implements: FR-TOOL-070, FR-VIEW-020, FR-VIEW-030, FR-VIEW-060, FR-VIEW-100, FR-VIEW-140, FR-VIEW-150, FR-VIEW-155, FR-VIEW-160, FR-VIEW-170, FR-VIEW-180, FR-VIEW-190, FR-VIEW-230, FR-VIEW-210, FR-TOOL-230, FR-TOOL-240, FR-GREENHOLM-030, FR-TOOL-260, FR-TOOL-270, FR-SNAKE-220
+// implements: FR-TOOL-070, FR-VIEW-020, FR-VIEW-030, FR-VIEW-060, FR-VIEW-100, FR-VIEW-140, FR-VIEW-150, FR-VIEW-155, FR-VIEW-160, FR-VIEW-170, FR-VIEW-250, FR-VIEW-190, FR-VIEW-230, FR-VIEW-210, FR-TOOL-230, FR-TOOL-240, FR-GREENHOLM-030, FR-TOOL-260, FR-TOOL-270, FR-SNAKE-220, FR-VIEW-280
 import Foundation
 import Observation
 import RealityKit
@@ -128,6 +128,7 @@ final class GameSession {
         game = game.restarted()
         recorder?.note(.matchBegan)
         eatingAtLastFrame = false
+        digestion = Digestion()
         focus = game.snake.head
         place()
     }
@@ -141,6 +142,8 @@ final class GameSession {
     /// Whether a meal was under way when the last frame was recorded: a meal is asked
     /// for between frames, so its beginning is seen by comparing frames.
     private var eatingAtLastFrame = false
+    /// The meals passing along the snake's body, as the screen shows them (FR-VIEW-280).
+    private var digestion = Digestion()
 
     /// One frame: the world moves, then what is drawn catches up with it. `seconds` is
     /// the interval since the last frame, as the renderer measured it.
@@ -152,6 +155,13 @@ final class GameSession {
         // room in; the model refuses to pass through walls whatever it is given, and
         // this keeps the picture from lurching as well.
         let report = game.advance(seconds: min(seconds, Frame.longest))
+        // A meal passes along the body on the match's clock: not while it is paused or
+        // over (FR-VIEW-280).
+        if !game.isPaused, game.outcome == nil {
+            digestion.step(seconds: min(seconds, Frame.longest),
+                           swallowed: game.eating.flatMap(remaining(of:)).map { Fraction.whole - $0 },
+                           length: Double(game.snake.tail.count) * game.snake.segmentSpacing)
+        }
         let stepTime = clock.now - stepping
         let placed = place()
         guard let recorder else { return }
@@ -193,7 +203,7 @@ final class GameSession {
             && Game.preyWithinReach(of: game.snake.head, among: game.bots,
                                     tuning: game.world.configurations.tuning) != nil
         SnakeEntity.update(snakeEntity, from: game.snake,
-                           radius: game.world.configurations.tuning.bodyRadius)
+                           radius: game.world.configurations.tuning.bodyRadius, lumps: digestion.lumps)
         BotEntity.update(botEntities, from: game.bots)
         // Every shot still alive is drawn where it went (FR-VIEW-170).
         ShotEntity.update(shotEntities, from: game.shots)
