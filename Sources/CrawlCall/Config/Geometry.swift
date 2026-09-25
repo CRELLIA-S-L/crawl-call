@@ -2,7 +2,7 @@
 // would tune (ART-070): halves, the ends of a segment, which side of a box a point is
 // on, and how close two numbers must be to count as the same.
 //
-// implements: FR-VIEW-150, FR-BOT-050, FR-TOOL-020, FR-MAP-090, FR-SNAKE-010, FR-VIEW-020, FR-VIEW-100, FR-BOT-080
+// implements: FR-VIEW-150, FR-BOT-050, FR-TOOL-020, FR-MAP-090, FR-SNAKE-010, FR-VIEW-020, FR-VIEW-100, FR-BOT-080, FR-MAP-270
 import Foundation
 
 enum Geometry {
@@ -37,6 +37,13 @@ enum Geometry {
 enum Fraction {
     static let none = 0.0
     static let whole = 1.0
+}
+
+/// The smoothstep curve, 3t² − 2t³: from 0 to 1 with no slope at either end, so that
+/// what follows it rises without a kink.
+enum SmoothStep {
+    static let three = 3.0
+    static let two = 2.0
 }
 
 extension Geometry {

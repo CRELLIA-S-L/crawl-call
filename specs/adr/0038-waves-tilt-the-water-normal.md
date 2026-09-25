@@ -30,16 +30,19 @@ Option 3 needs texture coordinates the island's surfaces do not have and an imag
 
 Every surface `SceneryBuilder.meshResource` builds carries a tangent frame at each vertex: x flattened onto the surface, or z where the surface faces along x, and the bitangent at right angles to both.
 `crawlCallWater` in `WaterRipple.metal` takes the water's colour and roughness from its material, as the hole shader does (ADR-0020).
-Three sine waves cross the ground at odd angles, lengths and speeds, in world metres divided by the configured wavelength and moving at the configured speed.
-Their slopes, scaled by the configured steepness, tilt the normal in the world, which is then written in the tangent space of the fragment's geometry — so the generated slabs and the built surfaces agree.
-Where the waves' mean rises from 0.45 to 0.8 the colour is lifted towards white, by at most the configured strength.
-Because the waves are in world metres, every piece of the water — band, open water, slab — shows the same waves at a join, and no seam appears.
-The ripple reaches the shader as the material's one custom value: wavelength, speed, crest strength, steepness.
+Twelve waves are summed, as ocean shaders sum them (GPU Gems 1, chapter 1, "Effective Water Simulation from Physical Models"; Tessendorf, "Simulating Ocean Water"): the first as long as the configured wavelength, each next 1.18 times shorter and 0.82 times lower, so the water has waves of every size; each in its own direction within 60 degrees of a fixed wind, and from its own start; each at the speed deep water carries a wave of its length, ω = √(g k), slowed by the configured share, so that long waves overtake short ones and the pattern keeps changing; and each shaped exp(sin − 1), a narrow crest over a wide trough.
+Slow noise bends the crests and raises and lowers the waves from place to place.
+Their slopes, scaled by the configured steepness, tilt the normal in the world, which is then written in the tangent space of the fragment's geometry — so any mesh with a tangent frame agrees with any other. Since FR-MAP-280 made the water partly transparent, the slabs beyond the grid are drawn as rectangles built the same way as the surfaces, by their tops alone, rather than as RealityKit's box.
+Waves in random phases add as the root of the sum of their squared weights, not as the sum, so the sum is turned back into standard units by the statistics of one wave exp(sin x − 1) over a turn — mean 0.466, deviation 0.302, slope 0.328 per unit — and the configured steepness is then the water's typical slope. Where the height stands 1.3 to 2.3 deviations above its mean, the colour is lifted towards white, by at most the configured strength. Divided by the sum of the weights instead, as first built, the twelve waves came out several times flatter than configured and never reached a crest.
+The first version, on 2026-09-25, was three and then five sines of fixed lengths and speeds; the maintainer found them all of one size and standing still, which is what waves of one speed look like.
+Because the waves are in world metres, every piece of the water — foam, open water, slab — shows the same waves at a join, and no seam appears.
+The ripple reaches the shader as the material's one custom value: the longest wavelength, the share of deep water's speed, crest strength, steepness.
 Where Metal or the function is not there, the water is drawn glossy and still.
 
 ### Consequences
 
-- The shader runs over the largest surface in the frame; its cost is measured on the phone, not assumed. On 2026-09-25 the match ran at 715 frames in ten seconds with 2 late, both at launch; the first frame came about half a second later than before the shader, which a second launch would tell apart from compiling it.
+- The shader runs over the largest surface in the frame; its cost is measured on the phone, not assumed. On 2026-09-25 the match ran at 715 frames in a ten-second run with 2 late, both at launch; the first frame came about half a second later than before the shader, which a second launch would tell apart from compiling it.
 - The foam is drawn with the same shader; the crests do not show on near-white foam, the slopes do.
 - The ground and the walls carry a tangent frame they do not use.
-- The wave directions, ratios and thresholds are constants in the shader, like the hole shader's, and wait with them for Q-280.
+- The wave count, ratios, wind, spread and thresholds are constants in the shader, like the hole shader's, and wait with them for Q-280.
+- The waves' turns are counted modulo one, so that the phase keeps its precision however long the session runs.

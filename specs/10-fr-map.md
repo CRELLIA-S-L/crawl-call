@@ -557,3 +557,44 @@ If the map, as drawn, shows the snake a way that its body cannot take, the syste
 
 **Rationale.** The maintainer, 2026-09-25, after a day of finding such ways one kind at a time — ground drawn over an empty cell, a gap narrower than the snake, the side of a flight, a tree at the water's edge, a tree whose corner met the water's: each was a case of the same thing, and a rule that listed them would miss the next. So the rule names no kind of place, and the check behind it compares what the eye sees with where the snake can be (ADR-0035); the cases found are its tests.
 "The snake's body" is the tuning's body radius and step height (IF-MAP-020): a wider snake, or a lower step, moves what counts as a way it cannot take.
+
+### FR-MAP-270 — The ground goes on under the water
+
+```yaml
+status: implemented
+verification: D
+derives_from: []
+depends_on: [FR-MAP-200, FR-MAP-140]
+refines: []
+conflicts_with: []
+code: [Sources/CrawlCall/Setting/Outline.swift, Sources/CrawlCall/Setting/Greenholm.swift, Sources/CrawlCall/Setting/SceneryBuilder.swift, Sources/CrawlCall/Setting/Scenery.swift, Sources/CrawlCall/Setting/SeaFloor.metal, Sources/CrawlCall/Config/GreenholmConfiguration.swift, Sources/CrawlCall/Config/Surroundings.swift, Sources/CrawlCall/Config/Geometry.swift, Sources/CrawlCall/Config/Resource.swift, config/setting/greenholm.json]
+tests: [Tests/CrawlCallTests/SeaFloorTests.swift, Tests/CrawlCallTests/IslandMapTests.swift]
+created: 2026-09-25
+```
+
+Where a map's setting ends its ground in water, the system **shall** draw a floor under the water that falls smoothly from just under the surface at the setting's edge to the depth the setting sets, coloured from the edge's colour towards the deep colour the setting sets as it falls.
+
+**Rationale.** The maintainer, 2026-09-25, after shallows drawn as bands of colour on opaque water (FR-GREENHOLM-040): water one can partly see through, over a floor that rises to the shore, is shallow where it is shallow, without a step anywhere.
+A rule of maps rather than of one setting, because every setting whose ground ends in water has the same edge (FR-MAP-200) and the same question of what lies under it; how far, how deep and in what colours is each setting's own.
+Down to the edge of all the camera can show, like the water (FR-MAP-140): a floor that stopped short would leave nothing to be seen through the water at the frame's edge. The floor lies deeper than the water, so what the camera shows of it is worked out at its own depth, where every ray from the camera meets it further along than it met the water.
+Judged on the phone. Seen only through water one can partly see through, FR-MAP-280.
+
+### FR-MAP-280 — The water can be partly seen through
+
+```yaml
+status: implemented
+verification: D
+derives_from: []
+depends_on: [FR-MAP-270]
+refines: []
+conflicts_with: []
+code: [Sources/CrawlCall/Setting/SceneryBuilder.swift, Sources/CrawlCall/Setting/WaterRipple.metal, Sources/CrawlCall/Setting/Greenholm.swift, Sources/CrawlCall/Setting/Scenery.swift, Sources/CrawlCall/Config/GreenholmConfiguration.swift, config/setting/greenholm.json]
+tests: [Tests/CrawlCallTests/IslandMapTests.swift]
+created: 2026-09-25
+```
+
+Where a map's setting ends its ground in water, the system **shall** draw the water with the opacity the setting sets.
+
+**Rationale.** The maintainer, 2026-09-25, with FR-MAP-270, of which it was the second half until the checker had the two obligations split: the floor under the water is what makes the shallows, and water one cannot see through hides it.
+Judged on the phone, and measured there in frames, because the water now blends with what is under it across most of the frame. How the opacity reaches the water's shader is ADR-0039.
+The water beyond the island's grid, laid out as slabs, is drawn by its tops alone: a slab's sides show through water one can see through, as a line wherever two slabs meet.

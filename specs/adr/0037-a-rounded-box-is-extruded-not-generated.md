@@ -9,7 +9,7 @@
 The maintainer asked for the edges of every drawn box to be rounded slightly (Q-400, now FR-VIEW-240), and for a quick trial first: every box rounded, no questions asked.
 The obvious way is RealityKit's own `MeshResource.generateBox(width:height:depth:cornerRadius:splitFaces:)`, which the bots' figures already use (ADR-0022).
 Its documentation in the iOS 27.0 SDK (`RealityFoundation.swiftinterface` and its `.swiftdoc`) says only that the radius is clamped to half the smallest side; it has no parameter for how finely the rounding is cut.
-Tried on the phone on 2026-09-25 with the trial's boxes, the match dropped from 673 frames in ten seconds, 2 of them late, to 387 frames, 201 of them late; the game's own work stayed under a millisecond a frame in both runs, so the time went to drawing.
+Tried on the phone on 2026-09-25 with the trial's boxes, the match dropped from 673 frames in a ten-second run, 2 of them late, to 387 frames, 201 of them late; the game's own work stayed under a millisecond a frame in both runs, so the time went to drawing.
 Counted on the Mac the same day, a square box is 12 triangles and that rounded box is 13 068, at every size and radius tried — a cube of a metre, a partition of 1 × 3 × 0.1 m, a figure's part of 15 cm — with `splitFaces` or without.
 
 ## Considered options
@@ -23,7 +23,7 @@ Counted on the Mac the same day, a square box is 12 triangles and that rounded b
 
 Option 3 at two segments.
 It is RealityKit's own, so nothing is written that the SDK already does; at two segments the edges read as rounded at the camera's distance on the trial's screenshot from the phone; and its triangles are set by a number rather than left to the framework.
-On the phone it drew 669 frames in ten seconds, 4 of them late, three of those in the first 0.7 s after launch — beside the square boxes' 673 and 2.
+On the phone it drew 669 frames in a ten-second run, 4 of them late, three of those in the first 0.75 s after launch — beside the square boxes' 673 and 2.
 Options 1 and 2 were measured out; option 4 is the same result for more code.
 
 ### How it works

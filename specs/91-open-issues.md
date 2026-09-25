@@ -144,3 +144,11 @@ What remains is what a decision inside the repository cannot close.
 - **What diverged:** nothing yet. The only life in Greenholm is its birds (FR-GREENHOLM-030); the water has waves (FR-GREENHOLM-070) and nothing in it.
 - **The question:** whether fish leap from the water, and what else lives in it.
 - **Still needed:** how often and where — within the match frame only, as the birds are (FR-GREENHOLM-030), or anywhere; what a fish is drawn as, whether from primitives like the birds or an asset (Q-380); how the rings are drawn — the water shader takes one value per material (ADR-0038), so rings at a point need another way in, or a drawn ring on the surface; whether a fish takes any part in play, which FR-MAP-130 forbids for scenery; and what it costs in frames.
+
+### Q-440 — The match takes longer to appear since the water got its shaders
+
+- **Found:** 2026-09-25, reading the first frame of every frame record made that day on the maintainer's iPhone 16 Pro (`specs/50-verification.md`).
+- **What diverged:** the first frame of a match came 0.48–0.58 s after launch in six runs before the water had a shader, 0.97–1.46 s in four with the waves (FR-GREENHOLM-070), and 1.0–1.57 s in three with the floor under the water as well (FR-MAP-270, FR-MAP-280) — so the floor is not clearly a part of it; once running, the match holds 60 frames a second. No requirement bounds the time from launch to a match on screen.
+- **The question:** what the time goes to — compiling the two surface shaders when their materials are first made, building the floor's height field and the distance field under it, or the transparent water's first draw — and whether it matters.
+- **Still needed:** a cold launch measured with the shaders and without, and with the floor and without, each run straight after the other on a cool phone that nobody touches; whether a second launch, with the shaders compiled once, is faster; and whether a bound on the time to a match belongs with NFR-PERF-010.
+

@@ -1,7 +1,7 @@
 // Where the game's files are in its bundle (ADR-0012): the directories, the
 // extensions and the names it asks for them by (ART-070).
 //
-// implements: IF-SNAKE-010, IF-MAP-020, IF-VIEW-020, IF-BOT-010, IF-MAP-010, FR-MAP-100, FR-VIEW-150, FR-MAP-120, IF-GREENHOLM-010, FR-GREENHOLM-070
+// implements: IF-SNAKE-010, IF-MAP-020, IF-VIEW-020, IF-BOT-010, IF-MAP-010, FR-MAP-100, FR-VIEW-150, FR-MAP-120, IF-GREENHOLM-010, FR-GREENHOLM-070, FR-MAP-270
 import Foundation
 
 enum Resource {
@@ -34,6 +34,9 @@ enum Resource {
     static let holeShader = "crawlCallHole"
     /// The surface shader that moves glints across Greenholm's water (ADR-0038).
     static let waterShader = "crawlCallWater"
+    /// The surface shader that colours the floor under the water by its depth
+    /// (FR-MAP-270).
+    static let floorShader = "crawlCallFloor"
 
     /// What a configuration failure names when the file it came from is not known.
     static let unknownConfiguration = "unknown"

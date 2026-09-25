@@ -2,7 +2,7 @@
 // (ART-070); the look itself — how wide the island is, what colour its water, how
 // often birds cross it — is the setting's configuration (IF-GREENHOLM-010, ADR-0031).
 //
-// implements: FR-MAP-140, FR-GREENHOLM-010, FR-GREENHOLM-020, FR-GREENHOLM-030, FR-MAP-200, FR-GREENHOLM-070
+// implements: FR-MAP-140, FR-GREENHOLM-010, FR-GREENHOLM-020, FR-GREENHOLM-030, FR-MAP-200, FR-GREENHOLM-070, FR-MAP-270
 import Foundation
 
 /// The camera of a running match, as far as the surroundings must answer for it.
@@ -48,8 +48,16 @@ enum IslandShape {
     /// Metres the island's banks reach below the water, so that no gap shows at the
     /// waterline from any angle.
     static let submerged = 0.5
-    /// Metres of water: a slab, not a plane, so that it has an underside to its top.
+    /// Metres the water's and the floor's slabs beyond the island's grid are laid out
+    /// deep; they are drawn by their tops alone (FR-MAP-280).
     static let waterDepth = 0.1
+    /// Metres the floor under the water lies below its surface at the shore, so that
+    /// the two never meet in one plane (FR-MAP-270).
+    static let floorUnderSurface = 0.05
+    /// Metres between the points of the floor's height field: fine enough that its
+    /// slope reads as a curve, coarse enough to stay within tens of thousands of
+    /// triangles round an arena some tens of metres across.
+    static let floorStep = 0.25
 }
 
 /// Numbers of how the sky picture is painted (FR-GREENHOLM-020).

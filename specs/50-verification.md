@@ -50,6 +50,7 @@ So: address a simulator by its identifier, not its name; boot it before the run 
 The automated tests are run by `scripts/run-tests.sh`, which does the three phases below, each under a watchdog (FR-TOOL-190), and prints what each one took:
 
 1. `xcrun simctl boot <id>` — the simulator is booted before the run and addressed by its identifier. Names on a machine are not unique: this one carries two devices called `iPhone 17 Pro` and two called `iPhone 17 Pro Max`, one of them unavailable for want of a runtime profile, so a destination given by name is a destination somebody else chose.
+   A booted simulator is not a destination unless its runtime is the one the app is built for: on 2026-09-25 a booted `iPhone 17 Pro` on iOS 26.5 was refused with "Unable to find a destination matching the provided destination specifier", and the list `xcodebuild` prints under that error names the ones it will take, with iOS 27.0 beside them.
 2. `xcodebuild … -destination "id=<id>" build-for-testing` — compiles the app and the test bundle, needing no device.
 3. `xcodebuild … -destination "id=<id>" test-without-building` — installs, launches and runs.
 
@@ -88,6 +89,14 @@ A frame-rate claim is only as good as its instrument, and two instruments that l
 - **`CADisplayLink`'s timestamps are the measure**, and a missed frame is an interval longer than one and a half times the target period of 16.67 ms. The target is fixed, never taken from `CADisplayLink.duration`: on a ProMotion display that property drops to 8.3 ms, which turns honest 60 Hz frames into counted "drops" — 33 of them in one twenty-minute run before the reference was fixed.
 
 The same rule holds for anything measured while a language-model call is running: what NFR-PERF-030 asks about is the interval between displayed frames, not the time some function took.
+
+A frame record is a measurement only of the run it came from, and three things make a run's numbers mean something other than they seem, all met on 2026-09-25:
+
+- **A change is priced against a run without it, made the same way.** RealityKit's rounded box showed 387 frames in a ten-second run, 201 of them late; that meant something only beside the 673 frames, 2 late, of the same build without the change, run straight after on the same phone for the same ten seconds of watching (ADR-0037). A number with nothing beside it is a number, not a cost.
+- **A run the phone was used in is not a measurement.** Two runs came back from a phone that was in use while they ran: in one the free camera had been moved off the snake, in the other the app had left the screen — its screenshot showed the home screen and its record stopped at 6.8 s of the ten. The screenshot and the time of the record's last frame are read before its numbers, and a run whose screenshot is not the match, or whose record ends early, is run again.
+- **A phone that has run a dozen builds back to back is warm**, and a warm phone slows itself (NFR-PERF-050). A run meant to price something is made cold, or said to be warm.
+
+The record's first frame is read too: it is the time from launch to a match on screen, and it moved from 0.48–0.58 s to 0.97–1.57 s when the water got its shaders (Q-440).
 
 ## What the technical spike verifies
 

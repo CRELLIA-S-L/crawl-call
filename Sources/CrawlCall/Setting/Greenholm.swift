@@ -5,7 +5,7 @@
 // and shrubs are the map's modules now, not a ring of scenery (FR-MAP-210, ADR-0034).
 // Laid out here as parts and surfaces; built in `SceneryBuilder`.
 //
-// implements: FR-GREENHOLM-010, FR-GREENHOLM-020, FR-GREENHOLM-030, FR-GREENHOLM-040, FR-GREENHOLM-050, FR-GREENHOLM-060, FR-GREENHOLM-070, FR-MAP-130, FR-MAP-140, FR-MAP-170, FR-MAP-200, FR-MAP-260
+// implements: FR-GREENHOLM-010, FR-GREENHOLM-020, FR-GREENHOLM-030, FR-GREENHOLM-050, FR-GREENHOLM-060, FR-GREENHOLM-070, FR-MAP-130, FR-MAP-140, FR-MAP-170, FR-MAP-200, FR-MAP-260, FR-MAP-270, FR-MAP-280
 import Foundation
 
 enum Greenholm {
@@ -20,7 +20,14 @@ enum Greenholm {
         let shore = ground - c.shoreDrop
         let water = ground - c.waterDrop
         let bottom = water - IslandShape.submerged
-        guard let covered = FrameCoverage.covered(arena: arena, camera: camera, surface: water) else {
+        // The floor under the water (FR-MAP-270): just under it at the shore, falling
+        // to its depth. It is seen through the water and lies lower, where every ray
+        // from the camera meets it further along than it met the water, so what the
+        // camera shows of it is worked out at its own depth.
+        let floorTop = water - IslandShape.floorUnderSurface
+        let floorBottom = water - max(c.floorDepth, IslandShape.floorUnderSurface)
+        guard let covered = FrameCoverage.covered(arena: arena, camera: camera, surface: water),
+              let coveredFloor = FrameCoverage.covered(arena: arena, camera: camera, surface: floorBottom) else {
             throw CoverageError.horizonInFrame(fieldOfView: camera.fieldOfView,
                                                lowestPitch: camera.pitches.lowerBound)
         }
@@ -41,41 +48,39 @@ enum Greenholm {
             surfaces.append(.init(layer: .ground, colour: c.shoreColour.rgb,
                                   mesh: Outline.wall(along: outline.signed.map { $0 + c.shoreWidth }, on: grid,
                                                      top: shore, bottom: bottom)))
+            // The floor, from the shore's colour at its edge towards its own at depth;
+            // what makes the shallows shallow (FR-MAP-270).
+            surfaces.append(.init(layer: .floor, colour: c.shoreColour.rgb,
+                                  mesh: Outline.floor(under: outline, edge: c.shoreWidth, width: c.floorWidth,
+                                                      top: floorTop, bottom: floorBottom,
+                                                      stride: Int((IslandShape.floorStep / grid.step).rounded()))))
             // The water near the island is cut to its shore, so that it never runs
             // under the island — where a basement is (FR-MAP-170): foam along the
-            // shore (FR-GREENHOLM-050), the shallows in bands beyond it, a step
-            // nearer the water's colour each (FR-GREENHOLM-040), and the water's own
-            // colour beyond them.
+            // shore (FR-GREENHOLM-050), and the water beyond it.
             let foam = c.shoreWidth + max(c.foamWidth, .zero)
             surfaces.append(.init(layer: .water, colour: c.foamColour.rgb,
                                   mesh: Outline.surface(where: outline.signed.map { min(-($0 + c.shoreWidth), $0 + foam) },
                                                         on: grid, height: water)))
-            let band = c.shallowsWidth / Double(max(c.shallowsBands, 1))
-            for index in Int.zero..<max(c.shallowsBands, .zero) {
-                let inner = foam + band * Double(index)
-                let outer = inner + band
-                let share = Double(index) / Double(c.shallowsBands)
-                let colour = c.shallowsColour.rgb + (c.waterColour.rgb - c.shallowsColour.rgb) * share
-                surfaces.append(.init(layer: .water, colour: colour,
-                                      mesh: Outline.surface(where: outline.signed.map { min(-($0 + inner), $0 + outer) },
-                                                            on: grid, height: water)))
-            }
-            let open = foam + max(c.shallowsWidth, .zero)
             surfaces.append(.init(layer: .water, colour: c.waterColour.rgb,
-                                  mesh: Outline.surface(where: outline.signed.map { -($0 + open) },
+                                  mesh: Outline.surface(where: outline.signed.map { -($0 + foam) },
                                                         on: grid, height: water)))
             let far = grid.point(grid.width - Distances.oneMore, grid.height - Distances.oneMore)
             patch = GroundRect(lowest: grid.origin, highest: far)
         }
         // The rest of the water, out to all the camera can show: the covered ground
-        // less the patch, in as many as four slabs round it (FR-MAP-140).
-        for rect in covered.around(patch) {
-            let size = rect.highest - rect.lowest
-            let centre = (rect.highest + rect.lowest) * Geometry.half
-            parts.append(.init(shape: .box, layer: .water,
-                               size: SIMD3(size.x, IslandShape.waterDepth, size.y),
-                               centre: SIMD3(centre.x, water - IslandShape.waterDepth * Geometry.half, centre.y),
-                               colour: c.waterColour.rgb))
+        // less the patch, in as many as four slabs round it (FR-MAP-140); and the
+        // floor under it at its full depth, out to the floor's own coverage
+        // (FR-MAP-270). Both are drawn by their tops alone.
+        for (layer, rects, height, colour) in [(Scenery.Part.Layer.water, covered.around(patch), water, c.waterColour.rgb),
+                                               (.floor, coveredFloor.around(patch), floorBottom, c.floorColour.rgb)] {
+            for rect in rects {
+                let size = rect.highest - rect.lowest
+                let centre = (rect.highest + rect.lowest) * Geometry.half
+                parts.append(.init(shape: .box, layer: layer,
+                                   size: SIMD3(size.x, IslandShape.waterDepth, size.y),
+                                   centre: SIMD3(centre.x, height - IslandShape.waterDepth * Geometry.half, centre.y),
+                                   colour: colour))
+            }
         }
 
         let birds = Birds(interval: c.birdInterval, count: c.birdCount, speed: c.birdSpeed,
@@ -85,8 +90,9 @@ enum Greenholm {
         return Scenery(parts: parts, surfaces: surfaces, covered: covered, surface: water,
                        sky: .init(zenith: c.skyZenithColour.rgb, horizon: c.skyHorizonColour.rgb),
                        birds: birds, waterRoughness: c.waterRoughness,
-                       waterSpecular: c.waterSpecular,
-                       ripple: .init(wavelength: c.rippleWavelength, speed: c.rippleSpeed,
+                       waterSpecular: c.waterSpecular, waterOpacity: c.waterOpacity,
+                       floorColour: c.floorColour.rgb,
+                       ripple: .init(wavelength: c.rippleWavelength, speedShare: c.rippleSpeedShare,
                                      strength: c.rippleStrength, slope: c.rippleSlope))
     }
 
@@ -97,7 +103,7 @@ enum Greenholm {
         guard let groundLevel = plan.groundLevel else { return nil }
         return Outline.around(plan.cells { $0 == groundLevel }, basement: plan.cells { $0 < groundLevel },
                               cellSize: plan.cellSize, margin: c.edgeMargin, rounding: c.edgeRounding,
-                              reach: c.shoreWidth + max(c.foamWidth, .zero) + max(c.shallowsWidth, .zero)
+                              reach: c.shoreWidth + max(c.foamWidth, .zero) + max(c.floorWidth, .zero)
                                   + OutlineGrid.pad)
     }
 }

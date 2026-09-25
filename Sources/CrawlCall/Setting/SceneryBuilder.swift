@@ -3,7 +3,7 @@
 // moves the birds. Nothing built here joins the map's entity or `SeeThrough`: scenery
 // is for the eye only (FR-MAP-130).
 //
-// implements: FR-GREENHOLM-010, FR-GREENHOLM-020, FR-GREENHOLM-030, FR-MAP-130, FR-TOOL-200, FR-MAP-200, FR-VIEW-240, FR-GREENHOLM-060, FR-GREENHOLM-070
+// implements: FR-GREENHOLM-010, FR-GREENHOLM-020, FR-GREENHOLM-030, FR-MAP-130, FR-TOOL-200, FR-MAP-200, FR-VIEW-240, FR-GREENHOLM-060, FR-GREENHOLM-070, FR-MAP-270, FR-MAP-280
 import CoreGraphics
 import Foundation
 import Metal
@@ -54,6 +54,7 @@ enum SceneryBuilder {
         // Water is glossy where everything else is matt (FR-GREENHOLM-060), so its
         // materials are kept apart even where a colour is the same.
         var waters: [SIMD3<Double>: any Material] = [:]
+        var floors: [SIMD3<Double>: any Material] = [:]
         func material(_ layer: Scenery.Part.Layer, _ colour: SIMD3<Double>) -> any Material {
             switch layer {
             case .ground:
@@ -64,16 +65,35 @@ enum SceneryBuilder {
                 let made = waters[colour] ?? water(colour, scenery: scenery)
                 waters[colour] = made
                 return made
+            case .floor:
+                let made = floors[colour] ?? floor(colour, scenery: scenery)
+                floors[colour] = made
+                return made
             }
         }
         for part in scenery.parts where part.size.min() > .zero {
-            let mesh = meshes[part.shape] ?? unitMesh(part.shape)
-            meshes[part.shape] = mesh
-            let material = material(part.layer, part.colour)
-            let model = ModelEntity(mesh: mesh, materials: [material])
+            let model: ModelEntity
+            switch part.layer {
+            case .ground:
+                let mesh = meshes[part.shape] ?? unitMesh(part.shape)
+                meshes[part.shape] = mesh
+                model = ModelEntity(mesh: mesh, materials: [material(part.layer, part.colour)])
+                model.scale = SIMD3(Float(part.size.x), Float(part.size.y), Float(part.size.z))
+                model.position = SIMD3(Float(part.centre.x), Float(part.centre.y), Float(part.centre.z))
+            case .water, .floor:
+                // By its top alone: the water can be seen through (FR-MAP-280), and a
+                // slab's sides would show through it where two slabs meet. The floor
+                // beyond the grid is at its full depth.
+                let share = part.layer == .floor ? Fraction.whole : Fraction.none
+                let top = Outline.level(GroundRect(lowest: SIMD2(part.lowest.x, part.lowest.z),
+                                                   highest: SIMD2(part.highest.x, part.highest.z)),
+                                        height: part.top, share: share)
+                guard let mesh = try? meshResource(top) else {
+                    preconditionFailure(String(describing: SceneryError.surfaceNotBuilt))
+                }
+                model = ModelEntity(mesh: mesh, materials: [material(part.layer, part.colour)])
+            }
             model.name = EntityName.sceneryPart
-            model.scale = SIMD3(Float(part.size.x), Float(part.size.y), Float(part.size.z))
-            model.position = SIMD3(Float(part.centre.x), Float(part.centre.y), Float(part.centre.z))
             model.components.set(ImageBasedLightReceiverComponent(imageBasedLight: ambient))
             root.addChild(model)
         }
@@ -105,6 +125,12 @@ enum SceneryBuilder {
         let frames = mesh.normals.map(tangentFrame)
         descriptor.tangents = MeshBuffers.Tangents(frames.map(\.tangent))
         descriptor.bitangents = MeshBuffers.Tangents(frames.map(\.bitangent))
+        // How far down the floor's slope, for the floor shader to colour it by
+        // (FR-MAP-270); nothing else carries it.
+        if !mesh.shares.isEmpty, mesh.shares.count == mesh.positions.count {
+            descriptor.textureCoordinates = MeshBuffers.TextureCoordinates(
+                mesh.shares.map { SIMD2(Float($0), Float(Fraction.none)) })
+        }
         descriptor.primitives = .triangles(mesh.indices)
         return try MeshResource.generate(from: [descriptor])
     }
@@ -128,18 +154,39 @@ enum SceneryBuilder {
         }
     }
 
-    /// Water: glossy (FR-GREENHOLM-060), with glints moving across it through the
-    /// water shader (FR-GREENHOLM-070, ADR-0038); glossy and still where Metal or the
-    /// function is not there.
+    /// Water: glossy (FR-GREENHOLM-060), partly transparent (FR-MAP-280), with waves
+    /// moving across it through the water shader (FR-GREENHOLM-070, ADR-0038); glossy
+    /// and still where Metal or the function is not there.
     static func water(_ colour: SIMD3<Double>, scenery: Scenery) -> any Material {
         var glossy = matt(colour, roughness: scenery.waterRoughness)
         glossy.specular = .init(floatLiteral: Float(scenery.waterSpecular))
+        glossy.blending = .transparent(opacity: .init(floatLiteral: Float(scenery.waterOpacity)))
         guard let library = shaderLibrary else { return glossy }
         let shader = CustomMaterial.SurfaceShader(named: Resource.waterShader, in: library)
         guard var rippled = try? CustomMaterial(from: glossy, surfaceShader: shader) else { return glossy }
-        rippled.custom.value = SIMD4(Float(scenery.ripple.wavelength), Float(scenery.ripple.speed),
+        rippled.custom.value = SIMD4(Float(scenery.ripple.wavelength), Float(scenery.ripple.speedShare),
                                      Float(scenery.ripple.strength), Float(scenery.ripple.slope))
+        // Transparent, at the water's opacity (FR-MAP-280). A custom material drops the
+        // opacity its blending is given and reads back whole, so the shader sets the
+        // opacity itself, from the clearcoat's roughness: the water has no clearcoat,
+        // and that value reaches the shader as it was set (ADR-0039).
+        rippled.blending = .transparent(opacity: .init(floatLiteral: Float(Fraction.whole)))
+        rippled.clearcoat = .init(floatLiteral: Float(Fraction.none))
+        rippled.clearcoatRoughness = .init(floatLiteral: Float(scenery.waterOpacity))
         return rippled
+    }
+
+    /// The floor under the water (FR-MAP-270): matt, from `colour` at its edge towards
+    /// the scenery's floor colour at depth, by how far down its slope each point lies;
+    /// the colour at its edge alone where Metal or the function is not there.
+    static func floor(_ colour: SIMD3<Double>, scenery: Scenery) -> any Material {
+        let matt = matt(colour)
+        guard let library = shaderLibrary else { return matt }
+        let shader = CustomMaterial.SurfaceShader(named: Resource.floorShader, in: library)
+        guard var coloured = try? CustomMaterial(from: matt, surfaceShader: shader) else { return matt }
+        let deep = scenery.floorColour
+        coloured.custom.value = SIMD4(Float(deep.x), Float(deep.y), Float(deep.z), .zero)
+        return coloured
     }
     private static let shaderLibrary: (any MTLLibrary)? = MTLCreateSystemDefaultDevice()?.makeDefaultLibrary()
 

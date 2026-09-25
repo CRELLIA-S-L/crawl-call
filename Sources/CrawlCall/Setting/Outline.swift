@@ -13,14 +13,18 @@
 // part inside, with the edge placed between the samples by the field's values, so the
 // edge is smooth to a fraction of the grid's step rather than stepped by it.
 //
-// implements: FR-MAP-200, FR-MAP-170, FR-GREENHOLM-010
+// implements: FR-MAP-200, FR-MAP-170, FR-GREENHOLM-010, FR-MAP-270
 import Foundation
+import simd
 
 /// Triangles in world metres, with a normal for every vertex.
 struct Mesh: Equatable {
     var positions: [SIMD3<Double>] = []
     var normals: [SIMD3<Double>] = []
     var indices: [UInt32] = []
+    /// For a sea floor, how far down its slope each vertex lies, 0 at the edge and 1
+    /// at the full depth (FR-MAP-270); empty for every other surface.
+    var shares: [Double] = []
 
     var isEmpty: Bool { indices.isEmpty }
 
@@ -130,6 +134,87 @@ struct Outline: Equatable {
                 }
             }
         }
+        return mesh
+    }
+
+    /// The floor under the water (FR-MAP-270): a height field over the grid, every
+    /// `stride` samples, just under the water at `top` where the signed distance
+    /// says the edge is `edge` metres out, falling smoothly to `bottom` over `width`
+    /// metres beyond it, and level there. Only where it can be seen: squares with a
+    /// corner beyond the edge, less one square, so that it reaches in under the shore
+    /// and leaves no gap; never under the island, where a basement may be open.
+    static func floor(under outline: Outline, edge: Double, width: Double, top: Double, bottom: Double,
+                      stride: Int) -> Mesh {
+        let grid = outline.grid
+        let stride = max(stride, Distances.oneMore)
+        let columns = (grid.width - Distances.oneMore) / stride + Distances.oneMore
+        let rows = (grid.height - Distances.oneMore) / stride + Distances.oneMore
+        let spacing = grid.step * Double(stride)
+        func sample(_ column: Int, _ row: Int) -> Double {
+            outline.signed[grid.index(column * stride, row * stride)]
+        }
+        func share(_ column: Int, _ row: Int) -> Double {
+            let beyond = -sample(column, row) - edge
+            guard width > .zero else { return beyond > .zero ? Fraction.whole : Fraction.none }
+            let t = min(max(beyond / width, Fraction.none), Fraction.whole)
+            return t * t * (SmoothStep.three - SmoothStep.two * t)
+        }
+        var shares = [Double](repeating: .zero, count: columns * rows)
+        var heights = shares
+        for row in Int.zero..<rows {
+            for column in Int.zero..<columns {
+                let s = share(column, row)
+                shares[row * columns + column] = s
+                heights[row * columns + column] = top + (bottom - top) * s
+            }
+        }
+        func height(_ column: Int, _ row: Int) -> Double {
+            heights[min(max(row, .zero), rows - Distances.oneMore) * columns
+                    + min(max(column, .zero), columns - Distances.oneMore)]
+        }
+        var mesh = Mesh()
+        var index = [Int](repeating: -1, count: columns * rows)
+        func vertex(_ column: Int, _ row: Int) -> UInt32 {
+            let at = row * columns + column
+            if index[at] < .zero {
+                index[at] = mesh.positions.count
+                let p = grid.point(column * stride, row * stride)
+                mesh.positions.append(SIMD3(p.x, heights[at], p.y))
+                // Central differences over the height field, one step either side.
+                let next = Distances.oneMore
+                let across = (height(column + next, row) - height(column - next, row)) / (Geometry.bothSides * spacing)
+                let down = (height(column, row + next) - height(column, row - next)) / (Geometry.bothSides * spacing)
+                mesh.normals.append(simd_normalize(SIMD3(-across, Fraction.whole, -down)))
+                mesh.shares.append(shares[at])
+            }
+            return UInt32(index[at])
+        }
+        for row in Int.zero..<(rows - Distances.oneMore) {
+            for column in Int.zero..<(columns - Distances.oneMore) {
+                let next = Distances.oneMore
+                let nearest = [sample(column, row), sample(column + next, row),
+                               sample(column, row + next), sample(column + next, row + next)].min() ?? .infinity
+                guard nearest < -edge + spacing else { continue }
+                let a = vertex(column, row), b = vertex(column + next, row)
+                let c = vertex(column + next, row + next), d = vertex(column, row + next)
+                // Wound as `surface` winds its squares, so that the floor faces up.
+                mesh.indices += [a, d, c, a, c, b]
+            }
+        }
+        return mesh
+    }
+
+    /// A level rectangle at `height`, facing up, every vertex at `share` down the
+    /// floor's slope: the floor and the water beyond the grid (FR-MAP-270).
+    static func level(_ rect: GroundRect, height: Double, share: Double) -> Mesh {
+        let up = SIMD3(Fraction.none, Fraction.whole, Fraction.none)
+        let low = rect.lowest, high = rect.highest
+        let a = SIMD3(low.x, height, low.y), b = SIMD3(high.x, height, low.y)
+        let c = SIMD3(high.x, height, high.y), d = SIMD3(low.x, height, high.y)
+        var mesh = Mesh()
+        mesh.triangle(a, d, c, normal: up)
+        mesh.triangle(a, c, b, normal: up)
+        mesh.shares = [Double](repeating: share, count: mesh.positions.count)
         return mesh
     }
 

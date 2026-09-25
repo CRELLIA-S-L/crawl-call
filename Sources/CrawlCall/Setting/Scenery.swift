@@ -5,7 +5,7 @@
 // are what the snake collides with, what the bots see and what is cut open
 // (FR-MAP-130).
 //
-// implements: FR-MAP-130, FR-MAP-140, FR-MAP-200, FR-GREENHOLM-060, FR-GREENHOLM-070
+// implements: FR-MAP-130, FR-MAP-140, FR-MAP-200, FR-GREENHOLM-060, FR-GREENHOLM-070, FR-MAP-270, FR-MAP-280
 import Foundation
 
 struct Scenery: Equatable {
@@ -13,7 +13,7 @@ struct Scenery: Equatable {
     struct Part: Equatable {
         enum Shape: Equatable, CaseIterable { case box }
         /// Which of a setting's layers the part belongs to (ADR-0031).
-        enum Layer: Equatable { case ground, water }
+        enum Layer: Equatable { case ground, water, floor }
 
         let shape: Shape
         let layer: Layer
@@ -51,13 +51,19 @@ struct Scenery: Equatable {
     let waterRoughness: Double
     /// How strongly the water reflects, 0 not at all (FR-GREENHOLM-060).
     let waterSpecular: Double
+    /// How opaque the water is, 0 to 1 (FR-MAP-280).
+    let waterOpacity: Double
+    /// The floor's colour at its full depth; at the edge it is its surfaces' own
+    /// colour (FR-MAP-270).
+    let floorColour: SIMD3<Double>
     /// The glints that move across the water (FR-GREENHOLM-070).
     let ripple: Ripple
 
     struct Ripple: Equatable {
-        /// Metres from one wave to the next, and metres a second they travel.
+        /// The longest waves' length in metres, and their speed as a share of the
+        /// speed deep water carries a wave of their length.
         let wavelength: Double
-        let speed: Double
+        let speedShare: Double
         /// How far a glint lifts the water's colour towards white, 0 to 1.
         let strength: Double
         /// How steep the waves are: the largest tilt of the surface, as rise over run.

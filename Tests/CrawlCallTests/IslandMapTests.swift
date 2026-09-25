@@ -3,7 +3,7 @@
 // (FR-MAP-170); the snake born where the map says (FR-MAP-180, FR-MAP-190); and what
 // each module stops (FR-MAP-210, FR-MAP-220).
 //
-// verifies: FR-MAP-170, FR-MAP-180, FR-MAP-190, FR-MAP-200, FR-MAP-210, FR-MAP-220, FR-GREENHOLM-010, FR-GREENHOLM-040, FR-GREENHOLM-050, FR-GREENHOLM-060, FR-GREENHOLM-070, IF-MAP-010
+// verifies: FR-MAP-170, FR-MAP-180, FR-MAP-190, FR-MAP-200, FR-MAP-210, FR-MAP-220, FR-GREENHOLM-010, FR-GREENHOLM-050, FR-GREENHOLM-060, FR-GREENHOLM-070, FR-MAP-270, FR-MAP-280, IF-MAP-010
 import RealityKit
 import XCTest
 @testable import CrawlCall
@@ -183,17 +183,18 @@ final class GreenholmIslandTests: XCTestCase {
         let world = try Launch.world().get()
         let camera = CameraRange(view: world.configurations.view, plan: world.plan, widestAspect: 2.174)
         let s = try world.setting.scenery(around: world.plan, camera: camera)
-        XCTAssertTrue(s.parts.allSatisfy { $0.layer == .water }, "scenery other than water is a primitive again")
+        XCTAssertTrue(s.parts.allSatisfy { $0.layer == .water || $0.layer == .floor },
+                      "scenery other than water and the floor under it is a primitive again")
         XCTAssertEqual(s.surfaces.filter { $0.layer == .ground }.count, 4)
-        // The foam, the shallows' bands and the water beyond them (FR-GREENHOLM-050,
-        // FR-GREENHOLM-040).
-        guard case .greenholm(let c) = world.setting else { return XCTFail("the shipped map is on Greenholm") }
-        XCTAssertEqual(s.surfaces.filter { $0.layer == .water }.count, c.shallowsBands + 2)
+        // The foam and the water beyond it (FR-GREENHOLM-050), and the floor under
+        // them (FR-MAP-270).
+        XCTAssertEqual(s.surfaces.filter { $0.layer == .water }.count, 2)
+        XCTAssertEqual(s.surfaces.filter { $0.layer == .floor }.count, 1)
         XCTAssertTrue(s.surfaces.allSatisfy { !$0.mesh.isEmpty })
         // The water reaches everything the camera can show: the covered ground, less the
         // island's grid, in slabs, and the grid's own water cut to the shore.
-        let slabs = s.parts.map { GroundRect(lowest: SIMD2($0.lowest.x, $0.lowest.z), highest: SIMD2($0.highest.x, $0.highest.z)) }
-        let island = s.surfaces.flatMap(\.mesh.positions)
+        let slabs = s.parts.filter { $0.layer == .water }.map { GroundRect(lowest: SIMD2($0.lowest.x, $0.lowest.z), highest: SIMD2($0.highest.x, $0.highest.z)) }
+        let island = s.surfaces.filter { $0.layer != .floor }.flatMap(\.mesh.positions)
         let low = SIMD2(try XCTUnwrap(island.map(\.x).min()), try XCTUnwrap(island.map(\.z).min()))
         let high = SIMD2(try XCTUnwrap(island.map(\.x).max()), try XCTUnwrap(island.map(\.z).max()))
         var chooser = SplitMix(state: 11)
@@ -227,10 +228,36 @@ final class GreenholmIslandTests: XCTestCase {
         XCTAssertEqual(roughness.count, models.count)
         XCTAssertTrue(roughness.contains { abs(Double($0) - s.waterRoughness) < 1e-6 })
         XCTAssertTrue(roughness.contains { abs($0 - SceneryShape.roughness) < 1e-6 })
-        // And glints move across it, from the setting's ripple (FR-GREENHOLM-070).
-        let rippled = models.compactMap { $0.model?.materials.first as? CustomMaterial }
-        XCTAssertFalse(rippled.isEmpty)
-        XCTAssertTrue(rippled.allSatisfy { $0.custom.value.x == Float(s.ripple.wavelength) })
+        // Models come in the order of the parts and then the surfaces that are drawn.
+        let layers = s.parts.map(\.layer) + s.surfaces.filter { !$0.mesh.isEmpty }.map(\.layer)
+        let water = zip(layers, models).filter { $0.0 == .water }.map(\.1)
+        let floor = zip(layers, models).filter { $0.0 == .floor }.map(\.1)
+        XCTAssertFalse(water.isEmpty)
+        XCTAssertFalse(floor.isEmpty)
+        // Waves move across the water, from the setting's ripple (FR-GREENHOLM-070),
+        // and it is drawn at the setting's opacity (FR-MAP-280).
+        for model in water {
+            let material = try XCTUnwrap(model.model?.materials.first as? CustomMaterial, model.name)
+            XCTAssertEqual(material.custom.value.x, Float(s.ripple.wavelength))
+            XCTAssertEqual(material.custom.value.y, Float(s.ripple.speedShare))
+            XCTAssertEqual(material.custom.value.z, Float(s.ripple.strength))
+            XCTAssertEqual(material.custom.value.w, Float(s.ripple.slope))
+            // And it reflects as strongly as the setting says (FR-GREENHOLM-060).
+            XCTAssertEqual(material.specular.scale, Float(s.waterSpecular), accuracy: 1e-6)
+            guard case .transparent = material.blending else { return XCTFail("the water is opaque") }
+            // The opacity reaches the shader in the clearcoat's roughness, and the
+            // water has no clearcoat (ADR-0039).
+            XCTAssertEqual(material.clearcoatRoughness.scale, Float(s.waterOpacity), accuracy: 1e-6)
+            XCTAssertEqual(material.clearcoat.scale, 0)
+        }
+        // The floor is coloured towards its colour at depth (FR-MAP-270), and opaque.
+        for model in floor {
+            let material = try XCTUnwrap(model.model?.materials.first as? CustomMaterial, model.name)
+            for channel in 0..<3 {
+                XCTAssertEqual(Double(material.custom.value[channel]), s.floorColour[channel], accuracy: 1e-6)
+            }
+            guard case .opaque = material.blending else { return XCTFail("the floor is not opaque") }
+        }
     }
 }
 

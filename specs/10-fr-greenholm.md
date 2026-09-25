@@ -69,7 +69,8 @@ At intervals from configuration, because how often is tuned by eye, and a number
 ### FR-GREENHOLM-040 — Greenholm's water is shallow at the shore
 
 ```yaml
-status: implemented
+status: superseded
+superseded_by: FR-MAP-270
 verification: D
 derives_from: []
 depends_on: [FR-GREENHOLM-010, FR-MAP-200]
@@ -85,6 +86,7 @@ Where a map's setting is Greenholm, the system **shall** draw the water beyond t
 **Rationale.** The maintainer, 2026-09-25: the water is to be a little prettier, and shallows at the shore were the first of the four ways put to them.
 In steps rather than a smooth fade, because the island is a diorama of flat, rounded pieces and the water is built the way its shore is — as surfaces cut along the edge's distance field (FR-MAP-200) — so a band is one more such surface and costs nothing a frame.
 Judged on the phone, because whether it reads as shallow water is what the eye decides; the maintainer found it good on 2026-09-25 at three bands over 2.4 m.
+Superseded on 2026-09-25, the day it was written, by FR-MAP-270: the maintainer asked for the shallows to be a sea floor rising to the shore under water one can partly see through, rather than bands of colour, and for that to be a rule of every map whose setting ends in water rather than of Greenholm alone.
 
 ### FR-GREENHOLM-050 — Foam lines Greenholm's shore
 
@@ -92,7 +94,7 @@ Judged on the phone, because whether it reads as shallow water is what the eye d
 status: implemented
 verification: D
 derives_from: []
-depends_on: [FR-GREENHOLM-040]
+depends_on: [FR-GREENHOLM-010]
 refines: []
 conflicts_with: []
 code: [Sources/CrawlCall/Setting/Greenholm.swift, Sources/CrawlCall/Config/GreenholmConfiguration.swift, config/setting/greenholm.json]
@@ -100,11 +102,12 @@ tests: [Tests/CrawlCallTests/IslandMapTests.swift]
 created: 2026-09-25
 ```
 
-Where a map's setting is Greenholm, the system **shall** draw a band of foam on the water along the shore, as wide and of the colour the setting's configuration sets, with the shallows beginning where it ends.
+Where a map's setting is Greenholm, the system **shall** draw a band of foam on the water along the shore, as wide and of the colour the setting's configuration sets.
 
 **Rationale.** The maintainer, 2026-09-25: the second of the four ways to make the water prettier. A pale rim where water meets sand is how a diorama draws a shore, and it separates the sand from the pale shallows, which are close to it in brightness.
 A band of the same kind as the shallows' (FR-GREENHOLM-040), for the same reason: a surface cut along the edge, costing nothing a frame. Still, not moving; whether it moves is for the ripple.
 Judged on the phone: on 2026-09-25, at 0.3 m and near white, it barely parted from the pale sand, and the maintainer left it as it is for now.
+The clause that had the shallows begin where the foam ends went with the shallows' bands, when FR-MAP-270 put a floor under the water in their place on 2026-09-25; the floor's slope begins at the shore, under the foam.
 
 ### FR-GREENHOLM-060 — Greenholm's water is glossy
 
@@ -140,8 +143,8 @@ tests: [Tests/CrawlCallTests/IslandMapTests.swift]
 created: 2026-09-25
 ```
 
-Where a map's setting is Greenholm, the system **shall** draw waves that move continuously across the water, their slopes lit by the sun and their crests paler, without a seam where one piece of the water meets another, at the wavelength, speed, steepness and crest strength the setting's configuration sets.
+Where a map's setting is Greenholm, the system **shall** draw waves of many lengths that move continuously across the water, each faster the longer it is, their slopes lit by the sun and their crests paler, without a seam where one piece of the water meets another, at the longest length, speed, steepness and crest strength the setting's configuration sets.
 
-**Rationale.** The maintainer, 2026-09-25: the fourth of the four ways to make the water prettier, and the one that makes it move. The gloss alone (FR-GREENHOLM-060) showed little, because the light above the water is flat. Pale glints drawn in the water's colour came first, and on the phone they read as white dots: the maintainer found the waves had no volume, which is what the sun on their slopes gives them.
+**Rationale.** The maintainer, 2026-09-25: the fourth of the four ways to make the water prettier, and the one that makes it move. The gloss alone (FR-GREENHOLM-060) showed little, because the light above the water is flat. Pale glints drawn in the water's colour came first, and on the phone they read as white dots: the maintainer found the waves had no volume, which is what the sun on their slopes gives them. With volume, they found the waves all of one size and standing still: of many lengths, each faster the longer it is, is how water moves, and how ocean shaders are built (ADR-0038).
 Without a seam, because the water is laid in bands along the shore and in slabs beyond them, and a pattern laid in each piece's own space would break at every join; ADR-0038 says how.
 Judged on the phone, and measured there in frames, because the water is the largest surface in the frame and the shader runs over all of it.
