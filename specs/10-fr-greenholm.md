@@ -43,6 +43,7 @@ Where a map's setting is Greenholm, the system **shall** draw a daylight sky abo
 **Rationale.** The match camera never shows the sky (FR-MAP-140), so to a match a sky is a risk before it is a picture: it must not become a second light or dim the ambient, which is FR-VIEW-130's measure.
 Worded as agreed on 2026-09-24 it said the sky "lights the scene"; building it showed that the lighting FR-VIEW-130 asked for — one sun, and a flat ambient every model receives explicitly — is best left as it is, and the frame with the sky and without it came out identical in every pixel sampled (ADR-0031). So the sky is drawn, and the scene is left lit as before.
 Seen as a sky only through the free camera of debug mode.
+On the phone, 2026-09-25, the free camera showed the sky a pale grey-blue: the picture is drawn, and RealityKit's default tone mapping, which runs over the whole frame, washes its blue towards grey. The maintainer left it as it is for now; Q-350 holds the measurements and the ways to change it.
 
 ### FR-GREENHOLM-030 — Birds cross Greenholm's sky
 

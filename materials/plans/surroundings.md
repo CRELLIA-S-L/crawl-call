@@ -2,7 +2,7 @@
 
 A plan agreed with the maintainer on 2026-09-24 and not yet started. It is written so that an agent with no memory of the conversation can take it up; everything it needs is here or pointed to from here.
 This file is not the specification. `specs/` is, and the first step of the work below is to write the requirements into it; until then nothing here binds anybody (ART-020 of `specs/constitution.md`, and `AGENTS.md`).
-The open question that points here is Q-270 in `specs/91-open-issues.md`.
+The open question that pointed here, Q-270, was closed on 2026-09-25 once the work was built and judged on the phone (`specs/91-open-issues.md`).
 
 **Built (2026-09-24)** through step 6 — the requirements, ADR-0031, the coverage, the setting, Greenholm with its sky, and the birds; step 7, wind, was not asked for. What changed from this plan on the way is in ADR-0031.
 
