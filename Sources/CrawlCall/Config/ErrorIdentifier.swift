@@ -28,6 +28,7 @@ enum ErrorIdentifier: String, CaseIterable {
     case kitMissing = "KIT_MISSING"
     case kitLegendKeyNotOneCharacter = "KIT_LEGEND_KEY_NOT_ONE_CHARACTER"
     case kitModuleFieldNotThreeNumbers = "KIT_MODULE_FIELD_NOT_THREE_NUMBERS"
+    case kitStepModuleNotInLegend = "KIT_STEP_MODULE_NOT_IN_LEGEND"
 
     // Finding and reading a map file.
     case mapMissing = "MAP_MISSING"
@@ -37,6 +38,8 @@ enum ErrorIdentifier: String, CaseIterable {
     case mapNoKit = "MAP_NO_KIT"
     case mapNoFloors = "MAP_NO_FLOORS"
     case mapRepeatedKit = "MAP_REPEATED_KIT"
+    case mapNoSetting = "MAP_NO_SETTING"
+    case mapRepeatedSetting = "MAP_REPEATED_SETTING"
     case mapUnknownDirective = "MAP_UNKNOWN_DIRECTIVE"
     case mapGridBeforeAnyFloor = "MAP_GRID_BEFORE_ANY_FLOOR"
     case mapRepeatedFloor = "MAP_REPEATED_FLOOR"
@@ -46,6 +49,15 @@ enum ErrorIdentifier: String, CaseIterable {
     case mapRaggedGrid = "MAP_RAGGED_GRID"
     case mapUnknownCharacter = "MAP_UNKNOWN_CHARACTER"
     case mapEmptyFloor = "MAP_EMPTY_FLOOR"
+    case mapFlightLeadsNowhere = "MAP_FLIGHT_LEADS_NOWHERE"
+    case mapFlightTooSteep = "MAP_FLIGHT_TOO_STEEP"
+
+    // The setting a map names (FR-MAP-120, FR-MAP-140).
+    case settingUnknown = "SETTING_UNKNOWN"
+    case settingHorizonInFrame = "SETTING_HORIZON_IN_FRAME"
+    case sceneryNoAmbientLight = "SCENERY_NO_AMBIENT_LIGHT"
+    case scenerySkyImageNotPainted = "SCENERY_SKY_IMAGE_NOT_PAINTED"
+    case scenerySkyNotGenerated = "SCENERY_SKY_NOT_GENERATED"
 
     // Building the scene's light.
     case sceneAmbientBitmapNotCreated = "SCENE_AMBIENT_BITMAP_NOT_CREATED"

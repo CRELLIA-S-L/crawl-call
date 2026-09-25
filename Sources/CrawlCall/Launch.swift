@@ -7,16 +7,20 @@
 // is not something the specification settles yet; what it must not do — carry on with
 // defaults — it does settle, by ADR-0012's rule that a typo is an error.
 //
-// implements: IF-SNAKE-010, IF-MAP-020, IF-VIEW-020, IF-BOT-010, FR-MAP-020, FR-TOOL-200
+// implements: IF-SNAKE-010, IF-MAP-020, IF-VIEW-020, IF-BOT-010, FR-MAP-020, FR-MAP-160, FR-TOOL-200, FR-MAP-120, FR-MAP-140, IF-GREENHOLM-010
 import Foundation
 
 /// Everything a match runs on, read once at start: the tuning, the kit, the map as
-/// parsed, the graph the bots path over and the geometry the player sees. Assembled
-/// in one place so that the scene and the graph cannot come from different files.
+/// parsed, the setting it names, the graph the bots path over and the geometry the
+/// player sees. Assembled in one place so that the scene and the graph cannot come
+/// from different files.
 struct World {
     let configurations: Configurations
     let kit: Kit
     let map: MapSpecification
+    /// The world the arena stands in (FR-MAP-120). Scenery only: nothing below reads
+    /// it but the view (FR-MAP-130).
+    let setting: Setting
     let graph: NavigationGraph
     let plan: ScenePlan
 }
@@ -39,11 +43,16 @@ enum Launch {
             // characters are legal is the kit's legend (ADR-0012).
             let header = try MapParser.kitName(in: text)
             let kit = try Kit.load(named: header, from: bundle)
-            let map = try MapParser.parse(text, kit: kit)
+            let map = try MapParser.parse(text, kit: kit, stepHeight: configurations.tuning.stepHeight)
+            let setting = try Setting.load(named: map.setting, from: bundle)
+            // A camera that could see the horizon could see past any world a setting
+            // builds (FR-MAP-140); that is a configuration no match can run on.
+            try FrameCoverage.requireGroundInFrame(view: configurations.view)
             return .success(World(configurations: configurations,
                                   kit: kit,
                                   map: map,
-                                  graph: NavigationGraph.derive(from: map),
+                                  setting: setting,
+                                  graph: NavigationGraph.derive(from: map, stepHeight: configurations.tuning.stepHeight),
                                   plan: ScenePlan.make(map: map, kit: kit,
                                                        cellSize: configurations.tuning.navigationGraphCellSize)))
         } catch {

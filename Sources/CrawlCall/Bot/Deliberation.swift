@@ -11,7 +11,7 @@
 // configuration (IF-BOT-010), as is how much an unhurt bot fears the snake
 // (FR-BOT-210). What shapes each term — a share, a whole — is in `Utility`.
 //
-// implements: FR-BOT-080, FR-BOT-090, FR-BOT-118, FR-BOT-200, FR-BOT-210
+// implements: FR-BOT-080, FR-BOT-090, FR-BOT-118, FR-BOT-200, FR-BOT-210, FR-MAP-150
 import Foundation
 
 enum Deliberation {
@@ -210,9 +210,7 @@ enum Deliberation {
     }
 
     static func centre(of node: NavigationGraph.Node, in situation: Situation) -> SIMD3<Double> {
-        SIMD3(Double(node.x) * situation.cellSize,
-              Double(node.floor) * situation.plan.floorHeight,
-              Double(node.z) * situation.cellSize)
+        situation.graph.centre(of: node, cellSize: situation.cellSize, floorHeight: situation.plan.floorHeight)
     }
 
     /// One at arm's length, nothing at the edge of the world.

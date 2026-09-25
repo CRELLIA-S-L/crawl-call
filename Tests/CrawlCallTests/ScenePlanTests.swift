@@ -13,7 +13,7 @@ final class ScenePlanTests: XCTestCase {
     }
 
     func testACellsPositionIsItsIndexTimesTheCellSize() throws {
-        let p = try plan("kit blockout\nfloor 0\n...\n...\n")
+        let p = try plan("kit blockout\nsetting greenholm\nfloor 0\n...\n...\n")
         let corner = try XCTUnwrap(p.pieces.first)
         XCTAssertEqual(corner.centre.x, 0, accuracy: 1e-9)
         XCTAssertEqual(corner.centre.z, 0, accuracy: 1e-9)
@@ -23,7 +23,7 @@ final class ScenePlanTests: XCTestCase {
     }
 
     func testAFloorSlabHangsBelowItsWalkingSurfaceAndAWallStandsOnIt() throws {
-        let p = try plan("kit blockout\nfloor 0\n.#\n")
+        let p = try plan("kit blockout\nsetting greenholm\nfloor 0\n.#\n")
         let slab = try XCTUnwrap(p.pieces.first { $0.module == "floor" })
         let wall = try XCTUnwrap(p.pieces.first { $0.module == "wall" })
         // The slab is 0.1 thick, so its centre is half of that below zero.
@@ -42,20 +42,20 @@ final class ScenePlanTests: XCTestCase {
     }
 
     func testTheUpperFloorSitsOneFloorHeightAbove() throws {
-        let p = try plan("kit blockout\nfloor 0\n.\nfloor 1\n.\n")
+        let p = try plan("kit blockout\nsetting greenholm\nfloor 0\n.\nfloor 1\n.\n")
         let ys = p.pieces.map(\.centre.y).sorted()
         XCTAssertEqual(ys.first!, -0.05, accuracy: 1e-9)
         XCTAssertEqual(ys.last!, kit.floorHeight - 0.05, accuracy: 1e-9)
     }
 
     func testTheCellSizeComesFromTheCallerNotTheKit() throws {
-        let p = try plan("kit blockout\nfloor 0\n..\n", cell: 1.25)
+        let p = try plan("kit blockout\nsetting greenholm\nfloor 0\n..\n", cell: 1.25)
         XCTAssertEqual(p.pieces[1].centre.x, 1.25, accuracy: 1e-9)
         XCTAssertEqual(p.cellSize, 1.25)
     }
 
     func testEverySizeComesFromTheKitsLegend() throws {
-        let p = try plan("kit blockout\nfloor 0\n.#o=/\n")
+        let p = try plan("kit blockout\nsetting greenholm\nfloor 0\n.#o=/\n")
         // Five cells, of which the wall, the crate and the partition are not walkable
         // and each gains the floor it stands on; the stair is walkable and is its own
         // surface, so it gains nothing (FR-TOOL-020).
@@ -67,7 +67,7 @@ final class ScenePlanTests: XCTestCase {
     }
 
     func testEmptyCellsProduceNoPieces() throws {
-        let p = try plan("kit blockout\nfloor 0\n. .\n")
+        let p = try plan("kit blockout\nsetting greenholm\nfloor 0\n. .\n")
         XCTAssertEqual(p.pieces.count, 2)
     }
 }
@@ -80,7 +80,7 @@ final class ScenePlanBoundsTests: XCTestCase {
     private lazy var kit: Kit = { try! Kit.load(named: "blockout", from: .main) }()
 
     func testTheBoundsCoverEveryPieceIncludingItsThickness() throws {
-        let map = try MapParser.parse("kit blockout\nfloor 0\n..\n", kit: kit)
+        let map = try MapParser.parse("kit blockout\nsetting greenholm\nfloor 0\n..\n", kit: kit)
         let plan = ScenePlan.make(map: map, kit: kit, cellSize: 0.5)
         // Two 0.5 × 0.1 × 0.5 slabs, the second half a metre along x, tops at y = 0.
         XCTAssertEqual(plan.bounds.lowest.x, -0.25, accuracy: 1e-9)
@@ -98,7 +98,7 @@ final class ScenePlanBoundsTests: XCTestCase {
     }
 
     func testEveryPieceCarriesTheColourItsModuleDeclares() throws {
-        let map = try MapParser.parse("kit blockout\nfloor 0\n.#o=/\n", kit: kit)
+        let map = try MapParser.parse("kit blockout\nsetting greenholm\nfloor 0\n.#o=/\n", kit: kit)
         let plan = ScenePlan.make(map: map, kit: kit, cellSize: 0.5)
         for piece in plan.pieces {
             let module = try XCTUnwrap(kit.modules.values.first { $0.name == piece.module })
@@ -215,7 +215,7 @@ final class ImpliedFloorTests: XCTestCase {
     }
 
     func testAWallCellAlsoGetsAFloorUnderIt() throws {
-        let p = try plan("kit blockout\nfloor 0\n#\n")
+        let p = try plan("kit blockout\nsetting greenholm\nfloor 0\n#\n")
         XCTAssertEqual(p.pieces.count, 2)
         let floor = try XCTUnwrap(p.pieces.first { $0.module == "floor" })
         let wall = try XCTUnwrap(p.pieces.first { $0.module == "wall" })
@@ -226,12 +226,12 @@ final class ImpliedFloorTests: XCTestCase {
     }
 
     func testAWalkableCellIsNotGivenASecondFloor() throws {
-        let p = try plan("kit blockout\nfloor 0\n.\n")
+        let p = try plan("kit blockout\nsetting greenholm\nfloor 0\n.\n")
         XCTAssertEqual(p.pieces.count, 1)
     }
 
     func testEmptySpaceGetsNoFloorEither() throws {
-        let p = try plan("kit blockout\nfloor 0\n# #\n")
+        let p = try plan("kit blockout\nsetting greenholm\nfloor 0\n# #\n")
         XCTAssertEqual(p.pieces.filter { $0.module == "floor" }.count, 2)
         XCTAssertEqual(p.pieces.count, 4)     // two walls, each on its own floor
     }
@@ -266,7 +266,7 @@ final class TailSurfaceTests: XCTestCase {
 
     private func kitWithFloorWidth(_ width: Double) throws -> Kit {
         let json = """
-        {"floorHeight": 3.0, "floorModule": ".",
+        {"floorHeight": 3.0, "floorModule": ".", "stepModule": ".",
          "modules": {".": {"name": "floor", "walkable": true,
                            "size": [\(width), 0.1, \(width)], "colour": [0.5, 0.5, 0.5]}}}
         """
@@ -276,9 +276,9 @@ final class TailSurfaceTests: XCTestCase {
 
     private func gap(floorWidth: Double, cell: Double = 0.5) throws -> Double {
         let kit = try kitWithFloorWidth(floorWidth)
-        let map = try MapParser.parse("kit test\nfloor 0\n..\n..\n", kit: kit)
+        let map = try MapParser.parse("kit test\nsetting greenholm\nfloor 0\n..\n..\n", kit: kit)
         return ScenePlan.make(map: map, kit: kit, cellSize: cell)
-            .widestGap(along: NavigationGraph.derive(from: map))
+            .widestGap(along: NavigationGraph.derive(from: map, stepHeight: ShippedTuning.stepHeight))
     }
 
     func testAFloorModuleThatFillsItsCellLeavesNoGap() throws {

@@ -123,66 +123,77 @@ Counted by quarter, which is what `period` says in the register's configuration.
 
 | quarter | arrived unclaimed | areas |
 |---|---|---|
-| 2026-Q3 | 126 | BOT 22, MAP 11, PERF 4, PUB 12, SCORE 7, SNAKE 21, TOOL 22, VIEW 27 |
+| 2026-Q3 | 142 | BOT 27, GREENHOLM 4, MAP 16, PERF 4, PUB 12, SCORE 7, SNAKE 21, TOOL 24, VIEW 27 |
 
 ## Requirements resting on no hypothesis
 
-126 of 197 requirements. Weight is what stands on them: how many
+142 of 213 requirements. Weight is what stands on them: how many
 requirements link to them, plus how many files their `code` field names.
 
 | Requirement | Incoming | Code files | Weight |
 |---|---|---|---|
-| FR-BOT-080 | 22 | 3 | 25 |
+| FR-BOT-080 | 23 | 3 | 26 |
 | IF-SNAKE-010 | 12 | 6 | 18 |
-| IF-VIEW-020 | 6 | 7 | 13 |
-| IF-BOT-010 | 6 | 6 | 12 |
+| FR-MAP-150 | 1 | 13 | 14 |
+| IF-VIEW-020 | 7 | 7 | 14 |
+| FR-BOT-050 | 8 | 5 | 13 |
+| FR-MAP-020 | 10 | 3 | 13 |
+| IF-BOT-010 | 7 | 6 | 13 |
+| IF-MAP-010 | 7 | 5 | 12 |
+| IF-MAP-020 | 6 | 6 | 12 |
 | FR-TOOL-230 | 3 | 8 | 11 |
-| IF-MAP-020 | 5 | 6 | 11 |
+| FR-MAP-120 | 4 | 6 | 10 |
 | FR-SNAKE-110 | 10 | 0 | 10 |
-| FR-MAP-020 | 7 | 2 | 9 |
+| FR-TOOL-200 | 0 | 10 | 10 |
+| FR-VIEW-150 | 3 | 7 | 10 |
+| FR-BOT-010 | 8 | 1 | 9 |
+| FR-GREENHOLM-010 | 3 | 6 | 9 |
+| FR-MAP-140 | 1 | 8 | 9 |
 | FR-TOOL-020 | 4 | 5 | 9 |
-| FR-BOT-010 | 7 | 1 | 8 |
-| FR-BOT-050 | 3 | 5 | 8 |
 | FR-SNAKE-090 | 6 | 2 | 8 |
+| FR-VIEW-010 | 7 | 1 | 8 |
 | FR-VIEW-190 | 1 | 7 | 8 |
-| IF-MAP-010 | 5 | 3 | 8 |
+| FR-GREENHOLM-030 | 0 | 7 | 7 |
 | FR-TOOL-070 | 0 | 7 | 7 |
-| FR-TOOL-200 | 0 | 7 | 7 |
 | FR-TOOL-240 | 1 | 6 | 7 |
-| FR-VIEW-010 | 6 | 1 | 7 |
+| FR-VIEW-020 | 3 | 4 | 7 |
 | FR-VIEW-050 | 2 | 5 | 7 |
-| FR-VIEW-150 | 0 | 7 | 7 |
+| FR-VIEW-155 | 2 | 5 | 7 |
 | FR-VIEW-170 | 0 | 7 | 7 |
 | IF-VIEW-010 | 5 | 2 | 7 |
 | FR-BOT-150 | 3 | 3 | 6 |
 | FR-BOT-160 | 4 | 2 | 6 |
 | FR-MAP-030 | 6 | 0 | 6 |
 | FR-MAP-100 | 2 | 4 | 6 |
+| FR-MAP-130 | 1 | 5 | 6 |
 | FR-SCORE-010 | 6 | 0 | 6 |
 | FR-SNAKE-060 | 4 | 2 | 6 |
-| FR-VIEW-020 | 2 | 4 | 6 |
 | FR-VIEW-030 | 2 | 4 | 6 |
 | FR-VIEW-060 | 2 | 4 | 6 |
 | FR-VIEW-200 | 1 | 5 | 6 |
+| FR-VIEW-210 | 2 | 4 | 6 |
 | FR-BOT-030 | 4 | 1 | 5 |
 | FR-BOT-060 | 2 | 3 | 5 |
 | FR-SNAKE-030 | 2 | 3 | 5 |
 | FR-SNAKE-070 | 3 | 2 | 5 |
+| FR-TOOL-260 | 0 | 5 | 5 |
+| FR-TOOL-270 | 0 | 5 | 5 |
 | FR-VIEW-120 | 1 | 4 | 5 |
-| FR-VIEW-210 | 1 | 4 | 5 |
 | FR-VIEW-230 | 0 | 5 | 5 |
 | NFR-PERF-010 | 5 | 0 | 5 |
 | CON-PUB-010 | 4 | 0 | 4 |
 | FR-BOT-200 | 2 | 2 | 4 |
+| FR-GREENHOLM-020 | 0 | 4 | 4 |
 | FR-TOOL-010 | 2 | 2 | 4 |
 | FR-TOOL-030 | 2 | 2 | 4 |
 | FR-VIEW-100 | 0 | 4 | 4 |
-| FR-VIEW-155 | 0 | 4 | 4 |
 | FR-VIEW-160 | 0 | 4 | 4 |
+| IF-GREENHOLM-010 | 0 | 4 | 4 |
 | NFR-PERF-050 | 4 | 0 | 4 |
 | FR-BOT-090 | 1 | 2 | 3 |
 | FR-BOT-165 | 1 | 2 | 3 |
 | FR-SNAKE-100 | 2 | 1 | 3 |
+| FR-VIEW-130 | 1 | 2 | 3 |
 | FR-VIEW-140 | 0 | 3 | 3 |
 | FR-VIEW-220 | 1 | 2 | 3 |
 | CON-PUB-020 | 2 | 0 | 2 |
@@ -193,6 +204,8 @@ requirements link to them, plus how many files their `code` field names.
 | FR-BOT-100 | 2 | 0 | 2 |
 | FR-BOT-118 | 0 | 2 | 2 |
 | FR-BOT-210 | 0 | 2 | 2 |
+| FR-BOT-240 | 2 | 0 | 2 |
+| FR-MAP-160 | 0 | 2 | 2 |
 | FR-SCORE-140 | 1 | 1 | 2 |
 | FR-SCORE-150 | 1 | 1 | 2 |
 | FR-SNAKE-015 | 0 | 2 | 2 |
@@ -200,7 +213,6 @@ requirements link to them, plus how many files their `code` field names.
 | FR-TOOL-190 | 1 | 1 | 2 |
 | FR-TOOL-210 | 1 | 1 | 2 |
 | FR-VIEW-070 | 0 | 2 | 2 |
-| FR-VIEW-130 | 0 | 2 | 2 |
 | FR-VIEW-180 | 0 | 2 | 2 |
 | IF-VIEW-030 | 0 | 2 | 2 |
 | INV-BOT-010 | 0 | 2 | 2 |
@@ -208,6 +220,8 @@ requirements link to them, plus how many files their `code` field names.
 | CON-PUB-050 | 1 | 0 | 1 |
 | FR-BOT-070 | 1 | 0 | 1 |
 | FR-BOT-120 | 1 | 0 | 1 |
+| FR-BOT-230 | 1 | 0 | 1 |
+| FR-BOT-250 | 1 | 0 | 1 |
 | FR-MAP-050 | 1 | 0 | 1 |
 | FR-MAP-060 | 1 | 0 | 1 |
 | FR-SNAKE-080 | 1 | 0 | 1 |
@@ -230,6 +244,8 @@ requirements link to them, plus how many files their `code` field names.
 | FR-BOT-130 | 0 | 0 | 0 |
 | FR-BOT-140 | 0 | 0 | 0 |
 | FR-BOT-170 | 0 | 0 | 0 |
+| FR-BOT-220 | 0 | 0 | 0 |
+| FR-BOT-260 | 0 | 0 | 0 |
 | FR-MAP-040 | 0 | 0 | 0 |
 | FR-MAP-110 | 0 | 0 | 0 |
 | FR-SCORE-020 | 0 | 0 | 0 |

@@ -1,7 +1,7 @@
 // The map file as IF-MAP-010 describes it, and FR-TOOL-010's other half: a file that
 // is wrong is rejected naming the line and the reason.
 //
-// verifies: IF-MAP-010, FR-TOOL-010, FR-MAP-100
+// verifies: IF-MAP-010, FR-TOOL-010, FR-MAP-100, FR-MAP-120, FR-MAP-150
 import XCTest
 @testable import CrawlCall
 
@@ -13,6 +13,7 @@ final class MapParserTests: XCTestCase {
     private let good = """
     ; a two-floor scrap
     kit blockout
+    setting greenholm
     transition 2,1 0 1
     floor 0
     ....
@@ -28,17 +29,18 @@ final class MapParserTests: XCTestCase {
     func testAMapParsesIntoFloorsTransitionsAndPlacements() throws {
         let map = try MapParser.parse(good, kit: kit)
         XCTAssertEqual(map.kit, "blockout")
+        XCTAssertEqual(map.setting, "greenholm")
         XCTAssertEqual(map.floors.map(\.level), [0, 1])
         XCTAssertEqual(map.transitions, [.init(x: 2, z: 1, from: 0, to: 1)])
         // 12 cells on floor 0 and 4 on floor 1, every one of them a module here.
         XCTAssertEqual(map.placements.count, 16)
         XCTAssertEqual(map.placements.filter { $0.module == "wall" }.count, 2)
-        XCTAssertEqual(map.placements.filter { $0.floor == 1 && $0.module == "stair" }.count, 1)
+        XCTAssertEqual(map.placements.filter { $0.floor == 1 && $0.module == "step" }.count, 1)
     }
 
     func testAPlacementSitsAtTheCellItsCharacterOccupies() throws {
         let map = try MapParser.parse(good, kit: kit)
-        let stair = try XCTUnwrap(map.placements.first { $0.module == "stair" })
+        let stair = try XCTUnwrap(map.placements.first { $0.module == "step" })
         XCTAssertEqual(stair.floor, 1)
         XCTAssertEqual(stair.x, 1)          // second column
         XCTAssertEqual(stair.z, 1)          // second row
@@ -49,7 +51,7 @@ final class MapParserTests: XCTestCase {
     }
 
     func testEmptySpacePlacesNothingAndIsNotAnUnknownCharacter() throws {
-        let map = try MapParser.parse("kit blockout\nfloor 0\n. .\n", kit: kit)
+        let map = try MapParser.parse("kit blockout\nsetting greenholm\nfloor 0\n. .\n", kit: kit)
         XCTAssertEqual(map.placements.count, 2)
         XCTAssertEqual(map.placements.map(\.x), [0, 2])
         XCTAssertEqual(map.floors[0].rows, [". ."])   // the row is kept as written
@@ -58,7 +60,7 @@ final class MapParserTests: XCTestCase {
     func testARowOfSpacesIsARowOfEmptyCellsAndNotABlankLine() throws {
         // A floor that starts with cells nothing stands on — a balcony over the far
         // half of the room. Trimming those rows away would move everything below them.
-        let map = try MapParser.parse("kit blockout\nfloor 1\n    \n  ..\n", kit: kit)
+        let map = try MapParser.parse("kit blockout\nsetting greenholm\nfloor 1\n    \n  ..\n", kit: kit)
         XCTAssertEqual(map.floors[0].rows.count, 2)
         XCTAssertEqual(map.floors[0].rows[0], "    ")
         XCTAssertEqual(map.placements.map(\.z), [1, 1])   // both on the second row
@@ -70,6 +72,7 @@ final class MapParserTests: XCTestCase {
         ; header
 
         kit blockout
+        setting greenholm
 
         floor 0
         ..
@@ -91,47 +94,69 @@ final class MapParserTests: XCTestCase {
     }
 
     func testAFileWithNoFloorsIsRejected() {
-        rejects("kit blockout\n", .noFloors)
+        rejects("kit blockout\nsetting greenholm\n", .noFloors)
     }
 
     func testASecondKitLineIsRejectedWithItsLine() {
-        rejects("kit blockout\nkit other\nfloor 0\n..\n", .repeatedKit(line: 2))
+        rejects("kit blockout\nkit other\nsetting greenholm\nfloor 0\n..\n", .repeatedKit(line: 2))
+    }
+
+    func testAFileWithNoSettingIsRejected() {
+        // FR-MAP-120: a map names the world its arena stands in; one that does not is
+        // an error at load, not an arena in the void.
+        rejects("kit blockout\nfloor 0\n..\n", .noSetting)
+    }
+
+    func testASecondSettingLineIsRejectedWithItsLine() {
+        rejects("kit blockout\nsetting greenholm\nsetting other\nfloor 0\n..\n", .repeatedSetting(line: 3))
+    }
+
+    func testASettingLineWithoutExactlyOneNameIsRejected() {
+        rejects("kit blockout\nsetting green holm\nfloor 0\n..\n",
+                .unknownDirective("setting green holm", line: 2))
+        rejects("kit blockout\nsetting\nfloor 0\n..\n", .unknownDirective("setting", line: 2))
+    }
+
+    func testTheSettingMayStandAnywhereInTheHeader() throws {
+        let map = try MapParser.parse("setting greenholm\ntransition 0,0 0 0\nkit blockout\nfloor 0\n..\n", kit: kit)
+        XCTAssertEqual(map.setting, "greenholm")
+        XCTAssertEqual(map.kit, "blockout")
     }
 
     func testAnUnknownDirectiveIsRejectedWithItsLine() {
-        rejects("kit blockout\nceiling 2\nfloor 0\n..\n", .unknownDirective("ceiling 2", line: 2))
+        rejects("kit blockout\nsetting greenholm\nceiling 2\nfloor 0\n..\n", .unknownDirective("ceiling 2", line: 3))
     }
 
     func testAGridRowBeforeAnyFloorIsRejected() {
-        rejects("kit blockout\n....\nfloor 0\n..\n", .gridBeforeAnyFloor(line: 2))
+        rejects("kit blockout\nsetting greenholm\n....\nfloor 0\n..\n", .gridBeforeAnyFloor(line: 3))
     }
 
     func testTheSameFloorTwiceIsRejected() {
-        rejects("kit blockout\nfloor 0\n..\nfloor 0\n..\n", .repeatedFloor(0, line: 4))
+        rejects("kit blockout\nsetting greenholm\nfloor 0\n..\nfloor 0\n..\n", .repeatedFloor(0, line: 5))
     }
 
     func testAFloorThatIsNotANumberIsRejected() {
-        rejects("kit blockout\nfloor ground\n..\n", .badFloorNumber("ground", line: 2))
+        rejects("kit blockout\nsetting greenholm\nfloor ground\n..\n", .badFloorNumber("ground", line: 3))
     }
 
     func testAMalformedTransitionIsRejectedWithItsText() {
-        rejects("kit blockout\ntransition 2 0 1\nfloor 0\n..\n", .badTransition("transition 2 0 1", line: 2))
+        rejects("kit blockout\nsetting greenholm\ntransition 2 0 1\nfloor 0\n..\n", .badTransition("transition 2 0 1", line: 3))
     }
 
     func testATransitionToAFloorTheFileDoesNotDeclareIsRejected() {
-        rejects("kit blockout\ntransition 0,0 0 4\nfloor 0\n..\n", .transitionToUnknownFloor(4, line: 2))
+        rejects("kit blockout\nsetting greenholm\ntransition 0,0 0 4\nfloor 0\n..\n", .transitionToUnknownFloor(4, line: 3))
     }
 
     func testARaggedGridIsRejectedWithBothWidths() {
-        rejects("kit blockout\nfloor 0\n....\n..\n", .raggedGrid(floor: 0, line: 4, expected: 4, found: 2))
+        rejects("kit blockout\nsetting greenholm\nfloor 0\n....\n..\n", .raggedGrid(floor: 0, line: 5, expected: 4, found: 2))
     }
 
     func testACharacterTheLegendDoesNotNameIsRejectedWithItsColumn() {
-        rejects("kit blockout\nfloor 0\n..x.\n", .unknownCharacter("x", floor: 0, line: 3, column: 3))
+        rejects("kit blockout\nsetting greenholm\nfloor 0\n..x.\n", .unknownCharacter("x", floor: 0, line: 4, column: 3))
     }
 
     func testAFloorWithNoGridUnderItIsRejected() {
-        rejects("kit blockout\nfloor 0\nfloor 1\n..\n", .emptyFloor(0, line: 2))
+        rejects("kit blockout\nsetting greenholm\nfloor 0\nfloor 1\n..\n", .emptyFloor(0, line: 3))
     }
 
     func testEveryRejectionNamesItsLineInWords() {
@@ -179,30 +204,36 @@ final class ShippedMapTests: XCTestCase {
     func testTheShippedMapParses() throws {
         let map = try shippedMap()
         XCTAssertEqual(map.kit, "blockout")
+        XCTAssertEqual(map.setting, "greenholm")
         XCTAssertEqual(map.floors.count, 2)
         XCTAssertEqual(map.floors.map(\.rows.count), [16, 16])
         XCTAssertTrue(map.floors.allSatisfy { $0.rows.allSatisfy { $0.count == 24 } })
     }
 
-    func testItHasTwoFloorsJoinedByATransitionTheSnakeCanTraverse() throws {
-        // FR-MAP-010, read off the map rather than asserted about it.
+    func testItHasTwoFloorsJoinedByAFlightTheSnakeCanTraverse() throws {
+        // FR-MAP-010 and FR-MAP-150, read off the map rather than asserted about it: a
+        // flight of steps and no way straight up (Q-330).
         let map = try shippedMap()
         XCTAssertGreaterThanOrEqual(Set(map.floors.map(\.level)).count, 2)
-        XCTAssertFalse(map.transitions.isEmpty)
+        XCTAssertTrue(map.transitions.isEmpty, "the blockout has a way straight up again")
+        let steps = map.placements.filter { $0.step != nil }
+        XCTAssertFalse(steps.isEmpty, "the blockout has no flight")
 
-        let graph = NavigationGraph.derive(from: map)
-        let transition = try XCTUnwrap(map.transitions.first)
-        let bottom = NavigationGraph.Node(floor: transition.from, x: transition.x, z: transition.z)
-        XCTAssertTrue(graph.isWalkable(bottom), "the transition's lower end is not walkable")
-        XCTAssertTrue(graph.isWalkable(.init(floor: transition.to, x: transition.x, z: transition.z)),
-                      "the transition's upper end is not walkable")
-        XCTAssertEqual(graph.floorsReachable(from: bottom), [0, 1])
+        // Two cells wide, side by side: a flight of one cell was very hard to climb on the
+        // phone (ADR-0033), and the snake's body is wider than a cell.
+        let feet = steps.filter { $0.step?.index == 1 }
+        XCTAssertEqual(feet.count, 2, "the blockout's flight is not two cells wide")
+        if feet.count == 2 { XCTAssertEqual(abs(feet[0].z - feet[1].z) + abs(feet[0].x - feet[1].x), 1) }
+
+        let graph = NavigationGraph.derive(from: map, stepHeight: ShippedTuning.stepHeight)
+        let bottom = try XCTUnwrap(steps.first { $0.step?.index == 1 })
+        XCTAssertEqual(graph.floorsReachable(from: .init(floor: bottom.floor, x: bottom.x, z: bottom.z)), [0, 1])
     }
 
     func testEveryWalkableCellOfTheShippedMapIsReachableFromTheGround() throws {
         // A pocket nobody can walk into is a map bug, and the kind an eye misses.
         let map = try shippedMap()
-        let graph = NavigationGraph.derive(from: map)
+        let graph = NavigationGraph.derive(from: map, stepHeight: ShippedTuning.stepHeight)
         let start = try XCTUnwrap(graph.nodes.first { $0.floor == 0 })
         var seen: Set<NavigationGraph.Node> = [start]
         var queue = [start]
@@ -221,7 +252,7 @@ final class ShippedMapTests: XCTestCase {
         let map = try shippedMap()
         let cell = try Configurations.load(from: .main).tuning.navigationGraphCellSize
         let plan = ScenePlan.make(map: map, kit: kit, cellSize: cell)
-        let graph = NavigationGraph.derive(from: map)
+        let graph = NavigationGraph.derive(from: map, stepHeight: ShippedTuning.stepHeight)
         // The graph is built from the map's cells, not from the scene's pieces — and
         // it has to stay that way now that a floor piece also appears under a wall,
         // where nobody may walk. So the comparison is against the walkable cells.
@@ -233,7 +264,7 @@ final class ShippedMapTests: XCTestCase {
             let z = Double(walkable.z) * cell
             let surface = plan.pieces.contains { piece in
                 abs(piece.centre.x - x) < 1e-9 && abs(piece.centre.z - z) < 1e-9
-                    && abs(piece.centre.y + piece.size.y / 2 - Double(walkable.floor) * kit.floorHeight) < 1e-9
+                    && abs(piece.centre.y + piece.size.y / 2 - map.height(of: walkable)) < 1e-9
             }
             XCTAssertTrue(surface, "cell \(walkable.x),\(walkable.z) on floor \(walkable.floor) has nothing to stand on")
         }
@@ -274,7 +305,7 @@ final class MapHeaderTests: XCTestCase {
     }
 
     func testAFileWrittenOnWindowsReadsTheSame() throws {
-        let unix = "kit blockout\nfloor 0\n.#.\n. .\n"
+        let unix = "kit blockout\nsetting greenholm\nfloor 0\n.#.\n. .\n"
         let windows = unix.replacingOccurrences(of: "\n", with: "\r\n")
         let a = try MapParser.parse(unix, kit: kit)
         let b = try MapParser.parse(windows, kit: kit)

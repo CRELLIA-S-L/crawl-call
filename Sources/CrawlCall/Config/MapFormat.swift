@@ -1,12 +1,13 @@
 // The words, separators and positions of the map file format (IF-MAP-010) and of a
 // kit's legend (ADR-0012), named once for the parser and for its messages (ART-070).
 //
-// implements: IF-MAP-010, FR-TOOL-010, FR-TOOL-020, FR-TOOL-030, FR-MAP-100, FR-SNAKE-220
+// implements: IF-MAP-010, FR-MAP-120, FR-MAP-150, FR-TOOL-010, FR-TOOL-020, FR-TOOL-030, FR-MAP-100, FR-SNAKE-220
 import Foundation
 
 enum MapFormat {
     /// The header's directives and the floor marker, each the first word of its line.
     static let kitDirective = "kit"
+    static let settingDirective = "setting"
     static let transitionDirective = "transition"
     static let floorDirective = "floor"
     /// A whole line beginning with this is a comment.
@@ -15,8 +16,27 @@ enum MapFormat {
     static let wordSeparator: Character = " "
     /// A grid cell holding no module.
     static let emptyCell: Character = " "
+    /// A step of a flight of stairs, drawn as an arrow pointing the way the flight
+    /// rises (IF-MAP-010, FR-MAP-150): up the page is towards −z, as rows count down.
+    static let risesNorth: Character = "^"
+    static let risesSouth: Character = "v"
+    static let risesEast: Character = ">"
+    static let risesWest: Character = "<"
+    /// Which way on the grid each arrow rises, in cells along x and z.
+    static let rises: [Character: (x: Int, z: Int)] = [
+        risesNorth: (x: .zero, z: -MapGrid.neighbourStep),
+        risesSouth: (x: .zero, z: MapGrid.neighbourStep),
+        risesEast: (x: MapGrid.neighbourStep, z: .zero),
+        risesWest: (x: -MapGrid.neighbourStep, z: .zero),
+    ]
+    /// The first step of a flight is its lowest, counted from one.
+    static let firstStep = 1
+
     /// What separates a cell's x and z in `transition <x>,<z> <from> <to>`.
     static let coordinateSeparator: Character = ","
+
+    /// What separates the names in a list a message gives.
+    static let listSeparator = ", "
 
     /// Line endings: whatever a file was written with becomes `lineBreak`.
     static let lineBreak = "\n"
@@ -26,6 +46,8 @@ enum MapFormat {
     /// How many words each directive has, and where in it each argument stands.
     static let kitWords = 2
     static let kitNameWord = 1
+    static let settingWords = 2
+    static let settingNameWord = 1
     static let floorWords = 2
     static let floorLevelWord = 1
     static let transitionWords = 4

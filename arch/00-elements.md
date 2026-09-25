@@ -59,8 +59,8 @@ One file today, and the element is what keeps the fifth intent a change to IF-VI
 
 ```yaml
 status: built
-carries: [Sources/CrawlCall/Map, maps/blockout.map, ATTRIBUTION.md]
-requirements: [IF-MAP-010, FR-TOOL-010, FR-TOOL-020, FR-TOOL-030, FR-MAP-010, FR-MAP-020, FR-MAP-100, FR-MAP-090]
+carries: [Sources/CrawlCall/Map, maps/blockout.map, config/kit, ATTRIBUTION.md]
+requirements: [IF-MAP-010, FR-TOOL-010, FR-TOOL-020, FR-TOOL-030, FR-MAP-010, FR-MAP-020, FR-MAP-100, FR-MAP-090, FR-MAP-150, FR-MAP-160]
 depends_on: [E-020]
 interface: a map file and its kit in; the placements, the navigation graph and the scene geometry out
 ```
@@ -78,7 +78,7 @@ It depends on start-up because the cell size it measures in is tuning (IF-MAP-02
 ```yaml
 status: built
 carries: [Sources/CrawlCall/View]
-requirements: [FR-VIEW-010, FR-VIEW-130, FR-VIEW-020, FR-VIEW-060, FR-VIEW-070, FR-TOOL-070, FR-VIEW-100, FR-VIEW-120, FR-VIEW-140, FR-VIEW-150, FR-VIEW-155, FR-VIEW-160, FR-VIEW-170, FR-VIEW-180, FR-VIEW-190, FR-VIEW-200, IF-VIEW-030, FR-VIEW-210, FR-VIEW-220, FR-VIEW-230]
+requirements: [FR-VIEW-010, FR-VIEW-130, FR-VIEW-020, FR-VIEW-060, FR-VIEW-070, FR-TOOL-070, FR-VIEW-100, FR-VIEW-120, FR-VIEW-140, FR-VIEW-150, FR-VIEW-155, FR-VIEW-160, FR-VIEW-170, FR-VIEW-180, FR-VIEW-190, FR-VIEW-200, IF-VIEW-030, FR-VIEW-210, FR-VIEW-220, FR-VIEW-230, FR-TOOL-260, FR-TOOL-270]
 depends_on: [E-040]
 interface: a scene plan in; the camera it is seen through and the light it is read by, out
 ```
@@ -87,6 +87,21 @@ Decides how the arena reaches the player: one camera at a fixed pitch, one dayli
 
 **Rationale.** Split from the map layer because the two answer different questions and change for different reasons: the map changes when a level does, the view when the game's look does, and a file holding both invites a camera decision to be made while editing geometry.
 The boundary is also where the specification puts it — the VIEW area owns the angle and the light, the MAP and TOOL areas own what is placed and where.
+
+### E-100 — The surroundings
+
+```yaml
+status: built
+carries: [Sources/CrawlCall/Setting, config/setting]
+requirements: [FR-MAP-120, FR-MAP-130, FR-MAP-140, IF-GREENHOLM-010, FR-GREENHOLM-010, FR-GREENHOLM-020, FR-GREENHOLM-030]
+depends_on: [E-020, E-040]
+interface: the setting a map names and the arena's plan in; the scenery around the arena, the sky and the birds out
+```
+
+Draws the world the arena stands in: loads the setting the map names, finds how much ground the match camera can show, lays the setting's parts over it — for Greenholm the island, its ring of trees and shrubs, the water and the sky — and flies the birds (ADR-0031).
+
+**Rationale.** Its own part because the one thing it must never do is reach into play (FR-MAP-130): the map layer's pieces are what the snake collides with, what the bots see and what is cut open, and a part that could add to them would put scenery into all three without anybody deciding it. Kept apart, it reads the plan and never writes it.
+It depends on the map layer for the arena's plan and on start-up for the view configuration the coverage is computed from; the view does not depend on it, and the match view only adds what it builds to the scene.
 
 ### E-060 — The snake
 

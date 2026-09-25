@@ -14,9 +14,9 @@ final class DeliberationTests: XCTestCase {
     private let cell = 0.5
 
     private func arena(_ rows: String...) throws -> Deliberation.Situation {
-        let map = try MapParser.parse("kit blockout\nfloor 0\n" + rows.joined(separator: "\n") + "\n", kit: kit)
+        let map = try MapParser.parse("kit blockout\nsetting greenholm\nfloor 0\n" + rows.joined(separator: "\n") + "\n", kit: kit)
         return Deliberation.Situation(plan: ScenePlan.make(map: map, kit: kit, cellSize: cell),
-                                      graph: NavigationGraph.derive(from: map),
+                                      graph: NavigationGraph.derive(from: map, stepHeight: ShippedTuning.stepHeight),
                                       configuration: configuration,
                                       cellSize: cell)
     }

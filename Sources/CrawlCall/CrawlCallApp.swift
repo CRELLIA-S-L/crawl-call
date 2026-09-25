@@ -6,7 +6,7 @@
 // the window no smaller than the controls (FR-VIEW-210) and hears when the lock comes
 // or goes (FR-VIEW-230), and SwiftUI's own `App` offers none of the three (ADR-0027).
 //
-// implements: IF-SNAKE-010, IF-MAP-020, IF-VIEW-020, IF-BOT-010, FR-TOOL-070, FR-VIEW-050, FR-VIEW-060, FR-VIEW-160, FR-VIEW-190, FR-VIEW-210, FR-VIEW-220, FR-VIEW-230, FR-TOOL-230, FR-TOOL-240
+// implements: IF-SNAKE-010, IF-MAP-020, IF-VIEW-020, IF-BOT-010, FR-TOOL-070, FR-VIEW-050, FR-VIEW-060, FR-VIEW-160, FR-VIEW-190, FR-VIEW-210, FR-VIEW-220, FR-VIEW-230, FR-TOOL-230, FR-TOOL-240, FR-MAP-140, FR-GREENHOLM-010, FR-GREENHOLM-020, FR-GREENHOLM-030
 import RealityKit
 import SwiftUI
 import UIKit
@@ -75,6 +75,8 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     func connect(_ windowScene: UIWindowScene) {
         // Nil where the platform does not resize scenes: an iPhone's is the screen.
         windowScene.sizeRestrictions?.minimumSize = GameWindow.minimumSize
+        host.widestAspect = GameWindow.widestAspect(screen: windowScene.screen.bounds.size,
+                                                    resizable: windowScene.sizeRestrictions != nil)
         let window = UIWindow(windowScene: windowScene)
         window.rootViewController = GameHostingController(rootView: GameRoot(world: world, host: host))
         self.window = window
@@ -131,6 +133,10 @@ struct MatchView: View {
         RealityView { content in
             let (scene, seeThrough) = SceneBuilder.scene(for: world.plan, view: world.configurations.view)
             content.add(scene)
+            // The world around the arena (FR-MAP-120): drawn beside the map, never in
+            // it, so that nothing of play reaches it (FR-MAP-130).
+            let scenery = SceneryBuilder.world(for: world, widestAspect: host.widestAspect, in: scene)
+            if let sky = scenery.sky { content.environment = .skybox(sky) }
 
             guard let start = Game.start(in: world),
                   let camera = scene.children.first(where: { $0.name == EntityName.camera }),
@@ -172,6 +178,18 @@ struct MatchView: View {
             _ = content.subscribe(to: SceneEvents.Update.self) { event in
                 session.step(seconds: event.deltaTime)
             }
+            // The birds keep their own clock: they fly on while the match is paused or
+            // over, as a world does (FR-GREENHOLM-030).
+            if let flock = scenery.flock, let birds = scenery.birds {
+                var elapsed = Double.zero
+                let pilot = SceneryBuilder.Pilot()
+                _ = content.subscribe(to: SceneEvents.Update.self) { [weak session] event in
+                    elapsed += event.deltaTime
+                    guard let session else { return }
+                    SceneryBuilder.move(flock, birds, at: elapsed, lookingAt: session.focus,
+                                        aspect: session.aspect, pilot: pilot)
+                }
+            }
         }
         .ignoresSafeArea()
         .onGeometryChange(for: Double.self) { geometry in
@@ -183,6 +201,9 @@ struct MatchView: View {
         // Debug mode's free camera (FR-TOOL-070): pinch and two-finger drag on the
         // arena, and a button back to the snake; nothing at all in a Release build.
         .freeCamera(session)
+        // And the see-through's switches, to tell which cut opens what (FR-TOOL-260,
+        // FR-TOOL-270, Q-260); nothing at all in a Release build.
+        .seeThroughSwitches(session)
         // One or the other, never both (FR-VIEW-190): while the match is on, the
         // controls; once it is over, the plate that says how it ended and starts
         // another.

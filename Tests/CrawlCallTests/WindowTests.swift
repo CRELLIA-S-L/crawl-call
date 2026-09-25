@@ -3,7 +3,7 @@
 // when the lock comes or goes and resumed by one press — and the real scene the suite
 // runs in built that way, not a copy of it.
 //
-// verifies: FR-VIEW-210, FR-VIEW-220, FR-VIEW-230
+// verifies: FR-VIEW-210, FR-VIEW-220, FR-VIEW-230, FR-VIEW-155, FR-TOOL-270
 import RealityKit
 import SwiftUI
 import UIKit
@@ -25,6 +25,19 @@ final class WindowTests: XCTestCase {
                            shotEntities: ShotEntity.make(for: game.bots),
                            camera: camera, seeThrough: built.seeThrough,
                            distance: 12, fieldOfView: 50)
+    }
+
+    // MARK: Q-260 — the window around the head is off in a match, and kept
+
+    func testAMatchStartsWithTheLineOfSightAndWithoutTheWindowAroundTheHead() throws {
+        // The maintainer switched the window off on 2026-09-25 and asked for it kept;
+        // debug mode switches it back on (FR-TOOL-270).
+        let match = try session()
+        XCTAssertTrue(match.seeThroughSwitches.line)
+        XCTAssertFalse(match.seeThroughSwitches.window)
+        XCTAssertFalse(match.seeThroughSwitches.tint)
+        match.seeThroughSwitches.window.toggle()
+        XCTAssertTrue(match.seeThroughSwitches.window, "the window cannot be switched back on")
     }
 
     // MARK: FR-VIEW-210 — any orientation on the iPad, landscape on the phone

@@ -187,7 +187,7 @@ final class MatchRecordTests: XCTestCase {
                                               from: JSONSerialization.data(withJSONObject: json))
         let c = base.configurations
         return World(configurations: Configurations(snake: c.snake, tuning: c.tuning, view: c.view, bot: c.bot, match: match),
-                     kit: base.kit, map: base.map, graph: base.graph, plan: base.plan)
+                     kit: base.kit, map: base.map, setting: base.setting, graph: base.graph, plan: base.plan)
     }
 
     private func session(in world: World, recording url: URL) throws -> (GameSession, FrameRecorder) {

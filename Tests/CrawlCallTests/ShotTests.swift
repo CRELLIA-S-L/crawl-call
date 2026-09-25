@@ -45,7 +45,7 @@ final class ShotTests: XCTestCase {
         // the line of fire leaves from the same eyes as the line of sight (ADR-0022).
         // Fired from the floor, the box would stop the shot the bot could see to take.
         let base = try world()
-        let map = try MapParser.parse("kit blockout\nfloor 0\n............\n", kit: base.kit)
+        let map = try MapParser.parse("kit blockout\nsetting greenholm\nfloor 0\n............\n", kit: base.kit)
         let cell = base.configurations.tuning.navigationGraphCellSize
         let floor = ScenePlan.make(map: map, kit: base.kit, cellSize: cell)
         let low = base.configurations.bot.eyeHeight / 2
@@ -54,7 +54,7 @@ final class ShotTests: XCTestCase {
                                   colour: SIMD3(0.5, 0.5, 0.5), level: 0)
         let plan = ScenePlan(pieces: floor.pieces + [box], cellSize: floor.cellSize, floorHeight: floor.floorHeight)
         let world = World(configurations: base.configurations, kit: base.kit, map: map,
-                          graph: NavigationGraph.derive(from: map), plan: plan)
+                          setting: base.setting, graph: NavigationGraph.derive(from: map, stepHeight: ShippedTuning.stepHeight), plan: plan)
         var bots = [try bot(at: NavigationGraph.Node(floor: 0, x: 0, z: 0), in: world)]
         let snake = [SIMD3(4.0, 0, 0)]
         XCTAssertTrue(Sight.isClear(from: bots[0].eye, to: snake[0], through: plan))
@@ -80,7 +80,7 @@ final class ShotTests: XCTestCase {
         let world = World(configurations: Configurations(snake: base.configurations.snake, tuning: base.configurations.tuning,
                                                          view: base.configurations.view, bot: configuration,
                                                          match: base.configurations.match),
-                          kit: base.kit, map: base.map, graph: base.graph, plan: base.plan)
+                          kit: base.kit, map: base.map, setting: base.setting, graph: base.graph, plan: base.plan)
         let here = cells(in: world)[0]
         let cell = world.configurations.tuning.navigationGraphCellSize
         var bots = [try bot(at: here, in: world)]

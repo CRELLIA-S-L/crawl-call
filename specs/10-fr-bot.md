@@ -47,7 +47,7 @@ Four per squad is the size of the vertical slice and there are no reinforcements
 ### FR-BOT-030 — Archetype sets base personality weights
 
 ```yaml
-status: implemented
+status: partial
 verification: T
 derives_from: [FR-BOT-010]
 depends_on: [IF-BOT-010]
@@ -58,10 +58,11 @@ tests: [Tests/CrawlCallTests/BotTests.swift]
 created: 2026-09-21
 ```
 
-When a bot is spawned, the system **shall** initialise its personality weights — aggression, discipline, panic, self-sacrifice — from its archetype's base weights in the bot configuration.
+When a bot is spawned, the system **shall** initialise its personality weights — aggression, courage, discipline, panic, self-sacrifice — from its archetype's base weights in the bot configuration.
 
 **Rationale.** Concept §8 table: assault aggression up; heavy discipline up, panic down; scout panic up; sniper discipline up; medic self-sacrifice up; sapper average.
 The commander later adjusts these (FR-CMD-060); the archetype is where they start.
+Courage joined the weights on 2026-09-25 (FR-BOT-090); the concept's table predates it, so each archetype's base courage is tuning, chosen when it is built. `partial` until the bot configuration carries it.
 
 ### FR-BOT-040 — One bot per squad holds the commander role
 
@@ -87,7 +88,7 @@ A role rather than a seventh archetype, and no marker: the role-holder is found 
 ### FR-BOT-050 — A bot notices the snake in view
 
 ```yaml
-status: implemented
+status: partial
 verification: T
 derives_from: []
 depends_on: []
@@ -98,10 +99,11 @@ tests: [Tests/CrawlCallTests/PerceptionTests.swift, Tests/CrawlCallTests/PieceIn
 created: 2026-09-21
 ```
 
-When any segment of the snake is within a bot's field of view and within the detection range of the bot configuration, the system **shall** mark the snake as known to that bot.
+When any segment of the snake is within a bot's field of view and within the detection range of the bot configuration, the system **shall** record in that bot's knowledge where the segment was seen and when, the latest sighting of each segment replacing the one before.
 
 **Rationale.** Concept §13 stage 1: bots see the snake, flee, shoot.
 Known-to-a-bot is what deliberation (FR-BOT-080) and the interrupt on sight (FR-BOT-150) read.
+Until 2026-09-25 the requirement set a mark that the snake was known, and a bot so marked was handed where every part of the snake truly was, from then on. The maintainer ruled that a bot acts on what it has seen (ADR-0032), so what a sighting leaves is where and when, and deliberation reads that (FR-BOT-220). `partial` until the build keeps the sightings instead of the mark.
 
 A bot looks from the eye height of the bot configuration (IF-BOT-010), which the shipped numbers put on the eyes of the figure it is drawn as (FR-VIEW-070), and what it looks at is the ground under each part of the snake. A module stops that line only where it stands higher than the line at the place the line crosses it: a fence lower than a bot's eyes hides a snake lying close behind it and not a snake across the room, by the same geometry the player's camera sees by, from lower down. Until 2026-09-24 sight was measured along the surface on purpose, as Q-240 settled it, because a bot was a box with no head and an eye height would have been a number measured from nothing; the figure is what gives the eye somewhere to be.
 
@@ -152,7 +154,7 @@ Ammunition is the regulator the concept names against a map that turns into wast
 ### FR-BOT-080 — Action chosen by maximum utility
 
 ```yaml
-status: implemented
+status: partial
 verification: T
 derives_from: []
 depends_on: []
@@ -163,15 +165,24 @@ tests: [Tests/CrawlCallTests/DeliberationTests.swift]
 created: 2026-09-21
 ```
 
-When a bot receives a deliberation slot, the system **shall** select the action with the highest utility score among those available to it, the score being a function of distance to cover, health, the snake's position, line of fire and ammunition.
+When a bot receives a deliberation slot, the system **shall** select the action with the highest utility score among those available to it, the score being a function of:
+
+- what the bot knows of the enemy;
+- what the bot knows of the snake;
+- the commander's order;
+- the danger the bot is in;
+- its health;
+- its personality weights;
+- what it has to fight with.
 
 **Rationale.** Concept §9.2: every possible action gets a numeric utility; the maximum is chosen.
 The inputs are named so that a test can vary each and observe the choice move; their weighting is tuning.
+The list is the maintainer's, rewritten on 2026-09-25 when they settled what a bot knows (ADR-0032): each input is read from what the bot and its squad have perceived, never from the truth, and courage is a personality weight of its own (FR-BOT-090). `partial` because the build scores the snake alone as an enemy and a danger, knows no courage, and has nothing to fight with but a magazine; equipment beyond it is Q-310.
 
 ### FR-BOT-090 — Personality weights multiply utility
 
 ```yaml
-status: implemented
+status: partial
 verification: T
 derives_from: [FR-BOT-080]
 depends_on: [FR-BOT-030]
@@ -182,10 +193,17 @@ tests: [Tests/CrawlCallTests/DeliberationTests.swift]
 created: 2026-09-21
 ```
 
-When computing a bot's utility scores, the system **shall** apply the bot's personality weights as multipliers: panic scaling threat terms up, discipline scaling hold-position terms up, aggression scaling attack terms up, self-sacrifice scaling protect-ally terms up.
+When computing a bot's utility scores, the system **shall** apply the bot's personality weights as multipliers:
+
+- panic, scaling threat terms up;
+- courage, scaling the terms for facing danger — firing at it, holding ground under it — up;
+- discipline, scaling hold-position terms up;
+- aggression, scaling attack terms up;
+- self-sacrifice, scaling protect-ally terms up.
 
 **Rationale.** Concept §9.2: a bot with panic 0.8 overestimates the threat and runs; with discipline 0.9 it holds even when scared.
 This is the only channel through which the commander's LLM output reaches per-frame behaviour.
+Courage was added by the maintainer on 2026-09-25 as a weight of its own, not as the other side of panic: a bot can be frightened and stand its ground anyway, and the two pull on different terms — panic on the fear that sends it away, courage on the terms that keep it facing the danger. `partial` until courage is in the bot configuration (IF-BOT-010), set at spawn (FR-BOT-030) and read by the utility.
 
 ### FR-BOT-100 — Cover is valued by what is left of it
 
@@ -516,3 +534,104 @@ When scoring actions for a bot, the system **shall** score at least these: fire 
 
 **Rationale.** Concept §13 stage 1: bots see the snake, run, shoot; §8: the medic stays behind and heals; §9.2 names cover, line of fire and ammunition as inputs, which presuppose cover, fire and reload as actions.
 One act over the minimum set; an archetype may add actions, and the set is the floor a test can enumerate.
+
+## Knowledge
+
+What a bot knows, and how it comes to know it (ADR-0032): what it has seen itself, from the start of the match on; what its squad has told it is in the next requirements of this section.
+How a bot sees is FR-BOT-050's: a clear line from its eyes within the detection range.
+
+### FR-BOT-220 — A bot acts on what it knows
+
+```yaml
+status: deferred
+verification: T
+derives_from: []
+depends_on: [FR-BOT-050, FR-BOT-230, FR-BOT-240, FR-BOT-250]
+refines: [FR-BOT-080]
+conflicts_with: []
+code: []
+tests: []
+created: 2026-09-25
+```
+
+When scoring actions for a bot, the system **shall** read the snake, the enemy and the map only from that bot's knowledge.
+
+**Rationale.** The maintainer's rule of 2026-09-25: a bot's movement must not rest on what the snake sees, since a bot is not the snake and cannot know it, nor on where anything truly is beyond what the bot has perceived (ADR-0032).
+A test holds it by moving the snake or an enemy where the bot has not seen it and nobody has told it, and finding the choice unchanged.
+
+### FR-BOT-230 — A bot remembers the map it has seen
+
+```yaml
+status: deferred
+verification: T
+derives_from: []
+depends_on: [FR-BOT-050, FR-MAP-020]
+refines: []
+conflicts_with: []
+code: []
+tests: []
+created: 2026-09-25
+```
+
+When a cell of the map is within a bot's field of view and within the detection range of the bot configuration, the system **shall** record in that bot's knowledge what stands in the cell and when it was seen, the latest sighting replacing the one before.
+
+**Rationale.** The maintainer, 2026-09-25: a bot learns the map as it sees it and, once it has seen it, remembers it (ADR-0032).
+The same sight as the snake's (FR-BOT-050), so that a bot cannot know a cell it could not have seen; the latest sighting wins, so that a crate a bot saw fall to debris (FR-MAP-030) is debris in what it knows once it has seen that.
+
+### FR-BOT-240 — A bot remembers the enemy it has seen
+
+```yaml
+status: deferred
+verification: T
+derives_from: []
+depends_on: [FR-BOT-050]
+refines: []
+conflicts_with: []
+code: []
+tests: []
+created: 2026-09-25
+```
+
+When an enemy bot is within a bot's field of view and within the detection range of the bot configuration, the system **shall** record in that bot's knowledge where the enemy was seen and when, the latest sighting of each enemy replacing the one before.
+
+**Rationale.** The maintainer, 2026-09-25: movements of the enemy are learnt when a bot sees them and remembered (ADR-0032).
+Apart from the map's cells because the two are built and tested apart; the snake's own sightings are FR-BOT-050's.
+
+### FR-BOT-250 — What a bot knows at the start
+
+```yaml
+status: deferred
+verification: T
+derives_from: []
+depends_on: [FR-BOT-010]
+refines: []
+conflicts_with: []
+code: []
+tests: []
+created: 2026-09-25
+```
+
+When a match starts, the system **shall** give each bot knowledge of the outline and floors of the building it fights in, of the ways between those floors, and of the area the enemy squad starts in, and of nothing else of the map, the enemy or the snake.
+
+**Rationale.** The maintainer, 2026-09-25: a bot knows the map roughly at the start — the shape of the ground, the large buildings, roughly where the enemy squad is — and the rest as it sees it (ADR-0032).
+The ways between floors are part of the building's shape: a bot that did not know them could plan no route to a floor it has not been on, since a cell it has not seen is taken as passable but a way up is not a cell.
+The island around the arena is scenery and takes no part in play (FR-MAP-130), so the ground a bot fights on is the building.
+
+### FR-BOT-260 — Forgetting is possible and off
+
+```yaml
+status: deferred
+verification: T
+derives_from: []
+depends_on: [IF-BOT-010, FR-BOT-050, FR-BOT-240]
+refines: []
+conflicts_with: []
+code: []
+tests: []
+created: 2026-09-25
+```
+
+Where the bot configuration sets a time after which a sighting of the snake or of the enemy is forgotten, the system **shall** drop from a bot's knowledge each such sighting older than that time.
+
+**Rationale.** The maintainer, 2026-09-25: nothing needs forgetting, but forgetting the snake and the enemy is to be possible (ADR-0032).
+Where no time is set nothing is forgotten; the map is never forgotten, only replaced by what is seen later (FR-BOT-230).

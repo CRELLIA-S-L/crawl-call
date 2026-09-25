@@ -9,12 +9,13 @@ final class NavigationGraphTests: XCTestCase {
     private lazy var kit: Kit = { try! Kit.load(named: "blockout", from: .main) }()
 
     private func graph(_ text: String) throws -> NavigationGraph {
-        NavigationGraph.derive(from: try MapParser.parse(text, kit: kit))
+        NavigationGraph.derive(from: try MapParser.parse(text, kit: kit), stepHeight: ShippedTuning.stepHeight)
     }
 
     func testEveryWalkableCellBecomesANodeAndNothingElseDoes() throws {
         let g = try graph("""
         kit blockout
+        setting greenholm
         floor 0
         ..#.
         .oo.
@@ -30,6 +31,7 @@ final class NavigationGraphTests: XCTestCase {
     func testNeighboursAreTheFourOrthogonalCellsAndNotTheDiagonal() throws {
         let g = try graph("""
         kit blockout
+        setting greenholm
         floor 0
         ...
         ...
@@ -44,7 +46,7 @@ final class NavigationGraphTests: XCTestCase {
     }
 
     func testAWallBetweenTwoCellsLeavesThemUnlinked() throws {
-        let g = try graph("kit blockout\nfloor 0\n.#.\n")
+        let g = try graph("kit blockout\nsetting greenholm\nfloor 0\n.#.\n")
         XCTAssertTrue(g.neighbours(of: .init(floor: 0, x: 0, z: 0)).isEmpty)
         XCTAssertEqual(g.edgeCount, 0)
     }
@@ -52,6 +54,7 @@ final class NavigationGraphTests: XCTestCase {
     func testATransitionIsTheEdgeBetweenTwoFloors() throws {
         let text = """
         kit blockout
+        setting greenholm
         transition 1,0 0 1
         floor 0
         ../
@@ -68,6 +71,7 @@ final class NavigationGraphTests: XCTestCase {
         // floors, which is what makes the header's transition list load-bearing.
         let g = try graph("""
         kit blockout
+        setting greenholm
         floor 0
         ../
         floor 1
@@ -81,6 +85,7 @@ final class NavigationGraphTests: XCTestCase {
         // through a wall.
         let g = try graph("""
         kit blockout
+        setting greenholm
         transition 1,0 0 1
         floor 0
         ...
@@ -91,7 +96,7 @@ final class NavigationGraphTests: XCTestCase {
     }
 
     func testEdgesAreTwoWay() throws {
-        let g = try graph("kit blockout\nfloor 0\n..\n")
+        let g = try graph("kit blockout\nsetting greenholm\nfloor 0\n..\n")
         let a = NavigationGraph.Node(floor: 0, x: 0, z: 0)
         let b = NavigationGraph.Node(floor: 0, x: 1, z: 0)
         XCTAssertTrue(g.neighbours(of: a).contains(b))
@@ -100,7 +105,7 @@ final class NavigationGraphTests: XCTestCase {
     }
 
     func testAnEmptyCellIsNotANode() throws {
-        let g = try graph("kit blockout\nfloor 0\n. .\n")
+        let g = try graph("kit blockout\nsetting greenholm\nfloor 0\n. .\n")
         XCTAssertEqual(g.nodeCount, 2)
         XCTAssertFalse(g.isWalkable(.init(floor: 0, x: 1, z: 0)))
         XCTAssertEqual(g.edgeCount, 0)      // the gap leaves them unlinked

@@ -3,7 +3,10 @@
 // and how close to what stands on that ground its body may come, answered from the
 // boxes the scene is built from (ADR-0021).
 //
-// implements: FR-MAP-025, FR-SNAKE-010, FR-SNAKE-020, FR-SNAKE-220
+// Heights are the graph's: a cell's surface is its node's, which on a flight of stairs
+// is not its floor's (FR-MAP-020, FR-MAP-150, ADR-0033).
+//
+// implements: FR-MAP-025, FR-SNAKE-010, FR-SNAKE-020, FR-SNAKE-220, FR-MAP-150, FR-MAP-020
 import Foundation
 
 struct Surfaces {
@@ -24,18 +27,20 @@ struct Surfaces {
     /// difference is the whole of it: air is a ledge to drop from, a wall is a wall
     /// (FR-SNAKE-010).
     private let occupied: Set<NavigationGraph.Node>
-    /// What the body cannot pass: every module the map places that is not walkable,
-    /// as the box the scene is built from. A walkable module is ground however tall
-    /// its box — a stair is walked up, not bumped into (ADR-0021).
-    private let obstacles: [(lowest: SIMD3<Double>, highest: SIMD3<Double>)]
+    /// What the body may not pass: every module the map places, as the box the scene
+    /// is built from, with whether it is ground. A module that is not ground is in the
+    /// way wherever it reaches the body's height; ground is in the way only where it
+    /// stands more than a step above the body's feet — the side of a step too tall to
+    /// climb onto — and is walked on otherwise (ADR-0021, ADR-0033).
+    private let obstacles: [(lowest: SIMD3<Double>, highest: SIMD3<Double>, ground: Bool)]
 
     init(graph: NavigationGraph, kit: Kit, tuning: TuningConfiguration, map: MapSpecification) {
         self.occupied = Set(map.placements.filter { !$0.walkable }
             .map { NavigationGraph.Node(floor: $0.floor, x: $0.x, z: $0.z) })
-        let solid = Set(kit.modules.values.filter { !$0.walkable }.map(\.name))
+        let ground = Set(kit.modules.values.filter(\.walkable).map(\.name))
         self.obstacles = ScenePlan.make(map: map, kit: kit, cellSize: tuning.navigationGraphCellSize).pieces
-            .filter { solid.contains($0.module) }
-            .map { (lowest: $0.centre - $0.size * Geometry.half, highest: $0.centre + $0.size * Geometry.half) }
+            .map { (lowest: $0.centre - $0.size * Geometry.half, highest: $0.centre + $0.size * Geometry.half,
+                    ground: ground.contains($0.module)) }
         self.graph = graph
         self.cellSize = tuning.navigationGraphCellSize
         self.floorHeight = kit.floorHeight
@@ -56,8 +61,18 @@ struct Surfaces {
     /// The height of a floor's walking surface.
     func elevation(of floor: Int) -> Double { Double(floor) * floorHeight }
 
-    func isWalkable(_ position: SIMD3<Double>, floor: Int) -> Bool {
-        graph.isWalkable(cell(of: position, floor: floor))
+    /// The height of a node's walking surface: on a flight, its step's.
+    func height(of node: NavigationGraph.Node) -> Double { graph.height(of: node, floorHeight: floorHeight) }
+
+    /// The node a head at `here` walks onto when it crosses into the cell at `target`:
+    /// the neighbour the graph joins it to there, on whichever floor — the same floor,
+    /// or, off the top of a flight, the floor above (FR-MAP-020). The one nearest in
+    /// height where there is more than one. Nil where the graph joins nothing there.
+    func step(from here: NavigationGraph.Node, into target: NavigationGraph.Node) -> NavigationGraph.Node? {
+        let at = height(of: here)
+        return graph.neighbours(of: here)
+            .filter { $0.x == target.x && $0.z == target.z }
+            .min { abs(height(of: $0) - at) < abs(height(of: $1) - at) }
     }
 
     /// The floor a declared transition leads down to from this cell, if there is one.
@@ -84,20 +99,20 @@ struct Surfaces {
             .min()
     }
 
-    /// The floor the head lands on when it leaves a ledge: the first one below that is
-    /// walkable at the same place and no further down than the tuning allows
-    /// (FR-SNAKE-220). Nil where there is nothing to land on within reach.
-    func landing(below position: SIMD3<Double>, from floor: Int) -> Int? {
+    /// The ground the head lands on when it leaves a ledge at `height`: the highest
+    /// surface below it at the same place, lower by more than a step — a step lower is
+    /// walked down, not dropped to — and no further down than the tuning allows
+    /// (FR-SNAKE-220). The side of a flight is such a ledge as well as a balcony's edge.
+    /// Nil where there is nothing to land on within reach.
+    func landing(below position: SIMD3<Double>, from floor: Int, at height: Double) -> NavigationGraph.Node? {
         // A ledge is where nothing stands. Walking into a wall with an open floor
         // beneath it is walking into a wall, not stepping off an edge — and without
         // this the head drops through the balcony's own walls.
         guard !occupied.contains(cell(of: position, floor: floor)) else { return nil }
-        var candidate = floor - MapGrid.floorStep
-        while elevation(of: floor) - elevation(of: candidate) <= maximumDropHeight {
-            if graph.isWalkable(cell(of: position, floor: candidate)) { return candidate }
-            candidate -= MapGrid.floorStep
-        }
-        return nil
+        let here = cell(of: position, floor: floor)
+        guard let node = graph.node(atX: here.x, z: here.z, below: height - stepHeight - Geometry.samePosition),
+              height - self.height(of: node) <= maximumDropHeight + Geometry.samePosition else { return nil }
+        return node
     }
 
     // MARK: the body against what stands on the ground (ADR-0021)
@@ -112,10 +127,22 @@ struct Surfaces {
     /// box reaches into that height, so a wall of the floor above is not in the way
     /// of a head on the floor below.
     func clearance(at position: SIMD3<Double>, floor: Int) -> (metres: Double, away: SIMD2<Double>)? {
-        let bottom = elevation(of: floor)
+        clearance(at: position, feet: elevation(of: floor))
+    }
+
+    /// The same, for a body whose feet are at `feet` metres: on a flight, its step's.
+    ///
+    /// `leaving` is the height of a ledge the body is dropping from, where it is: what
+    /// was not in its way up there — the step whose side it slides down, and the next
+    /// step up, which it stood a step below — is not in the way of its landing either,
+    /// though the body lands half beside them and walks clear of them after (FR-SNAKE-220).
+    func clearance(at position: SIMD3<Double>, feet bottom: Double,
+                   leaving ledge: Double = -.infinity) -> (metres: Double, away: SIMD2<Double>)? {
         let top = bottom + Motion.heightInRadii * bodyRadius
+        let groundInTheWay = max(bottom, ledge) + stepHeight + Geometry.samePosition
         var nearest: (metres: Double, away: SIMD2<Double>)?
-        for box in obstacles where box.lowest.y < top && box.highest.y > bottom {
+        for box in obstacles where box.lowest.y < top && box.highest.y > bottom
+            && (!box.ground || box.highest.y > groundInTheWay) {
             let offset = SIMD2(position.x - (box.lowest.x + box.highest.x) * Geometry.half,
                                position.z - (box.lowest.z + box.highest.z) * Geometry.half)
             let half = SIMD2((box.highest.x - box.lowest.x) * Geometry.half,
@@ -156,14 +183,14 @@ struct Surfaces {
     /// than that once the body's width is added on each side of it — a partition of
     /// 0.1 m is 0.7 m to a body of 0.3 m — so no step can pass from one side of a
     /// module to the other.
-    func room(from position: SIMD3<Double>, floor: Int, along unit: SIMD2<Double>,
+    func room(from position: SIMD3<Double>, feet: Double, along unit: SIMD2<Double>,
               upTo distance: Double) -> (metres: Double, against: SIMD2<Double>?) {
-        let deepest = min(.zero, clearance(at: position, floor: floor)?.metres ?? .zero)
+        let deepest = min(.zero, clearance(at: position, feet: feet)?.metres ?? .zero)
         func at(_ metres: Double) -> SIMD3<Double> {
             SIMD3(position.x + unit.x * metres, position.y, position.z + unit.y * metres)
         }
         func fits(_ metres: Double) -> Bool {
-            guard let there = clearance(at: at(metres), floor: floor) else { return true }
+            guard let there = clearance(at: at(metres), feet: feet) else { return true }
             return there.metres >= deepest - Motion.depthSlack
         }
         if fits(distance) { return (distance, nil) }
@@ -176,12 +203,18 @@ struct Surfaces {
         // What stopped the body is what it would be inside of just past the contact —
         // not what is nearest at the contact, where a body in a corner touches two
         // things at once and the one it is not pressing into may be named.
-        return (low, clearance(at: at(high), floor: floor)?.away)
+        return (low, clearance(at: at(high), feet: feet)?.away)
     }
 
     /// Whether the body can stand at a position without being inside anything.
     func fits(_ position: SIMD3<Double>, floor: Int) -> Bool {
-        (clearance(at: position, floor: floor)?.metres ?? .zero) >= -Motion.overlapTolerance
+        fits(position, feet: elevation(of: floor))
+    }
+
+    /// The same, for a body whose feet are at `feet` metres, dropping from a ledge at
+    /// `leaving` where it is.
+    func fits(_ position: SIMD3<Double>, feet: Double, leaving ledge: Double = -.infinity) -> Bool {
+        (clearance(at: position, feet: feet, leaving: ledge)?.metres ?? .zero) >= -Motion.overlapTolerance
     }
 
     /// A place for the body near a position, clear of what it cannot pass: moved out
@@ -191,14 +224,15 @@ struct Surfaces {
     /// The match sets the head down with this (ADR-0021): it starts in the first
     /// walkable cell of the lowest floor (`Game.start`), which in an arena walled all
     /// round is a corner, and a body wider than a cell sits in both walls there.
-    func clear(_ position: SIMD3<Double>, floor: Int) -> SIMD3<Double> {
+    func clear(_ position: SIMD3<Double>, feet: Double) -> SIMD3<Double> {
         var here = position
         for _ in Int.zero..<Motion.pushOutAttempts {
-            guard let near = clearance(at: here, floor: floor), near.metres < .zero else { break }
+            guard let near = clearance(at: here, feet: feet), near.metres < .zero else { break }
             here += SIMD3(near.away.x, .zero, near.away.y) * -near.metres
         }
-        guard cell(of: here, floor: floor) == cell(of: position, floor: floor),
-              fits(here, floor: floor) else { return position }
+        // The cell is a matter of x and z alone; any floor names it.
+        guard cell(of: here, floor: .zero) == cell(of: position, floor: .zero),
+              fits(here, feet: feet) else { return position }
         return here
     }
 }

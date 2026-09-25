@@ -204,7 +204,7 @@ final class FreeCameraTests: XCTestCase {
             configurations = Configurations(snake: configurations.snake, tuning: configurations.tuning, view: view,
                                             bot: configurations.bot, match: configurations.match)
         }
-        let world = World(configurations: configurations, kit: base.kit, map: base.map, graph: base.graph, plan: base.plan)
+        let world = World(configurations: configurations, kit: base.kit, map: base.map, setting: base.setting, graph: base.graph, plan: base.plan)
         let built = SceneBuilder.scene(for: world.plan, view: world.configurations.view)
         let game = Game(world: world, start: try XCTUnwrap(Game.start(in: world)))
         let camera = try XCTUnwrap(built.root.children.first { $0.name == "camera" })

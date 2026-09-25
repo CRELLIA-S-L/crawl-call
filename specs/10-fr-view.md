@@ -44,7 +44,8 @@ created: 2026-09-21
 While a match is running, the system **shall** keep the snake's head within the central region of the frame the view configuration defines, moving the camera as the head moves, except where that would show ground beyond the arena, where the camera stops at its edge.
 
 **Rationale.** Concept §3: the camera follows the snake.
-The exception is what a match starts in: the blockout's first cell is a corner, and a camera obeying the region alone put sixty-one per cent of the screen outside the map, measured on the device on 2026-09-22. Ground beyond the arena is nothing — there is no world there to draw — so a frame spent on it is a frame not spent on the room the player is in. A camera stopped at the edge lets the head leave the central region, which is the lesser of the two: the head is still on screen, and what surrounds it is the arena rather than the void.
+The exception is what a match starts in: the blockout's first cell is a corner, and a camera obeying the region alone put sixty-one per cent of the screen outside the map, measured on the device on 2026-09-22. Ground beyond the arena was then nothing — there was no world there to draw — so a frame spent on it was a frame not spent on the room the player is in. A camera stopped at the edge lets the head leave the central region, which is the lesser of the two: the head is still on screen, and what surrounds it is the arena rather than the void.
+Since 2026-09-24 there is a world around the arena (FR-MAP-140, ADR-0031), so the void is gone; the stop stays, as the maintainer agreed with the plan for it, because a frame spent on the island is still a frame not spent on the room, and the free camera of debug mode shows the island to anyone who wants to look.
 
 ### FR-VIEW-140 — A floor above the head is drawn see-through
 
@@ -96,14 +97,14 @@ The same margin decides both that a module is in the way and how wide the cut ar
 ### FR-VIEW-155 — The ground around the head is kept in sight
 
 ```yaml
-status: implemented
+status: partial
 verification: D
 derives_from: [FR-VIEW-010]
 depends_on: [FR-SNAKE-010, FR-VIEW-020, IF-VIEW-020]
 refines: []
 conflicts_with: []
-code: [Sources/CrawlCall/View/SeeThrough.swift, Sources/CrawlCall/Map/SceneBuilder.swift, Sources/CrawlCall/GameSession.swift, Sources/CrawlCall/View/SeeThroughHole.metal]
-tests: [Tests/CrawlCallTests/SeeThroughTests.swift]
+code: [Sources/CrawlCall/View/SeeThrough.swift, Sources/CrawlCall/Map/SceneBuilder.swift, Sources/CrawlCall/GameSession.swift, Sources/CrawlCall/View/SeeThroughHole.metal, Sources/CrawlCall/Config/Interface.swift]
+tests: [Tests/CrawlCallTests/SeeThroughTests.swift, Tests/CrawlCallTests/WindowTests.swift]
 created: 2026-09-23
 ```
 
@@ -122,8 +123,9 @@ The demonstration that verifies this, for whoever carries it out: steer the head
 Rebuilt as a hole on 2026-09-23.
 This was met by accident before it was written. Until 2026-09-23 the margin of FR-VIEW-150 was applied around each point of the snake in every direction at once, which cleared the ring of cells touching it — including the ones behind it, which hide nothing — and read on screen as this requirement. FR-VIEW-150 never asked for that, and taking it away takes with it the thing the player had been steering by, which is why this is asked for on purpose.
 
-## Input
+**Switched off, 2026-09-25.** On the phone, with debug mode tinting each cut by its cause (FR-TOOL-260) and switching either off (FR-TOOL-270), the maintainer found that this window is what opened walls and crates beside the head that hide nothing (Q-260), and had it switched off in a match — not removed: the code and its tests stay, debug mode switches it back on, and it goes only once that is settled. `partial` while a match runs without it.
 
+## Input
 ### FR-VIEW-030 — Game logic reads intents, not device events
 
 ```yaml

@@ -2,7 +2,7 @@
 // part of the scene finds another — the match looks the camera up by it — so it is
 // declared once and not spelled at each end.
 //
-// implements: FR-TOOL-020, FR-VIEW-020, FR-VIEW-100, FR-VIEW-170
+// implements: FR-TOOL-020, FR-VIEW-020, FR-VIEW-100, FR-VIEW-170, FR-MAP-130, FR-GREENHOLM-030
 import Foundation
 
 enum EntityName {
@@ -18,6 +18,13 @@ enum EntityName {
     static let bot = "bot"
     static let shots = "shots"
     static let shot = "shot"
+    /// What a setting draws around the arena (FR-MAP-130, ADR-0031).
+    static let scenery = "scenery"
+    static let sceneryPart = "sceneryPart"
+    static let birds = "birds"
+    static let bird = "bird"
+    static let leftWing = "leftWing"
+    static let rightWing = "rightWing"
 
     /// A tracer's name ends in the squad that fires it, so that a pool of them can be
     /// sorted by squad again without a table beside it.

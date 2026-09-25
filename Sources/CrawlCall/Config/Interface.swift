@@ -2,7 +2,7 @@
 // and gestures (ART-070). Part of how the interface looks rather than of the world it
 // shows, so named here and not in the configuration (ADR-0026).
 //
-// implements: FR-VIEW-050, FR-VIEW-120, FR-VIEW-160, FR-VIEW-190, FR-TOOL-070, FR-VIEW-210
+// implements: FR-VIEW-050, FR-VIEW-120, FR-VIEW-160, FR-VIEW-190, FR-TOOL-070, FR-VIEW-210, FR-MAP-140, FR-TOOL-260, FR-TOOL-270, FR-VIEW-155
 import Foundation
 
 /// The look every plate and mark shares (FR-VIEW-120): a light, translucent plate and
@@ -69,6 +69,28 @@ enum DebugControls {
     static let unscaled = 1.0
 }
 
+/// Which see-through cuts a match starts with. The window around the head (FR-VIEW-155)
+/// is off since 2026-09-25: the maintainer found on the phone that it opened walls and
+/// crates beside the head that hide nothing (Q-260). It is kept, not removed, to be
+/// switched back on in debug mode (FR-TOOL-270) and compared before it goes.
+enum SeeThroughAtStart {
+    static let line = true
+    static let headWindow = false
+}
+
+/// What debug mode tints a module the see-through cut open with, by what cut it
+/// (FR-TOOL-260): red, green and blue in 0…1, bright enough to tell apart from any
+/// colour of the kit.
+enum SeeThroughTint {
+    static let line = SIMD3<Double>(0.95, 0.2, 0.85)
+    static let window = SIMD3<Double>(0.1, 0.85, 0.95)
+    static let both = SIMD3<Double>(1.0, 0.85, 0.1)
+    /// The switches' plate and how far a switch that is off fades.
+    static let switchOffOpacity = 0.35
+    static let switchSpacing = 8.0
+    static let switchPadding = 10.0
+}
+
 /// The window the game is played in on an iPad (FR-VIEW-210).
 enum GameWindow {
     /// Across, the stick's plate and the eat button side by side, with a margin at each
@@ -80,5 +102,17 @@ enum GameWindow {
         let stick = Stick.radius * Stick.plateInRadii
         return CGSize(width: stick + EatButton.size + Interface.screenMargin * marginsAcross,
                       height: max(stick, EatButton.size) + Interface.screenMargin * marginsDown)
+    }
+
+    /// The widest frame, width over height, the game can be given on a screen of this
+    /// size: the screen itself where the window is the screen, and the screen's long
+    /// side over the smallest height a window may have where windows resize — an
+    /// iPad's, which can be as short as the controls (FR-VIEW-210). The surroundings
+    /// are sized for it (FR-MAP-140).
+    static func widestAspect(screen: CGSize, resizable: Bool) -> Double {
+        let long = Double(max(screen.width, screen.height))
+        let short = Double(min(screen.width, screen.height))
+        let lowest = resizable ? Double(minimumSize.height) : short
+        return lowest > .zero ? long / lowest : Fraction.whole
     }
 }

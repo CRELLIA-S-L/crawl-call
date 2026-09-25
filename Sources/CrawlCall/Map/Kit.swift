@@ -7,7 +7,7 @@
 // holds distances, not storeys (IF-MAP-020) — so it lives with the geometry it is a
 // property of. Said out loud because the specification is silent on it.
 //
-// implements: FR-MAP-100, FR-TOOL-200
+// implements: FR-MAP-100, FR-TOOL-200, FR-MAP-150
 import Foundation
 
 struct Kit: Decodable, Equatable {
@@ -27,12 +27,18 @@ struct Kit: Decodable, Equatable {
     /// The character of the module that is this kit's floor. A cell holds one module
     /// (IF-MAP-010), so the floor under a wall is placed from here (FR-TOOL-020).
     let floorModule: String
+    /// The character of the module a step of a flight of stairs is drawn as. A map
+    /// draws a step as an arrow, not as this character, because which way a flight
+    /// rises is the map's to say (IF-MAP-010); the kit says what a step looks like and
+    /// how wide it is, and its height is the flight's (FR-MAP-150, ADR-0033).
+    let stepModule: String
     /// Keyed by the single character that names the module in a map grid.
     let modules: [String: Module]
 
     static let schema = Schema.object([
         "floorHeight": .value,
         "floorModule": .value,
+        "stepModule": .value,
         "modules": .named(of: .object(["name": .value, "walkable": .value,
                                       "size": .array(of: .value), "colour": .array(of: .value)])),
     ])
@@ -41,12 +47,14 @@ struct Kit: Decodable, Equatable {
         case missing(name: String)
         case legendKeyIsNotOneCharacter(String)
         case moduleFieldIsNotThreeNumbers(module: String, field: String)
+        case stepModuleNotInLegend(String)
 
         var identifier: ErrorIdentifier {
             switch self {
             case .missing:                      return .kitMissing
             case .legendKeyIsNotOneCharacter:   return .kitLegendKeyNotOneCharacter
             case .moduleFieldIsNotThreeNumbers: return .kitModuleFieldNotThreeNumbers
+            case .stepModuleNotInLegend:        return .kitStepModuleNotInLegend
             }
         }
 
@@ -58,6 +66,8 @@ struct Kit: Decodable, Equatable {
                 return "the legend key '\(k)' is not a single character; a grid cell is one character"
             case .moduleFieldIsNotThreeNumbers(let m, let f):
                 return "module '\(m)' has a \(f) that is not three numbers"
+            case .stepModuleNotInLegend(let k):
+                return "the step module '\(k)' is not a key of the legend; a flight of stairs would have nothing to be drawn as"
             }
         }
     }
@@ -76,6 +86,7 @@ struct Kit: Decodable, Equatable {
         for key in kit.modules.keys where key.count != MapFormat.charactersPerCell {
             throw KitError.legendKeyIsNotOneCharacter(key)
         }
+        guard kit.modules[kit.stepModule] != nil else { throw KitError.stepModuleNotInLegend(kit.stepModule) }
         for (key, module) in kit.modules {
             let named = "\(key) (\(module.name))"
             if module.size.count != SIMD3<Double>.scalarCount {
@@ -93,4 +104,7 @@ struct Kit: Decodable, Equatable {
 
     /// What a cell's module stands on, when the module is not the surface itself.
     var floor: Module? { modules[floorModule] }
+
+    /// What a step of a flight is drawn as.
+    var step: Module? { modules[stepModule] }
 }

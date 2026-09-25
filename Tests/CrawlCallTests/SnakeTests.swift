@@ -1,7 +1,7 @@
 // The head's movement and the tail that follows it. Geometry is compared within a
 // tolerance, never for equality (`specs/50-verification.md`).
 //
-// verifies: FR-SNAKE-010, FR-SNAKE-015, FR-SNAKE-020, FR-SNAKE-030, FR-SNAKE-220, FR-MAP-025
+// verifies: FR-SNAKE-010, FR-SNAKE-015, FR-SNAKE-020, FR-SNAKE-030, FR-SNAKE-220, FR-MAP-025, FR-MAP-150
 import XCTest
 @testable import CrawlCall
 
@@ -12,7 +12,7 @@ final class SnakeTests: XCTestCase {
     /// A small room with a wall on its right and an upper floor joined by one cell.
     private func surfaces(_ text: String) throws -> Surfaces {
         let map = try MapParser.parse(text, kit: kit)
-        return Surfaces(graph: NavigationGraph.derive(from: map), kit: kit, tuning: tuning, map: map)
+        return Surfaces(graph: NavigationGraph.derive(from: map, stepHeight: ShippedTuning.stepHeight), kit: kit, tuning: tuning, map: map)
     }
 
     private func snake(at x: Double, _ z: Double, floor: Int = 0, segments: Int = 4) -> Snake {
@@ -23,7 +23,7 @@ final class SnakeTests: XCTestCase {
     // MARK: the head
 
     func testTheHeadMovesTheWayThePlayerHolds() throws {
-        let s = try surfaces("kit blockout\nfloor 0\n....\n....\n")
+        let s = try surfaces("kit blockout\nsetting greenholm\nfloor 0\n....\n....\n")
         var snake = self.snake(at: 0, 0)
         snake.advance(direction: SIMD2(1, 0), speed: 3, seconds: 0.1, over: s)
         XCTAssertEqual(snake.head.x, 0.3, accuracy: 1e-9)
@@ -32,7 +32,7 @@ final class SnakeTests: XCTestCase {
 
     func testItAdvancesAtTheSpeedItIsGivenForTheTimeItIsGiven() throws {
         // FR-SNAKE-030: the distance is speed × time and nothing else.
-        let s = try surfaces("kit blockout\nfloor 0\n......\n")
+        let s = try surfaces("kit blockout\nsetting greenholm\nfloor 0\n......\n")
         var snake = self.snake(at: 0, 0)
         snake.advance(direction: SIMD2(1, 0), speed: 2, seconds: 0.25, over: s)
         XCTAssertEqual(snake.head.x, 0.5, accuracy: 1e-9)
@@ -41,7 +41,7 @@ final class SnakeTests: XCTestCase {
     }
 
     func testADiagonalHoldIsNotFasterThanAStraightOne() throws {
-        let s = try surfaces("kit blockout\nfloor 0\n....\n....\n")
+        let s = try surfaces("kit blockout\nsetting greenholm\nfloor 0\n....\n....\n")
         var straight = snake(at: 0, 0)
         var diagonal = snake(at: 0, 0)
         straight.advance(direction: SIMD2(1, 0), speed: 3, seconds: 0.1, over: s)
@@ -54,7 +54,7 @@ final class SnakeTests: XCTestCase {
 
     func testAWallStopsTheHeadWhereItIs() throws {
         // FR-SNAKE-010: never through walls.
-        let s = try surfaces("kit blockout\nfloor 0\n.#\n")
+        let s = try surfaces("kit blockout\nsetting greenholm\nfloor 0\n.#\n")
         var snake = self.snake(at: 0, 0)
         snake.advance(direction: SIMD2(1, 0), speed: 10, seconds: 1, over: s)
         XCTAssertEqual(snake.head.x, 0, accuracy: 1e-9)
@@ -64,14 +64,14 @@ final class SnakeTests: XCTestCase {
         // A corridor with a wall in the middle and floor beyond it. One frame of half
         // a second at three metres a second is 1.5 m — past the wall, if the step is
         // taken whole.
-        let s = try surfaces("kit blockout\nfloor 0\n..#..\n")
+        let s = try surfaces("kit blockout\nsetting greenholm\nfloor 0\n..#..\n")
         var snake = self.snake(at: 0, 0)
         snake.advance(direction: SIMD2(1, 0), speed: 3, seconds: 0.5, over: s)
         XCTAssertLessThan(snake.head.x, 1.0, "the head passed through the wall at x = 1.0")
     }
 
     func testNoDirectionMeansNoMovement() throws {
-        let s = try surfaces("kit blockout\nfloor 0\n....\n")
+        let s = try surfaces("kit blockout\nsetting greenholm\nfloor 0\n....\n")
         var snake = self.snake(at: 0, 0)
         snake.advance(direction: SIMD2(0, 0), speed: 3, seconds: 0.1, over: s)
         XCTAssertEqual(snake.head.x, 0, accuracy: 1e-12)
@@ -83,7 +83,7 @@ final class SnakeTests: XCTestCase {
     /// A wall running along z, with floor beside it, long enough for a second of
     /// sliding not to run off its end.
     private func wallAlongZ() throws -> Surfaces {
-        try surfaces("kit blockout\nfloor 0\n.#\n.#\n.#\n.#\n.#\n.#\n")
+        try surfaces("kit blockout\nsetting greenholm\nfloor 0\n.#\n.#\n.#\n.#\n.#\n.#\n")
     }
 
     /// Where a head beside the wall of `wallAlongZ` stands with its body touching the
@@ -130,7 +130,7 @@ final class SnakeTests: XCTestCase {
 
     func testACornerStopsTheHeadBecauseNeitherWayIsOpen() throws {
         // Two walls, one on each way out. The same rule refuses twice.
-        let s = try surfaces("kit blockout\nfloor 0\n.#\n##\n")
+        let s = try surfaces("kit blockout\nsetting greenholm\nfloor 0\n.#\n##\n")
         var snake = self.snake(at: touching, touching)
         snake.advance(direction: SIMD2(1, 1), speed: 3, seconds: 1, over: s)
         XCTAssertEqual(snake.head.x, touching, accuracy: 1e-9)
@@ -141,7 +141,7 @@ final class SnakeTests: XCTestCase {
         // A cell with no module and nothing under it is refused by the same code path
         // a wall is (FR-SNAKE-220), so the requirement's "what it cannot pass" covers
         // both without naming them apart.
-        let s = try surfaces("kit blockout\nfloor 0\n. \n. \n. \n. \n. \n. \n")
+        let s = try surfaces("kit blockout\nsetting greenholm\nfloor 0\n. \n. \n. \n. \n. \n. \n")
         var snake = self.snake(at: 0.24, 0)
         snake.advance(direction: SIMD2(1, 1), speed: 3, seconds: 1, over: s)
         XCTAssertEqual(snake.head.x, 0.24, accuracy: 1e-9, "the head walked out over the hole")
@@ -168,7 +168,7 @@ final class SnakeTests: XCTestCase {
         // either side of the head, touches it with the head at 0.95. Kept to walkable
         // cells alone, the head stopped at 1.0 — the last centre whose cell is floor —
         // with its body 5 cm into the wall (Q-230).
-        let s = try surfaces("kit blockout\nfloor 0\n...#\n")
+        let s = try surfaces("kit blockout\nsetting greenholm\nfloor 0\n...#\n")
         var snake = self.snake(at: 0, 0)
         snake.advance(direction: SIMD2(1, 0), speed: 3, seconds: 1, over: s)
         XCTAssertEqual(snake.head.x, 1.25 - tuning.bodyRadius, accuracy: 1e-6)
@@ -179,7 +179,7 @@ final class SnakeTests: XCTestCase {
         // The partition is 0.1 m deep in a cell of 0.5, centred in it: its face is
         // 0.05 m from the cell's centre, so the body stops 0.3 m short of that and
         // not at the cell's edge. The partition's cell is at z = 1.0.
-        let s = try surfaces("kit blockout\nfloor 0\n.\n.\n=\n.\n")
+        let s = try surfaces("kit blockout\nsetting greenholm\nfloor 0\n.\n.\n=\n.\n")
         var snake = self.snake(at: 0, 0)
         snake.advance(direction: SIMD2(0, 1), speed: 3, seconds: 1, over: s)
         XCTAssertEqual(snake.head.z, 1.0 - 0.05 - tuning.bodyRadius, accuracy: 1e-6)
@@ -210,7 +210,7 @@ final class SnakeTests: XCTestCase {
         // corner, so split along the axes the head would stand there; laid along the
         // face it touches, the rest of the step takes it round onto the wall's side
         // and down it.
-        let s = try surfaces("kit blockout\nfloor 0\n.#\n.#\n.#\n..\n..\n")
+        let s = try surfaces("kit blockout\nsetting greenholm\nfloor 0\n.#\n.#\n.#\n..\n..\n")
         let corner = SIMD2(0.25, 1.25)
         let outward = SIMD2(-0.8, 0.6)
         var snake = self.snake(at: corner.x + outward.x * tuning.bodyRadius,
@@ -227,7 +227,7 @@ final class SnakeTests: XCTestCase {
         // What it was laid along was the nearest wall, and with both at the same
         // distance that was whichever the map listed first — here the top wall, which
         // it was not pressing into. Top wall at z = 0, side wall at x = 1.0.
-        let s = try surfaces("kit blockout\nfloor 0\n###\n..#\n..#\n..#\n")
+        let s = try surfaces("kit blockout\nsetting greenholm\nfloor 0\n###\n..#\n..#\n..#\n")
         let start = SIMD2(0.75 - tuning.bodyRadius, 0.25 + tuning.bodyRadius)
         var snake = self.snake(at: start.x, start.y)
         let held = SIMD2(0.11, 0.99)
@@ -240,7 +240,7 @@ final class SnakeTests: XCTestCase {
     func testHowEverTheHeadIsSteeredItsBodyStaysOutOfEveryWall() throws {
         // A room with a crate, a partition and walls, and the head steered round it
         // in every direction the stick has, long enough in each to reach something.
-        let s = try surfaces("kit blockout\nfloor 0\n#########\n#.......#\n#.......#\n#..o....#\n#.......#\n#....=..#\n#.......#\n#########\n")
+        let s = try surfaces("kit blockout\nsetting greenholm\nfloor 0\n#########\n#.......#\n#.......#\n#..o....#\n#.......#\n#....=..#\n#.......#\n#########\n")
         var snake = self.snake(at: 2, 1)
         XCTAssertTrue(s.fits(snake.head, floor: 0), "the test starts inside a wall")
         var touched = 0
@@ -254,15 +254,25 @@ final class SnakeTests: XCTestCase {
         XCTAssertGreaterThan(touched, 0, "the head never reached anything, so nothing was tested")
     }
 
-    func testAWalkableModuleIsGroundHoweverTallItsBox() throws {
-        // A stair's box stands the height of a floor. It is walked up, not bumped into.
-        let surfaces = try surfaces("kit blockout\ntransition 2,0 0 1\nfloor 0\n../\nfloor 1\n  /\n")
-        XCTAssertNil(surfaces.clearance(at: SIMD3(0.5, 0, 0), floor: 0), "the stair is in the body's way")
+    func testGroundIsInTheBodysWayOnlyWhereItStandsMoreThanAStepAboveItsFeet() throws {
+        // ADR-0033: a step one step up is walked onto; one taller is the side of a
+        // step, met like a wall. On a flight's first step, from the floor it stands on
+        // the second step, two steps up, is in the way; from the first step itself it
+        // is one step up, and is not.
+        let s = try surfaces("kit blockout\nsetting greenholm\nfloor 0\n..>>>>>>>>.\nfloor 1\n          .\n")
+        let rise = try Kit.load(named: "blockout", from: .main).floorHeight / 8
+        // A clearance is the gap to the nearest thing in the way: negative is inside it.
+        XCTAssertGreaterThan(try XCTUnwrap(s.clearance(at: SIMD3(0.5, 0, 0), feet: 0)).metres, 0,
+                             "the first step, one step up, is in the body's way")
+        XCTAssertLessThan(try XCTUnwrap(s.clearance(at: SIMD3(1.0, 0, 0), feet: 0)).metres, 0,
+                          "the second step, two steps up, is not in the way of a body on the floor")
+        XCTAssertGreaterThan(try XCTUnwrap(s.clearance(at: SIMD3(1.0, rise, 0), feet: rise)).metres, 0,
+                             "standing on the first, the second is still a wall")
     }
 
     func testAWallOnTheFloorAboveIsNotInTheWayOfAHeadBelow() throws {
         // A balcony's wall stands over open ground; the head walks under it.
-        let s = try surfaces("kit blockout\nfloor 0\n....\nfloor 1\n  # \n")
+        let s = try surfaces("kit blockout\nsetting greenholm\nfloor 0\n....\nfloor 1\n  # \n")
         var snake = self.snake(at: 0, 0)
         snake.advance(direction: SIMD2(1, 0), speed: 3, seconds: 0.5, over: s)
         XCTAssertEqual(snake.head.x, 1.5, accuracy: 1e-9)
@@ -313,8 +323,8 @@ final class SnakeTests: XCTestCase {
         // The ledge ends at x = 0.25 and the ground below goes on, but a wall stands
         // down there beside the landing, a quarter of a metre off the line the head
         // drops along. Without the wall the same drop is taken.
-        let blocked = try surfaces("kit blockout\nfloor 0\n..\n.#\nfloor 1\n. \n  \n")
-        let open = try surfaces("kit blockout\nfloor 0\n..\n..\nfloor 1\n. \n  \n")
+        let blocked = try surfaces("kit blockout\nsetting greenholm\nfloor 0\n..\n.#\nfloor 1\n. \n  \n")
+        let open = try surfaces("kit blockout\nsetting greenholm\nfloor 0\n..\n..\nfloor 1\n. \n  \n")
         var stopped = snake(at: 0, 0, floor: 1)
         var dropped = snake(at: 0, 0, floor: 1)
         stopped.advance(direction: SIMD2(1, 0), speed: 3, seconds: 0.2, over: blocked)
@@ -328,7 +338,7 @@ final class SnakeTests: XCTestCase {
     func testSteeringOffALedgeLandsOnTheFloorBelow() throws {
         // FR-SNAKE-220: a drop is a path. The upper floor ends at x = 0; below it the
         // ground floor continues.
-        let s = try surfaces("kit blockout\nfloor 0\n..\nfloor 1\n. \n")
+        let s = try surfaces("kit blockout\nsetting greenholm\nfloor 0\n..\nfloor 1\n. \n")
         var snake = self.snake(at: 0, 0, floor: 1)
         XCTAssertEqual(snake.head.y, kit.floorHeight, accuracy: 1e-9)
         snake.advance(direction: SIMD2(1, 0), speed: 3, seconds: 0.2, over: s)
@@ -338,7 +348,7 @@ final class SnakeTests: XCTestCase {
     }
 
     func testTheDropIsInTheTrailAsAVerticalPortion() throws {
-        let s = try surfaces("kit blockout\nfloor 0\n..\nfloor 1\n. \n")
+        let s = try surfaces("kit blockout\nsetting greenholm\nfloor 0\n..\nfloor 1\n. \n")
         var snake = self.snake(at: 0, 0, floor: 1)
         snake.advance(direction: SIMD2(1, 0), speed: 3, seconds: 0.2, over: s)
 
@@ -357,7 +367,7 @@ final class SnakeTests: XCTestCase {
 
     func testADropWithNothingToLandOnIsAWall() throws {
         // Nothing below the edge: the head stays rather than falling out of the world.
-        let s = try surfaces("kit blockout\nfloor 1\n. \n")
+        let s = try surfaces("kit blockout\nsetting greenholm\nfloor 1\n. \n")
         var snake = self.snake(at: 0, 0, floor: 1)
         snake.advance(direction: SIMD2(1, 0), speed: 3, seconds: 0.2, over: s)
         XCTAssertEqual(snake.floor, 1)
@@ -368,7 +378,7 @@ final class SnakeTests: XCTestCase {
 
     func testTheTailLiesAlongThePathTheHeadTravelled() throws {
         // FR-SNAKE-020: each segment one spacing behind the last, back along the trail.
-        let s = try surfaces("kit blockout\nfloor 0\n........\n")
+        let s = try surfaces("kit blockout\nsetting greenholm\nfloor 0\n........\n")
         var snake = self.snake(at: 0, 0, segments: 3)
         for _ in 0..<20 { snake.advance(direction: SIMD2(1, 0), speed: 3, seconds: 0.05, over: s) }
         let tail = snake.tail
@@ -381,7 +391,7 @@ final class SnakeTests: XCTestCase {
     }
 
     func testTheTailTurnsTheCornerRatherThanCuttingIt() throws {
-        let s = try surfaces("kit blockout\nfloor 0\n....\n....\n....\n")
+        let s = try surfaces("kit blockout\nsetting greenholm\nfloor 0\n....\n....\n....\n")
         var snake = self.snake(at: 0, 0, segments: 2)
         for _ in 0..<12 { snake.advance(direction: SIMD2(0, 1), speed: 3, seconds: 0.05, over: s) }
         for _ in 0..<12 { snake.advance(direction: SIMD2(1, 0), speed: 3, seconds: 0.05, over: s) }
@@ -397,7 +407,7 @@ final class SnakeTests: XCTestCase {
         // segments 0.6 apart. Walking back from the head, the first lands 0.6 into the
         // east leg; the second uses up that leg's metre and spends the remaining 0.2
         // on the north one.
-        let s = try surfaces("kit blockout\nfloor 0\n.....\n.....\n.....\n.....\n")
+        let s = try surfaces("kit blockout\nsetting greenholm\nfloor 0\n.....\n.....\n.....\n.....\n")
         var snake = self.snake(at: 0, 0, segments: 2)
         for _ in 0..<4 { snake.advance(direction: SIMD2(0, 1), speed: 3, seconds: 1.0 / 12, over: s) }
         for _ in 0..<4 { snake.advance(direction: SIMD2(1, 0), speed: 3, seconds: 1.0 / 12, over: s) }
@@ -413,14 +423,14 @@ final class SnakeTests: XCTestCase {
     }
 
     func testAShortTrailGivesAsManySegmentsAsItCanCarry() throws {
-        let s = try surfaces("kit blockout\nfloor 0\n....\n")
+        let s = try surfaces("kit blockout\nsetting greenholm\nfloor 0\n....\n")
         var snake = self.snake(at: 0, 0, segments: 5)
         snake.advance(direction: SIMD2(1, 0), speed: 3, seconds: 0.05, over: s)
         XCTAssertLessThan(snake.tail.count, 5)
     }
 
     func testTheTailFollowsTheHeadDownADrop() throws {
-        let s = try surfaces("kit blockout\nfloor 0\n....\nfloor 1\n..  \n")
+        let s = try surfaces("kit blockout\nsetting greenholm\nfloor 0\n....\nfloor 1\n..  \n")
         var snake = self.snake(at: 0, 0, floor: 1, segments: 3)
         snake.advance(direction: SIMD2(1, 0), speed: 3, seconds: 0.1, over: s)   // along the upper floor
         snake.advance(direction: SIMD2(1, 0), speed: 3, seconds: 0.3, over: s)   // off the edge
@@ -435,7 +445,7 @@ final class SnakeTests: XCTestCase {
 
     func testTheSurfacesReadTheirNumbersFromTheTuningConfiguration() throws {
         // FR-MAP-025: one set of values for the snake and for the graph.
-        let s = try surfaces("kit blockout\nfloor 0\n..\n")
+        let s = try surfaces("kit blockout\nsetting greenholm\nfloor 0\n..\n")
         XCTAssertEqual(s.cellSize, tuning.navigationGraphCellSize)
         XCTAssertEqual(s.bodyRadius, tuning.bodyRadius)
         XCTAssertEqual(s.stepHeight, tuning.stepHeight)
@@ -445,8 +455,10 @@ final class SnakeTests: XCTestCase {
     }
 }
 
-/// The stairs half of FR-SNAKE-010: a map's vertical transition is something the
-/// snake can traverse (FR-MAP-010), not only something the bots path along.
+/// The stairs half of FR-SNAKE-010: a way between floors is something the snake can
+/// traverse (FR-MAP-010), not only something the bots path along — a flight on the
+/// shipped map (FR-MAP-150), and the way straight up a `transition` line still makes
+/// (Q-330), kept working for the tower that may want it.
 ///
 /// verifies: FR-SNAKE-010, FR-MAP-010
 final class SnakeClimbTests: XCTestCase {
@@ -457,8 +469,8 @@ final class SnakeClimbTests: XCTestCase {
     /// Three cells in a row on the ground floor, the last of them a stair that a
     /// transition links to the same cell one floor up.
     private func stairs() throws -> Surfaces {
-        let map = try MapParser.parse("kit blockout\ntransition 2,0 0 1\nfloor 0\n../\nfloor 1\n  /\n", kit: kit)
-        return Surfaces(graph: NavigationGraph.derive(from: map), kit: kit, tuning: tuning, map: map)
+        let map = try MapParser.parse("kit blockout\nsetting greenholm\ntransition 2,0 0 1\nfloor 0\n../\nfloor 1\n  /\n", kit: kit)
+        return Surfaces(graph: NavigationGraph.derive(from: map, stepHeight: ShippedTuning.stepHeight), kit: kit, tuning: tuning, map: map)
     }
 
     private func snake(at x: Int) -> Snake {
@@ -518,15 +530,15 @@ final class SnakeClimbTests: XCTestCase {
     }
 
     func testTheShippedBlockoutsBalconyCanBeReachedFromTheStart() throws {
-        // The map declares one transition and FR-MAP-010 asks that it be one the
-        // snake can traverse. Steered from where a match begins: along the top row to
-        // the stair's column, then down it to the stair.
+        // FR-MAP-010 asks that the floors be joined by a way the snake can traverse;
+        // on the blockout it is the flight (FR-MAP-150). Steered from where a match
+        // begins: down the west side to the flight's row, then east up it.
         let world = try Launch.world().get()
         let start = try XCTUnwrap(Game.start(in: world))
         let size = world.configurations.tuning.navigationGraphCellSize
         let surfaces = Surfaces(graph: world.graph, kit: world.kit, tuning: world.configurations.tuning, map: world.map)
         var body = Game(world: world, start: start).snake
-        let stair = try XCTUnwrap(world.map.transitions.first)
+        let foot = try XCTUnwrap(world.map.placements.first { $0.step?.index == 1 })
 
         func steer(_ direction: SIMD2<Double>, until reached: (Snake) -> Bool) {
             for _ in 0..<2000 where !reached(body) {
@@ -534,13 +546,11 @@ final class SnakeClimbTests: XCTestCase {
                              seconds: 1.0 / 60, over: surfaces)
             }
         }
-        steer(SIMD2(1, 0)) { Int(($0.head.x / size).rounded()) >= stair.x }
-        steer(SIMD2(0, 1)) { $0.floor != start.floor }
-        // And then up it, which takes the height's worth of walking.
-        steer(SIMD2(0, 1)) { $0.head.y >= Double(stair.to) * world.kit.floorHeight - 1e-9 }
+        steer(SIMD2(0, 1)) { Int(($0.head.z / size).rounded()) >= foot.z }
+        steer(SIMD2(1, 0)) { $0.floor == 1 && abs($0.head.y - world.kit.floorHeight) < 1e-9 }
 
-        XCTAssertEqual(body.floor, stair.to, "the balcony cannot be reached from the start")
-        XCTAssertEqual(body.head.y, Double(stair.to) * world.kit.floorHeight, accuracy: 1e-9)
+        XCTAssertEqual(body.floor, 1, "the balcony cannot be reached from the start")
+        XCTAssertEqual(body.head.y, world.kit.floorHeight, accuracy: 1e-9)
     }
 
     func testAClimbTakesTheTimeItsHeightIsWorth() throws {
@@ -587,10 +597,10 @@ final class SnakeClimbTests: XCTestCase {
         let size = world.configurations.tuning.navigationGraphCellSize
         let surfaces = Surfaces(graph: world.graph, kit: world.kit,
                                 tuning: world.configurations.tuning, map: world.map)
-        let wall = NavigationGraph.Node(floor: 1, x: 14, z: 12)
-        let beside = NavigationGraph.Node(floor: 1, x: 15, z: 12)
-        XCTAssertFalse(world.graph.isWalkable(wall), "the map changed: (14,12) is no longer a wall")
-        XCTAssertTrue(world.graph.isWalkable(NavigationGraph.Node(floor: 0, x: 14, z: 12)),
+        let wall = NavigationGraph.Node(floor: 1, x: 14, z: 14)
+        let beside = NavigationGraph.Node(floor: 1, x: 15, z: 14)
+        XCTAssertFalse(world.graph.isWalkable(wall), "the map changed: (14,14) is no longer a wall")
+        XCTAssertTrue(world.graph.isWalkable(NavigationGraph.Node(floor: 0, x: 14, z: 14)),
                       "the map changed: there is no floor under that wall")
 
         var body = Snake(head: SIMD3(Double(beside.x) * size, world.kit.floorHeight,
@@ -602,17 +612,16 @@ final class SnakeClimbTests: XCTestCase {
         XCTAssertEqual(body.floor, 1, "the head went through the balcony's wall and fell")
         XCTAssertEqual(body.head.y, world.kit.floorHeight, accuracy: 1e-9)
 
-        // And the way down is the stair it came up: this balcony is walled on the two
+        // And the way down is the flight it came up: this balcony is walled on the two
         // sides that face the room and ends at the map's edge on the others, so with
-        // the wall holding, a one-way transition would make it a trap.
-        let stair = try XCTUnwrap(world.map.transitions.first)
-        var leaving = Snake(head: SIMD3(Double(stair.x) * size, world.kit.floorHeight,
-                                        Double(stair.z + 2) * size),
+        // the wall holding, a flight that only went up would make it a trap.
+        let top = try XCTUnwrap(world.map.placements.first { $0.step.map { $0.index == $0.count } ?? false })
+        var leaving = Snake(head: SIMD3(Double(top.x + 2) * size, world.kit.floorHeight, Double(top.z) * size),
                             floor: 1, segments: 4, segmentSpacing: 0.6)
-        for _ in 0..<180 {
-            leaving.advance(direction: SIMD2(0, -1), speed: 3.0, seconds: 1.0 / 60, over: surfaces)
+        for _ in 0..<240 {
+            leaving.advance(direction: SIMD2(-1, 0), speed: 3.0, seconds: 1.0 / 60, over: surfaces)
         }
-        XCTAssertEqual(leaving.floor, stair.from, "the balcony is a trap: the stair does not go down")
+        XCTAssertEqual(leaving.floor, 0, "the balcony is a trap: the flight does not go down")
         XCTAssertEqual(leaving.head.y, 0, accuracy: 1e-9)
     }
 

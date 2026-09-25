@@ -80,7 +80,7 @@ final class MatchEndTests: XCTestCase {
                                   replacing: "squadSize", with: squadSize))
         }
         return World(configurations: configurations, kit: base.kit, map: base.map,
-                     graph: base.graph, plan: base.plan)
+                     setting: base.setting, graph: base.graph, plan: base.plan)
     }
 
     private func decode<T: Decodable>(_ type: T.Type, named name: String, schema: Schema,

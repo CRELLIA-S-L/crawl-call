@@ -231,6 +231,44 @@ Where debug mode is enabled, the system **shall** draw each bot's current line o
 
 **Rationale.** Concept §11.3; also the only way to see witnessing (FR-SCORE-070) happen.
 
+### FR-TOOL-260 — Debug mode tints what the see-through cuts by what cut it
+
+```yaml
+status: implemented
+verification: T
+derives_from: []
+depends_on: [FR-VIEW-150, FR-VIEW-155]
+refines: []
+conflicts_with: []
+code: [Sources/CrawlCall/View/SeeThrough.swift, Sources/CrawlCall/View/SeeThroughSwitches.swift, Sources/CrawlCall/GameSession.swift, Sources/CrawlCall/Config/Interface.swift, Sources/CrawlCall/Config/DebugText.swift]
+tests: [Tests/CrawlCallTests/SeeThroughTests.swift]
+created: 2026-09-25
+```
+
+Where debug mode is enabled and the user switches the tint on, the system **shall** tint each module the see-through cuts open by what cut it: the line of sight to the snake, the window around the head, or both.
+
+**Rationale.** The maintainer, 2026-09-25: the see-through opens walls and crates beside the head that hide nothing (Q-260), and two cuts can do that — the line of sight of FR-VIEW-150 and the window of FR-VIEW-155 — so the phone has to show which one did before either is changed.
+A switch and not always on, because debug mode is the build the maintainer plays (ADR-0023), and a tinted arena is not one to play in.
+
+### FR-TOOL-270 — Debug mode switches each see-through cut off
+
+```yaml
+status: implemented
+verification: T
+derives_from: []
+depends_on: [FR-VIEW-150, FR-VIEW-155]
+refines: []
+conflicts_with: []
+code: [Sources/CrawlCall/View/SeeThrough.swift, Sources/CrawlCall/View/SeeThroughSwitches.swift, Sources/CrawlCall/GameSession.swift, Sources/CrawlCall/Config/Interface.swift, Sources/CrawlCall/Config/DebugText.swift]
+tests: [Tests/CrawlCallTests/SeeThroughTests.swift, Tests/CrawlCallTests/WindowTests.swift]
+created: 2026-09-25
+```
+
+Where debug mode is enabled, the system **shall** let the user switch off the cut along the line of sight and the cut around the head, each on its own.
+
+**Rationale.** The maintainer, 2026-09-25, beside FR-TOOL-260: with one cut off, what is still open is the other's alone, which says as plainly as the tint which cut opens what (Q-260).
+The switches exist in debug mode only (ADR-0023). A match starts with the cut along the line of sight and, since the maintainer found the window to be what over-cut, without the window around the head (FR-VIEW-155), which a switch here turns back on to compare.
+
 ## Render scripts
 
 ### FR-TOOL-130 — Concept renders are built by script
@@ -431,7 +469,7 @@ derives_from: []
 depends_on: []
 refines: []
 conflicts_with: []
-code: [Sources/CrawlCall/Config/ErrorIdentifier.swift, Sources/CrawlCall/Config/Schema.swift, Sources/CrawlCall/Config/Configurations+Load.swift, Sources/CrawlCall/Map/Kit.swift, Sources/CrawlCall/Map/MapSpecification.swift, Sources/CrawlCall/Launch.swift, Sources/CrawlCall/View/SceneView.swift]
+code: [Sources/CrawlCall/Config/ErrorIdentifier.swift, Sources/CrawlCall/Config/Schema.swift, Sources/CrawlCall/Config/Configurations+Load.swift, Sources/CrawlCall/Map/Kit.swift, Sources/CrawlCall/Map/MapSpecification.swift, Sources/CrawlCall/Launch.swift, Sources/CrawlCall/View/SceneView.swift, Sources/CrawlCall/Setting/Setting.swift, Sources/CrawlCall/Setting/SceneryBuilder.swift, Sources/CrawlCall/Setting/FrameCoverage.swift]
 tests: [Tests/CrawlCallTests/ErrorIdentifierTests.swift]
 exempt: [unlinked]
 created: 2026-09-24

@@ -12,7 +12,7 @@
 // The looks of a module are made once, when the map is built, and swapped as the
 // rules change their mind: a material is cheap to keep and not cheap to make.
 //
-// implements: FR-VIEW-140, FR-VIEW-150, FR-VIEW-155, FR-TOOL-230
+// implements: FR-VIEW-140, FR-VIEW-150, FR-VIEW-155, FR-TOOL-230, FR-TOOL-260, FR-TOOL-270
 import CoreGraphics
 import Foundation
 import Metal
@@ -143,8 +143,13 @@ struct SeeThrough {
             case around(SIMD3<Double>)
             case along(SIMD3<Double>)
         }
+        /// What cut it: the line of sight to the snake (FR-VIEW-150), the window
+        /// around the head (FR-VIEW-155), or both — which debug mode tints it by
+        /// (FR-TOOL-260).
+        enum Cause: Equatable, CaseIterable { case line, window, both }
         let shape: Shape
         let radius: Double
+        let cause: Cause
 
         /// As the shader takes it, in the one four-component value a material carries:
         /// the point, and the radius — positive around it, negative along the line of
@@ -175,20 +180,24 @@ struct SeeThrough {
     /// with one sphere holding everything either would clear. The hole is only ever
     /// wider than it has to be, never narrower.
     ///
-    /// `surface` is the height of the floor the head is on, and not the head's own
-    /// height: a head walking a stair has already changed floors and is a second's
-    /// climb short of the surface, and a height test against it would cut open the
-    /// very balcony it is climbing onto.
+    /// `surface` is the height of the ground the head is on — its cell's, a step's on a
+    /// flight — and not the head's own height: a head walking a stair has already
+    /// entered the next step and is a moment's climb short of it, and a height test
+    /// against the head would cut open the very balcony it is climbing onto.
+    ///
+    /// `switches` can turn either cut off, as debug mode lets the user do (FR-TOOL-270);
+    /// what a match starts with is `SeeThroughAtStart`'s.
     nonisolated static func holes(in boxes: [Box], headOn level: Int, head: SIMD3<Double>,
                                   surface: Double, snake: [SIMD3<Double>],
                                   from eye: SIMD3<Double>, margin: Double,
-                                  visibilityRadius: Double) -> [Int: Hole] {
+                                  visibilityRadius: Double,
+                                  switches: Switches = Switches()) -> [Int: Hole] {
         var answer: [Int: Hole] = [:]
         for (index, box) in boxes.enumerated() where box.level <= level {
             // Every part of the snake this module stands in front of (FR-VIEW-150),
             // with where its line of sight goes through the module.
             var hidden: [(part: SIMD3<Double>, crossing: (SIMD3<Double>, SIMD3<Double>))] = []
-            for point in snake {
+            for point in snake where switches.line {
                 if let crossing = Sight.crossing(centre: box.centre, size: box.size,
                                                  from: eye, to: point, margin: margin) {
                     hidden.append((point, crossing))
@@ -197,7 +206,7 @@ struct SeeThrough {
             // The ground around the head (FR-VIEW-155): near enough, higher than the
             // floor the head is on so that floor is never opened onto the void, and not
             // wholly beyond the head.
-            let window = visibilityRadius > .zero
+            let window = switches.window && visibilityRadius > .zero
                 && box.centre.y + box.size.y * Geometry.half > surface + Geometry.samePosition
                 && !beyond(centre: box.centre, size: box.size, from: eye, past: head)
                 && distance(from: head, to: box) <= visibilityRadius
@@ -206,7 +215,7 @@ struct SeeThrough {
             case (true, false):
                 continue
             case (true, true):
-                answer[index] = Hole(shape: .around(head), radius: visibilityRadius)
+                answer[index] = Hole(shape: .around(head), radius: visibilityRadius, cause: .window)
             case (false, false):
                 // Cut along the line of sight to the middle of the parts it hides, wide
                 // enough for the farthest of them: the lines to them all start at the
@@ -214,7 +223,7 @@ struct SeeThrough {
                 // they are no further apart than at the snake itself.
                 let aim = hidden.reduce(SIMD3<Double>.zero) { $0 + $1.part } / Double(hidden.count)
                 let spread = hidden.map { length($0.part - aim) }.max() ?? .zero
-                answer[index] = Hole(shape: .along(aim), radius: margin + spread)
+                answer[index] = Hole(shape: .along(aim), radius: margin + spread, cause: .line)
             case (false, true):
                 // Both at once, which is the ordinary case beside the head: one sphere
                 // holding every stretch of line through the module and the head's own
@@ -226,7 +235,7 @@ struct SeeThrough {
                 spheres.append((head, visibilityRadius))
                 let centre = spheres.reduce(SIMD3<Double>.zero) { $0 + $1.0 } / Double(spheres.count)
                 let reach = spheres.map { length($0.0 - centre) + $0.1 }.max() ?? .zero
-                answer[index] = Hole(shape: .around(centre), radius: reach)
+                answer[index] = Hole(shape: .around(centre), radius: reach, cause: .both)
             }
         }
         return answer
@@ -247,6 +256,24 @@ struct SeeThrough {
         return (d.x * d.x + d.y * d.y + d.z * d.z).squareRoot()
     }
 
+    /// Debug mode's switches (FR-TOOL-260, FR-TOOL-270): each cut on or off, and whether
+    /// what is cut is tinted by what cut it. By themselves they have both cuts and no
+    /// tint; what a match starts with is `SeeThroughAtStart`'s.
+    struct Switches: Equatable {
+        var line = true
+        var window = true
+        var tint = false
+    }
+
+    /// The colour a hole's cause is tinted with in debug mode.
+    nonisolated static func tint(for cause: Hole.Cause) -> SIMD3<Double> {
+        switch cause {
+        case .line:   return SeeThroughTint.line
+        case .window: return SeeThroughTint.window
+        case .both:   return SeeThroughTint.both
+        }
+    }
+
     /// What a `show` changed that the frame record counts (FR-TOOL-230): modules that
     /// changed their look, and modules drawn through the hole shader for the first time.
     struct Report: Equatable {
@@ -260,17 +287,24 @@ struct SeeThrough {
     @discardableResult
     mutating func show(headOn level: Int, head: SIMD3<Double>, surface: Double,
                        snake: [SIMD3<Double>], from eye: SIMD3<Double>,
-                       margin: Double, visibilityRadius: Double) -> Report {
+                       margin: Double, visibilityRadius: Double,
+                       switches: Switches = Switches()) -> Report {
         var report = Report()
         let nowLids = Set(boxes.indices.filter { boxes[$0].level > level })
         let holes = Self.holes(in: boxes, headOn: level, head: head, surface: surface,
                                snake: snake, from: eye, margin: margin,
-                               visibilityRadius: visibilityRadius)
+                               visibilityRadius: visibilityRadius, switches: switches)
         let nowCut = Set(holes.keys)
 
         for (index, hole) in holes {
             if var holed = modules[index].holed?.first as? CustomMaterial {
                 holed.custom.value = hole.parameter
+                if switches.tint {
+                    let colour = Self.tint(for: hole.cause)
+                    holed.baseColor = CustomMaterial.BaseColor(PhysicallyBasedMaterial.BaseColor(
+                        tint: UIColor(red: CGFloat(colour.x), green: CGFloat(colour.y),
+                                      blue: CGFloat(colour.z), alpha: Colour.opaque)))
+                }
                 modules[index].model.model?.materials = [holed]
                 // It still stands; only a patch of it is see-through (ADR-0020).
                 modules[index].model.components.set(DynamicLightShadowComponent(castsShadow: true))

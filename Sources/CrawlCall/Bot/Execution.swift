@@ -9,7 +9,7 @@
 // rather than an accident: no requirement gives a weapon a rate of fire, and
 // inventing one would put a number in this file that no interface carries.
 //
-// implements: FR-BOT-060, FR-VIEW-170, INV-BOT-010, FR-BOT-165
+// implements: FR-BOT-060, FR-VIEW-170, INV-BOT-010, FR-BOT-165, FR-MAP-150
 import Foundation
 
 enum Execution {
@@ -95,7 +95,7 @@ enum Execution {
             }
             guard let speed = world.configurations.bot.archetypes[bots[index].archetype.rawValue]?.runSpeed
             else { continue }
-            advance(&bots[index], by: speed * seconds, cellSize: cell, floorHeight: world.kit.floorHeight)
+            advance(&bots[index], by: speed * seconds, over: world.graph, cellSize: cell, floorHeight: world.kit.floorHeight)
         }
     }
 
@@ -109,13 +109,12 @@ enum Execution {
 
     /// Walks a bot along its route by the given distance, stopping where the route
     /// runs out.
-    private static func advance(_ bot: inout Bot, by distance: Double,
+    private static func advance(_ bot: inout Bot, by distance: Double, over graph: NavigationGraph,
                                 cellSize: Double, floorHeight: Double) {
         var left = distance
         while left > Walking.arrived, let next = bot.path.first {
-            let there = SIMD3(Double(next.x) * cellSize,
-                              Double(next.floor) * floorHeight,
-                              Double(next.z) * cellSize)
+            // At the height of the node's surface: up a flight step by step (FR-MAP-150).
+            let there = graph.centre(of: next, cellSize: cellSize, floorHeight: floorHeight)
             let gap = Perception.metres(bot.position, there)
             if gap <= left {
                 bot.position = there

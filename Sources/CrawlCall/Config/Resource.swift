@@ -1,7 +1,7 @@
 // Where the game's files are in its bundle (ADR-0012): the directories, the
 // extensions and the names it asks for them by (ART-070).
 //
-// implements: IF-SNAKE-010, IF-MAP-020, IF-VIEW-020, IF-BOT-010, IF-MAP-010, FR-MAP-100, FR-VIEW-150
+// implements: IF-SNAKE-010, IF-MAP-020, IF-VIEW-020, IF-BOT-010, IF-MAP-010, FR-MAP-100, FR-VIEW-150, FR-MAP-120, IF-GREENHOLM-010
 import Foundation
 
 enum Resource {
@@ -11,6 +11,9 @@ enum Resource {
     /// A module kit is a directory under `config/kit/` holding its legend.
     static let kitDirectory = "kit"
     static let legendName = "legend"
+    /// A setting's configuration is a file under `config/setting/`, named as the
+    /// setting is (FR-MAP-120, ADR-0031).
+    static let settingDirectory = "setting"
     /// Map files are text, under `maps/` (IF-MAP-010).
     static let mapDirectory = "maps"
     static let mapExtension = "map"
@@ -43,6 +46,12 @@ enum Resource {
 
     /// `kit/<name>/legend`: a kit's legend, named as a configuration relative to `config/`.
     static func legend(ofKit name: String) -> String { path(kitDirectory, name, legendName) }
+
+    /// `setting/<name>`: a setting's configuration, named relative to `config/`.
+    static func setting(named name: String) -> String { path(settingDirectory, name) }
+
+    /// `config/setting`: the directory the settings' configurations are in.
+    static var settingsDirectory: String { path(configurationDirectory, settingDirectory) }
 
     /// `config/kit/<name>`: the directory a kit's legend is in.
     static func kitDirectory(_ name: String) -> String { path(configurationDirectory, kitDirectory, name) }

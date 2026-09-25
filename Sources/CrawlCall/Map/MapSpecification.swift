@@ -1,10 +1,16 @@
 // The map file, parsed. IF-MAP-010: one UTF-8 text file, a header naming the module
-// kit and the transitions between floors, then one character grid per floor.
+// kit, the setting and the transitions between floors, then one character grid per
+// floor. The setting is the world the arena stands in (FR-MAP-120); the parser only
+// reads its name, and whether the game provides it is asked when it is loaded.
 //
 // FR-TOOL-010 asks for the placement of every module per floor, or a rejection that
 // names the line and the reason — so every error below carries its line.
 //
-// implements: IF-MAP-010, FR-TOOL-010, FR-TOOL-200
+// A flight of stairs is a run of arrows on one floor, each a step, rising the way the
+// arrows point to the floor above (FR-MAP-150); one too steep to climb is refused
+// here, where the map is read (FR-MAP-160, ADR-0033).
+//
+// implements: IF-MAP-010, FR-MAP-120, FR-MAP-150, FR-MAP-160, FR-TOOL-010, FR-TOOL-200
 import Foundation
 
 struct MapSpecification: Equatable {
@@ -24,18 +30,39 @@ struct MapSpecification: Equatable {
         let floor: Int
         let x: Int
         let z: Int
+        /// Where the cell is a step of a flight of stairs, which step it is.
+        var step: Step? = nil
+    }
+
+    /// A step of a flight: the `index`th from the bottom, counted from one, of `count`.
+    struct Step: Equatable {
+        let index: Int
+        let count: Int
     }
 
     let kit: String
+    /// Metres from one floor's walking surface to the next: the kit's (FR-MAP-100),
+    /// carried so that how high a cell is can be read off the map alone.
+    let floorHeight: Double
+    /// The setting the arena stands in, by its name (FR-MAP-120).
+    let setting: String
     /// Floors in the order the file declares them, each with its grid rows.
     let floors: [(level: Int, rows: [String])]
     let transitions: [Transition]
     let placements: [Placement]
 
     static func == (a: MapSpecification, b: MapSpecification) -> Bool {
-        a.kit == b.kit && a.transitions == b.transitions && a.placements == b.placements
+        a.kit == b.kit && a.floorHeight == b.floorHeight && a.setting == b.setting && a.transitions == b.transitions && a.placements == b.placements
             && a.floors.map(\.level) == b.floors.map(\.level)
             && a.floors.map(\.rows) == b.floors.map(\.rows)
+    }
+
+    /// How high a placement's walking surface is, in metres: its floor's, and on a
+    /// flight its share of the way to the floor above, in equal rises (FR-MAP-150).
+    func height(of placement: Placement) -> Double {
+        let floor = Double(placement.floor) * floorHeight
+        guard let step = placement.step, step.count > .zero else { return floor }
+        return floor + floorHeight * Double(step.index) / Double(step.count)
     }
 }
 
@@ -43,6 +70,8 @@ enum MapParseError: IdentifiedError, Equatable {
     case noKit
     case noFloors
     case repeatedKit(line: Int)
+    case noSetting
+    case repeatedSetting(line: Int)
     case unknownDirective(String, line: Int)
     case gridBeforeAnyFloor(line: Int)
     case repeatedFloor(Int, line: Int)
@@ -52,12 +81,16 @@ enum MapParseError: IdentifiedError, Equatable {
     case raggedGrid(floor: Int, line: Int, expected: Int, found: Int)
     case unknownCharacter(Character, floor: Int, line: Int, column: Int)
     case emptyFloor(Int, line: Int)
+    case flightLeadsNowhere(floor: Int, line: Int, column: Int)
+    case flightTooSteep(line: Int, rise: Double, allowed: Double)
 
     var identifier: ErrorIdentifier {
         switch self {
         case .noKit:                    return .mapNoKit
         case .noFloors:                 return .mapNoFloors
         case .repeatedKit:              return .mapRepeatedKit
+        case .noSetting:                return .mapNoSetting
+        case .repeatedSetting:          return .mapRepeatedSetting
         case .unknownDirective:         return .mapUnknownDirective
         case .gridBeforeAnyFloor:       return .mapGridBeforeAnyFloor
         case .repeatedFloor:            return .mapRepeatedFloor
@@ -67,6 +100,8 @@ enum MapParseError: IdentifiedError, Equatable {
         case .raggedGrid:               return .mapRaggedGrid
         case .unknownCharacter:         return .mapUnknownCharacter
         case .emptyFloor:               return .mapEmptyFloor
+        case .flightLeadsNowhere:       return .mapFlightLeadsNowhere
+        case .flightTooSteep:           return .mapFlightTooSteep
         }
     }
 
@@ -78,8 +113,12 @@ enum MapParseError: IdentifiedError, Equatable {
             return "the file has no floors"
         case .repeatedKit(let l):
             return "line \(l): the kit is named twice; a map is assembled from one kit"
+        case .noSetting:
+            return "the file names no setting; a map needs `setting <name>` before its floors"
+        case .repeatedSetting(let l):
+            return "line \(l): the setting is named twice; an arena stands in one setting"
         case .unknownDirective(let d, let l):
-            return "line \(l): '\(d)' is not `kit`, `transition` or `floor`"
+            return "line \(l): '\(d)' is not `kit`, `setting`, `transition` or `floor`"
         case .gridBeforeAnyFloor(let l):
             return "line \(l): a grid row before any `floor` line"
         case .repeatedFloor(let f, let l):
@@ -96,6 +135,10 @@ enum MapParseError: IdentifiedError, Equatable {
             return "line \(l), column \(col): floor \(f) uses '\(c)', which the kit's legend does not name"
         case .emptyFloor(let f, let l):
             return "line \(l): floor \(f) has no grid under it"
+        case .flightLeadsNowhere(let f, let l, let c):
+            return "line \(l), column \(c): the flight on floor \(f) rises to a cell the floor above does not make walkable"
+        case .flightTooSteep(let l, let r, let a):
+            return "line \(l): the flight starting here would rise \(r) m a step, more than the \(a) m a step may"
         }
     }
 }
@@ -117,10 +160,17 @@ enum MapParser {
     /// Reads a map file against the kit it names. The kit comes from the caller
     /// because a map cannot be read without knowing which characters are legal —
     /// that is the disagreement ADR-0012's legend exists to prevent.
-    static func parse(_ text: String, kit: Kit) throws -> MapSpecification {
+    ///
+    /// A flight whose steps would rise more than `stepHeight` is refused (FR-MAP-160);
+    /// the step height is the tuning's, which the caller has and the map does not.
+    static func parse(_ text: String, kit: Kit, stepHeight: Double = .infinity) throws -> MapSpecification {
         var kitName: String?
+        var settingName: String?
         var floors: [(level: Int, rows: [String])] = []
         var floorLine: [Int: Int] = [:]
+        // The line each grid row is on, by floor: a flight is refused by the line it
+        // starts on.
+        var rowLines: [Int: [Int]] = [:]
         var transitions: [(MapSpecification.Transition, Int)] = []
         var current: Int?
 
@@ -143,6 +193,10 @@ enum MapParser {
                 guard kitName == nil else { throw MapParseError.repeatedKit(line: line) }
                 guard words.count == MapFormat.kitWords else { throw MapParseError.unknownDirective(trimmed, line: line) }
                 kitName = String(words[MapFormat.kitNameWord])
+            case MapFormat.settingDirective:
+                guard settingName == nil else { throw MapParseError.repeatedSetting(line: line) }
+                guard words.count == MapFormat.settingWords else { throw MapParseError.unknownDirective(trimmed, line: line) }
+                settingName = String(words[MapFormat.settingNameWord])
             case MapFormat.transitionDirective:
                 guard words.count == MapFormat.transitionWords,
                       let cell = Self.cell(String(words[MapFormat.transitionCellWord])),
@@ -167,7 +221,9 @@ enum MapParser {
                 // nobody knows — unless it would pass for a grid, which is the other
                 // mistake worth naming precisely.
                 guard let index = current else {
-                    let looksLikeAGrid = row.allSatisfy { $0 == MapFormat.emptyCell || kit.module(for: $0) != nil }
+                    let looksLikeAGrid = row.allSatisfy {
+                    $0 == MapFormat.emptyCell || MapFormat.rises[$0] != nil || kit.module(for: $0) != nil
+                }
                     throw looksLikeAGrid ? MapParseError.gridBeforeAnyFloor(line: line)
                                          : MapParseError.unknownDirective(trimmed, line: line)
                 }
@@ -178,16 +234,21 @@ enum MapParser {
                 }
                 // A space is empty space, not a module (IF-MAP-010), so the kit's
                 // legend is not asked about it.
+                // An arrow is a step, drawn as the kit's step module, so it is known
+                // wherever the kit has one.
                 for (column, character) in row.enumerated()
-                where character != MapFormat.emptyCell && kit.module(for: character) == nil {
+                where character != MapFormat.emptyCell && kit.module(for: character) == nil
+                    && (MapFormat.rises[character] == nil || kit.step == nil) {
                     throw MapParseError.unknownCharacter(character, floor: level,
                                                          line: line, column: column + MapFormat.firstColumn)
                 }
                 floors[index].rows.append(row)
+                rowLines[level, default: []].append(line)
             }
         }
 
         guard let name = kitName else { throw MapParseError.noKit }
+        guard let setting = settingName else { throw MapParseError.noSetting }
         guard !floors.isEmpty else { throw MapParseError.noFloors }
         for floor in floors where floor.rows.isEmpty {
             // Every floor was entered in `floorLine` when its line was read, so the
@@ -203,19 +264,82 @@ enum MapParser {
 
         var placements: [MapSpecification.Placement] = []
         for floor in floors {
+            let steps = try flights(on: floor, lines: rowLines[floor.level] ?? [], among: floors,
+                                    kit: kit, stepHeight: stepHeight)
             for (z, row) in floor.rows.enumerated() {
                 for (x, character) in row.enumerated() {
                     // Empty space places nothing; the cell exists and holds no module.
-                    guard character != MapFormat.emptyCell, let module = kit.module(for: character) else { continue }
+                    guard character != MapFormat.emptyCell,
+                          let module = MapFormat.rises[character] != nil ? kit.step : kit.module(for: character)
+                    else { continue }
                     placements.append(.init(module: module.name, character: character,
                                             walkable: module.walkable,
-                                            floor: floor.level, x: x, z: z))
+                                            floor: floor.level, x: x, z: z,
+                                            step: steps[GridCell(x: x, z: z)]))
                 }
             }
         }
 
-        return MapSpecification(kit: name, floors: floors,
+        return MapSpecification(kit: name, floorHeight: kit.floorHeight, setting: setting, floors: floors,
                                 transitions: transitions.map(\.0), placements: placements)
+    }
+
+    private struct GridCell: Hashable {
+        let x: Int
+        let z: Int
+    }
+
+    /// The flights on one floor, as the step each arrow is. A flight is a run of the
+    /// same arrow along the way it points; its first step is the one no arrow of the
+    /// run leads up to, and its top step leads onto the cell beyond it on the floor
+    /// above, which must be walkable there (FR-MAP-150). Its rise is the floor height
+    /// shared over its steps, and more than a step may rise refuses the map (FR-MAP-160).
+    private static func flights(on floor: (level: Int, rows: [String]), lines: [Int],
+                                among floors: [(level: Int, rows: [String])], kit: Kit,
+                                stepHeight: Double) throws -> [GridCell: MapSpecification.Step] {
+        let rows = floor.rows.map(Array.init)
+        func arrow(_ x: Int, _ z: Int) -> Character? {
+            guard rows.indices.contains(z), rows[z].indices.contains(x), MapFormat.rises[rows[z][x]] != nil
+            else { return nil }
+            return rows[z][x]
+        }
+        let above = floors.first { $0.level == floor.level + MapGrid.floorStep }.map { $0.rows.map(Array.init) }
+        func walkableAbove(_ x: Int, _ z: Int) -> Bool {
+            guard let above, above.indices.contains(z), above[z].indices.contains(x) else { return false }
+            let character = above[z][x]
+            return MapFormat.rises[character] != nil || kit.module(for: character)?.walkable == true
+        }
+        var steps: [GridCell: MapSpecification.Step] = [:]
+        for (z, row) in rows.enumerated() {
+            for x in row.indices {
+                guard let character = arrow(x, z), let way = MapFormat.rises[character],
+                      arrow(x - way.x, z - way.z) != character else { continue }
+                // The first step of a flight: walk up it to its top.
+                var run: [GridCell] = []
+                var cell = GridCell(x: x, z: z)
+                while arrow(cell.x, cell.z) == character {
+                    run.append(cell)
+                    cell = GridCell(x: cell.x + way.x, z: cell.z + way.z)
+                }
+                let line = lines.indices.contains(z) ? lines[z] : .zero
+                // The run holds the cell it started from, so it is never empty and the
+                // fallback is the name of that cell rather than a case that happens.
+                let top = run.last ?? GridCell(x: x, z: z)
+                guard walkableAbove(cell.x, cell.z) else {
+                    throw MapParseError.flightLeadsNowhere(floor: floor.level,
+                                                          line: lines.indices.contains(top.z) ? lines[top.z] : .zero,
+                                                          column: top.x + MapFormat.firstColumn)
+                }
+                let rise = kit.floorHeight / Double(run.count)
+                guard rise <= stepHeight else {
+                    throw MapParseError.flightTooSteep(line: line, rise: rise, allowed: stepHeight)
+                }
+                for (offset, step) in run.enumerated() {
+                    steps[step] = MapSpecification.Step(index: offset + MapFormat.firstStep, count: run.count)
+                }
+            }
+        }
+        return steps
     }
 
     /// The kit a map names, read without the kit — the one thing that can be known

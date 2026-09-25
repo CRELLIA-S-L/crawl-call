@@ -54,4 +54,6 @@ extension Geometry {
     /// The scene's axes: x across, y up.
     static let xAxis = SIMD3<Float>(1, 0, 0)
     static let yAxis = SIMD3<Float>(0, 1, 0)
+    /// And z, towards the match camera.
+    static let zAxis = SIMD3<Float>(0, 0, 1)
 }

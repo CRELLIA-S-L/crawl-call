@@ -4,6 +4,10 @@ A plan agreed with the maintainer on 2026-09-24 and not yet started. It is writt
 This file is not the specification. `specs/` is, and the first step of the work below is to write the requirements into it; until then nothing here binds anybody (ART-020 of `specs/constitution.md`, and `AGENTS.md`).
 The open question that points here is Q-270 in `specs/91-open-issues.md`.
 
+**Built (2026-09-24)** through step 6 — the requirements, ADR-0031, the coverage, the setting, Greenholm with its sky, and the birds; step 7, wind, was not asked for. What changed from this plan on the way is in ADR-0031.
+
+**Step 1 is done (2026-09-24).** The requirements are written: FR-MAP-120, FR-MAP-130 and FR-MAP-140 in `specs/10-fr-map.md`, *Surroundings*; the island as the area GREENHOLM in `specs/10-fr-greenholm.md` — the maintainer asked for an area per setting, each with a proper name, since there will be more than one island; and IF-MAP-010 names the setting in the header, `partial` until the parser reads it. The three texts below were split into six there, and are kept here as they were agreed; where they differ, `specs/` wins.
+
 ## What the maintainer asked for, and what they decided
 
 The request, in their words: a surrounding world — sky, space beyond the map, maybe some birds and vegetation, "or something like that".
@@ -73,7 +77,7 @@ Read from the SDK's own interfaces on 2026-09-24, not from memory. The paths are
 2. *The rim* that closes the space in: trees and shrubs, crater walls, bulkheads, the walls of a building. For the island the rim is its ring of trees and shrubs with the shore beyond them, and water stretches from the shore to the edge of what the camera can show.
 3. *The backdrop*: sky, space, a ceiling. Never in the match frame (above); it lights the scene and is what the free camera sees.
 
-**A map names its setting.** One header line in the map file, for example `setting island`, beside the existing `kit` and `transition` lines. IF-MAP-010 says the header "names the module kit and the transitions between floors", so the statement changes to include the setting, and `MapParser` learns the line — it is in `Sources/CrawlCall/Map/MapSpecification.swift`, where the header's `kit` and `transition` lines are read. Settings are families of scenery like module kits: a new one is a new family, not a change to the others. Where a setting's own numbers live — heights of trees, water colour, how often birds fly — is configuration beside the kit (`config/kit/<kit>/legend.json` is the precedent), not code.
+**A map names its setting.** One header line in the map file, for example `setting greenholm`, beside the existing `kit` and `transition` lines. IF-MAP-010 says the header "names the module kit and the transitions between floors", so the statement changes to include the setting, and `MapParser` learns the line — it is in `Sources/CrawlCall/Map/MapSpecification.swift`, where the header's `kit` and `transition` lines are read. Settings are families of scenery like module kits: a new one is a new family, not a change to the others. Where a setting's own numbers live — heights of trees, water colour, how often birds fly — is configuration beside the kit (`config/kit/<kit>/legend.json` is the precedent), not code.
 
 **Scenery is for the eye only.** It takes no part in movement, in what the bots see, in the navigation graph or in what is cut open for the snake. In the code that means it stays out of `ScenePlan.pieces`: the plan's pieces are what `Surfaces` collides the snake with (ADR-0021), what `Sight` tests lines of sight against (ADR-0019) and what `SeeThrough` cuts open (ADR-0020). Scenery gets its own entities under the scene, built from its own description.
 
@@ -105,7 +109,7 @@ In order, each through the project's procedures:
 1. Write the three requirements into `specs/` with the `srs-new` skill, and change IF-MAP-010's statement for the `setting` line. Put the texts to the maintainer before they are marked approved (`AGENTS.md`, rules 4 and 8).
 2. Write the ADR.
 3. The coverage computation, as a pure function with tests: the trapezoid for a camera, a pitch range, an aspect and the height between the highest floor and the lowest surface of the surroundings, and the arena's bounds grown by it. Test it against an independent derivation, not against the tables above.
-4. The setting as a description (layers, parts, paints) built into entities, kept out of `ScenePlan`; the map's `setting` line parsed; `maps/blockout.map` names `island`.
+4. The setting as a description (layers, parts, paints) built into entities, kept out of `ScenePlan`; the map's `setting` line parsed; `maps/blockout.map` names `greenholm`.
 5. The island: ground, shore, water to the coverage edge, trees and shrubs on the rim, then the sky as the environment and the ambient light.
 6. Birds.
 7. Wind in the foliage, as a second pass if the maintainer wants it.

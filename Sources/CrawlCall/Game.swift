@@ -5,7 +5,7 @@
 // or a key: the schemes produce intents (FR-VIEW-050), the logic consumes them, and
 // neither knows about the other.
 //
-// implements: FR-VIEW-030, FR-VIEW-170, FR-VIEW-190, FR-SNAKE-010, FR-SNAKE-030, FR-BOT-020, FR-BOT-150, FR-SNAKE-060, FR-SNAKE-070, FR-SNAKE-090, FR-SCORE-140, FR-SCORE-150, INV-BOT-010, FR-VIEW-230, FR-TOOL-230
+// implements: FR-VIEW-030, FR-VIEW-170, FR-VIEW-190, FR-SNAKE-010, FR-SNAKE-030, FR-BOT-020, FR-BOT-150, FR-SNAKE-060, FR-SNAKE-070, FR-SNAKE-090, FR-SCORE-140, FR-SCORE-150, INV-BOT-010, FR-VIEW-230, FR-TOOL-230, FR-MAP-150
 import Foundation
 
 struct Game {
@@ -32,6 +32,13 @@ struct Game {
     /// nothing to lose to a change of the window, and is not paused by one (FR-VIEW-230).
     private(set) var hasBeenSteered = false
     private let surfaces: Surfaces
+
+    /// The height of the ground the head is on: its cell's surface, which on a flight
+    /// is its step's (FR-MAP-150) — not the head's own height, which a climb leaves
+    /// short of it for a moment.
+    var snakeSurface: Double {
+        surfaces.height(of: surfaces.cell(of: snake.head, floor: snake.floor))
+    }
     /// The bots' own clock, which the frame rate does not set (FR-BOT-150).
     private var slots = Slots()
     /// The meal under way, if there is one (FR-SNAKE-090).
@@ -50,8 +57,8 @@ struct Game {
         // The start cell's centre, moved out of any wall the body would overlap there:
         // the body is wider than a cell, and a head set down in the corner of the
         // arena would begin the match inside two walls (FR-SNAKE-010, ADR-0021).
-        let centre = SIMD3(Double(start.x) * cell, Double(start.floor) * world.kit.floorHeight, Double(start.z) * cell)
-        self.snake = Snake(head: surfaces.clear(centre, floor: start.floor),
+        let centre = world.graph.centre(of: start, cellSize: cell, floorHeight: world.kit.floorHeight)
+        self.snake = Snake(head: surfaces.clear(centre, feet: centre.y),
                            floor: start.floor,
                            segments: world.configurations.snake.startingSegmentCount,
                            segmentSpacing: world.configurations.tuning.bodyRadius * Motion.widthInRadii)

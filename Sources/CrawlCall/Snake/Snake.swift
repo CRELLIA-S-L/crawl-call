@@ -1,7 +1,7 @@
 // The snake as the game reasons about it: where the head is, where it has been, and
 // where the tail therefore lies. No RealityKit here — this is the part a test can read.
 //
-// implements: FR-SNAKE-010, FR-SNAKE-015, FR-SNAKE-020, FR-SNAKE-030, FR-SNAKE-060, FR-SNAKE-070, FR-SNAKE-210, FR-SNAKE-220
+// implements: FR-MAP-150, FR-SNAKE-010, FR-SNAKE-015, FR-SNAKE-020, FR-SNAKE-030, FR-SNAKE-060, FR-SNAKE-070, FR-SNAKE-210, FR-SNAKE-220
 import Foundation
 
 struct Snake {
@@ -142,41 +142,52 @@ struct Snake {
                                    over surfaces: Surfaces) -> (covered: Double, against: SIMD2<Double>?)? {
         // The body first: as far as it goes before it touches something it cannot
         // pass (FR-SNAKE-010, ADR-0021). What the grid says is asked of where it got to.
-        let room = surfaces.room(from: head, floor: floor, along: unit, upTo: distance)
+        // The body is measured from the ground it stands on: its node's surface, which on
+        // a flight is its step's (FR-MAP-150).
+        let here = surfaces.cell(of: head, floor: floor)
+        let feet = surfaces.height(of: here)
+        let room = surfaces.room(from: head, feet: feet, along: unit, upTo: distance)
         guard room.metres > Motion.negligibleDistance else { return (.zero, room.against) }
         let wanted = SIMD3(head.x + unit.x * room.metres, head.y, head.z + unit.y * room.metres)
+        let target = surfaces.cell(of: wanted, floor: floor)
 
-        if surfaces.isWalkable(wanted, floor: floor) {
-            let leaving = surfaces.cell(of: head, floor: floor)
-            let entering = surfaces.cell(of: wanted, floor: floor)
-            moveTo(SIMD3(wanted.x, surfaces.elevation(of: floor), wanted.z))
-            // Stairs, the other half of FR-SNAKE-010: a cell a transition links
-            // upward carries the head up as it enters it, and the trail keeps both
-            // heights so the tail climbs behind it rather than cutting the corner —
-            // the mirror of a drop (FR-SNAKE-220).
-            //
-            // Entering is what does it, not standing: a head that has just dropped
-            // onto the same cell would otherwise be sent straight back up.
-            // A transition is walked in whichever direction the head came at it from:
-            // up it from below, down it from above. The floor changes at the cell —
-            // it is walkable on both, which is what a transition means — and the
-            // height between them is then walked over the frames that follow.
-            if entering != leaving,
-               let other = surfaces.rise(at: wanted, from: floor) ?? surfaces.descent(at: wanted, from: floor) {
+        // Within the cell it is in, the head only moves.
+        if target == here {
+            moveTo(wanted)
+            return (room.metres, room.against)
+        }
+        // Into a neighbouring cell the graph joins it to: on the same floor, or off the
+        // top of a flight onto the floor above (FR-MAP-020). A change of height — a step
+        // up or down — is walked over the frames that follow, like any climb, and the
+        // trail keeps both heights so the tail climbs behind the head (FR-SNAKE-010).
+        if let next = surfaces.step(from: here, into: target) {
+            moveTo(wanted)
+            floor = next.floor
+            let height = surfaces.height(of: next)
+            if abs(height - head.y) > Geometry.samePosition { climbingTo = height }
+            // A way straight up at the cell entered: a transition (Q-330), walked in
+            // whichever direction the head came at it from. The floor changes at the
+            // cell — it is walkable on both, which is what a transition means — and the
+            // height between them is walked as a climb. Entering is what does it, not
+            // standing: a head that has just dropped onto the same cell would otherwise
+            // be sent straight back up.
+            if let other = surfaces.rise(at: wanted, from: floor) ?? surfaces.descent(at: wanted, from: floor) {
                 floor = other
-                climbingTo = surfaces.elevation(of: other)
+                climbingTo = surfaces.height(of: surfaces.cell(of: wanted, floor: other))
             }
             return (room.metres, room.against)
         }
-        // A drop lands the body on the floor below as well as taking it off this one,
-        // and a landing inside something down there is refused like a wall.
-        if let below = surfaces.landing(below: wanted, from: floor), surfaces.fits(wanted, floor: below) {
+        // A drop lands the body on the ground below as well as taking it off this one —
+        // off a balcony, or off the side of a flight — and a landing inside something
+        // down there is refused like a wall.
+        if let below = surfaces.landing(below: wanted, from: floor, at: feet),
+           surfaces.fits(wanted, feet: surfaces.height(of: below), leaving: feet) {
             // The drop is part of the path: the corner it leaves and the ground it
             // lands on both go into the trail, so the tail lies down the drop rather
             // than cutting the corner (FR-SNAKE-220).
-            moveTo(SIMD3(wanted.x, surfaces.elevation(of: floor), wanted.z))
-            floor = below
-            moveTo(SIMD3(wanted.x, surfaces.elevation(of: below), wanted.z))
+            moveTo(SIMD3(wanted.x, feet, wanted.z))
+            floor = below.floor
+            moveTo(SIMD3(wanted.x, surfaces.height(of: below), wanted.z))
             return (room.metres, room.against)
         }
         return nil

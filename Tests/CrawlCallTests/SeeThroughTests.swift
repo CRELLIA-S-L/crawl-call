@@ -3,7 +3,7 @@
 // placed on, the line test itself, the switch, and the four together over the real
 // blockout.
 //
-// verifies: FR-VIEW-140, FR-VIEW-150, FR-VIEW-155
+// verifies: FR-TOOL-260, FR-TOOL-270, FR-VIEW-140, FR-VIEW-150, FR-VIEW-155
 import RealityKit
 import XCTest
 @testable import CrawlCall
@@ -156,7 +156,7 @@ final class SeeThroughTests: XCTestCase {
                                                   snake: [.zero], from: eye, margin: reach,
                                                   visibilityRadius: 0)[0],
                                  "a partition hiding the snake is not cut open at all")
-        XCTAssertEqual(hole, SeeThrough.Hole(shape: .along(.zero), radius: reach))
+        XCTAssertEqual(hole, SeeThrough.Hole(shape: .along(.zero), radius: reach, cause: .line))
         XCTAssertTrue(cut(SIMD3(0, 1.714, 1.2), by: hole, from: eye), "not open where the line crosses")
         // 0.6 m up is 0.64 m from the line of sight, beyond the 0.45 m it is cut to; a
         // sphere holding the stretch of line through the partition reaches it, which is
@@ -170,7 +170,7 @@ final class SeeThroughTests: XCTestCase {
         let aside = box(SIMD3(-1.5, 0.4, 0), fence)
         let holes = SeeThrough.holes(in: [aside], headOn: 0, head: .zero, surface: 0, snake: [.zero],
                                      from: matchEye(), margin: reach, visibilityRadius: 2.5)
-        XCTAssertEqual(holes[0], SeeThrough.Hole(shape: .around(.zero), radius: 2.5))
+        XCTAssertEqual(holes[0], SeeThrough.Hole(shape: .around(.zero), radius: 2.5, cause: .window))
         // And with no window asked for, nothing about it wants cutting.
         XCTAssertNil(SeeThrough.holes(in: [aside], headOn: 0, head: .zero, surface: 0, snake: [.zero],
                                       from: matchEye(), margin: reach, visibilityRadius: 0)[0])
@@ -213,7 +213,7 @@ final class SeeThroughTests: XCTestCase {
         let hole = try XCTUnwrap(SeeThrough.holes(in: [wide], headOn: 0, head: parts[0], surface: 0,
                                                   snake: parts, from: eye, margin: reach,
                                                   visibilityRadius: 0)[0])
-        XCTAssertEqual(hole, SeeThrough.Hole(shape: .along(.zero), radius: reach + 1))
+        XCTAssertEqual(hole, SeeThrough.Hole(shape: .along(.zero), radius: reach + 1, cause: .line))
         for part in parts {
             // Where that part's line crosses the module's plane, derived on its own.
             let along = (1.2 - eye.z) / (part.z - eye.z)
@@ -265,6 +265,84 @@ final class SeeThroughTests: XCTestCase {
         XCTAssertNotNil(SeeThrough.holes(in: [slab], headOn: 1, head: halfway, surface: 1.5,
                                          snake: [halfway], from: matchEye(over: halfway),
                                          margin: reach, visibilityRadius: 2.5)[0])
+    }
+
+    // MARK: debug mode's switches (FR-TOOL-260, FR-TOOL-270)
+
+    /// A partition in front of the snake, which the line of sight cuts, and a fence to
+    /// its side within the window, which only the window cuts; and a crate beside the
+    /// head that both cut.
+    private func three() -> [SeeThrough.Box] {
+        [box(SIMD3(0, 1, 1.2), SIMD3(0.5, 2, 0.1)),
+         box(SIMD3(-1.5, 0.4, 0), fence),
+         box(SIMD3(0, 0.5, 0.6), SIMD3(0.5, 1, 0.5))]
+    }
+
+    private func holes(_ switches: SeeThrough.Switches) -> [Int: SeeThrough.Hole] {
+        SeeThrough.holes(in: three(), headOn: 0, head: .zero, surface: 0, snake: [.zero],
+                         from: matchEye(), margin: reach, visibilityRadius: 2.5, switches: switches)
+    }
+
+    func testEachHoleKnowsWhatCutIt() {
+        let all = holes(SeeThrough.Switches())
+        XCTAssertEqual(all[0]?.cause, .both, "the partition stands within the window as well")
+        XCTAssertEqual(all[1]?.cause, .window)
+        XCTAssertEqual(all[2]?.cause, .both)
+        // Far from the head, the partition is the line's alone.
+        let far = SeeThrough.holes(in: three(), headOn: 0, head: .zero, surface: 0, snake: [.zero],
+                                   from: matchEye(), margin: reach, visibilityRadius: 0.5)
+        XCTAssertEqual(far[0]?.cause, .line)
+    }
+
+    func testSwitchingTheLineOffLeavesOnlyTheWindow() {
+        let window = holes(SeeThrough.Switches(line: false, window: true))
+        XCTAssertFalse(window.isEmpty)
+        XCTAssertTrue(window.values.allSatisfy { $0.cause == .window }, "\(window)")
+    }
+
+    func testSwitchingTheWindowOffLeavesOnlyTheLine() {
+        let line = holes(SeeThrough.Switches(line: true, window: false))
+        XCTAssertNil(line[1], "the fence aside hides nothing, and only the window cut it")
+        XCTAssertFalse(line.isEmpty)
+        XCTAssertTrue(line.values.allSatisfy { $0.cause == .line }, "\(line)")
+    }
+
+    func testSwitchingBothOffCutsNothing() {
+        XCTAssertTrue(holes(SeeThrough.Switches(line: false, window: false)).isEmpty)
+    }
+
+    func testTheSwitchesByThemselvesHaveBothCutsAndNoTint() {
+        XCTAssertEqual(SeeThrough.Switches(), SeeThrough.Switches(line: true, window: true, tint: false))
+        // Three causes, three colours.
+        XCTAssertEqual(Set(SeeThrough.Hole.Cause.allCases.map { "\(SeeThrough.tint(for: $0))" }).count, 3)
+    }
+
+    func testTintPaintsWhatIsCutByWhatCutItAndOnlyWhenAskedFor() throws {
+        let colour = SIMD3<Double>(0.5, 0.5, 0.5)
+        let holed = try XCTUnwrap(SeeThrough.holed(from: SeeThrough.solid(colour: colour)))
+        func drawn(_ switches: SeeThrough.Switches) throws -> CGColor {
+            let model = ModelEntity(mesh: MeshResource.generateBox(size: 1), materials: [SeeThrough.solid(colour: colour)])
+            let partition = SeeThrough.Module(model: model, level: 0,
+                                              centre: SIMD3(0, 1, 1.2), size: SIMD3(0.5, 2, 0.1),
+                                              solid: [SeeThrough.solid(colour: colour)],
+                                              clear: [SeeThrough.clear(colour: colour)], holed: [holed])
+            var seeThrough = SeeThrough([partition])
+            seeThrough.show(headOn: 0, head: .zero, surface: 0, snake: [.zero], from: matchEye(),
+                            margin: reach, visibilityRadius: 0, switches: switches)
+            return try XCTUnwrap(model.model?.materials.first as? CustomMaterial).baseColor.__tint
+        }
+        func rgb(_ c: CGColor) -> SIMD3<Double> {
+            let converted = c.converted(to: CGColorSpaceCreateDeviceRGB(), intent: .defaultIntent, options: nil) ?? c
+            let parts = converted.components ?? []
+            return SIMD3(Double(parts[0]), Double(parts[1]), Double(parts[2]))
+        }
+        let tinted = rgb(try drawn(SeeThrough.Switches(tint: true)))
+        let line = SeeThroughTint.line
+        XCTAssertEqual(tinted.x, line.x, accuracy: 0.01)
+        XCTAssertEqual(tinted.y, line.y, accuracy: 0.01)
+        XCTAssertEqual(tinted.z, line.z, accuracy: 0.01)
+        let plain = rgb(try drawn(SeeThrough.Switches()))
+        XCTAssertEqual(plain.x, colour.x, accuracy: 0.01, "a match tints what it cuts")
     }
 
     func testTheHoleShaderLoadsAndAModuleIsDrawnThroughIt() throws {

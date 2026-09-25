@@ -1,9 +1,13 @@
-; The stage-1 blockout: one room, a balcony over its right half, one stair.
+; The stage-1 blockout: one room, a balcony over its right half, one flight of stairs.
 ; Grey primitives only — the kit is authored in this repository (ATTRIBUTION.md).
 ; Every grid row is exactly 24 cells wide; a space is a cell with no module.
+; The arena stands on Greenholm, an island (FR-MAP-120, FR-GREENHOLM-010).
+; The flight rises east along rows 12 and 13, two cells wide, eight steps of 0.375 m,
+; into an opening three cells wide in the balcony's west wall: wide enough for the
+; snake's body, which a single cell is not (ADR-0021) (FR-MAP-150, ADR-0033).
 
 kit blockout
-transition 21,12 0 1
+setting greenholm
 
 floor 0
 ########################
@@ -18,8 +22,8 @@ floor 0
 #......................#
 #................o.....#
 #........oo............#
-#..................../.#
-#......................#
+#.....>>>>>>>>.........#
+#.....>>>>>>>>.........#
 #......................#
 ########################
 
@@ -35,8 +39,8 @@ floor 1
                         
               ##########
               #.........
-              #.........
-              #....../..
-              #.........
+              ..........
+              ..........
+              ..........
               #.........
               #........#

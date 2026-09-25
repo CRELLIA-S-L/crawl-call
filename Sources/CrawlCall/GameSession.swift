@@ -5,7 +5,7 @@
 // measured with — `specs/50-verification.md` says why, and the two are different
 // questions asked of the same number.
 //
-// implements: FR-TOOL-070, FR-VIEW-020, FR-VIEW-030, FR-VIEW-060, FR-VIEW-100, FR-VIEW-140, FR-VIEW-150, FR-VIEW-155, FR-VIEW-160, FR-VIEW-170, FR-VIEW-180, FR-VIEW-190, FR-VIEW-230, FR-VIEW-210, FR-TOOL-230, FR-TOOL-240
+// implements: FR-TOOL-070, FR-VIEW-020, FR-VIEW-030, FR-VIEW-060, FR-VIEW-100, FR-VIEW-140, FR-VIEW-150, FR-VIEW-155, FR-VIEW-160, FR-VIEW-170, FR-VIEW-180, FR-VIEW-190, FR-VIEW-230, FR-VIEW-210, FR-TOOL-230, FR-TOOL-240, FR-GREENHOLM-030, FR-TOOL-260, FR-TOOL-270
 import Foundation
 import Observation
 import RealityKit
@@ -22,12 +22,18 @@ final class GameSession {
     private let shotEntities: Entity
     private let camera: Entity
     private var seeThrough: SeeThrough
-    private var focus: SIMD3<Double>
+    /// Where the match camera looks (FR-VIEW-020); read by the scenery, whose birds
+    /// cross where the player is looking (FR-GREENHOLM-030).
+    private(set) var focus: SIMD3<Double>
     private let distance: Double
     private let fieldOfView: Double
     /// The camera the user has taken off the snake in debug mode (FR-TOOL-070), or nil
     /// while it follows the head (FR-VIEW-020).
     private(set) var freeCamera: FreeCamera?
+    /// Debug mode's see-through switches (FR-TOOL-260, FR-TOOL-270). A match starts
+    /// with the cut along the line of sight and without the window around the head,
+    /// which is off until it has been compared on the phone (Q-260), and with no tint.
+    var seeThroughSwitches = SeeThrough.Switches(line: SeeThroughAtStart.line, window: SeeThroughAtStart.headWindow)
 
     init(game: Game, snakeEntity: Entity, botEntities: Entity, shotEntities: Entity,
          camera: Entity, seeThrough: SeeThrough, distance: Double, fieldOfView: Double) {
@@ -218,7 +224,7 @@ final class GameSession {
         let seeing = clock.now
         var placed = Placed()
         placed.look = seeThrough.show(headOn: game.snake.floor, head: game.snake.head,
-                        surface: Double(game.snake.floor) * game.world.plan.floorHeight,
+                        surface: game.snakeSurface,
                         snake: [game.snake.head] + game.snake.tail,
                         from: eye,
                         // The body's own radius, because a sphere half behind a wall
@@ -226,7 +232,8 @@ final class GameSession {
                         // fade starts a little early.
                         margin: game.world.configurations.tuning.bodyRadius
                             + game.world.configurations.view.seeThroughMargin,
-                        visibilityRadius: game.world.configurations.view.visibilityRadius)
+                        visibilityRadius: game.world.configurations.view.visibilityRadius,
+                        switches: seeThroughSwitches)
         let seen = clock.now
         placed.seeThroughTime = seen - seeing
         placed.drawTime = seeing - drawing

@@ -160,15 +160,41 @@ derives_from: []
 depends_on: []
 refines: []
 conflicts_with: []
-code: [Sources/CrawlCall/Map/MapSpecification.swift, Sources/CrawlCall/Config/Resource.swift, Sources/CrawlCall/Config/MapFormat.swift]
-tests: [Tests/CrawlCallTests/MapParserTests.swift]
+code: [Sources/CrawlCall/Map/MapSpecification.swift, maps/blockout.map, Sources/CrawlCall/Config/Resource.swift, Sources/CrawlCall/Config/MapFormat.swift, config/kit/blockout/legend.json]
+tests: [Tests/CrawlCallTests/MapParserTests.swift, Tests/CrawlCallTests/FlightTests.swift]
 created: 2026-09-21
 ```
 
-A map **shall** be described by one UTF-8 text file holding a header that names the module kit and the transitions between floors, followed by one character grid per floor in which each cell names a module of the kit, by the kit's legend, or empty space.
+A map **shall** be described by one UTF-8 text file holding a header that names the module kit, the setting and the transitions between floors, followed by one character grid per floor in which each cell names a module of the kit, by the kit's legend; a step of a flight of stairs, by an arrow pointing the way the flight rises; or empty space.
 
 **Rationale.** Concept §11.2: "translated into a text specification — an ASCII grid per floor"; the map lives in a text file so that iterations are seconds and versions go into git.
 Which characters mean which modules is the kit's own `legend.json` (ADR-0012), so that a map and its kit cannot disagree.
+The setting is named in the header beside the kit, for the same reason the kit is (FR-MAP-120).
+A step is an arrow and not a legend character because which way a flight rises is the map's to say, not the kit's; what a step is drawn as is the kit's (FR-MAP-150, ADR-0033). The `transition` line stays for a way that goes straight up — the ladder a tower may have one day (Q-330) — and no map uses it now.
+
+## Settings
+
+A setting's configuration is its own file under `config/setting/`, named as the setting is (ADR-0031), read when a map that stands in it is loaded; each setting's interface is in the area of its name.
+
+### IF-GREENHOLM-010 — Greenholm configuration
+
+```yaml
+status: implemented
+verification: T
+derives_from: [FR-GREENHOLM-010]
+depends_on: [FR-MAP-120]
+refines: []
+conflicts_with: []
+code: [Sources/CrawlCall/Config/GreenholmConfiguration.swift, Sources/CrawlCall/Setting/Setting.swift, Sources/CrawlCall/Config/Resource.swift, Sources/CrawlCall/Launch.swift]
+tests: [Tests/CrawlCallTests/SurroundingsTests.swift]
+created: 2026-09-24
+```
+
+When a map whose setting is Greenholm is loaded, the system **shall** read from the Greenholm configuration — the JSON file `config/setting/greenholm.json` (ADR-0012) — the island's margin beyond the arena, the shore's width and drop and the water's drop below the grass; the rim's spacing and inset, a tree's trunk and crown, a shrub's size, and the scales the trees are drawn at in turn; the colours of the grass, shore, water, trunks, crowns and shrubs; the sky's colour at the zenith and at the horizon (FR-GREENHOLM-020); and how often birds cross, how many fly together, how fast and how high above the arena, how large, how often they beat their wings and their colour (FR-GREENHOLM-030).
+
+**Rationale.** Every number of what the island looks like is taste, settled by eye on the phone, and ART-070 keeps such numbers out of code.
+One file per setting beside the others, not a section of the view configuration, so that a setting added later brings its own file and changes nobody else's; and read only when a map names the setting, because a map on another setting has no use for it.
+A file with an unknown key is rejected as every configuration is (ADR-0012).
 
 ## Input
 

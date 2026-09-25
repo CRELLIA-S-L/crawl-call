@@ -8,7 +8,8 @@
     "VIEW",
     "TOOL",
     "PERF",
-    "PUB"
+    "PUB",
+    "GREENHOLM"
   ],
   "code_roots": [
     "Sources"

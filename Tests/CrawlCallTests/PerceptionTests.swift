@@ -15,7 +15,7 @@ final class PerceptionTests: XCTestCase {
     /// A row of floor with one wall in the middle of it:
     /// `.....#.....`, so that two points on the same row are either side of it.
     private func plan(_ rows: String...) throws -> ScenePlan {
-        let map = try MapParser.parse("kit blockout\nfloor 0\n" + rows.joined(separator: "\n") + "\n", kit: kit)
+        let map = try MapParser.parse("kit blockout\nsetting greenholm\nfloor 0\n" + rows.joined(separator: "\n") + "\n", kit: kit)
         return ScenePlan.make(map: map, kit: kit, cellSize: cell)
     }
 

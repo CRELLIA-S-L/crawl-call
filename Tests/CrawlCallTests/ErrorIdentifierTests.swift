@@ -17,15 +17,16 @@ final class ErrorIdentifierTests: XCTestCase {
     private var everyKind: [IdentifiedError] {
         let schema = SchemaError.unknownKey("speed", path: "abilities")
         let mapParse: [MapParseError] = [
-            .noKit, .noFloors, .repeatedKit(line: 3), .unknownDirective("lift", line: 4),
+            .noKit, .noFloors, .repeatedKit(line: 3), .noSetting, .repeatedSetting(line: 2), .unknownDirective("lift", line: 4),
             .gridBeforeAnyFloor(line: 5), .repeatedFloor(1, line: 6), .badFloorNumber("x", line: 7),
             .badTransition("transition 1", line: 8), .transitionToUnknownFloor(9, line: 9),
             .raggedGrid(floor: 0, line: 10, expected: 4, found: 3),
             .unknownCharacter("?", floor: 0, line: 11, column: 2), .emptyFloor(2, line: 12),
+            .flightLeadsNowhere(floor: 0, line: 13, column: 4), .flightTooSteep(line: 14, rise: 0.5, allowed: 0.4),
         ]
         let kit: [Kit.KitError] = [
             .missing(name: "blockout"), .legendKeyIsNotOneCharacter("##"),
-            .moduleFieldIsNotThreeNumbers(module: "# (wall)", field: "size"),
+            .moduleFieldIsNotThreeNumbers(module: "# (wall)", field: "size"), .stepModuleNotInLegend("?"),
         ]
         let schemaErrors: [SchemaError] = [
             .notAnObject(path: ""), schema, .missingKey("speed", path: "abilities"),
@@ -39,7 +40,13 @@ final class ErrorIdentifierTests: XCTestCase {
             .missing(name: "blockout"), .unreadable(name: "blockout", underlying: Underlying()),
         ]
         let scene: [SceneError] = SceneError.allCases
-        return mapParse + kit + schemaErrors + configuration + mapLoad + scene
+        let setting: [IdentifiedError] = [
+            SettingError.unknown(name: "atlantis"),
+            CoverageError.horizonInFrame(fieldOfView: 110, lowestPitch: 50),
+            SceneryError.noAmbientLight, SceneryError.skyImageNotPainted,
+            SceneryError.skyNotGenerated(underlying: Underlying()),
+        ]
+        return mapParse + kit + schemaErrors + configuration + mapLoad + scene + setting
     }
 
     func testEveryErrorLineOpensWithItsIdentifierAColonAndASpace() {
@@ -84,7 +91,7 @@ final class ErrorIdentifierTests: XCTestCase {
         // End to end through the parser: the identifier comes from a real failure,
         // not only from a hand-built value.
         let kit = try JSONDecoder().decode(Kit.self, from: Data("""
-            {"floorHeight": 3, "floorModule": ".",
+            {"floorHeight": 3, "floorModule": ".", "stepModule": ".",
              "modules": {".": {"name": "floor", "walkable": true, "size": [1, 0.1, 1], "colour": [1, 1, 1]}}}
             """.utf8))
         XCTAssertThrowsError(try MapParser.parse("kit a\nkit b\nfloor 0\n.\n", kit: kit)) { error in

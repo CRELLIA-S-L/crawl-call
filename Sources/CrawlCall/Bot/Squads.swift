@@ -7,7 +7,7 @@
 // another over the graph the bots path on. Said out loud rather than passed off as a
 // rule: when a map gains spawn zones, this is what they replace.
 //
-// implements: FR-BOT-020, INV-BOT-030
+// implements: FR-BOT-020, INV-BOT-030, FR-MAP-150
 import Foundation
 
 enum Squads {
@@ -36,10 +36,10 @@ enum Squads {
         // is in metres, and a balcony makes two cells a long walk apart while they
         // are four metres from one another — which is how both squads first ended up
         // on the same balcony.
-        let redCentre = centre(of: redAnchor, cellSize: cell, floorHeight: height)
+        let redCentre = centre(of: redAnchor, in: world.graph, cellSize: cell, floorHeight: height)
         let apart = world.configurations.bot.groupingDistance
         let elsewhere = fromSnake.filter {
-            Perception.metres(centre(of: $0.key, cellSize: cell, floorHeight: height), redCentre) >= apart
+            Perception.metres(centre(of: $0.key, in: world.graph, cellSize: cell, floorHeight: height), redCentre) >= apart
         }
         guard let blueAnchor = farthest(in: elsewhere.isEmpty ? fromSnake : elsewhere) else { return [] }
 
@@ -48,7 +48,7 @@ enum Squads {
         // Not merely two anchors apart but two groups apart: every cell of the second
         // squad keeps the grouping distance from every bot of the first, or the two
         // fan out towards each other and arrive as one crowd.
-        let held = red.map { centre(of: $0, cellSize: cell, floorHeight: height) }
+        let held = red.map { centre(of: $0, in: world.graph, cellSize: cell, floorHeight: height) }
         let blue = nearest(size, to: blueAnchor, in: world.graph, avoiding: &taken,
                            keeping: apart, from: held, cellSize: cell, floorHeight: height)
 
@@ -56,9 +56,7 @@ enum Squads {
         for (squad, cells) in [(Squad.red, red), (Squad.blue, blue)] {
             for (index, node) in cells.enumerated() {
                 let kind = Archetype.allCases[index % Archetype.allCases.count]
-                let position = SIMD3(Double(node.x) * cell,
-                                     Double(node.floor) * height,
-                                     Double(node.z) * cell)
+                let position = centre(of: node, in: world.graph, cellSize: cell, floorHeight: height)
                 guard let bot = Bot(id: bots.count, squad: squad, archetype: kind,
                                     at: position, floor: node.floor,
                                     configuration: world.configurations.bot) else { continue }
@@ -69,8 +67,9 @@ enum Squads {
     }
 
     /// Where a cell stands, in metres.
-    static func centre(of node: NavigationGraph.Node, cellSize: Double, floorHeight: Double) -> SIMD3<Double> {
-        SIMD3(Double(node.x) * cellSize, Double(node.floor) * floorHeight, Double(node.z) * cellSize)
+    static func centre(of node: NavigationGraph.Node, in graph: NavigationGraph,
+                       cellSize: Double, floorHeight: Double) -> SIMD3<Double> {
+        graph.centre(of: node, cellSize: cellSize, floorHeight: floorHeight)
     }
 
     /// Steps over the graph from one cell to every cell it can reach.
@@ -113,7 +112,7 @@ enum Squads {
             .filter { !taken.contains($0) }
             .filter { node in
                 guard distance > .zero, !others.isEmpty else { return true }
-                let there = centre(of: node, cellSize: cellSize, floorHeight: floorHeight)
+                let there = centre(of: node, in: graph, cellSize: cellSize, floorHeight: floorHeight)
                 return others.allSatisfy { Perception.metres(there, $0) >= distance }
             }
             .sorted { a, b in
