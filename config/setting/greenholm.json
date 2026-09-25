@@ -37,8 +37,8 @@
   "waterSpecular": 0.15,
   "rippleWavelength": 2.4,
   "rippleSpeedShare": 0.5,
-  "rippleStrength": 0.15,
-  "rippleSlope": 0.35,
+  "rippleStrength": 0.08,
+  "rippleSlope": 0.12,
   "skyZenithColour": {
     "red": 0.35,
     "green": 0.58,
