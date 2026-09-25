@@ -4,12 +4,13 @@ Standing engineering principles of the project.
 Every plan and every diff is checked against them.
 Unlike requirements (what the system does) and ADRs (single decisions with their context), articles apply to all work at all times and change only through the amendment procedure in ART-090.
 
-- **Version:** 1.4.0
+- **Version:** 1.5.0
 - **Ratified:** 2026-08-05
 - **Amended:** 2026-08-05 — v1.1.0: ART-020 tightened to approved requirements; ART-090 taxonomy extended to classify tightening and relaxing (both changes MINOR per ART-090)
 - **Amended:** 2026-09-24 — v1.2.0: ART-070 added, named values in place of literals in code (MINOR per ART-090)
 - **Amended:** 2026-09-24 — v1.3.0: ART-070 sends text a player reads to the string catalog, so that it can be translated (MINOR per ART-090)
 - **Amended:** 2026-09-24 — v1.4.0: ART-080 added, no warnings and nothing deprecated (MINOR per ART-090)
+- **Amended:** 2026-09-25 — v1.5.0: ART-030 tightened: a change to a setting outside the repository needs the same confirmation, and no project script makes one (MINOR per ART-090)
 
 Articles are numbered in steps of 10 and referenced from plans, reviews, and ADRs the same way requirements are: “rejected per ART-040”.
 The set below is a starting point — adapt the articles to your project, but keep the amendment procedure.
@@ -28,6 +29,7 @@ The mechanics — statuses, numbering, closing the loop — live in `specs/READM
 
 Within an established requirement, an agent edits code and specification freely.
 Builds, test runs, external network calls, data migrations, and deletion of files it did not create require the user's explicit confirmation — each time, not once per session.
+A change to a setting outside the repository — the operating system's, another program's or the user's — requires the same confirmation, even when it is to be undone, and no script of the project makes one.
 
 ## ART-040 — Simplicity
 
