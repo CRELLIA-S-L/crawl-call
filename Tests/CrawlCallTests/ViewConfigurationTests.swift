@@ -43,10 +43,14 @@ final class ViewConfigurationTests: XCTestCase {
         // The numbers moved out of code on 2026-09-24 without changing the picture:
         // the sun sixty degrees down and thirty-six across, as it was at a third and
         // a fifth of a half turn.
-        let shipped = try Launch.world().get().configurations.view
+        let world = try Launch.world().get()
+        let shipped = world.configurations.view
         XCTAssertEqual(SceneView.radians(shipped.sunElevation), Float.pi / 3, accuracy: 1e-6)
         XCTAssertEqual(SceneView.radians(shipped.sunAzimuth), Float.pi / 5, accuracy: 1e-6)
         XCTAssertEqual(shipped.cameraFieldOfView, 50)
-        XCTAssertEqual(shipped.cameraDistanceInMapWidths, 1.1)
+        // The camera stands 13.2 m back, as it did over the room of 12 m at 1.1 of its
+        // side; the island is 15 m, and its share was brought down to keep the metres
+        // when the blockout became an island on 2026-09-25 (ADR-0034).
+        XCTAssertEqual(SceneView.distance(framing: world.plan, view: shipped), 13.2, accuracy: 1e-9)
     }
 }

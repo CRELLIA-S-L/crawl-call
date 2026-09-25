@@ -8,7 +8,7 @@ import XCTest
 final class EatingTests: XCTestCase {
     private func world() throws -> World { try Launch.world().get() }
     private func match(_ world: World) throws -> Game {
-        Game(world: world, start: try XCTUnwrap(Game.start(in: world)))
+        Game(world: world, start: try XCTUnwrap(Game.firstStart(in: world)))
     }
 
     func testEveryArchetypeIsWorthSomethingToEat() throws {

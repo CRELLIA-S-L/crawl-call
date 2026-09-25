@@ -5,7 +5,7 @@
 // or a key: the schemes produce intents (FR-VIEW-050), the logic consumes them, and
 // neither knows about the other.
 //
-// implements: FR-VIEW-030, FR-VIEW-170, FR-VIEW-190, FR-SNAKE-010, FR-SNAKE-030, FR-BOT-020, FR-BOT-150, FR-SNAKE-060, FR-SNAKE-070, FR-SNAKE-090, FR-SCORE-140, FR-SCORE-150, INV-BOT-010, FR-VIEW-230, FR-TOOL-230, FR-MAP-150
+// implements: FR-VIEW-030, FR-VIEW-170, FR-VIEW-190, FR-SNAKE-010, FR-SNAKE-030, FR-BOT-020, FR-BOT-150, FR-SNAKE-060, FR-SNAKE-070, FR-SNAKE-090, FR-SCORE-140, FR-SCORE-150, INV-BOT-010, FR-VIEW-230, FR-TOOL-230, FR-MAP-150, FR-MAP-180, FR-MAP-170
 import Foundation
 
 struct Game {
@@ -221,13 +221,24 @@ struct Game {
     /// read once at start-up (IF-SNAKE-010 and its neighbours) and nothing in it is
     /// spent by a match, so a new one is a new `Game` over the same value
     /// (FR-VIEW-190).
-    func restarted() -> Game { Game(world: world, start: start) }
+    /// Another match in the same world, from a start chosen again (FR-MAP-180).
+    func restarted() -> Game { Game(world: world, start: Self.start(in: world) ?? start) }
 
-    /// Where a match starts: the lowest floor's first walkable cell, so that a map
-    /// without a declared spawn still runs. Where the snake *should* start is a map
-    /// property nobody has specified yet.
+    /// Where a match starts: one of the spawn points the map names, chosen at random
+    /// (FR-MAP-180). A map with none — one read for a test rather than played, since
+    /// the launch refuses such a map (FR-MAP-190) — starts in floor 0's first walkable
+    /// cell, or the lowest floor's where it has no floor 0.
+    static func start<Chooser: RandomNumberGenerator>(in world: World, using chooser: inout Chooser) -> NavigationGraph.Node? {
+        let spawns = world.map.spawns.map { NavigationGraph.Node(floor: $0.floor, x: $0.x, z: $0.z) }
+            .filter(world.graph.isWalkable)
+        if let chosen = spawns.randomElement(using: &chooser) { return chosen }
+        let levels = world.map.floors.map(\.level)
+        let ground = levels.contains(.zero) ? .zero : levels.min()
+        return world.graph.nodes.filter { $0.floor == ground }.min { a, b in (a.z, a.x) < (b.z, b.x) }
+    }
+
     static func start(in world: World) -> NavigationGraph.Node? {
-        world.graph.nodes.filter { $0.floor == world.map.floors.map(\.level).min() }
-            .min { a, b in (a.z, a.x) < (b.z, b.x) }
+        var chooser = SystemRandomNumberGenerator()
+        return start(in: world, using: &chooser)
     }
 }

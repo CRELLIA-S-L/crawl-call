@@ -1,13 +1,19 @@
 // The head's movement and the tail that follows it. Geometry is compared within a
 // tolerance, never for equality (`specs/50-verification.md`).
 //
-// verifies: FR-SNAKE-010, FR-SNAKE-015, FR-SNAKE-020, FR-SNAKE-030, FR-SNAKE-220, FR-MAP-025, FR-MAP-150
+// verifies: FR-SNAKE-010, FR-SNAKE-015, FR-SNAKE-020, FR-SNAKE-030, FR-SNAKE-220, FR-MAP-025, FR-MAP-150, FR-SNAKE-260
 import XCTest
 @testable import CrawlCall
 
 final class SnakeTests: XCTestCase {
-    private lazy var kit: Kit = { try! Kit.load(named: "blockout", from: .main) }()
-    private lazy var tuning: TuningConfiguration = { try! Configurations.load(from: .main).tuning }()
+    private var kit: Kit!
+    private var tuning: TuningConfiguration!
+
+    override func setUpWithError() throws {
+        try super.setUpWithError()
+        kit = try Kit.load(named: "blockout", from: .main)
+        tuning = try Configurations.load(from: .main).tuning
+    }
 
     /// A small room with a wall on its right and an upper floor joined by one cell.
     private func surfaces(_ text: String) throws -> Surfaces {
@@ -189,7 +195,7 @@ final class SnakeTests: XCTestCase {
         // The shipped blockout's one way between the partitions: rows 5 and 7 of
         // column 10 hold a partition each, row 6 is open, and the gap between the two
         // is 0.9 m — wide enough for a body of 0.6.
-        let world = try Launch.world().get()
+        let world = try Launch.world(map: "room").get()
         let surfaces = Surfaces(graph: world.graph, kit: world.kit, tuning: world.configurations.tuning, map: world.map)
         XCTAssertFalse(world.graph.isWalkable(NavigationGraph.Node(floor: 0, x: 10, z: 5)),
                        "the map changed: (10,5) is no longer a partition")
@@ -305,7 +311,7 @@ final class SnakeTests: XCTestCase {
         // The blockout's start is its corner cell, a quarter of a metre from two walls;
         // the body, 0.3 m wide, would start the match 5 cm into both.
         let world = try Launch.world().get()
-        let start = try XCTUnwrap(Game.start(in: world))
+        let start = try XCTUnwrap(Game.firstStart(in: world))
         let game = Game(world: world, start: start)
         let surfaces = Surfaces(graph: world.graph, kit: world.kit, tuning: world.configurations.tuning, map: world.map)
         let size = world.configurations.tuning.navigationGraphCellSize
@@ -345,6 +351,75 @@ final class SnakeTests: XCTestCase {
         XCTAssertEqual(snake.floor, 0)
         XCTAssertEqual(snake.head.y, 0, accuracy: 1e-9)
         XCTAssertEqual(snake.head.x, 0.6, accuracy: 1e-9)
+    }
+
+    func testCrossingACornerOfACellOnAnUpperFloorIsNoLedge() throws {
+        // A head that crosses a corner of its cell enters the cell corner to corner with
+        // it. On a balcony that dropped it to the floor below wherever it happened; the
+        // corner is ground, reached through either cell beside it (FR-SNAKE-220).
+        let s = try surfaces("kit blockout\nsetting greenholm\nfloor 0\n...\n...\n...\nfloor 1\n...\n...\n...\n")
+        var snake = self.snake(at: 0.24, 0.24, floor: 1)
+        let across = 0.5.squareRoot()
+        snake.advance(direction: SIMD2(across, across), speed: 3, seconds: 1.0 / 60, over: s)
+        XCTAssertGreaterThan(snake.head.x, 0.25, "the head did not cross the corner, so the test proves nothing")
+        XCTAssertGreaterThan(snake.head.z, 0.25, "the head did not cross the corner, so the test proves nothing")
+        XCTAssertEqual(snake.floor, 1, "the head dropped off a balcony at the corner of a cell")
+        XCTAssertEqual(snake.head.y, kit.floorHeight, accuracy: 1e-9)
+    }
+
+    func testACornerWithNothingBeyondItIsStillALedge() throws {
+        // Where the cell the corner leads to is not there on the upper floor, the head
+        // goes off the edge as it would off a side.
+        let s = try surfaces("kit blockout\nsetting greenholm\nfloor 0\n..\n..\nfloor 1\n..\n. \n")
+        var snake = self.snake(at: 0.24, 0.24, floor: 1)
+        let across = 0.5.squareRoot()
+        snake.advance(direction: SIMD2(across, across), speed: 3, seconds: 1.0 / 60, over: s)
+        XCTAssertEqual(snake.floor, 0)
+    }
+
+    // MARK: a gap narrower than the body
+
+    /// Walks the snake east along the middle row of an upper floor and says where it got.
+    private func crawl(_ upper: String, seconds: Double) throws -> Snake {
+        let rows = upper.split(separator: "\n", omittingEmptySubsequences: false)
+        let ground = rows.map { String(repeating: ".", count: $0.count) }.joined(separator: "\n")
+        let s = try surfaces("kit blockout\nsetting greenholm\nfloor 0\n\(ground)\nfloor 1\n\(upper)\n")
+        var snake = self.snake(at: 0, 0.5, floor: 1)
+        snake.advance(direction: SIMD2(1, 0), speed: 3, seconds: seconds, over: s)
+        return snake
+    }
+
+    func testAGapInTheFloorNarrowerThanTheBodyIsCrawledAcross() throws {
+        // A hole of one cell, 0.5 m, in a floor, crossed by a body 0.6 m wide
+        // (FR-SNAKE-260). The head goes over it at the floor's height and on.
+        let snake = try crawl("....\n. ..\n....", seconds: 0.4)
+        XCTAssertGreaterThan(snake.head.x, 1.1, "the head did not get past the gap")
+        XCTAssertEqual(snake.floor, 1, "the snake fell into a gap narrower than its body")
+        XCTAssertTrue(snake.trail.allSatisfy { abs($0.y - kit.floorHeight) < 1e-9 },
+                      "some part of the snake went down into the gap")
+    }
+
+    func testASlotNarrowerThanTheBodyIsCrawledAcrossWhateverItsLength() throws {
+        // Two cells long, one across: the body cannot fall into it along its length.
+        let snake = try crawl(".....\n.  ..\n.....", seconds: 0.5)
+        XCTAssertGreaterThan(snake.head.x, 1.3, "the head did not get past the slot, which ends at 1.25")
+        XCTAssertEqual(snake.floor, 1)
+    }
+
+    func testAGapAsWideAsTheBodyIsALedge() throws {
+        // Two cells each way: the body fits, and drops (FR-SNAKE-220).
+        let snake = try crawl("....\n.  .\n.  .\n....", seconds: 0.4)
+        XCTAssertEqual(snake.floor, 0)
+    }
+
+    func testTwoCellsThatMeetAtAPointAreCrawledBetween() throws {
+        // A joint is a gap of no width at all (FR-SNAKE-260).
+        let point = try surfaces("kit blockout\nsetting greenholm\nfloor 0\n..\n..\nfloor 1\n. \n .\n")
+        var snake = self.snake(at: 0.24, 0.24, floor: 1)
+        let across = 0.5.squareRoot()
+        snake.advance(direction: SIMD2(across, across), speed: 3, seconds: 1.0 / 60, over: point)
+        XCTAssertGreaterThan(snake.head.x, 0.25, "the head did not cross the joint, so the test proves nothing")
+        XCTAssertEqual(snake.floor, 1, "the snake fell through a joint")
     }
 
     func testTheDropIsInTheTrailAsAVerticalPortion() throws {
@@ -416,10 +491,10 @@ final class SnakeTests: XCTestCase {
 
         let tail = snake.tail
         XCTAssertEqual(tail.count, 2)
-        XCTAssertEqual(tail[0].x, 0.4, accuracy: 1e-6)
-        XCTAssertEqual(tail[0].z, 1.0, accuracy: 1e-6)
-        XCTAssertEqual(tail[1].x, 0.0, accuracy: 1e-6)
-        XCTAssertEqual(tail[1].z, 0.8, accuracy: 1e-6)
+        XCTAssertEqual(try element(0, of: tail).x, 0.4, accuracy: 1e-6)
+        XCTAssertEqual(try element(0, of: tail).z, 1.0, accuracy: 1e-6)
+        XCTAssertEqual(try element(1, of: tail).x, 0.0, accuracy: 1e-6)
+        XCTAssertEqual(try element(1, of: tail).z, 0.8, accuracy: 1e-6)
     }
 
     func testAShortTrailGivesAsManySegmentsAsItCanCarry() throws {
@@ -462,8 +537,15 @@ final class SnakeTests: XCTestCase {
 ///
 /// verifies: FR-SNAKE-010, FR-MAP-010
 final class SnakeClimbTests: XCTestCase {
-    private lazy var kit: Kit = { try! Kit.load(named: "blockout", from: .main) }()
-    private lazy var tuning: TuningConfiguration = { try! Launch.world().get().configurations.tuning }()
+    private var kit: Kit!
+    private var tuning: TuningConfiguration!
+
+    override func setUpWithError() throws {
+        try super.setUpWithError()
+        kit = try Kit.load(named: "blockout", from: .main)
+        tuning = try Launch.world().get().configurations.tuning
+    }
+
     private let cell = 0.5
 
     /// Three cells in a row on the ground floor, the last of them a stair that a
@@ -534,7 +616,7 @@ final class SnakeClimbTests: XCTestCase {
         // on the blockout it is the flight (FR-MAP-150). Steered from where a match
         // begins: down the west side to the flight's row, then east up it.
         let world = try Launch.world().get()
-        let start = try XCTUnwrap(Game.start(in: world))
+        let start = try XCTUnwrap(Game.firstStart(in: world))
         let size = world.configurations.tuning.navigationGraphCellSize
         let surfaces = Surfaces(graph: world.graph, kit: world.kit, tuning: world.configurations.tuning, map: world.map)
         var body = Game(world: world, start: start).snake
@@ -597,10 +679,10 @@ final class SnakeClimbTests: XCTestCase {
         let size = world.configurations.tuning.navigationGraphCellSize
         let surfaces = Surfaces(graph: world.graph, kit: world.kit,
                                 tuning: world.configurations.tuning, map: world.map)
-        let wall = NavigationGraph.Node(floor: 1, x: 14, z: 14)
-        let beside = NavigationGraph.Node(floor: 1, x: 15, z: 14)
-        XCTAssertFalse(world.graph.isWalkable(wall), "the map changed: (14,14) is no longer a wall")
-        XCTAssertTrue(world.graph.isWalkable(NavigationGraph.Node(floor: 0, x: 14, z: 14)),
+        let wall = NavigationGraph.Node(floor: 1, x: 18, z: 18)
+        let beside = NavigationGraph.Node(floor: 1, x: 19, z: 18)
+        XCTAssertFalse(world.graph.isWalkable(wall), "the map changed: (18,18) is no longer a wall")
+        XCTAssertTrue(world.graph.isWalkable(NavigationGraph.Node(floor: 0, x: 18, z: 18)),
                       "the map changed: there is no floor under that wall")
 
         var body = Snake(head: SIMD3(Double(beside.x) * size, world.kit.floorHeight,

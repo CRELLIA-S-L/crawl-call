@@ -59,9 +59,9 @@ final class CoverageTests: XCTestCase {
         let corners = try XCTUnwrap(FrameCoverage.footprint(pitchDegrees: 55, fieldOfViewDegrees: 50,
                                                             distance: 13.2, aspect: 2622.0 / 1206,
                                                             drop: 0))
-        XCTAssertEqual(corners.map { -$0.y }.max()!, 11.2, accuracy: 0.05)
-        XCTAssertEqual(corners.map(\.y).max()!, 5.7, accuracy: 0.05)
-        XCTAssertEqual(corners.map { abs($0.x) }.max()!, 19.9, accuracy: 0.05)
+        XCTAssertEqual(try XCTUnwrap(corners.map { -$0.y }.max()), 11.2, accuracy: 0.05)
+        XCTAssertEqual(try XCTUnwrap(corners.map(\.y).max()), 5.7, accuracy: 0.05)
+        XCTAssertEqual(try XCTUnwrap(corners.map { abs($0.x) }.max()), 19.9, accuracy: 0.05)
     }
 
     func testEveryFrameOfTheRangeFallsInsideTheCoveredGround() throws {
@@ -135,72 +135,6 @@ final class CoverageTests: XCTestCase {
         json["cameraFieldOfView"] = fieldOfView
         return try JSONDecoder().decode(ViewConfiguration.self, from: JSONSerialization.data(withJSONObject: json))
     }
-
-    // MARK: what stands in front of the arena
-
-    /// Whether a segment passes through a box: the slab test.
-    private func crosses(from a: SIMD3<Double>, to b: SIMD3<Double>,
-                         low: SIMD3<Double>, high: SIMD3<Double>) -> Bool {
-        var enter = 0.0, leave = 1.0
-        let d = b - a
-        for axis in 0..<3 {
-            if abs(d[axis]) < 1e-12 {
-                if a[axis] < low[axis] || a[axis] > high[axis] { return false }
-                continue
-            }
-            var t0 = (low[axis] - a[axis]) / d[axis]
-            var t1 = (high[axis] - a[axis]) / d[axis]
-            if t0 > t1 { swap(&t0, &t1) }
-            enter = max(enter, t0); leave = min(leave, t1)
-            if enter > leave { return false }
-        }
-        return true
-    }
-
-    func testSomethingAsTallAsAllowedInFrontHidesNoPartOfTheArena() throws {
-        let world = try Launch.world().get()
-        let camera = CameraRange(view: world.configurations.view, plan: world.plan, widestAspect: 2.174)
-        let arena = world.plan.bounds
-        for gap in [0.3, 1, 2.4] {
-            let allowed = FrameCoverage.tallestInFront(gap: gap, camera: camera)
-            let ground = world.plan.underside
-            let low = SIMD3(arena.centre.x - 0.5, ground, arena.highest.z + gap)
-            let high = SIMD3(arena.centre.x + 0.5, ground + allowed - 1e-6, arena.highest.z + gap + 1)
-            for pitch in [50.0, 55, 60] {
-                for fz in stride(from: arena.lowest.z, through: arena.highest.z, by: 0.5) {
-                    for fy in [ground, 0, 3] {
-                        let focus = SIMD3(arena.centre.x, fy, fz)
-                        let cam = Entity()
-                        SceneView.place(cam, lookingAt: focus, pitchDegrees: pitch, distance: camera.distance)
-                        let eye = SIMD3<Double>(cam.position)
-                        for pz in stride(from: arena.lowest.z, through: arena.highest.z, by: 0.25) {
-                            let p = SIMD3(arena.centre.x, ground, pz)
-                            XCTAssertFalse(crosses(from: eye, to: p, low: low, high: high),
-                                           "gap \(gap), pitch \(pitch), focus z \(fz) y \(fy), point z \(pz)")
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    func testSomethingTallerThanAllowedInFrontHidesTheArenasEdge() throws {
-        // Negation: a tenth taller, the camera looking at the near edge from the lowest
-        // pitch sees the edge through it.
-        let world = try Launch.world().get()
-        let camera = CameraRange(view: world.configurations.view, plan: world.plan, widestAspect: 2.174)
-        let arena = world.plan.bounds
-        let gap = 1.0
-        let ground = world.plan.underside
-        let allowed = FrameCoverage.tallestInFront(gap: gap, camera: camera) * 1.1
-        let low = SIMD3(arena.centre.x - 0.5, ground, arena.highest.z + gap)
-        let high = SIMD3(arena.centre.x + 0.5, ground + allowed, arena.highest.z + gap + 1)
-        let cam = Entity()
-        SceneView.place(cam, lookingAt: SIMD3(arena.centre.x, ground, arena.highest.z),
-                        pitchDegrees: 50, distance: camera.distance)
-        let edge = SIMD3(arena.centre.x, ground, arena.highest.z)
-        XCTAssertTrue(crosses(from: SIMD3<Double>(cam.position), to: edge, low: low, high: high))
-    }
 }
 
 @MainActor
@@ -223,9 +157,8 @@ final class GreenholmTests: XCTestCase {
     func testTheShippedMapStandsOnGreenholmWithItsConfiguration() throws {
         let world = try world()
         let c = try configuration(world)
-        XCTAssertGreaterThan(c.islandMargin, 0)
+        XCTAssertGreaterThan(c.edgeMargin, 0)
         XCTAssertGreaterThan(c.birdInterval, 0)
-        XCTAssertFalse(c.treeScales.isEmpty)
     }
 
     func testASettingTheGameDoesNotProvideIsRefusedByName() {
@@ -266,18 +199,18 @@ final class GreenholmTests: XCTestCase {
     }
 
     func testTheLaunchRefusesAMapOnASettingTheGameDoesNotProvide() throws {
-        let b = try bundle(map: "atlantis", text: "kit blockout\nsetting atlantis\nfloor 0\n..\n")
+        let b = try bundle(map: "atlantis", text: "kit blockout\nsetting atlantis\nspawn 0,0 0\nfloor 0\n..\n")
         switch Launch.world(from: b, map: "atlantis") {
         case .success: XCTFail("a map on a setting nobody provides must not start")
         case .failure(let error): XCTAssertEqual(error as? SettingError, .unknown(name: "atlantis"))
         }
         // And the same bundle starts a map on Greenholm, so the refusal is the setting's.
-        let good = try bundle(map: "small", text: "kit blockout\nsetting greenholm\nfloor 0\n..\n")
+        let good = try bundle(map: "small", text: "kit blockout\nsetting greenholm\nspawn 0,0 0\nfloor 0\n..\n")
         XCTAssertNoThrow(try Launch.world(from: good, map: "small").get())
     }
 
     func testTheLaunchRefusesACameraThatSeesTheHorizon() throws {
-        let b = try bundle(map: "small", text: "kit blockout\nsetting greenholm\nfloor 0\n..\n") {
+        let b = try bundle(map: "small", text: "kit blockout\nsetting greenholm\nspawn 0,0 0\nfloor 0\n..\n") {
             $0["cameraFieldOfView"] = 110
         }
         switch Launch.world(from: b, map: "small") {
@@ -336,51 +269,6 @@ final class GreenholmTests: XCTestCase {
         XCTAssertNotNil(result.flock)
     }
 
-    func testNoPartStandsOverTheArena() throws {
-        let (s, world, _) = try scenery()
-        let arena = world.plan.bounds
-        for part in s.parts where part.layer == .rim {
-            let overX = part.highest.x > arena.lowest.x && part.lowest.x < arena.highest.x
-            let overZ = part.highest.z > arena.lowest.z && part.lowest.z < arena.highest.z
-            XCTAssertFalse(overX && overZ, "\(part.shape) at \(part.centre) stands over the arena")
-        }
-        // And the ground and water lie below it.
-        for part in s.parts where part.layer != .rim {
-            XCTAssertLessThanOrEqual(part.top, world.plan.underside + 1e-9)
-        }
-    }
-
-    func testWhatStandsInFrontIsNoTallerThanAllowed() throws {
-        let (s, world, camera) = try scenery()
-        let arena = world.plan.bounds
-        var inFront = 0
-        for part in s.parts where part.layer == .rim
-            && part.highest.x > arena.lowest.x && part.lowest.x < arena.highest.x && part.lowest.z >= arena.highest.z {
-            inFront += 1
-            let allowed = FrameCoverage.tallestInFront(gap: part.lowest.z - arena.highest.z, camera: camera)
-            XCTAssertLessThanOrEqual(part.top - world.plan.underside, allowed + 1e-9, "\(part.shape) at \(part.centre)")
-        }
-        XCTAssertGreaterThan(inFront, 0, "nothing stands in front, so this checked nothing")
-    }
-
-    func testTreesInFrontAreLeftForShrubs() throws {
-        // The rule changes what is placed: without a camera to answer to — a range whose
-        // lowest pitch is nearly straight down — the front of the ring has cones.
-        let world = try world()
-        let c = try configuration(world)
-        let arena = world.plan.bounds
-        let steep = CameraRange(pitches: 89...89.5, fieldOfView: 50, distance: 13.2, widestAspect: 2.174)
-        let usual = CameraRange(view: world.configurations.view, plan: world.plan, widestAspect: 2.174)
-        func conesInFront(_ camera: CameraRange) throws -> Int {
-            try Greenholm.scenery(around: world.plan, camera: camera, configuration: c).parts.filter {
-                $0.shape == .cone && $0.highest.x > arena.lowest.x && $0.lowest.x < arena.highest.x
-                    && $0.lowest.z >= arena.highest.z
-            }.count
-        }
-        XCTAssertGreaterThan(try conesInFront(steep), 0)
-        XCTAssertEqual(try conesInFront(usual), 0)
-    }
-
     func testTheIslandIsLaidUnderTheLowestFloorAndNotUnderASunkenModule() throws {
         // A walkable module taller than the floor slab hangs below the surface it makes
         // — as the blockout's old stair did, three metres down; the island is laid at
@@ -388,8 +276,8 @@ final class GreenholmTests: XCTestCase {
         let kit = try Kit.load(named: "blockout", from: .main)
         let map = try MapParser.parse("kit blockout\nsetting greenholm\nfloor 0\n./\n", kit: kit)
         let plan = ScenePlan.make(map: map, kit: kit, cellSize: 0.5)
-        let slab = try XCTUnwrap(kit.floor).size[1]
-        let sunk = try XCTUnwrap(kit.module(for: "/")).size[1]
+        let slab = try element(1, of: XCTUnwrap(kit.floor).size)
+        let sunk = try element(1, of: XCTUnwrap(kit.module(for: "/")).size)
         XCTAssertGreaterThan(sunk, slab, "the kit changed: its '/' is no deeper than a floor slab")
         XCTAssertEqual(plan.bounds.lowest.y, -sunk, accuracy: 1e-9)
         XCTAssertEqual(plan.underside, -slab, accuracy: 1e-9)
@@ -399,25 +287,6 @@ final class GreenholmTests: XCTestCase {
     }
 
     // MARK: FR-MAP-140 — the water reaches all the camera can show
-
-    func testTheWaterReachesEveryPartOfTheCoveredGround() throws {
-        for widest in [2.174, 7.8] {
-            let (s, world, camera) = try scenery(widest: widest)
-            let water = try XCTUnwrap(s.parts.first { $0.layer == .water })
-            let expected = try XCTUnwrap(FrameCoverage.covered(arena: world.plan.bounds, camera: camera,
-                                                               surface: s.surface))
-            let reach = GroundRect(lowest: SIMD2(water.lowest.x, water.lowest.z),
-                                   highest: SIMD2(water.highest.x, water.highest.z))
-            // The water's box is its centre and size, so its edges come back through
-            // arithmetic: compared with a tolerance, not exactly.
-            XCTAssertTrue(reach.grown(by: 1e-9).contains(expected))
-            XCTAssertFalse(reach.grown(by: -1e-6).contains(expected), "the water is sized to the ground, not beyond it")
-            XCTAssertEqual(water.top, s.surface, accuracy: 1e-9)
-            // Nothing the scenery offers lies lower than the water.
-            for part in s.parts { XCTAssertGreaterThanOrEqual(part.lowest.y, s.surface - 1e-9 - IslandShape.submerged
-                                                                - IslandShape.waterDepth) }
-        }
-    }
 
     // MARK: FR-GREENHOLM-030 — birds over the arena, as the camera sees them
 
@@ -443,7 +312,7 @@ final class GreenholmTests: XCTestCase {
             }
         }
         // And they are spread, not all on one line.
-        XCTAssertGreaterThan(offsets.max()! - offsets.min()!, arena.extent.z / 2)
+        XCTAssertGreaterThan(try XCTUnwrap(offsets.max()) - XCTUnwrap(offsets.min()), arena.extent.z / 2)
     }
 
     func testAFlightStartsAndEndsOutOfFrameAndCrossesItsMiddleOnAnyWindow() throws {
@@ -482,48 +351,18 @@ final class GreenholmTests: XCTestCase {
 
     // MARK: FR-GREENHOLM-010 — what the island is made of
 
-    func testTheIslandIsGrassOnAShoreRingedByTreesAndShrubs() throws {
-        let (s, world, _) = try scenery()
-        let c = try configuration(world)
-        let ground = s.parts.filter { $0.layer == .ground }
-        XCTAssertEqual(ground.count, 2)
-        let grass = try XCTUnwrap(ground.first { $0.colour == c.grassColour.rgb })
-        let shore = try XCTUnwrap(ground.first { $0.colour == c.shoreColour.rgb })
-        XCTAssertEqual(grass.top, world.plan.underside, accuracy: 1e-9)
-        XCTAssertEqual(shore.top, grass.top - c.shoreDrop, accuracy: 1e-9)
-        XCTAssertEqual(shore.size.x - grass.size.x, 2 * c.shoreWidth, accuracy: 1e-9)
-        XCTAssertGreaterThanOrEqual(s.parts.filter { $0.shape == .cone }.count, IslandShape.fewestRimTrees / 2)
-        XCTAssertGreaterThan(s.parts.filter { $0.shape == .sphere }.count, 0)
-        XCTAssertEqual(s.sky, Scenery.Sky(zenith: c.skyZenithColour.rgb, horizon: c.skyHorizonColour.rgb))
-    }
-
-    func testEveryPartIsBuiltAndLitAndShapesAreShared() throws {
-        let (s, world, _) = try scenery()
-        let built = SceneBuilder.scene(for: world.plan, view: world.configurations.view)
-        let ambient = try XCTUnwrap(built.root.children.first { $0.name == EntityName.ambient })
-        let root = SceneryBuilder.entity(for: s, ambient: ambient)
-        let models = root.children.compactMap { $0 as? ModelEntity }
-        XCTAssertEqual(models.count, s.parts.count)
-        XCTAssertTrue(models.allSatisfy { $0.components.has(ImageBasedLightReceiverComponent.self) })
-        let meshes = Set(models.compactMap { $0.model.map { ObjectIdentifier($0.mesh) } })
-        XCTAssertLessThanOrEqual(meshes.count, Scenery.Part.Shape.allCases.count)
-        for (model, part) in zip(models, s.parts) {
-            XCTAssertEqual(SIMD3<Double>(model.scale), part.size, accuracy: 1e-5)
-        }
-    }
-
     func testTheSkyIsZenithAboveAndHorizonBelow() throws {
         let sky = Scenery.Sky(zenith: SIMD3(0, 0, 1), horizon: SIMD3(1, 1, 1))
         let image = try XCTUnwrap(SceneryBuilder.skyImage(sky))
         XCTAssertEqual(image.width, image.height * 2)
         let data = try XCTUnwrap(image.dataProvider?.data as Data?)
-        func pixel(row: Int) -> SIMD3<Double> {
+        func pixel(row: Int) throws -> SIMD3<Double> {
             let offset = row * image.bytesPerRow
-            return SIMD3(Double(data[offset]), Double(data[offset + 1]), Double(data[offset + 2])) / 255
+            return try vector((offset..<offset + 3).map { Double(try element($0, of: data)) }) / 255
         }
-        XCTAssertEqual(pixel(row: 0), SIMD3(0, 0, 1), accuracy: 0.03)
-        XCTAssertEqual(pixel(row: image.height - 1), SIMD3(1, 1, 1), accuracy: 0.01)
-        XCTAssertEqual(pixel(row: image.height * 3 / 4), SIMD3(1, 1, 1), accuracy: 0.01)
+        XCTAssertEqual(try pixel(row: 0), SIMD3(0, 0, 1), accuracy: 0.03)
+        XCTAssertEqual(try pixel(row: image.height - 1), SIMD3(1, 1, 1), accuracy: 0.01)
+        XCTAssertEqual(try pixel(row: image.height * 3 / 4), SIMD3(1, 1, 1), accuracy: 0.01)
         XCTAssertNoThrow(try SceneryBuilder.skyResource(sky))
     }
 }
@@ -602,20 +441,20 @@ final class BirdsTests: XCTestCase {
         let now = try XCTUnwrap(birds.flock(at: 12, on: flight))
         XCTAssertEqual(now.positions.count, 3)
         XCTAssertEqual(now.heading, SIMD3(1, 0, 0), accuracy: 1e-12)
-        let leader = now.positions[0]
+        let leader = try element(0, of: now.positions)
         XCTAssertEqual(leader.x, 5 - half + 2 * 5, accuracy: 1e-9)
-        let left = now.positions[1], right = now.positions[2]
+        let left = try element(1, of: now.positions), right = try element(2, of: now.positions)
         XCTAssertEqual(left.x, right.x, accuracy: 1e-9)
         XCTAssertLessThan(left.x, leader.x)
         XCTAssertEqual(left.z - leader.z, -(right.z - leader.z), accuracy: 1e-9)
         XCTAssertNotEqual(left.z, leader.z)
     }
 
-    func testWingsBeatWithinTheirSwing() {
+    func testWingsBeatWithinTheirSwing() throws {
         let angles = stride(from: 0.0, through: 3, by: 0.01).map(birds.wing(at:))
-        XCTAssertLessThanOrEqual(angles.map(abs).max()!, BirdShape.flapDegrees + 1e-9)
-        XCTAssertGreaterThan(angles.max()!, BirdShape.flapDegrees * 0.99)
-        XCTAssertLessThan(angles.min()!, -BirdShape.flapDegrees * 0.99)
+        XCTAssertLessThanOrEqual(try XCTUnwrap(angles.map(abs).max()), BirdShape.flapDegrees + 1e-9)
+        XCTAssertGreaterThan(try XCTUnwrap(angles.max()), BirdShape.flapDegrees * 0.99)
+        XCTAssertLessThan(try XCTUnwrap(angles.min()), -BirdShape.flapDegrees * 0.99)
     }
 
     @MainActor
@@ -626,12 +465,12 @@ final class BirdsTests: XCTestCase {
         XCTAssertTrue(flock.children.allSatisfy { !$0.isEnabled })
         SceneryBuilder.move(flock, birds, at: 12, lookingAt: SIMD3(5, 0, 3), aspect: 2, pilot: pilot)
         XCTAssertTrue(flock.children.allSatisfy(\.isEnabled))
-        XCTAssertEqual(Double(flock.children[0].position.x), 5 - half + 10, accuracy: 1e-4)
-        let line = flock.children[0].position.z
+        XCTAssertEqual(Double(try element(0, of: flock.children).position.x), 5 - half + 10, accuracy: 1e-4)
+        let line = try element(0, of: flock.children).position.z
         SceneryBuilder.move(flock, birds, at: 13, lookingAt: SIMD3(5, 0, 9), aspect: 2, pilot: pilot)
-        XCTAssertEqual(flock.children[0].position.z, line, accuracy: 1e-5, "a flight keeps its line")
+        XCTAssertEqual(try element(0, of: flock.children).position.z, line, accuracy: 1e-5, "a flight keeps its line")
         SceneryBuilder.move(flock, birds, at: 21, lookingAt: SIMD3(5, 0, 9), aspect: 2, pilot: pilot)
-        XCTAssertEqual(Double(flock.children[0].position.z),
+        XCTAssertEqual(Double(try element(0, of: flock.children).position.z),
                        birds.flight(1, lookingAt: SIMD3(5, 0, 9), aspect: 2).from.z, accuracy: 1e-4, "the next one takes a new line")
         SceneryBuilder.move(flock, birds, at: 5, lookingAt: SIMD3(5, 0, 3), aspect: 2, pilot: pilot)
         XCTAssertTrue(flock.children.allSatisfy { !$0.isEnabled })

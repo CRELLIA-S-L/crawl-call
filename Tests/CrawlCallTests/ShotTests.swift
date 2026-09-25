@@ -7,7 +7,7 @@ import XCTest
 @testable import CrawlCall
 
 final class ShotTests: XCTestCase {
-    private func world() throws -> World { try Launch.world().get() }
+    private func world() throws -> World { try Launch.world(map: "room").get() }
 
     private func cells(in world: World) -> [NavigationGraph.Node] {
         world.graph.nodes.filter { $0.floor == 0 }.sorted { ($0.z, $0.x) < ($1.z, $1.x) }
@@ -22,19 +22,19 @@ final class ShotTests: XCTestCase {
 
     func testAShotIsReportedWithBothItsEnds() throws {
         let world = try world()
-        let here = cells(in: world)[0]
+        let here = try element(0, of: cells(in: world))
         let cell = world.configurations.tuning.navigationGraphCellSize
         var bots = [try bot(at: here, in: world)]
-        bots[0].knowsSnake = true
+        bots[try checkedIndex(0, of: bots)].knowsSnake = true
         let target = SIMD3(Double(here.x) * cell + cell, 0, Double(here.z) * cell)
 
         let volley = Execution.deliberate(&bots, slots: [0], snake: [target], world: world)
         let shot = try XCTUnwrap(volley.shots.first)
         XCTAssertEqual(volley.shots.count, 1, "one shot a step is the cadence FR-BOT-060 fixes")
         // From the shooter's eyes, which is where it looked and fired from (ADR-0022).
-        XCTAssertEqual(shot.from.x, bots[0].position.x, accuracy: 1e-12)
-        XCTAssertEqual(shot.from.y, bots[0].position.y + world.configurations.bot.eyeHeight, accuracy: 1e-12)
-        XCTAssertEqual(shot.from.z, bots[0].position.z, accuracy: 1e-12)
+        XCTAssertEqual(shot.from.x, try element(0, of: bots).position.x, accuracy: 1e-12)
+        XCTAssertEqual(shot.from.y, try element(0, of: bots).position.y + world.configurations.bot.eyeHeight, accuracy: 1e-12)
+        XCTAssertEqual(shot.from.z, try element(0, of: bots).position.z, accuracy: 1e-12)
         XCTAssertEqual(shot.to, target)
         XCTAssertEqual(shot.squad, .red)
         XCTAssertEqual(shot.left, world.configurations.bot.deliberationPeriod)
@@ -57,10 +57,10 @@ final class ShotTests: XCTestCase {
                           setting: base.setting, graph: NavigationGraph.derive(from: map, stepHeight: ShippedTuning.stepHeight), plan: plan)
         var bots = [try bot(at: NavigationGraph.Node(floor: 0, x: 0, z: 0), in: world)]
         let snake = [SIMD3(4.0, 0, 0)]
-        XCTAssertTrue(Sight.isClear(from: bots[0].eye, to: snake[0], through: plan))
-        XCTAssertFalse(Sight.isClear(from: bots[0].position, to: snake[0], through: plan),
+        XCTAssertTrue(Sight.isClear(from: try element(0, of: bots).eye, to: try element(0, of: snake), through: plan))
+        XCTAssertFalse(Sight.isClear(from: try element(0, of: bots).position, to: try element(0, of: snake), through: plan),
                        "the box does not stand in the way from the floor, so this proves nothing")
-        bots[0].knowsSnake = true
+        bots[try checkedIndex(0, of: bots)].knowsSnake = true
         let volley = Execution.deliberate(&bots, slots: [0], snake: snake, world: world)
         XCTAssertEqual(volley.shots.count, 1, "the bot saw the snake over the box and did not fire")
     }
@@ -81,14 +81,14 @@ final class ShotTests: XCTestCase {
                                                          view: base.configurations.view, bot: configuration,
                                                          match: base.configurations.match),
                           kit: base.kit, map: base.map, setting: base.setting, graph: base.graph, plan: base.plan)
-        let here = cells(in: world)[0]
+        let here = try element(0, of: cells(in: world))
         let cell = world.configurations.tuning.navigationGraphCellSize
         var bots = [try bot(at: here, in: world)]
-        bots[0].knowsSnake = true
+        bots[try checkedIndex(0, of: bots)].knowsSnake = true
         let target = SIMD3(Double(here.x) * cell + cell, 0, Double(here.z) * cell)
         let volley = Execution.deliberate(&bots, slots: [0], snake: [target], world: world)
         let shot = try XCTUnwrap(volley.shots.first)
-        XCTAssertEqual(shot.from.y, bots[0].position.y + 0.5, accuracy: 1e-12)
+        XCTAssertEqual(shot.from.y, try element(0, of: bots).position.y + 0.5, accuracy: 1e-12)
     }
 
     func testShotsLastTheirPeriodAndDoNotPileUp() throws {
@@ -104,7 +104,7 @@ final class ShotTests: XCTestCase {
         let world = try world()
         let period = world.configurations.bot.deliberationPeriod
         let cell = world.configurations.tuning.navigationGraphCellSize
-        let start = try XCTUnwrap(Game.start(in: world))
+        let start = try XCTUnwrap(Game.firstStart(in: world))
         var game = Game(world: world, start: start)
         let prey = try XCTUnwrap(game.bots.filter { $0.floor == 0 }.first)
         var route = Route.between(start,
@@ -182,7 +182,7 @@ final class ShotTests: XCTestCase {
     @MainActor
     func testEachSquadsShotIsDrawnInItsOwnColour() throws {
         let world = try world()
-        let two = [try bot(at: cells(in: world)[0], in: world),
+        let two = [try bot(at: element(0, of: cells(in: world)), in: world),
                    try XCTUnwrap(Bot(id: 1, squad: .blue, archetype: .assault,
                                      at: SIMD3(2, 0, 2), floor: 0,
                                      configuration: world.configurations.bot))]

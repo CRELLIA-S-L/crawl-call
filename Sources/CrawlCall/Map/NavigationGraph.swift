@@ -9,7 +9,7 @@
 // which is a bug the grid cannot see and a player can. Said out loud because the
 // specification is silent on it.
 //
-// implements: FR-TOOL-030, FR-MAP-020, FR-MAP-150, FR-MAP-025
+// implements: FR-TOOL-030, FR-MAP-020, FR-MAP-150, FR-MAP-025, FR-MAP-220
 import Foundation
 
 struct NavigationGraph: Equatable {
@@ -64,7 +64,9 @@ struct NavigationGraph: Equatable {
     static func derive(from map: MapSpecification, stepHeight: Double) -> NavigationGraph {
         var neighbours: [Node: Set<Node>] = [:]
         var heights: [Node: Double] = [:]
-        for placement in map.placements where placement.walkable {
+        // A node wherever something can stand: on a surface, or among what stops no
+        // movement, on the floor laid under it (FR-MAP-220).
+        for placement in map.placements where placement.isPassable {
             let node = Node(floor: placement.floor, x: placement.x, z: placement.z)
             neighbours[node] = []
             heights[node] = map.height(of: placement)

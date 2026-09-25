@@ -525,3 +525,22 @@ When a segment is removed by the snake's own act, the system **shall** take it o
 
 **Rationale.** The smallest rule that delivers the choice the mechanic is for, and a deliberate refusal of the larger one: the tail already blocks bots (FR-SNAKE-040), so a severed piece that stayed would be a wall the player places at will — a different mechanic, an order of magnitude larger, and one that changes what a map is.
 Whether it should stay is not settled by argument but by five people: H-080 measures whether a piece left lying about is placed on purpose or used as cover, and this requirement is what holds until that reading exists.
+
+### FR-SNAKE-260 — The snake crawls across a gap narrower than its body
+
+```yaml
+status: implemented
+verification: T
+derives_from: [FR-SNAKE-220]
+depends_on: [FR-SNAKE-010, IF-MAP-020]
+refines: []
+conflicts_with: []
+code: [Sources/CrawlCall/Snake/Surfaces.swift]
+tests: [Tests/CrawlCallTests/SnakeTests.swift]
+created: 2026-09-25
+```
+
+Where the ground the snake crawls on has a gap narrower than its body, the system **shall** let the snake crawl across the gap at the ground's height, with no part of the snake falling into it.
+
+**Rationale.** The maintainer, 2026-09-25, after the snake fell from the balcony wherever its head crossed a corner of a cell: the rule that the snake does not go where it does not fit holds for gaps in the floor and joints between cells as much as for gaps between walls, and it holds for every part of the snake, not only its head. Across, not stopped at, by the maintainer's choice: a gap too narrow to fall into is a gap to crawl over. A gap as wide as the body or wider is a ledge, dropped from as FR-SNAKE-220 says; leaping one is Q-410.
+"Its body" is the tuning's body radius (IF-MAP-020).

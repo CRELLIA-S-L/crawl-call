@@ -28,7 +28,18 @@ enum Squads {
         let cell = world.configurations.tuning.navigationGraphCellSize
         let height = world.kit.floorHeight
 
-        let fromSnake = distances(in: world.graph, from: snakeStart)
+        // No bot starts within the snake's interrupt distance, measured across the
+        // ground and not along the walk: a cell many steps away can be a wall's width
+        // from the snake — outside a building the snake starts in — and a bot there
+        // begins the match alarmed. Those cells are taken before anybody is placed.
+        let snake = centre(of: snakeStart, in: world.graph, cellSize: cell, floorHeight: height)
+        let interrupt = world.configurations.bot.interruptDistance
+        let reach = distances(in: world.graph, from: snakeStart)
+        let near = Set(reach.keys.filter {
+            Perception.metres(centre(of: $0, in: world.graph, cellSize: cell, floorHeight: height), snake) <= interrupt
+        })
+        let clear = reach.filter { !near.contains($0.key) }
+        let fromSnake = clear.isEmpty ? reach : clear
         guard let redAnchor = farthest(in: fromSnake) else { return [] }
         // Two squads closer together than the distance at which they keep together
         // (IF-BOT-010) would read as one group rather than two sides. The distance is
@@ -43,7 +54,7 @@ enum Squads {
         }
         guard let blueAnchor = farthest(in: elsewhere.isEmpty ? fromSnake : elsewhere) else { return [] }
 
-        var taken: Set<NavigationGraph.Node> = []
+        var taken: Set<NavigationGraph.Node> = clear.isEmpty ? [] : near
         let red = nearest(size, to: redAnchor, in: world.graph, avoiding: &taken)
         // Not merely two anchors apart but two groups apart: every cell of the second
         // squad keeps the grouping distance from every bot of the first, or the two

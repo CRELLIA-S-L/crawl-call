@@ -15,7 +15,7 @@ final class WindowTests: XCTestCase {
     private func session() throws -> GameSession {
         let world = try Launch.world().get()
         let built = SceneBuilder.scene(for: world.plan, view: world.configurations.view)
-        let start = try XCTUnwrap(Game.start(in: world))
+        let start = try XCTUnwrap(Game.firstStart(in: world))
         let game = Game(world: world, start: start)
         let camera = try XCTUnwrap(built.root.children.first { $0.name == "camera" })
         return GameSession(game: game,

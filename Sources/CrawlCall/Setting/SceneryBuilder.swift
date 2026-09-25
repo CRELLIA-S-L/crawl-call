@@ -3,7 +3,7 @@
 // moves the birds. Nothing built here joins the map's entity or `SeeThrough`: scenery
 // is for the eye only (FR-MAP-130).
 //
-// implements: FR-GREENHOLM-010, FR-GREENHOLM-020, FR-GREENHOLM-030, FR-MAP-130, FR-TOOL-200
+// implements: FR-GREENHOLM-010, FR-GREENHOLM-020, FR-GREENHOLM-030, FR-MAP-130, FR-TOOL-200, FR-MAP-200
 import CoreGraphics
 import Foundation
 import RealityKit
@@ -62,20 +62,39 @@ enum SceneryBuilder {
             model.components.set(ImageBasedLightReceiverComponent(imageBasedLight: ambient))
             root.addChild(model)
         }
+        for surface in scenery.surfaces where !surface.mesh.isEmpty {
+            guard let mesh = try? meshResource(surface.mesh) else {
+                preconditionFailure(String(describing: SceneryError.surfaceNotBuilt))
+            }
+            var material = materials[surface.colour] ?? matt(surface.colour)
+            // Walls and water are seen from either side as the camera goes round them.
+            material.faceCulling = .none
+            let model = ModelEntity(mesh: mesh, materials: [material])
+            model.name = EntityName.sceneryPart
+            model.components.set(ImageBasedLightReceiverComponent(imageBasedLight: ambient))
+            root.addChild(model)
+        }
         if let birds = scenery.birds {
             root.addChild(flock(birds, ambient: ambient))
         }
         return root
     }
 
+    /// A surface's triangles as RealityKit takes them.
+    @MainActor
+    static func meshResource(_ mesh: Mesh) throws -> MeshResource {
+        var descriptor = MeshDescriptor(name: EntityName.sceneryPart)
+        descriptor.positions = MeshBuffers.Positions(mesh.positions.map { SIMD3<Float>($0) })
+        descriptor.normals = MeshBuffers.Normals(mesh.normals.map { SIMD3<Float>($0) })
+        descriptor.primitives = .triangles(mesh.indices)
+        return try MeshResource.generate(from: [descriptor])
+    }
+
     /// A mesh of the shape at unit size: one metre across and one high.
     @MainActor
     static func unitMesh(_ shape: Scenery.Part.Shape) -> MeshResource {
         switch shape {
-        case .box:      return .generateBox(size: SceneryShape.unit)
-        case .cylinder: return .generateCylinder(height: SceneryShape.unit, radius: SceneryShape.unitRadius)
-        case .cone:     return .generateCone(height: SceneryShape.unit, radius: SceneryShape.unitRadius)
-        case .sphere:   return .generateSphere(radius: SceneryShape.unitRadius)
+        case .box: return .generateBox(size: SceneryShape.unit)
         }
     }
 
@@ -200,12 +219,14 @@ enum SceneryBuilder {
 /// What building the scenery can fail at (FR-TOOL-200).
 enum SceneryError: IdentifiedError {
     case noAmbientLight
+    case surfaceNotBuilt
     case skyImageNotPainted
     case skyNotGenerated(underlying: Error)
 
     var identifier: ErrorIdentifier {
         switch self {
         case .noAmbientLight:     return .sceneryNoAmbientLight
+        case .surfaceNotBuilt:    return .scenerySurfaceNotBuilt
         case .skyImageNotPainted: return .scenerySkyImageNotPainted
         case .skyNotGenerated:    return .scenerySkyNotGenerated
         }
@@ -214,6 +235,7 @@ enum SceneryError: IdentifiedError {
     var details: String {
         switch self {
         case .noAmbientLight:           return "the scene has no ambient light for the scenery to be lit by"
+        case .surfaceNotBuilt:          return "a surface of the scenery could not be made into a mesh"
         case .skyImageNotPainted:       return "the sky's picture could not be painted"
         case .skyNotGenerated(let e):   return "the sky could not be made from its picture: \(e)"
         }

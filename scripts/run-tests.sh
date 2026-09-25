@@ -102,11 +102,13 @@ build_report() {
 # The count of tests run and failed, and the name of each that failed. Returns 0 only
 # where the log counts the whole suite and no failure in it. The count is the line
 # right after `Test Suite 'All tests' …` — every suite prints one of its own, and a run
-# ended before the whole suite's landed must not be read off the last suite's.
+# ended before the whole suite's landed must not be read off the last suite's. A count
+# with skipped tests in it — XCTest counts a test whose setup threw as skipped as well
+# as failed — is a count too, and not a pass: a skipped test did not pass.
 tests_report() {
   log="$1"; status="$2"
   summary=$(LC_ALL=C awk "/^Test Suite 'All tests' (passed|failed)/ { if ((getline next_line) > 0) print next_line }" "$log" \
-              | LC_ALL=C grep -aE 'Executed [0-9]+ tests?, with [0-9]+ failures?' | tail -1)
+              | LC_ALL=C grep -aE 'Executed [0-9]+ tests?, with ([0-9]+ tests? skipped and )?[0-9]+ failures?' | tail -1)
   if [ -z "$summary" ]; then
     echo "no test count in the log: the suite did not report" >&2
     [ "$status" -ne 0 ] && return "$status"

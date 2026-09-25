@@ -4,7 +4,7 @@
 // `config/setting/`, so that a new one is added beside the others and changes none of
 // them (ADR-0031).
 //
-// implements: FR-MAP-120, FR-MAP-130, IF-GREENHOLM-010, FR-TOOL-200
+// implements: FR-MAP-120, FR-MAP-130, IF-GREENHOLM-010, FR-TOOL-200, FR-MAP-260
 import Foundation
 
 /// A setting the game provides, with what it was configured with.
@@ -34,6 +34,14 @@ enum Setting: Equatable {
             throw ConfigurationError.fileMissing(name: named)
         }
         return try Configurations.decode(type, named: named, schema: schema, from: data)
+    }
+
+    /// The setting's edge round a plan's ground floor (FR-MAP-200), as the drawing
+    /// makes it; nil where there is no ground floor.
+    func edge(around plan: ScenePlan) -> Outline? {
+        switch self {
+        case .greenholm(let configuration): return Greenholm.edge(around: plan, configuration: configuration)
+        }
     }
 
     /// The scenery the setting draws around an arena, for a camera that can take any

@@ -6,9 +6,12 @@ import XCTest
 @testable import CrawlCall
 
 final class MapParserTests: XCTestCase {
-    private lazy var kit: Kit = {
-        try! Kit.load(named: "blockout", from: .main)
-    }()
+    private var kit: Kit!
+
+    override func setUpWithError() throws {
+        try super.setUpWithError()
+        kit = try Kit.load(named: "blockout", from: .main)
+    }
 
     private let good = """
     ; a two-floor scrap
@@ -54,15 +57,15 @@ final class MapParserTests: XCTestCase {
         let map = try MapParser.parse("kit blockout\nsetting greenholm\nfloor 0\n. .\n", kit: kit)
         XCTAssertEqual(map.placements.count, 2)
         XCTAssertEqual(map.placements.map(\.x), [0, 2])
-        XCTAssertEqual(map.floors[0].rows, [". ."])   // the row is kept as written
+        XCTAssertEqual(try element(0, of: map.floors).rows, [". ."])   // the row is kept as written
     }
 
     func testARowOfSpacesIsARowOfEmptyCellsAndNotABlankLine() throws {
         // A floor that starts with cells nothing stands on — a balcony over the far
         // half of the room. Trimming those rows away would move everything below them.
         let map = try MapParser.parse("kit blockout\nsetting greenholm\nfloor 1\n    \n  ..\n", kit: kit)
-        XCTAssertEqual(map.floors[0].rows.count, 2)
-        XCTAssertEqual(map.floors[0].rows[0], "    ")
+        XCTAssertEqual(try element(0, of: map.floors).rows.count, 2)
+        XCTAssertEqual(try element(0, of: element(0, of: map.floors).rows), "    ")
         XCTAssertEqual(map.placements.map(\.z), [1, 1])   // both on the second row
         XCTAssertEqual(map.placements.map(\.x), [2, 3])
     }
@@ -193,7 +196,12 @@ final class MapParserTests: XCTestCase {
 ///
 /// verifies: IF-MAP-010, FR-TOOL-010, FR-MAP-010, FR-MAP-020, FR-TOOL-020, FR-TOOL-030
 final class ShippedMapTests: XCTestCase {
-    private lazy var kit: Kit = { try! Kit.load(named: "blockout", from: .main) }()
+    private var kit: Kit!
+
+    override func setUpWithError() throws {
+        try super.setUpWithError()
+        kit = try Kit.load(named: "blockout", from: .main)
+    }
 
     private func shippedMap() throws -> MapSpecification {
         let url = try XCTUnwrap(Bundle.main.url(forResource: "blockout", withExtension: "map",
@@ -206,8 +214,8 @@ final class ShippedMapTests: XCTestCase {
         XCTAssertEqual(map.kit, "blockout")
         XCTAssertEqual(map.setting, "greenholm")
         XCTAssertEqual(map.floors.count, 2)
-        XCTAssertEqual(map.floors.map(\.rows.count), [16, 16])
-        XCTAssertTrue(map.floors.allSatisfy { $0.rows.allSatisfy { $0.count == 24 } })
+        XCTAssertEqual(map.floors.map(\.rows.count), [24, 24])
+        XCTAssertTrue(map.floors.allSatisfy { $0.rows.allSatisfy { $0.count == 32 } })
     }
 
     func testItHasTwoFloorsJoinedByAFlightTheSnakeCanTraverse() throws {
@@ -223,7 +231,10 @@ final class ShippedMapTests: XCTestCase {
         // phone (ADR-0033), and the snake's body is wider than a cell.
         let feet = steps.filter { $0.step?.index == 1 }
         XCTAssertEqual(feet.count, 2, "the blockout's flight is not two cells wide")
-        if feet.count == 2 { XCTAssertEqual(abs(feet[0].z - feet[1].z) + abs(feet[0].x - feet[1].x), 1) }
+        if feet.count == 2 {
+            let (a, b) = (try element(0, of: feet), try element(1, of: feet))
+            XCTAssertEqual(abs(a.z - b.z) + abs(a.x - b.x), 1)
+        }
 
         let graph = NavigationGraph.derive(from: map, stepHeight: ShippedTuning.stepHeight)
         let bottom = try XCTUnwrap(steps.first { $0.step?.index == 1 })
@@ -256,7 +267,8 @@ final class ShippedMapTests: XCTestCase {
         // The graph is built from the map's cells, not from the scene's pieces — and
         // it has to stay that way now that a floor piece also appears under a wall,
         // where nobody may walk. So the comparison is against the walkable cells.
-        let walkableCells = map.placements.filter(\.walkable)
+        // …and of those a shrub stands in, which stops no movement (FR-MAP-220).
+        let walkableCells = map.placements.filter(\.isPassable)
         XCTAssertEqual(walkableCells.count, graph.nodeCount)
         // And every one of them has a surface under it in the scene.
         for walkable in walkableCells {
@@ -277,7 +289,12 @@ final class ShippedMapTests: XCTestCase {
 ///
 /// verifies: IF-MAP-010, FR-TOOL-010
 final class MapHeaderTests: XCTestCase {
-    private lazy var kit: Kit = { try! Kit.load(named: "blockout", from: .main) }()
+    private var kit: Kit!
+
+    override func setUpWithError() throws {
+        try super.setUpWithError()
+        kit = try Kit.load(named: "blockout", from: .main)
+    }
 
     func testTheKitIsReadBeforeAnythingElse() throws {
         XCTAssertEqual(try MapParser.kitName(in: "; note\n\nkit blockout\nfloor 0\n..\n"), "blockout")

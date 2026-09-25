@@ -82,6 +82,16 @@ printf "Test Suite 'All tests' passed at now.\n\t Executed 12 tests, with 0 fail
 if tests_report "$work/passed.log" 124 > "$work/passed.out" 2>&1; then got=0; else got=$?; fi
 check "a run that counted every test passing exits zero, hang or not" "$got" "0"
 
+printf "Test Suite 'All tests' failed at now.\n\t Executed 12 tests, with 3 tests skipped and 3 failures (3 unexpected) in 1.0 (1.0) seconds\n" > "$work/skipped.log"
+printf "Test Case '-[CrawlCallTests.CTests testThree]' failed (0.1 seconds).\n" >> "$work/skipped.log"
+if tests_report "$work/skipped.log" 0 > "$work/skipped.out" 2>&1; then got=0; else got=$?; fi
+check "a run whose count has skipped tests in it is read, and fails" "$got" "65"
+check "and prints that count" "$(grep -c 'with 3 tests skipped and 3 failures' "$work/skipped.out")" "1"
+check "and names the failed test" "$(grep -c 'CTests testThree' "$work/skipped.out")" "1"
+printf "Test Suite 'All tests' passed at now.\n\t Executed 12 tests, with 2 tests skipped and 0 failures (0 unexpected) in 1.0 (1.0) seconds\n" > "$work/skiponly.log"
+if tests_report "$work/skiponly.log" 0 > "$work/skiponly.out" 2>&1; then got=0; else got=$?; fi
+check "a run with skipped tests and no failures is not a pass" "$got" "65"
+
 printf "Test Suite 'All tests' started\n" > "$work/silent.log"
 if tests_report "$work/silent.log" 0 > "$work/silent.out" 2>&1; then got=0; else got=$?; fi
 check "a run with no count in its log is not a pass" "$got" "1"

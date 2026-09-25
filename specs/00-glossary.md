@@ -49,7 +49,10 @@ The convention of this project:
 | **inspection distance** | How close a bot must come to a body to read its cause of death (FR-SCORE-120); in the scoring configuration. |
 | **override distance** | How close the snake's head must be for a bot to treat it as the top threat regardless of orders (FR-BOT-120); in the bot configuration. |
 | **module / kit** | A module is one placeable piece of map geometry with a declared type; a kit is the licensed set of modules a map is assembled from (FR-MAP-100). |
-| **setting** | The world a map's arena stands in — the ground around it, the rim that closes the space in, and the backdrop above — named by the map (FR-MAP-120) and drawn as scenery. Each setting is a family of its own with a proper name, such as Greenholm, and its requirements form an area of that name; a setting's name is never one of the areas that divide the system by subject. |
+| **ground floor** | Floor 0: the one at ground level, on which a setting lays its ground; floors numbered below it are basements, above it upper floors (FR-MAP-170). |
+| **spawn point** | A cell a map names, in its header, where the snake may be born; each match takes one at random (FR-MAP-180). |
+| **permeability** | What a module stops, as its kit declares it: movement, sight, both or neither — a shrub stops sight, a tree both (FR-MAP-210, FR-MAP-220). |
+| **setting** | The world a map stands in — the edge of its ground, drawn along the map's own outline and rounded (FR-MAP-200), what lies beyond it, and the backdrop above — named by the map (FR-MAP-120) and drawn as scenery. Each setting is a family of its own with a proper name, such as Greenholm, and its requirements form an area of that name; a setting's name is never one of the areas that divide the system by subject. |
 | **scenery** | What a setting draws: seen, and nothing else — it takes no part in movement, sight, the navigation graph or what is cut open for the snake (FR-MAP-130). The arena is the map's modules; everything around it is scenery. |
 | **attribution file** | The repository file listing every third-party asset with its source and licence (CON-PUB-030). |
 | **speech event** | An occurrence the speech configuration names as worth a line — witnessing an eating, a squadmate vanishing, a truce proposed or broken, a body found (FR-CMD-140). |

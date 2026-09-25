@@ -26,7 +26,7 @@ final class ArchetypeTests: XCTestCase {
 final class SquadSpawnTests: XCTestCase {
     private func match() throws -> (world: World, start: NavigationGraph.Node, bots: [Bot]) {
         let world = try Launch.world().get()
-        let start = try XCTUnwrap(Game.start(in: world))
+        let start = try XCTUnwrap(Game.firstStart(in: world))
         return (world, start, Game(world: world, start: start).bots)
     }
 
@@ -91,7 +91,7 @@ final class SquadSpawnTests: XCTestCase {
 
     func testTheSameMapAlwaysGivesTheSameMatch() throws {
         let world = try Launch.world().get()
-        let start = try XCTUnwrap(Game.start(in: world))
+        let start = try XCTUnwrap(Game.firstStart(in: world))
         let first = Game(world: world, start: start).bots
         let again = Game(world: world, start: start).bots
         XCTAssertEqual(first, again)

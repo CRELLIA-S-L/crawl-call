@@ -40,7 +40,7 @@ final class TouchSchemeTests: XCTestCase {
     func testTheSnakeActuallyStopsWhenTheThumbLifts() throws {
         // The scheme and the logic, wired: push the stick, move, lift off, stay.
         let world = try Launch.world().get()
-        var game = Game(world: world, start: try XCTUnwrap(Game.start(in: world)))
+        var game = Game(world: world, start: try XCTUnwrap(Game.firstStart(in: world)))
         game.apply(.move(direction: TouchScheme.stick(CGSize(width: 100, height: 0)).direction))
         game.advance(seconds: 0.1)
         let moved = game.snake.head

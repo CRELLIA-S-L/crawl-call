@@ -11,7 +11,7 @@ import XCTest
 final class BotEntityTests: XCTestCase {
     private func squads() throws -> [Bot] {
         let world = try Launch.world().get()
-        return Game(world: world, start: try XCTUnwrap(Game.start(in: world))).bots
+        return Game(world: world, start: try XCTUnwrap(Game.firstStart(in: world))).bots
     }
 
     func testEveryBotGetsABodyOfItsOwn() throws {
@@ -69,10 +69,10 @@ final class BotEntityTests: XCTestCase {
     func testABodyFollowsItsBot() throws {
         var bots = try squads()
         let entity = BotEntity.make(for: bots, height: 1.12)
-        let moved = bots[0].position + SIMD3(1.5, 0, 2.5)
-        bots[0].position = moved
+        let moved = try element(0, of: bots).position + SIMD3(1.5, 0, 2.5)
+        bots[try checkedIndex(0, of: bots)].position = moved
         BotEntity.update(entity, from: bots)
-        let body = try XCTUnwrap(entity.children.first { $0.name == "bot\(bots[0].id)" })
+        let body = try XCTUnwrap(entity.children.first { $0.name == "bot\(try element(0, of: bots).id)" })
         XCTAssertEqual(Double(body.position.x), moved.x, accuracy: 1e-6)
         XCTAssertEqual(Double(body.position.z), moved.z, accuracy: 1e-6)
     }

@@ -9,8 +9,15 @@ import XCTest
 @testable import CrawlCall
 
 final class DeliberationTests: XCTestCase {
-    private lazy var kit: Kit = { try! Kit.load(named: "blockout", from: .main) }()
-    private lazy var configuration: BotConfiguration = { try! Launch.world().get().configurations.bot }()
+    private var kit: Kit!
+    private var configuration: BotConfiguration!
+
+    override func setUpWithError() throws {
+        try super.setUpWithError()
+        kit = try Kit.load(named: "blockout", from: .main)
+        configuration = try Launch.world().get().configurations.bot
+    }
+
     private let cell = 0.5
 
     private func arena(_ rows: String...) throws -> Deliberation.Situation {

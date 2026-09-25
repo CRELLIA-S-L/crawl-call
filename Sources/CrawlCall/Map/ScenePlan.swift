@@ -7,7 +7,7 @@
 // configuration (IF-MAP-020) and the kit's floor height, so the graph's cells and the
 // geometry cannot drift apart.
 //
-// implements: FR-TOOL-020, FR-MAP-090, FR-GREENHOLM-010, FR-MAP-150
+// implements: FR-TOOL-020, FR-MAP-090, FR-MAP-150, FR-MAP-170, FR-MAP-220
 import Foundation
 
 struct ScenePlan: Equatable {
@@ -24,6 +24,14 @@ struct ScenePlan: Equatable {
         /// — a stair rises to its floor from the one below, a wall stands on its own
         /// — and FR-VIEW-140 asks what is above the head, not what is high up.
         let level: Int
+        /// What the piece's module stops (FR-MAP-220), and what it is drawn as. A box
+        /// made by hand stops both and is drawn as a box.
+        var stopsMovement = true
+        var stopsSight = true
+        /// A surface to walk on, which stops the body only where it stands more than
+        /// a step above it (ADR-0033).
+        var ground = false
+        var figure: Kit.Module.Figure = .box
     }
 
     /// The widest gap between the surfaces of two cells a walker can step between,
@@ -72,22 +80,41 @@ struct ScenePlan: Equatable {
     let pieces: [Piece]
     let cellSize: Double
     let floorHeight: Double
+    /// The colour of a tree figure's trunk, from the kit (FR-MAP-210).
+    let trunkColour: SIMD3<Double>
     /// Which pieces cover which cells, for questions about a small stretch of the map.
     let index: PieceIndex
 
-    init(pieces: [Piece], cellSize: Double, floorHeight: Double) {
+    init(pieces: [Piece], cellSize: Double, floorHeight: Double, trunkColour: SIMD3<Double> = .zero) {
         self.pieces = pieces
         self.cellSize = cellSize
         self.floorHeight = floorHeight
+        self.trunkColour = trunkColour
         self.index = PieceIndex(pieces: pieces, cellSize: cellSize)
     }
 
-    /// The underside of the lowest floor: where its walking surface is, less the
-    /// thinnest piece that surface is made of. Not the lowest point of the plan, which
-    /// a stair sunk below its floor can reach; this is the level the arena stands at,
-    /// which a setting lays its ground to (FR-GREENHOLM-010). Zero for an empty plan.
+    /// The ground floor (FR-MAP-170): floor 0, or the lowest floor of a plan with no
+    /// floor 0. Nil for an empty plan.
+    var groundLevel: Int? {
+        let levels = Set(pieces.map(\.level))
+        return levels.contains(.zero) ? .zero : levels.min()
+    }
+
+    /// The cells the pieces of the floors `keep` accepts stand in.
+    func cells(_ keep: (Int) -> Bool) -> Set<PieceIndex.Cell> {
+        Set(pieces.filter { keep($0.level) }.map {
+            PieceIndex.Cell(x: Int(($0.centre.x / cellSize).rounded()), z: Int(($0.centre.z / cellSize).rounded()))
+        })
+    }
+
+    /// The underside of the ground floor: where its walking surface is, less the
+    /// thinnest piece that surface is made of. The ground is floor 0 (FR-MAP-170), and
+    /// the floors below it are basements, which a setting lays its ground over, not
+    /// under; a plan with no floor 0 falls back to its lowest floor. Not the lowest
+    /// point of the plan, which a module sunk below its floor can reach. Zero for an
+    /// empty plan.
     var underside: Double {
-        guard let lowest = pieces.map(\.level).min() else { return .zero }
+        guard let lowest = groundLevel else { return .zero }
         let surface = Double(lowest) * floorHeight
         let slabs = pieces.filter { $0.level == lowest && abs($0.centre.y + $0.size.y * Geometry.half - surface) < Geometry.samePosition }
         return surface - (slabs.map(\.size.y).min() ?? .zero)
@@ -127,13 +154,16 @@ struct ScenePlan: Equatable {
                                     centre: SIMD3(Double(placement.x) * cellSize, (top + bottom) * Geometry.half,
                                                   Double(placement.z) * cellSize),
                                     colour: SIMD3<Double>(module.colour),
-                                    level: placement.floor))
+                                    level: placement.floor,
+                                    stopsMovement: module.stopsMovement, stopsSight: module.stopsSight,
+                                    ground: true, figure: module.figure))
                 continue
             }
             // A cell holds one module, so a cell holding a wall holds no floor and the
-            // scene would have a hole under it. The floor is implied (FR-TOOL-020); a
+            // scene would have a hole under it. The floor is implied (FR-TOOL-020) — the
+            // one the module names, indoors the floor and outdoors the ground; a
             // deliberate hole is a different thing and a map will say so (FR-MAP-110).
-            if !module.walkable, let floor = kit.floor, floor.size.count == SIMD3<Double>.scalarCount {
+            if !module.walkable, let floor = kit.floor(under: module), floor.size.count == SIMD3<Double>.scalarCount {
                 let floorSize = SIMD3<Double>(floor.size)
                 pieces.append(Piece(module: floor.name,
                                     size: floorSize,
@@ -141,7 +171,9 @@ struct ScenePlan: Equatable {
                                                   elevation - floorSize.y * Geometry.half,
                                                   Double(placement.z) * cellSize),
                                     colour: SIMD3<Double>(floor.colour),
-                                    level: placement.floor))
+                                    level: placement.floor,
+                                    stopsMovement: floor.stopsMovement, stopsSight: floor.stopsSight,
+                                    ground: floor.walkable, figure: floor.figure))
             }
             // A walkable module *is* the surface, so its top sits at the floor's
             // elevation; anything else stands on that surface, sunk into it by
@@ -154,8 +186,11 @@ struct ScenePlan: Equatable {
                                 size: size,
                                 centre: SIMD3(Double(placement.x) * cellSize, y, Double(placement.z) * cellSize),
                                 colour: SIMD3<Double>(module.colour),
-                                level: placement.floor))
+                                level: placement.floor,
+                                stopsMovement: module.stopsMovement, stopsSight: module.stopsSight,
+                                ground: module.walkable, figure: module.figure))
         }
-        return ScenePlan(pieces: pieces, cellSize: cellSize, floorHeight: kit.floorHeight)
+        let trunk = kit.trunkColour.count == SIMD3<Double>.scalarCount ? SIMD3<Double>(kit.trunkColour) : .zero
+        return ScenePlan(pieces: pieces, cellSize: cellSize, floorHeight: kit.floorHeight, trunkColour: trunk)
     }
 }

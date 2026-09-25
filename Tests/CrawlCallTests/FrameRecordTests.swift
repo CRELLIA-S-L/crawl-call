@@ -25,14 +25,14 @@ final class FrameRecordTests: XCTestCase {
                        "frame,time_ms,interval_ms,step_ms,deliberation_ms,see_through_ms,draw_ms,events\n")
     }
 
-    func testAFullRingKeepsTheNewestFramesInOrderAndCountsWhatItDropped() {
+    func testAFullRingKeepsTheNewestFramesInOrderAndCountsWhatItDropped() throws {
         var record = FrameRecord(capacity: 3)
         for step in 1...5 { record.record(frame(step: Double(step))) }
         XCTAssertEqual(record.count, 3)
         XCTAssertEqual(record.dropped, 2)
         XCTAssertEqual(record.frames.map { $0[.step] }, [3, 4, 5])
         // Numbered from the first frame ever recorded, so the gap the ring left shows.
-        let numbers = record.csv().split(separator: "\n").dropFirst().map { $0.split(separator: ",")[0] }
+        let numbers = try record.csv().split(separator: "\n").dropFirst().map { try element(0, of: $0.split(separator: ",")) }
         XCTAssertEqual(numbers, ["3", "4", "5"])
     }
 
@@ -52,24 +52,24 @@ final class FrameRecordTests: XCTestCase {
 
     // MARK: the file's shape
 
-    func testARowWritesEveryColumnToTheMicrosecond() {
+    func testARowWritesEveryColumnToTheMicrosecond() throws {
         var record = FrameRecord(capacity: 2)
         var one = frame(step: 2.5, deliberation: 1.25, seeThrough: 0.0626, draw: 0.3333333)
         one.time = 1000
         one.interval = 16.6666666
         record.record(one)
-        let row = record.csv().split(separator: "\n")[1]
+        let row = try element(1, of: record.csv().split(separator: "\n"))
         XCTAssertEqual(row, "1,1000.000,16.667,2.500,1.250,0.063,0.333,")
     }
 
-    func testEventsAreWrittenInTheirOwnOrderWithACountWhereThereIsMoreThanOne() {
+    func testEventsAreWrittenInTheirOwnOrderWithACountWhereThereIsMoreThanOne() throws {
         var one = frame()
         one.add(.firstHole)
         one.add(.deliberation, times: 2)
         one.add(.matchBegan)
         var record = FrameRecord(capacity: 1)
         record.record(one)
-        let events = record.csv().split(separator: "\n")[1].split(separator: ",", omittingEmptySubsequences: false).last
+        let events = try element(1, of: record.csv().split(separator: "\n")).split(separator: ",", omittingEmptySubsequences: false).last
         XCTAssertEqual(events, "match_began;deliberation*2;first_hole")
     }
 
@@ -118,9 +118,9 @@ final class FrameRecordTests: XCTestCase {
         recorder.add(interval: 0.05, frame())
         recorder.add(interval: 0.02, frame())
         let frames = recorder.record.frames
-        XCTAssertEqual(frames[0].interval, 50, accuracy: 1e-9)
-        XCTAssertEqual(frames[1].interval, 20, accuracy: 1e-9)
-        XCTAssertGreaterThanOrEqual(frames[1].time, frames[0].time)
+        XCTAssertEqual(try element(0, of: frames).interval, 50, accuracy: 1e-9)
+        XCTAssertEqual(try element(1, of: frames).interval, 20, accuracy: 1e-9)
+        XCTAssertGreaterThanOrEqual(try element(1, of: frames).time, try element(0, of: frames).time)
     }
 
     @MainActor
@@ -155,7 +155,7 @@ final class FrameRecordTests: XCTestCase {
         var frame = frame()
         frame.add(.hit, times: 7)
         recorder.add(interval: 1.0 / 60, frame)
-        XCTAssertEqual(recorder.record.frames[0].count(of: .hit), Int(UInt16.max))
+        XCTAssertEqual(try element(0, of: recorder.record.frames).count(of: .hit), Int(UInt16.max))
     }
 
     @MainActor
@@ -178,7 +178,7 @@ final class FrameRecordTests: XCTestCase {
 @MainActor
 final class MatchRecordTests: XCTestCase {
     private func world(squadSize: Int? = nil) throws -> World {
-        let base = try Launch.world().get()
+        let base = try Launch.world(map: "room").get()
         guard let squadSize else { return base }
         let url = try XCTUnwrap(Bundle.main.url(forResource: "match", withExtension: "json", subdirectory: "config"))
         var json = try XCTUnwrap(JSONSerialization.jsonObject(with: Data(contentsOf: url)) as? [String: Any])
@@ -191,7 +191,7 @@ final class MatchRecordTests: XCTestCase {
     }
 
     private func session(in world: World, recording url: URL) throws -> (GameSession, FrameRecorder) {
-        let game = Game(world: world, start: try XCTUnwrap(Game.start(in: world)))
+        let game = Game(world: world, start: try XCTUnwrap(Game.firstStart(in: world)))
         let built = SceneBuilder.scene(for: world.plan, view: world.configurations.view)
         let camera = try XCTUnwrap(built.root.children.first { $0.name == "camera" })
         let session = GameSession(game: game,
@@ -214,7 +214,7 @@ final class MatchRecordTests: XCTestCase {
         for _ in 0..<30 { session.step(seconds: 1.0 / 60) }
         let frames = recorder.record.frames
         XCTAssertEqual(frames.count, 30)
-        XCTAssertEqual(frames[0].count(of: .matchBegan), 1)
+        XCTAssertEqual(try element(0, of: frames).count(of: .matchBegan), 1)
         XCTAssertEqual(frames.dropFirst().map { $0.count(of: .matchBegan) }.reduce(0, +), 0)
         for frame in frames {
             XCTAssertEqual(frame.interval, 1000.0 / 60, accuracy: 1e-9)
@@ -289,7 +289,8 @@ final class MatchRecordTests: XCTestCase {
         // match began and ended in — the second frame came after the copy was taken.
         let rows = written.split(separator: "\n")
         XCTAssertEqual(rows.count, 2, written)
-        XCTAssertTrue(rows[1].hasSuffix(",match_began;match_ended"), String(rows[1]))
+        let events = try element(1, of: rows)
+        XCTAssertTrue(events.hasSuffix(",match_began;match_ended"), String(events))
     }
 
     func testARestartBeginsAMatchInTheSameRecord() throws {
@@ -302,7 +303,7 @@ final class MatchRecordTests: XCTestCase {
 
     func testASessionWithoutARecorderRecordsNothingAndStillPlays() throws {
         let world = try world()
-        let game = Game(world: world, start: try XCTUnwrap(Game.start(in: world)))
+        let game = Game(world: world, start: try XCTUnwrap(Game.firstStart(in: world)))
         let built = SceneBuilder.scene(for: world.plan, view: world.configurations.view)
         let camera = try XCTUnwrap(built.root.children.first { $0.name == "camera" })
         let session = GameSession(game: game,
@@ -322,8 +323,8 @@ final class MatchRecordTests: XCTestCase {
 /// What the match's step and the see-through check report, measured on the real thing.
 final class StepReportTests: XCTestCase {
     func testAStepReportsTheBotsThatDeliberatedAndTheTimeItTook() throws {
-        let world = try Launch.world().get()
-        var game = Game(world: world, start: try XCTUnwrap(Game.start(in: world)))
+        let world = try Launch.world(map: "room").get()
+        var game = Game(world: world, start: try XCTUnwrap(Game.firstStart(in: world)))
         // One period exactly: one deliberation step, as many bots as the slots allow.
         let report = game.advance(seconds: world.configurations.bot.deliberationPeriod)
         XCTAssertEqual(report.deliberations, min(world.configurations.bot.perFrameSlotMaximum, game.bots.count))
@@ -331,22 +332,22 @@ final class StepReportTests: XCTestCase {
     }
 
     func testAStepShorterThanAPeriodDeliberatesNobody() throws {
-        let world = try Launch.world().get()
-        var game = Game(world: world, start: try XCTUnwrap(Game.start(in: world)))
+        let world = try Launch.world(map: "room").get()
+        var game = Game(world: world, start: try XCTUnwrap(Game.firstStart(in: world)))
         let report = game.advance(seconds: world.configurations.bot.deliberationPeriod / 4)
         XCTAssertEqual(report, Game.StepReport())
     }
 
     func testAPausedMatchReportsNothing() throws {
-        let world = try Launch.world().get()
-        var game = Game(world: world, start: try XCTUnwrap(Game.start(in: world)))
+        let world = try Launch.world(map: "room").get()
+        var game = Game(world: world, start: try XCTUnwrap(Game.firstStart(in: world)))
         game.apply(.pause)
         XCTAssertEqual(game.advance(seconds: 1), Game.StepReport())
     }
 
     @MainActor
     func testTheSeeThroughCountsALookChangeOnceAndItsReturnOnce() throws {
-        let world = try Launch.world().get()
+        let world = try Launch.world(map: "room").get()
         var seeThrough = SceneBuilder.scene(for: world.plan, view: world.configurations.view).seeThrough
         let margin = world.configurations.tuning.bodyRadius + world.configurations.view.seeThroughMargin
         let radius = world.configurations.view.visibilityRadius

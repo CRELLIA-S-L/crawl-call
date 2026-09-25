@@ -7,19 +7,39 @@
 // holds distances, not storeys (IF-MAP-020) — so it lives with the geometry it is a
 // property of. Said out loud because the specification is silent on it.
 //
-// implements: FR-MAP-100, FR-TOOL-200, FR-MAP-150
+// implements: FR-MAP-100, FR-TOOL-200, FR-MAP-150, FR-MAP-210, FR-TOOL-020
 import Foundation
 
 struct Kit: Decodable, Equatable {
     struct Module: Decodable, Equatable {
+        /// What a module is drawn as: a box of its size, or a figure fitted into that
+        /// box. Only the drawing differs; for sight and for the body every module is
+        /// its box (ADR-0034).
+        enum Figure: String, Decodable, Equatable {
+            case box, tree, shrub
+        }
+
         let name: String
+        /// A surface to walk on: a floor, a step, the ground.
         let walkable: Bool
+        /// What the module stops (FR-MAP-210): movement — the snake's body and the
+        /// bots' paths — and sight. A shrub stops sight and not movement; a tree both.
+        let stopsMovement: Bool
+        let stopsSight: Bool
+        /// The legend character of the module laid under this one where this one is not
+        /// a surface: the floor indoors, the ground outdoors (FR-TOOL-020).
+        let floor: String
+        let figure: Figure
         /// Width, height and depth in metres; a floor module is a thin slab.
         let size: [Double]
         /// Red, green and blue in 0…1. In the kit rather than in code because it is
         /// what the module looks like, and a kit is what a map is assembled from
         /// (FR-MAP-100).
         let colour: [Double]
+
+        /// Whether a bot or the snake can be in the cell it stands in: a surface, or a
+        /// module that stops no movement, stood among on the floor laid under it.
+        var passable: Bool { walkable || !stopsMovement }
     }
 
     /// Metres from one floor's walking surface to the next.
@@ -32,6 +52,9 @@ struct Kit: Decodable, Equatable {
     /// rises is the map's to say (IF-MAP-010); the kit says what a step looks like and
     /// how wide it is, and its height is the flight's (FR-MAP-150, ADR-0033).
     let stepModule: String
+    /// Red, green and blue in 0…1 of a tree figure's trunk; its crown is the module's
+    /// colour.
+    let trunkColour: [Double]
     /// Keyed by the single character that names the module in a map grid.
     let modules: [String: Module]
 
@@ -39,7 +62,10 @@ struct Kit: Decodable, Equatable {
         "floorHeight": .value,
         "floorModule": .value,
         "stepModule": .value,
+        "trunkColour": .array(of: .value),
         "modules": .named(of: .object(["name": .value, "walkable": .value,
+                                      "stopsMovement": .value, "stopsSight": .value,
+                                      "floor": .value, "figure": .value,
                                       "size": .array(of: .value), "colour": .array(of: .value)])),
     ])
 
@@ -48,6 +74,7 @@ struct Kit: Decodable, Equatable {
         case legendKeyIsNotOneCharacter(String)
         case moduleFieldIsNotThreeNumbers(module: String, field: String)
         case stepModuleNotInLegend(String)
+        case floorNotInLegend(module: String, floor: String)
 
         var identifier: ErrorIdentifier {
             switch self {
@@ -55,6 +82,7 @@ struct Kit: Decodable, Equatable {
             case .legendKeyIsNotOneCharacter:   return .kitLegendKeyNotOneCharacter
             case .moduleFieldIsNotThreeNumbers: return .kitModuleFieldNotThreeNumbers
             case .stepModuleNotInLegend:        return .kitStepModuleNotInLegend
+            case .floorNotInLegend:             return .kitFloorNotInLegend
             }
         }
 
@@ -68,6 +96,8 @@ struct Kit: Decodable, Equatable {
                 return "module '\(m)' has a \(f) that is not three numbers"
             case .stepModuleNotInLegend(let k):
                 return "the step module '\(k)' is not a key of the legend; a flight of stairs would have nothing to be drawn as"
+            case .floorNotInLegend(let m, let f):
+                return "module '\(m)' names '\(f)' as its floor, which is not a key of the legend"
             }
         }
     }
@@ -87,6 +117,9 @@ struct Kit: Decodable, Equatable {
             throw KitError.legendKeyIsNotOneCharacter(key)
         }
         guard kit.modules[kit.stepModule] != nil else { throw KitError.stepModuleNotInLegend(kit.stepModule) }
+        for (key, module) in kit.modules where kit.modules[module.floor] == nil {
+            throw KitError.floorNotInLegend(module: "\(key) (\(module.name))", floor: module.floor)
+        }
         for (key, module) in kit.modules {
             let named = "\(key) (\(module.name))"
             if module.size.count != SIMD3<Double>.scalarCount {
@@ -104,6 +137,9 @@ struct Kit: Decodable, Equatable {
 
     /// What a cell's module stands on, when the module is not the surface itself.
     var floor: Module? { modules[floorModule] }
+
+    /// What is laid under a module that is not a surface itself (FR-TOOL-020).
+    func floor(under module: Module) -> Module? { modules[module.floor] }
 
     /// What a step of a flight is drawn as.
     var step: Module? { modules[stepModule] }

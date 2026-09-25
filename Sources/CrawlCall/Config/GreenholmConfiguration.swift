@@ -8,34 +8,18 @@ import Foundation
 struct GreenholmConfiguration: Decodable, Equatable {
     typealias Colour = ViewConfiguration.Colour
 
-    /// Metres of grass beyond the smallest ellipse round the arena.
-    let islandMargin: Double
+    /// Metres the island's edge lies beyond the map's outermost cells, and the radius
+    /// its hollows are rounded with (FR-MAP-200).
+    let edgeMargin: Double
+    let edgeRounding: Double
     /// Metres of shore beyond the grass, and how far below the grass it lies.
     let shoreWidth: Double
     let shoreDrop: Double
     /// Metres from the grass down to the water.
     let waterDrop: Double
-    /// Metres along the rim from one tree to the next, and how far inside the grass's
-    /// edge the rim stands.
-    let rimSpacing: Double
-    let rimInset: Double
-    /// A tree: a trunk and a cone of a crown, in metres, before its scale.
-    let trunkHeight: Double
-    let trunkRadius: Double
-    let crownHeight: Double
-    let crownRadius: Double
-    /// A shrub: a sphere flattened to this height, in metres.
-    let shrubRadius: Double
-    let shrubHeight: Double
-    /// The scales the rim's trees are drawn at, taken in turn, so that the ring does not
-    /// read as one tree repeated.
-    let treeScales: [Double]
     let grassColour: Colour
     let shoreColour: Colour
     let waterColour: Colour
-    let trunkColour: Colour
-    let crownColour: Colour
-    let shrubColour: Colour
     /// The sky, straight up and at the horizon (FR-GREENHOLM-020).
     let skyZenithColour: Colour
     let skyHorizonColour: Colour
@@ -53,12 +37,9 @@ struct GreenholmConfiguration: Decodable, Equatable {
     static let schema: Schema = {
         let colour = Schema.object(["red": .value, "green": .value, "blue": .value])
         return Schema.object([
-            "islandMargin": .value, "shoreWidth": .value, "shoreDrop": .value, "waterDrop": .value,
-            "rimSpacing": .value, "rimInset": .value,
-            "trunkHeight": .value, "trunkRadius": .value, "crownHeight": .value, "crownRadius": .value,
-            "shrubRadius": .value, "shrubHeight": .value, "treeScales": .array(of: .value),
+            "edgeMargin": .value, "edgeRounding": .value,
+            "shoreWidth": .value, "shoreDrop": .value, "waterDrop": .value,
             "grassColour": colour, "shoreColour": colour, "waterColour": colour,
-            "trunkColour": colour, "crownColour": colour, "shrubColour": colour,
             "skyZenithColour": colour, "skyHorizonColour": colour,
             "birdInterval": .value, "birdCount": .value, "birdSpeed": .value, "birdHeight": .value,
             "birdSize": .value, "birdWingbeats": .value, "birdColour": colour,

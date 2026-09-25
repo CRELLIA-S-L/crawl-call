@@ -1,13 +1,14 @@
 // The words, separators and positions of the map file format (IF-MAP-010) and of a
 // kit's legend (ADR-0012), named once for the parser and for its messages (ART-070).
 //
-// implements: IF-MAP-010, FR-MAP-120, FR-MAP-150, FR-TOOL-010, FR-TOOL-020, FR-TOOL-030, FR-MAP-100, FR-SNAKE-220
+// implements: IF-MAP-010, FR-MAP-120, FR-MAP-150, FR-MAP-180, FR-TOOL-010, FR-TOOL-020, FR-TOOL-030, FR-MAP-100, FR-SNAKE-220
 import Foundation
 
 enum MapFormat {
     /// The header's directives and the floor marker, each the first word of its line.
     static let kitDirective = "kit"
     static let settingDirective = "setting"
+    static let spawnDirective = "spawn"
     static let transitionDirective = "transition"
     static let floorDirective = "floor"
     /// A whole line beginning with this is a comment.
@@ -48,6 +49,10 @@ enum MapFormat {
     static let kitNameWord = 1
     static let settingWords = 2
     static let settingNameWord = 1
+    /// `spawn <x>,<z> <floor>`: a cell the snake may be born in (FR-MAP-180).
+    static let spawnWords = 3
+    static let spawnCellWord = 1
+    static let spawnFloorWord = 2
     static let floorWords = 2
     static let floorLevelWord = 1
     static let transitionWords = 4

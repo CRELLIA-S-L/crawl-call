@@ -1,0 +1,49 @@
+; A fixture for the test suite, not a level: the stage-1 room as it was before the
+; blockout became an island (ADR-0034) — one room, a balcony over its right half, a
+; flight of stairs two cells wide — kept so that the tests of how the snake, the bots
+; and the camera behave do not change with every change to the shipped map.
+; Every grid row is exactly 24 cells wide; a space is a cell with no module.
+; The partition that stood in column 10, row 4, is gone: a partition is thin across the rows, and
+; with the one below it made a slot 0.4 m wide, narrower than the snake (FR-MAP-260).
+; The row under the flight's taller steps is wall: a single row of floor between the flight's
+; side and the south wall was a gap narrower than the snake (FR-MAP-260).
+
+kit blockout
+setting greenholm
+spawn 1,1 0
+
+floor 0
+########################
+#......................#
+#......................#
+#......................#
+#....oo................#
+#....o....=............#
+#.............oo.......#
+#.........=............#
+#......................#
+#......................#
+#................o.....#
+#........oo............#
+#.....>>>>>>>>.........#
+#.....>>>>>>>>.........#
+#.....########.........#
+########################
+
+floor 1
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+              ##########
+              #.........
+              ..........
+              ..........
+              ..........
+              #.........
+              #........#

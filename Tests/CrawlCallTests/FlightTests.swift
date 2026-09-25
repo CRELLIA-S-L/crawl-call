@@ -7,8 +7,15 @@ import XCTest
 @testable import CrawlCall
 
 final class FlightTests: XCTestCase {
-    private lazy var kit: Kit = { try! Kit.load(named: "blockout", from: .main) }()
-    private lazy var tuning: TuningConfiguration = { try! Configurations.load(from: .main).tuning }()
+    private var kit: Kit!
+    private var tuning: TuningConfiguration!
+
+    override func setUpWithError() throws {
+        try super.setUpWithError()
+        kit = try Kit.load(named: "blockout", from: .main)
+        tuning = try Configurations.load(from: .main).tuning
+    }
+
     private let cell = 0.5
 
     /// A floor of four cells in a row and a flight of `steps` arrows east of it,
@@ -166,7 +173,7 @@ final class FlightTests: XCTestCase {
     func testAStepIsABlockFromTheFloorSlabUpToItsHeight() throws {
         let map = try parse(text(steps: 8))
         let plan = ScenePlan.make(map: map, kit: kit, cellSize: cell)
-        let slab = try XCTUnwrap(kit.floor).size[1]
+        let slab = try element(1, of: XCTUnwrap(kit.floor).size)
         for placement in map.placements where placement.step != nil {
             let piece = try XCTUnwrap(plan.pieces.first {
                 abs($0.centre.x - Double(placement.x) * cell) < 1e-9 && $0.module == kit.step?.name
@@ -196,7 +203,7 @@ final class FlightTests: XCTestCase {
         XCTAssertEqual(body.head.y, kit.floorHeight, accuracy: 1e-9)
         // Up through the heights in between, never higher than where it ends.
         XCTAssertGreaterThan(heights.filter { $0 > 1e-9 && $0 < kit.floorHeight - 1e-9 }.count, 30)
-        XCTAssertLessThanOrEqual(heights.max()!, kit.floorHeight + 1e-9)
+        XCTAssertLessThanOrEqual(try XCTUnwrap(heights.max()), kit.floorHeight + 1e-9)
         // And back down it to the ground.
         for _ in 0..<240 {
             body.advance(direction: SIMD2(-1, 0), speed: 3, seconds: 1.0 / 60, over: s)

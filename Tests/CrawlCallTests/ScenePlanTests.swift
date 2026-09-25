@@ -6,7 +6,12 @@ import XCTest
 @testable import CrawlCall
 
 final class ScenePlanTests: XCTestCase {
-    private lazy var kit: Kit = { try! Kit.load(named: "blockout", from: .main) }()
+    private var kit: Kit!
+
+    override func setUpWithError() throws {
+        try super.setUpWithError()
+        kit = try Kit.load(named: "blockout", from: .main)
+    }
 
     private func plan(_ text: String, cell: Double = 0.5) throws -> ScenePlan {
         ScenePlan.make(map: try MapParser.parse(text, kit: kit), kit: kit, cellSize: cell)
@@ -33,7 +38,7 @@ final class ScenePlanTests: XCTestCase {
         // height is read from the kit and not written here: the kit is where the
         // number lives, and a test that carried a copy of it would fail the day the
         // maintainer changed the one that matters.
-        let height = try XCTUnwrap(kit.module(for: "#")).size[1]
+        let height = try element(1, of: XCTUnwrap(kit.module(for: "#")).size)
         XCTAssertEqual(wall.size.y, height, accuracy: 1e-9)
         XCTAssertEqual(wall.centre.y, height / 2 - MapGrid.surfaceOverlap, accuracy: 1e-9)
         // Which is what matters: the two faces are not in one plane.
@@ -44,13 +49,13 @@ final class ScenePlanTests: XCTestCase {
     func testTheUpperFloorSitsOneFloorHeightAbove() throws {
         let p = try plan("kit blockout\nsetting greenholm\nfloor 0\n.\nfloor 1\n.\n")
         let ys = p.pieces.map(\.centre.y).sorted()
-        XCTAssertEqual(ys.first!, -0.05, accuracy: 1e-9)
-        XCTAssertEqual(ys.last!, kit.floorHeight - 0.05, accuracy: 1e-9)
+        XCTAssertEqual(try XCTUnwrap(ys.first), -0.05, accuracy: 1e-9)
+        XCTAssertEqual(try XCTUnwrap(ys.last), kit.floorHeight - 0.05, accuracy: 1e-9)
     }
 
     func testTheCellSizeComesFromTheCallerNotTheKit() throws {
         let p = try plan("kit blockout\nsetting greenholm\nfloor 0\n..\n", cell: 1.25)
-        XCTAssertEqual(p.pieces[1].centre.x, 1.25, accuracy: 1e-9)
+        XCTAssertEqual(try element(1, of: p.pieces).centre.x, 1.25, accuracy: 1e-9)
         XCTAssertEqual(p.cellSize, 1.25)
     }
 
@@ -61,8 +66,8 @@ final class ScenePlanTests: XCTestCase {
         // surface, so it gains nothing (FR-TOOL-020).
         XCTAssertEqual(p.pieces.count, 8)
         for piece in p.pieces {
-            let module = kit.modules.values.first { $0.name == piece.module }
-            XCTAssertEqual(piece.size, SIMD3(module!.size[0], module!.size[1], module!.size[2]))
+            let module = try XCTUnwrap(kit.modules.values.first { $0.name == piece.module })
+            XCTAssertEqual(piece.size, try vector(module.size))
         }
     }
 
@@ -77,7 +82,12 @@ final class ScenePlanTests: XCTestCase {
 ///
 /// verifies: FR-TOOL-020, FR-MAP-100
 final class ScenePlanBoundsTests: XCTestCase {
-    private lazy var kit: Kit = { try! Kit.load(named: "blockout", from: .main) }()
+    private var kit: Kit!
+
+    override func setUpWithError() throws {
+        try super.setUpWithError()
+        kit = try Kit.load(named: "blockout", from: .main)
+    }
 
     func testTheBoundsCoverEveryPieceIncludingItsThickness() throws {
         let map = try MapParser.parse("kit blockout\nsetting greenholm\nfloor 0\n..\n", kit: kit)
@@ -102,17 +112,18 @@ final class ScenePlanBoundsTests: XCTestCase {
         let plan = ScenePlan.make(map: map, kit: kit, cellSize: 0.5)
         for piece in plan.pieces {
             let module = try XCTUnwrap(kit.modules.values.first { $0.name == piece.module })
-            XCTAssertEqual(piece.colour, SIMD3(module.colour[0], module.colour[1], module.colour[2]))
+            XCTAssertEqual(piece.colour, try vector(module.colour))
         }
         // The kit tells the modules apart, which is the point of having colours at all.
         XCTAssertEqual(Set(plan.pieces.map { "\($0.colour)" }).count, 5)
     }
 
-    func testTheShippedMapIsWiderThanItIsDeepAndStandsOnTheOrigin() throws {
+    func testTheShippedMapIsWiderThanItIsDeep() throws {
+        // An island of 30 cells across, its first column empty, and 24 down.
         let world = try Launch.world().get()
-        XCTAssertEqual(world.plan.bounds.lowest.x, -0.25, accuracy: 1e-9)
-        XCTAssertEqual(world.plan.bounds.extent.x, 12.0, accuracy: 1e-9)   // 24 cells of 0.5
-        XCTAssertEqual(world.plan.bounds.extent.z, 8.0, accuracy: 1e-9)    // 16 cells of 0.5
+        XCTAssertEqual(world.plan.bounds.lowest.x, 0.25, accuracy: 1e-9)
+        XCTAssertEqual(world.plan.bounds.extent.x, 15.0, accuracy: 1e-9)   // 30 cells of 0.5
+        XCTAssertEqual(world.plan.bounds.extent.z, 12.0, accuracy: 1e-9)   // 24 cells of 0.5
     }
 }
 
@@ -208,7 +219,12 @@ final class SceneBuilderTests: XCTestCase {
 ///
 /// verifies: FR-TOOL-020
 final class ImpliedFloorTests: XCTestCase {
-    private lazy var kit: Kit = { try! Kit.load(named: "blockout", from: .main) }()
+    private var kit: Kit!
+
+    override func setUpWithError() throws {
+        try super.setUpWithError()
+        kit = try Kit.load(named: "blockout", from: .main)
+    }
 
     private func plan(_ text: String) throws -> ScenePlan {
         ScenePlan.make(map: try MapParser.parse(text, kit: kit), kit: kit, cellSize: 0.5)
@@ -243,9 +259,9 @@ final class ImpliedFloorTests: XCTestCase {
         func isWalkable(_ module: String) -> Bool {
             kit.modules.values.first { $0.name == module }?.walkable ?? false
         }
-        let floors = world.plan.pieces.filter { $0.module == "floor" }
-        // A walkable module is a surface itself and stands on nothing; everything else
-        // has to have one under it.
+        // A surface — the floor indoors, the ground outdoors — under every module that
+        // is not one itself (FR-TOOL-020).
+        let floors = world.plan.pieces.filter { isWalkable($0.module) }
         for piece in world.plan.pieces where !isWalkable(piece.module) {
             let base = piece.centre.y - piece.size.y / 2 + MapGrid.surfaceOverlap
             let stands = floors.contains { floor in
@@ -262,12 +278,18 @@ final class ImpliedFloorTests: XCTestCase {
 ///
 /// verifies: FR-MAP-090
 final class TailSurfaceTests: XCTestCase {
-    private lazy var kit: Kit = { try! Kit.load(named: "blockout", from: .main) }()
+    private var kit: Kit!
+
+    override func setUpWithError() throws {
+        try super.setUpWithError()
+        kit = try Kit.load(named: "blockout", from: .main)
+    }
 
     private func kitWithFloorWidth(_ width: Double) throws -> Kit {
         let json = """
-        {"floorHeight": 3.0, "floorModule": ".", "stepModule": ".",
-         "modules": {".": {"name": "floor", "walkable": true,
+        {"floorHeight": 3.0, "floorModule": ".", "stepModule": ".", "trunkColour": [0.4, 0.3, 0.2],
+         "modules": {".": {"name": "floor", "walkable": true, "stopsMovement": false, "stopsSight": true,
+                           "floor": ".", "figure": "box",
                            "size": [\(width), 0.1, \(width)], "colour": [0.5, 0.5, 0.5]}}}
         """
         return try Configurations.decode(Kit.self, named: "kit/test/legend",

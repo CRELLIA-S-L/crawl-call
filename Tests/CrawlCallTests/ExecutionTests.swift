@@ -8,7 +8,12 @@ import XCTest
 @testable import CrawlCall
 
 final class SlotsTests: XCTestCase {
-    private lazy var configuration: BotConfiguration = { try! Launch.world().get().configurations.bot }()
+    private var configuration: BotConfiguration!
+
+    override func setUpWithError() throws {
+        try super.setUpWithError()
+        configuration = try Launch.world().get().configurations.bot
+    }
 
     func testTheSameSecondBuysTheSameThinkingAtAnyFrameRate() {
         // What the requirement claims is the equality, and that is asserted first:
@@ -72,7 +77,7 @@ final class SlotsTests: XCTestCase {
 
         // With nobody watching, the same queue goes round instead — which is what
         // makes the assertion above about importance and not about the queue.
-        bots[3].knowsSnake = false
+        bots[try checkedIndex(3, of: bots)].knowsSnake = false
         var calm = Slots()
         let calmFirst = calm.next(among: bots, snake: [], configuration: configuration)
         let calmSecond = calm.next(among: bots, snake: [], configuration: configuration)
@@ -103,7 +108,8 @@ final class ExecutionTests: XCTestCase {
         let world = try world()
         let ground = cells(in: world)
         let goal = try XCTUnwrap(ground.last)
-        var bots = [try bot(0, at: ground[0], in: world), try bot(1, at: ground[1], in: world)]
+        var bots = [try bot(0, at: element(0, of: ground), in: world),
+                    try bot(1, at: element(1, of: ground), in: world)]
         for index in bots.indices {
             bots[index].action = .flee(to: goal)
             bots[index].path = Route.between(
@@ -125,15 +131,16 @@ final class ExecutionTests: XCTestCase {
         let world = try world()
         let ground = cells(in: world)
         let goal = try XCTUnwrap(ground.last)
-        var bots = [try bot(0, at: ground[0], in: world), try bot(1, at: ground[1], in: world)]
-        bots[0].action = .flee(to: goal)
-        bots[1].action = .flee(to: goal)
+        var bots = [try bot(0, at: element(0, of: ground), in: world),
+                    try bot(1, at: element(1, of: ground), in: world)]
+        bots[try checkedIndex(0, of: bots)].action = .flee(to: goal)
+        bots[try checkedIndex(1, of: bots)].action = .flee(to: goal)
         Execution.walk(&bots, seconds: 1.0 / 60, world: world)
-        XCTAssertFalse(bots[0].path.isEmpty)
-        XCTAssertTrue(bots[1].path.isEmpty, "two routes were computed in one frame")
+        XCTAssertFalse(try element(0, of: bots).path.isEmpty)
+        XCTAssertTrue(try element(1, of: bots).path.isEmpty, "two routes were computed in one frame")
         // Next frame it is the second bot's turn.
         Execution.walk(&bots, seconds: 1.0 / 60, world: world)
-        XCTAssertFalse(bots[1].path.isEmpty)
+        XCTAssertFalse(try element(1, of: bots).path.isEmpty)
     }
 
     func testABotThatDecidesToMoveActuallyGetsSomewhere() throws {
@@ -142,13 +149,13 @@ final class ExecutionTests: XCTestCase {
         // twitch, and the chain would still look right one call at a time.
         let world = try world()
         let ground = cells(in: world)
-        var bots = [try bot(0, at: ground[0], in: world)]
-        bots[0].knowsSnake = true
-        bots[0].health = 5                          // frightened enough to run
-        bots[0].weights = BotConfiguration.Weights(panic: 0.9, discipline: 0.5,
+        var bots = [try bot(0, at: element(0, of: ground), in: world)]
+        bots[try checkedIndex(0, of: bots)].knowsSnake = true
+        bots[try checkedIndex(0, of: bots)].health = 5  // frightened enough to run
+        bots[try checkedIndex(0, of: bots)].weights = BotConfiguration.Weights(panic: 0.9, discipline: 0.5,
                                                    aggression: 0.1, selfSacrifice: 0.5)
-        let where0 = bots[0].position
-        let snake = [bots[0].position + SIMD3(1, 0, 0)]
+        let where0 = try element(0, of: bots).position
+        let snake = [try element(0, of: bots).position + SIMD3(1, 0, 0)]
 
         var slots = Slots()
         for _ in 0..<120 {
@@ -161,48 +168,48 @@ final class ExecutionTests: XCTestCase {
                            routeOrder: slots.order(among: bots, snake: snake,
                                                    configuration: world.configurations.bot))
         }
-        let moved = Perception.metres(where0, bots[0].position)
+        let moved = Perception.metres(where0, try element(0, of: bots).position)
         XCTAssertGreaterThan(moved, 1.0, "the bot decided to run and covered \(moved) m in two seconds")
     }
 
     func testAFiringBotSpendsARoundAndDealsItsDamage() throws {
         let world = try world()
         let ground = cells(in: world)
-        let here = ground[0]
+        let here = try element(0, of: ground)
         let cell = world.configurations.tuning.navigationGraphCellSize
         var bots = [try bot(0, at: here, in: world)]
-        bots[0].knowsSnake = true
+        bots[try checkedIndex(0, of: bots)].knowsSnake = true
         let target = SIMD3(Double(here.x) * cell + cell, 0, Double(here.z) * cell)
-        let before = bots[0].ammunition
+        let before = try element(0, of: bots).ammunition
 
         let volley = Execution.deliberate(&bots, slots: [0], snake: [target], world: world)
         let entry = try XCTUnwrap(world.configurations.bot.archetypes[Archetype.assault.rawValue])
-        XCTAssertEqual(bots[0].action, .fire(at: .snake(at: target)))
+        XCTAssertEqual(try element(0, of: bots).action, .fire(at: .snake(at: target)))
         XCTAssertEqual(volley.damage, entry.weaponDamage)
-        XCTAssertEqual(bots[0].ammunition, before - 1)
+        XCTAssertEqual(try element(0, of: bots).ammunition, before - 1)
     }
 
     func testABotThatHasNotSeenTheSnakeDoesNotFireAtIt() throws {
         let world = try world()
-        let here = cells(in: world)[0]
+        let here = try element(0, of: cells(in: world))
         let cell = world.configurations.tuning.navigationGraphCellSize
         var bots = [try bot(0, at: here, in: world)]
         let target = SIMD3(Double(here.x) * cell + cell, 0, Double(here.z) * cell)
         XCTAssertEqual(Execution.deliberate(&bots, slots: [0], snake: [target], world: world).damage, 0)
-        XCTAssertNil(bots[0].action)
+        XCTAssertNil(try element(0, of: bots).action)
     }
 
     func testAnEmptyMagazineIsReloadedRatherThanFired() throws {
         let world = try world()
-        let here = cells(in: world)[0]
+        let here = try element(0, of: cells(in: world))
         let cell = world.configurations.tuning.navigationGraphCellSize
         var bots = [try bot(0, at: here, in: world)]
-        bots[0].knowsSnake = true
-        bots[0].ammunition = 0
+        bots[try checkedIndex(0, of: bots)].knowsSnake = true
+        bots[try checkedIndex(0, of: bots)].ammunition = 0
         let target = SIMD3(Double(here.x) * cell + cell, 0, Double(here.z) * cell)
         XCTAssertEqual(Execution.deliberate(&bots, slots: [0], snake: [target], world: world).damage, 0)
-        XCTAssertEqual(bots[0].action, .reload)
-        XCTAssertEqual(bots[0].ammunition,
+        XCTAssertEqual(try element(0, of: bots).action, .reload)
+        XCTAssertEqual(try element(0, of: bots).ammunition,
                        try XCTUnwrap(world.configurations.bot.archetypes[Archetype.assault.rawValue]).magazine)
     }
 }

@@ -11,7 +11,13 @@ import XCTest
 @testable import CrawlCall
 
 final class FigureTests: XCTestCase {
-    private lazy var bots: BotConfiguration = { try! Launch.world().get().configurations.bot }()
+    private var bots: BotConfiguration!
+
+    override func setUpWithError() throws {
+        try super.setUpWithError()
+        bots = try Launch.world().get().configurations.bot
+    }
+
     /// The shipped size, which is what the screen shows.
     private var height: Double { bots.figureHeight }
 

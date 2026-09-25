@@ -289,6 +289,7 @@ created: 2026-09-24
 The scenery of a setting **shall** take no part in movement, in what the bots see, in the navigation graph or in what is cut open for the snake.
 
 **Rationale.** The arena is the game and the map's author designs it; a tree at the rim that blocked a bot's sight, or a shore the snake could crawl onto, would be play nobody put in the map.
+A tree or a shrub that is to stop sight or movement is the map's module, not scenery, and says what it stops through its kit (FR-MAP-210).
 The four are one obligation — scenery is for the eye — and the list says what play is, so that "no part" can be checked: a test finds the same pieces and the same navigation graph for one map read on two different settings.
 Kept out of what is cut open because FR-VIEW-150 is paid for every frame over every piece it considers, and scenery between the camera and the arena is settled where it is placed, not by cutting it; how is the setting's decision record's.
 
@@ -355,3 +356,204 @@ If a flight of stairs a map draws would rise by more than the step height of the
 
 **Rationale.** A step higher than the step height is one neither the snake nor a bot can climb (FR-MAP-025), so such a flight would join nothing; refusing it at load says so where the map is written, rather than leaving a floor nobody can reach.
 With the shipped numbers — a floor of 3 m, a step of 0.4 m — a flight has at least eight steps.
+
+## Ground, spawn points and outline
+
+What the map's ground is, where the snake is born, how the setting's edge follows the map, and what each module stops (ADR-0034).
+Settled by the maintainer on 2026-09-25: floor 0 is the ground, the map names the snake's spawn points, the map's edges are the edges of the island or whatever setting it stands in, and trees and shrubs are the map's modules.
+
+### FR-MAP-170 — Floor 0 is the ground
+
+```yaml
+status: implemented
+verification: T
+derives_from: []
+depends_on: [IF-MAP-010]
+refines: []
+conflicts_with: []
+code: [Sources/CrawlCall/Map/ScenePlan.swift, Sources/CrawlCall/Setting/Greenholm.swift, Sources/CrawlCall/Setting/Outline.swift, Sources/CrawlCall/Game.swift]
+tests: [Tests/CrawlCallTests/IslandMapTests.swift]
+created: 2026-09-25
+```
+
+The system **shall** take a map's floor 0 as the one at ground level, the floors numbered below it as underground and those above it as above ground.
+
+**Rationale.** The maintainer, 2026-09-25, when basements came up: a floor below the ground is a basement, and the setting's ground has to be laid at one level whatever floors a map has below it. Until then the setting lay under a map's lowest floor, which a basement would have lifted the whole building above.
+
+### FR-MAP-180 — The snake is born where the map says
+
+```yaml
+status: implemented
+verification: T
+derives_from: []
+depends_on: [IF-MAP-010]
+refines: []
+conflicts_with: []
+code: [Sources/CrawlCall/Map/MapSpecification.swift, Sources/CrawlCall/Config/MapFormat.swift, Sources/CrawlCall/Game.swift, maps/blockout.map]
+tests: [Tests/CrawlCallTests/IslandMapTests.swift]
+created: 2026-09-25
+```
+
+When a match starts, the system **shall** place the snake's head at one of the spawn points the map names, chosen at random.
+
+**Rationale.** The maintainer, 2026-09-25: where the snake is born is the map's to say, possibly in more than one place, one of them chosen at random. Until then it was born in the first walkable cell of the lowest floor, which a basement would have made the basement.
+Each match is a new start, a restart included.
+
+### FR-MAP-190 — A map without a spawn point is refused
+
+```yaml
+status: implemented
+verification: T
+derives_from: []
+depends_on: [FR-MAP-180]
+refines: []
+conflicts_with: []
+code: [Sources/CrawlCall/Map/MapSpecification.swift, Sources/CrawlCall/Launch.swift]
+tests: [Tests/CrawlCallTests/IslandMapTests.swift]
+created: 2026-09-25
+```
+
+If a map names no spawn point, or names one on a cell nothing can stand in — neither a surface nor a module that stops no movement — the system **shall** refuse the map, naming the refused spawn point's line where it has one.
+
+**Rationale.** A snake born nowhere, or inside a wall, is a match that cannot be played; saying so where the map is written is cheaper than finding it on the phone.
+
+### FR-MAP-200 — The setting's edge is the map's outline, rounded
+
+```yaml
+status: implemented
+verification: T
+derives_from: []
+depends_on: [FR-MAP-120, FR-MAP-170]
+refines: []
+conflicts_with: []
+code: [Sources/CrawlCall/Setting/Outline.swift, Sources/CrawlCall/Setting/DistanceField.swift, Sources/CrawlCall/Setting/Greenholm.swift, Sources/CrawlCall/Setting/SceneryBuilder.swift, Sources/CrawlCall/Setting/Scenery.swift, Sources/CrawlCall/Setting/FrameCoverage.swift, Sources/CrawlCall/Config/Surroundings.swift]
+tests: [Tests/CrawlCallTests/IslandMapTests.swift]
+created: 2026-09-25
+```
+
+The system **shall** draw the edge of a map's setting along the outline of the map's floor 0, rounded so that no step of the grid shows in it and outside every cell of the map.
+
+**Rationale.** The maintainer, 2026-09-25: maps are of any shape, not rectangles, and a map's edges are the edges of the island — or of whatever setting it stands in — rounded, so that the grid's staircase does not show.
+Outside every cell, so that no cell anybody can stand on hangs over the water; the rounding is the drawing's, and where the snake and the bots may go is still the grid's.
+
+### FR-MAP-210 — A kit says what each module stops
+
+```yaml
+status: implemented
+verification: T
+derives_from: [FR-MAP-100]
+depends_on: [FR-MAP-020, FR-BOT-050]
+refines: []
+conflicts_with: []
+code: [Sources/CrawlCall/Map/Kit.swift, Sources/CrawlCall/Map/SceneBuilder.swift, Sources/CrawlCall/Config/Drawing.swift, config/kit/blockout/legend.json]
+tests: [Tests/CrawlCallTests/IslandMapTests.swift]
+created: 2026-09-25
+```
+
+Every module type of a kit **shall** declare whether it stops movement and whether it stops sight.
+
+**Rationale.** The maintainer, 2026-09-25: trees and shrubs are modules of the map, with a different "permeability" — a shrub stops sight and not movement, a tree stops both — and trees will one day be destroyed, which FR-MAP-060 declares per module type as well.
+Until then a module that was not walkable stopped both, and one that was walkable neither.
+
+### FR-MAP-220 — A module stops what its type says
+
+```yaml
+status: implemented
+verification: T
+derives_from: [FR-MAP-210]
+depends_on: [FR-MAP-020, FR-BOT-050, FR-SNAKE-010]
+refines: []
+conflicts_with: []
+code: [Sources/CrawlCall/Map/MapSpecification.swift, Sources/CrawlCall/Map/NavigationGraph.swift, Sources/CrawlCall/Snake/Surfaces.swift, Sources/CrawlCall/Map/Sight.swift, Sources/CrawlCall/Map/ScenePlan.swift]
+tests: [Tests/CrawlCallTests/IslandMapTests.swift]
+created: 2026-09-25
+```
+
+The system **shall** let no movement through a module whose type stops movement, and no line of sight through one whose type stops sight.
+
+**Rationale.** FR-MAP-210's declaration kept: movement is the snake's body (ADR-0021) and the bots' graph (FR-MAP-020), sight is the line test the bots see by (ADR-0019). Written apart from the declaration because the format takes one obligation to a requirement, and the two are built and tested apart.
+
+### FR-MAP-230 — No ground is drawn where nothing stands
+
+```yaml
+status: superseded
+superseded_by: FR-MAP-260
+verification: T
+derives_from: [FR-MAP-200]
+depends_on: [FR-MAP-170]
+refines: []
+conflicts_with: []
+code: [Sources/CrawlCall/Map/Passages.swift, Sources/CrawlCall/Setting/Setting.swift, Sources/CrawlCall/Setting/Greenholm.swift, Sources/CrawlCall/Setting/Outline.swift, Sources/CrawlCall/Map/MapSpecification.swift, Sources/CrawlCall/Launch.swift, maps/blockout.map]
+tests: [Tests/CrawlCallTests/PassageTests.swift]
+created: 2026-09-25
+```
+
+If the setting's edge would draw ground over a cell of floor 0 that holds no module, between two cells of floor 0 in its row or its column, the system **shall** refuse the map, naming the cell's line and column.
+
+**Rationale.** The maintainer, 2026-09-25, after the snake ran into an invisible wall at the blockout's left edge: the edge FR-MAP-200 draws closes any gap in the map narrower than its margin and rounding, so an empty cell there looked like grass and could not be walked. Refused rather than taken for ground, by the maintainer's choice: taking it for ground would have the setting decide what the map is.
+Between two cells of the map, because the edge also draws a strip of ground beyond the map's outermost cells, on purpose, and that strip has the map on one side only.
+
+Superseded on 2026-09-25, the day it was written, by FR-MAP-260: the maintainer asked for one rule that names no kind of place, since each kind found — this one among them — was a case of the same thing, and the next would be one nobody had listed. Its case is among FR-MAP-260's tests.
+
+### FR-MAP-240 — No passage narrower than the snake
+
+```yaml
+status: superseded
+superseded_by: FR-MAP-260
+verification: T
+derives_from: [FR-MAP-220]
+depends_on: [FR-SNAKE-010, IF-MAP-020]
+refines: []
+conflicts_with: []
+code: [Sources/CrawlCall/Map/Passages.swift, Sources/CrawlCall/Map/MapSpecification.swift, Sources/CrawlCall/Launch.swift, maps/blockout.map]
+tests: [Tests/CrawlCallTests/PassageTests.swift]
+created: 2026-09-25
+```
+
+If two things the snake's body cannot pass — modules that stop movement, and the side of a flight where it stands more than a step above the floor — stand closer together than the snake's body is wide, with nothing the body cannot pass between them, the system **shall** refuse the map, naming both cells.
+
+**Rationale.** The maintainer, 2026-09-25: every passage a map shows should be wide enough for the snake. The body is wider than a cell (ADR-0021), so a gap of one cell between a tree and a wall looked like a way through and was none. The width is the tuning's body radius, twice, so a wider or narrower snake moves the limit with it.
+Reworded on 2026-09-25, the day it was written, when the snake could not get between the blockout's flight and the wall beside it: the body meets a flight's side as a wall wherever a step stands more than a step above its feet (ADR-0033), and the first wording counted only modules that stop movement.
+
+Superseded on 2026-09-25, the day it was written, by FR-MAP-260: the maintainer asked for one rule that names no kind of place, since each kind found — this one among them — was a case of the same thing, and the next would be one nobody had listed. Its case is among FR-MAP-260's tests.
+
+### FR-MAP-250 — Nothing that stops movement stands at the map's edge
+
+```yaml
+status: superseded
+superseded_by: FR-MAP-260
+verification: T
+derives_from: [FR-MAP-200]
+depends_on: [FR-MAP-170, FR-MAP-220]
+refines: []
+conflicts_with: []
+code: [Sources/CrawlCall/Map/Passages.swift, Sources/CrawlCall/Map/MapSpecification.swift, Sources/CrawlCall/Launch.swift, maps/blockout.map]
+tests: [Tests/CrawlCallTests/PassageTests.swift]
+created: 2026-09-25
+```
+
+If a module that stops movement stands on a cell of floor 0 beside a cell that holds no module and has no floor below it, with a cell the snake can stand in beside it along that edge, the system **shall** refuse the map, naming the cell's line and column.
+
+**Rationale.** The maintainer, 2026-09-25, after trees at the blockout's edge seemed to leave a way round them that the snake could not take. The setting's edge draws ground beyond the map's outermost cells (FR-MAP-200), and beside a tree it reads as a way round; the snake's head goes only where there are cells, so no width of that ground is a way round.
+Only where a cell the snake can stand in lies beside it along the edge, because that is what leads the snake to it: a wall that runs along the edge has only wall beside it there. A cell with a floor below it is a basement's opening, and a wall beside one is a wall round a stairwell.
+
+Superseded on 2026-09-25, the day it was written, by FR-MAP-260: the maintainer asked for one rule that names no kind of place, since each kind found — this one among them — was a case of the same thing, and the next would be one nobody had listed. Its case is among FR-MAP-260's tests.
+
+### FR-MAP-260 — A map shows no way the snake cannot take
+
+```yaml
+status: implemented
+verification: T
+derives_from: [FR-MAP-200, FR-MAP-220]
+depends_on: [FR-MAP-170, FR-SNAKE-010, IF-MAP-020]
+refines: []
+conflicts_with: []
+code: [Sources/CrawlCall/Map/Passages.swift, Sources/CrawlCall/Setting/Setting.swift, Sources/CrawlCall/Setting/Greenholm.swift, Sources/CrawlCall/Map/MapSpecification.swift, Sources/CrawlCall/Launch.swift, maps/blockout.map]
+tests: [Tests/CrawlCallTests/PassageTests.swift]
+created: 2026-09-25
+```
+
+If the map, as drawn, shows the snake a way that its body cannot take, the system **shall** refuse the map, naming where that way is.
+
+**Rationale.** The maintainer, 2026-09-25, after a day of finding such ways one kind at a time — ground drawn over an empty cell, a gap narrower than the snake, the side of a flight, a tree at the water's edge, a tree whose corner met the water's: each was a case of the same thing, and a rule that listed them would miss the next. So the rule names no kind of place, and the check behind it compares what the eye sees with where the snake can be (ADR-0035); the cases found are its tests.
+"The snake's body" is the tuning's body radius and step height (IF-MAP-020): a wider snake, or a lower step, moves what counts as a way it cannot take.

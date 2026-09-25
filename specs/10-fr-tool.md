@@ -33,12 +33,12 @@ derives_from: [FR-TOOL-010]
 depends_on: [FR-MAP-100]
 refines: []
 conflicts_with: []
-code: [Sources/CrawlCall/Map/ScenePlan.swift, Sources/CrawlCall/Map/SceneBuilder.swift, Sources/CrawlCall/Config/EntityName.swift, Sources/CrawlCall/Config/MapFormat.swift, Sources/CrawlCall/Config/Geometry.swift]
+code: [Sources/CrawlCall/Map/ScenePlan.swift, Sources/CrawlCall/Map/SceneBuilder.swift, Sources/CrawlCall/Config/EntityName.swift, Sources/CrawlCall/Config/MapFormat.swift, Sources/CrawlCall/Config/Geometry.swift, Sources/CrawlCall/Map/Kit.swift]
 tests: [Tests/CrawlCallTests/ScenePlanTests.swift, Tests/CrawlCallTests/MapParserTests.swift, Tests/CrawlCallTests/LaunchTests.swift]
 created: 2026-09-21
 ```
 
-When given a parsed map, the map tool **shall** assemble the scene by placing the kit's module for each cell at the coordinates the specification gives it, and, under every cell whose module is not walkable, the kit's floor module as well.
+When given a parsed map, the map tool **shall** assemble the scene by placing the kit's module for each cell at the coordinates the specification gives it, and, under every cell whose module is not walkable, the floor module the kit names for that module as well.
 
 **Rationale on the implied floor.** A grid cell holds one module (IF-MAP-010), so a cell holding a wall holds no floor, and a scene built literally has a hole under every wall, crate and partition — measured on the device on 2026-09-22, where the pixels at the foot of a partition read `0, 0, 0` against a floor of `133, 140, 151`.
 The floor is implied rather than written into each cell because a map is a drawing a person edits, and making them spell out the floor under every wall would be the kind of bookkeeping the text format exists to avoid (concept §11.2).
@@ -544,3 +544,21 @@ When a run on the device ends, the run tool **shall** copy the frame record from
 
 **Rationale.** The record is read where the run is, so that a freeze is named the minute it was seen rather than after somebody opens a spreadsheet.
 Late is one and a half frame periods at 60 per second, 25 ms: a frame of 16.67 ms is on time at NFR-PERF-010's rate, and a frame that came after a skipped one is at least 33 ms, so the line between them falls where no on-time frame reaches and every skipped one does. "More than 16.6 ms", as first drafted, would have called every frame late.
+
+### FR-TOOL-280 — The test suite holds nothing that would crash it
+
+```yaml
+status: implemented
+verification: T
+derives_from: []
+depends_on: [FR-TOOL-210]
+refines: []
+conflicts_with: []
+code: [Tests/CrawlCallTests/TestSupport.swift]
+tests: [Tests/CrawlCallTests/TestHygieneTests.swift]
+created: 2026-09-25
+```
+
+If the test suite's own code holds a `try!`, an `as!`, a forced unwrap or a subscript by a number, the test suite **shall** fail, naming the file and the line.
+
+**Rationale.** The maintainer, 2026-09-25: a test that fails reports a failure, never a crash (`specs/50-verification.md`). A crash of the test process ends the run, not the test — on 2026-09-25 one ended a run at its watchdog's limit with no count and no name for the failed test, and brought up macOS's offer to report it to Apple. Those four are how the suite's own code ends the process where a value is not there; the suite reaches into collections through helpers that fail the test instead. Checked by the suite itself, so that the rule holds without anybody having to remember it.

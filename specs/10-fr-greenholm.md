@@ -13,16 +13,17 @@ derives_from: []
 depends_on: [FR-MAP-120, FR-MAP-130, FR-MAP-140]
 refines: []
 conflicts_with: []
-code: [Sources/CrawlCall/Setting/Greenholm.swift, Sources/CrawlCall/Setting/SceneryBuilder.swift, Sources/CrawlCall/Config/Surroundings.swift, Sources/CrawlCall/Map/ScenePlan.swift, Sources/CrawlCall/CrawlCallApp.swift, config/setting/greenholm.json]
-tests: [Tests/CrawlCallTests/SurroundingsTests.swift]
+code: [Sources/CrawlCall/Setting/Greenholm.swift, Sources/CrawlCall/Setting/SceneryBuilder.swift, Sources/CrawlCall/Config/Surroundings.swift, Sources/CrawlCall/CrawlCallApp.swift, config/setting/greenholm.json, Sources/CrawlCall/Setting/Outline.swift]
+tests: [Tests/CrawlCallTests/SurroundingsTests.swift, Tests/CrawlCallTests/IslandMapTests.swift]
 created: 2026-09-24
 ```
 
-The system **shall** provide the Greenholm setting: the arena on a grassy island ringed by trees and shrubs, with a shore and open water beyond it.
+The system **shall** provide the Greenholm setting: the map's ground as a grassy island, its edge a shore with open water beyond it.
 
 **Rationale.** The maintainer chose an island for the first setting on 2026-09-24, having had the same idea independently.
 An island hides the edge of a finite world by being an island: RealityKit in the iOS 27.0 SDK has no fog or haze to fade one out, and water reaching as far as FR-MAP-140 asks is a single surface, where a forest or a city reaching as far would be thousands of parts.
 Judged on the phone, because whether it reads as an island in daylight is what the eye decides.
+Rewritten on 2026-09-25, when the maintainer decided that the map's edges are the island's edges (FR-MAP-200): the island is no longer scenery round a rectangular arena but the map's own ground, and trees and shrubs are the map's modules, which stop sight or movement as their kit says (FR-MAP-210), not a ring of scenery.
 
 ### FR-GREENHOLM-020 — Greenholm has a daylight sky
 

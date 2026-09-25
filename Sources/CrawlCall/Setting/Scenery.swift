@@ -1,19 +1,19 @@
-// What a setting draws, as data a test can read before anything is built (ADR-0031):
-// the ground around the arena, the rim that closes the space in, and the backdrop.
+// What a setting draws, as data a test can read before anything is built (ADR-0031,
+// ADR-0034): the ground the map stands on, cut to its outline, the water beyond it,
+// and the backdrop.
 // Scenery is for the eye only, so it lives here and never in `ScenePlan`, whose pieces
 // are what the snake collides with, what the bots see and what is cut open
 // (FR-MAP-130).
 //
-// implements: FR-MAP-130, FR-MAP-140
+// implements: FR-MAP-130, FR-MAP-140, FR-MAP-200
 import Foundation
 
 struct Scenery: Equatable {
-    /// One primitive, at unit size scaled to `size`: a box, a cylinder or a cone
-    /// standing up, or a sphere.
+    /// One primitive, at unit size scaled to `size`: a box.
     struct Part: Equatable {
-        enum Shape: Equatable, CaseIterable { case box, cylinder, cone, sphere }
+        enum Shape: Equatable, CaseIterable { case box }
         /// Which of a setting's layers the part belongs to (ADR-0031).
-        enum Layer: Equatable { case ground, water, rim }
+        enum Layer: Equatable { case ground, water }
 
         let shape: Shape
         let layer: Layer
@@ -29,7 +29,16 @@ struct Scenery: Equatable {
         var highest: SIMD3<Double> { centre + size * Geometry.half }
     }
 
+    /// A surface cut to a shape no primitive has: the island's ground and its walls
+    /// along the map's outline, and the water up to its shore (FR-MAP-200).
+    struct Surface: Equatable {
+        let layer: Part.Layer
+        let colour: SIMD3<Double>
+        let mesh: Mesh
+    }
+
     let parts: [Part]
+    let surfaces: [Surface]
     /// The ground the match camera can show, which the water reaches to (FR-MAP-140).
     let covered: GroundRect
     /// The height of the lowest surface the scenery offers — the water's.

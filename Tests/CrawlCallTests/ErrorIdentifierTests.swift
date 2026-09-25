@@ -17,7 +17,7 @@ final class ErrorIdentifierTests: XCTestCase {
     private var everyKind: [IdentifiedError] {
         let schema = SchemaError.unknownKey("speed", path: "abilities")
         let mapParse: [MapParseError] = [
-            .noKit, .noFloors, .repeatedKit(line: 3), .noSetting, .repeatedSetting(line: 2), .unknownDirective("lift", line: 4),
+            .noKit, .noFloors, .repeatedKit(line: 3), .noSetting, .repeatedSetting(line: 2), .noSpawn, .badSpawn("spawn 1", line: 3), .spawnNotWalkable(line: 4), .wayNotTaken(line: 5, column: 2), .unknownDirective("lift", line: 4),
             .gridBeforeAnyFloor(line: 5), .repeatedFloor(1, line: 6), .badFloorNumber("x", line: 7),
             .badTransition("transition 1", line: 8), .transitionToUnknownFloor(9, line: 9),
             .raggedGrid(floor: 0, line: 10, expected: 4, found: 3),
@@ -27,6 +27,7 @@ final class ErrorIdentifierTests: XCTestCase {
         let kit: [Kit.KitError] = [
             .missing(name: "blockout"), .legendKeyIsNotOneCharacter("##"),
             .moduleFieldIsNotThreeNumbers(module: "# (wall)", field: "size"), .stepModuleNotInLegend("?"),
+            .floorNotInLegend(module: "T (tree)", floor: "?"),
         ]
         let schemaErrors: [SchemaError] = [
             .notAnObject(path: ""), schema, .missingKey("speed", path: "abilities"),
@@ -43,7 +44,7 @@ final class ErrorIdentifierTests: XCTestCase {
         let setting: [IdentifiedError] = [
             SettingError.unknown(name: "atlantis"),
             CoverageError.horizonInFrame(fieldOfView: 110, lowestPitch: 50),
-            SceneryError.noAmbientLight, SceneryError.skyImageNotPainted,
+            SceneryError.noAmbientLight, SceneryError.surfaceNotBuilt, SceneryError.skyImageNotPainted,
             SceneryError.skyNotGenerated(underlying: Underlying()),
         ]
         return mapParse + kit + schemaErrors + configuration + mapLoad + scene + setting
@@ -78,8 +79,8 @@ final class ErrorIdentifierTests: XCTestCase {
         XCTAssertEqual(Set(everyKind.map(\.identifier)), Set(ErrorIdentifier.allCases))
     }
 
-    func testIdentifiersAreUpperCaseWordsJoinedByUnderscores() {
-        let shape = try! NSRegularExpression(pattern: "^[A-Z]+(_[A-Z]+)*$")
+    func testIdentifiersAreUpperCaseWordsJoinedByUnderscores() throws {
+        let shape = try NSRegularExpression(pattern: "^[A-Z]+(_[A-Z]+)*$")
         for identifier in ErrorIdentifier.allCases {
             let raw = identifier.rawValue
             let range = NSRange(raw.startIndex..., in: raw)
@@ -91,8 +92,9 @@ final class ErrorIdentifierTests: XCTestCase {
         // End to end through the parser: the identifier comes from a real failure,
         // not only from a hand-built value.
         let kit = try JSONDecoder().decode(Kit.self, from: Data("""
-            {"floorHeight": 3, "floorModule": ".", "stepModule": ".",
-             "modules": {".": {"name": "floor", "walkable": true, "size": [1, 0.1, 1], "colour": [1, 1, 1]}}}
+            {"floorHeight": 3, "floorModule": ".", "stepModule": ".", "trunkColour": [0.4, 0.3, 0.2],
+             "modules": {".": {"name": "floor", "walkable": true, "stopsMovement": false, "stopsSight": true,
+                               "floor": ".", "figure": "box", "size": [1, 0.1, 1], "colour": [1, 1, 1]}}}
             """.utf8))
         XCTAssertThrowsError(try MapParser.parse("kit a\nkit b\nfloor 0\n.\n", kit: kit)) { error in
             XCTAssertTrue(String(describing: error).hasPrefix("MAP_REPEATED_KIT: line 2"), "\(error)")

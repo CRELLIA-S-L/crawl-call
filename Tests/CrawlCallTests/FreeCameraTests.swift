@@ -164,7 +164,7 @@ final class FreeCameraTests: XCTestCase {
     func testAPinchTakesTheCameraOffTheSnakeAndItStaysWhereItWasPut() throws {
         let world = try Launch.world().get()
         let built = SceneBuilder.scene(for: world.plan, view: world.configurations.view)
-        let game = Game(world: world, start: try XCTUnwrap(Game.start(in: world)))
+        let game = Game(world: world, start: try XCTUnwrap(Game.firstStart(in: world)))
         let camera = try XCTUnwrap(built.root.children.first { $0.name == "camera" })
         let session = GameSession(game: game,
                                   snakeEntity: SnakeEntity.make(radius: world.configurations.tuning.bodyRadius,
@@ -206,7 +206,7 @@ final class FreeCameraTests: XCTestCase {
         }
         let world = World(configurations: configurations, kit: base.kit, map: base.map, setting: base.setting, graph: base.graph, plan: base.plan)
         let built = SceneBuilder.scene(for: world.plan, view: world.configurations.view)
-        let game = Game(world: world, start: try XCTUnwrap(Game.start(in: world)))
+        let game = Game(world: world, start: try XCTUnwrap(Game.firstStart(in: world)))
         let camera = try XCTUnwrap(built.root.children.first { $0.name == "camera" })
         let session = GameSession(game: game,
                                   snakeEntity: SnakeEntity.make(radius: world.configurations.tuning.bodyRadius,
@@ -288,7 +288,7 @@ final class FreeCameraTests: XCTestCase {
         func build() throws -> (GameSession, Entity) {
             let world = try Launch.world().get()
             let built = SceneBuilder.scene(for: world.plan, view: world.configurations.view)
-            let game = Game(world: world, start: try XCTUnwrap(Game.start(in: world)))
+            let game = Game(world: world, start: try XCTUnwrap(Game.firstStart(in: world)))
             let camera = try XCTUnwrap(built.root.children.first { $0.name == "camera" })
             let s = GameSession(game: game,
                                 snakeEntity: SnakeEntity.make(radius: world.configurations.tuning.bodyRadius,

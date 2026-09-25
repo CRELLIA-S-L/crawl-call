@@ -2,10 +2,19 @@
   "floorHeight": 3.0,
   "floorModule": ".",
   "stepModule": "/",
+  "trunkColour": [
+    0.45,
+    0.32,
+    0.2
+  ],
   "modules": {
     ".": {
       "name": "floor",
       "walkable": true,
+      "stopsMovement": false,
+      "stopsSight": true,
+      "floor": ".",
+      "figure": "box",
       "size": [
         0.5,
         0.1,
@@ -20,6 +29,10 @@
     "#": {
       "name": "wall",
       "walkable": false,
+      "stopsMovement": true,
+      "stopsSight": true,
+      "floor": ".",
+      "figure": "box",
       "size": [
         0.5,
         0.8,
@@ -34,6 +47,10 @@
     "o": {
       "name": "crate",
       "walkable": false,
+      "stopsMovement": true,
+      "stopsSight": true,
+      "floor": ".",
+      "figure": "box",
       "size": [
         0.5,
         1.0,
@@ -48,6 +65,10 @@
     "=": {
       "name": "partition",
       "walkable": false,
+      "stopsMovement": true,
+      "stopsSight": true,
+      "floor": ".",
+      "figure": "box",
       "size": [
         0.5,
         2.0,
@@ -62,6 +83,10 @@
     "/": {
       "name": "step",
       "walkable": true,
+      "stopsMovement": false,
+      "stopsSight": true,
+      "floor": ".",
+      "figure": "box",
       "size": [
         0.5,
         0.375,
@@ -71,6 +96,60 @@
         0.35,
         0.65,
         0.45
+      ]
+    },
+    ",": {
+      "name": "ground",
+      "walkable": true,
+      "stopsMovement": false,
+      "stopsSight": true,
+      "floor": ",",
+      "figure": "box",
+      "size": [
+        0.5,
+        0.1,
+        0.5
+      ],
+      "colour": [
+        0.42,
+        0.66,
+        0.3
+      ]
+    },
+    "T": {
+      "name": "tree",
+      "walkable": false,
+      "stopsMovement": true,
+      "stopsSight": true,
+      "floor": ",",
+      "figure": "tree",
+      "size": [
+        0.5,
+        2.6,
+        0.5
+      ],
+      "colour": [
+        0.24,
+        0.5,
+        0.24
+      ]
+    },
+    "*": {
+      "name": "shrub",
+      "walkable": false,
+      "stopsMovement": false,
+      "stopsSight": true,
+      "floor": ",",
+      "figure": "shrub",
+      "size": [
+        0.5,
+        0.7,
+        0.5
+      ],
+      "colour": [
+        0.34,
+        0.58,
+        0.27
       ]
     }
   }

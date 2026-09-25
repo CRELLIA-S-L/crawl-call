@@ -8,13 +8,13 @@ import XCTest
 final class GameTests: XCTestCase {
     private func game() throws -> Game {
         let world = try Launch.world().get()
-        let start = try XCTUnwrap(Game.start(in: world))
+        let start = try XCTUnwrap(Game.firstStart(in: world))
         return Game(world: world, start: start)
     }
 
     func testAMatchStartsOnAWalkableCellOfTheLowestFloor() throws {
         let world = try Launch.world().get()
-        let start = try XCTUnwrap(Game.start(in: world))
+        let start = try XCTUnwrap(Game.firstStart(in: world))
         XCTAssertEqual(start.floor, 0)
         XCTAssertTrue(world.graph.isWalkable(start))
     }
@@ -99,7 +99,7 @@ final class SnakeEntityTests: XCTestCase {
 
     func testEachBodyGoesWhereTheModelSaysAndTheRestAreHidden() throws {
         let world = try Launch.world().get()
-        var game = Game(world: world, start: try XCTUnwrap(Game.start(in: world)))
+        var game = Game(world: world, start: try XCTUnwrap(Game.firstStart(in: world)))
         let entity = SnakeEntity.make(radius: world.configurations.tuning.bodyRadius,
                                       segments: game.snake.segments)
 
@@ -128,7 +128,7 @@ final class SnakeEntityTests: XCTestCase {
         // begins with, so a snake that ate past that length grew in the model and
         // stood still on screen (FR-SNAKE-060 true and invisible).
         let world = try Launch.world().get()
-        let start = try XCTUnwrap(Game.start(in: world))
+        let start = try XCTUnwrap(Game.firstStart(in: world))
         let cell = world.configurations.tuning.navigationGraphCellSize
         let surfaces = Surfaces(graph: world.graph, kit: world.kit,
                                 tuning: world.configurations.tuning, map: world.map)
@@ -167,7 +167,7 @@ final class SnakeEntityTests: XCTestCase {
         // is that the tail lies along the path, and a match now has bots in it that
         // shoot the tail off while the test is walking it.
         let world = try Launch.world().get()
-        let start = try XCTUnwrap(Game.start(in: world))
+        let start = try XCTUnwrap(Game.firstStart(in: world))
         let cell = world.configurations.tuning.navigationGraphCellSize
         let surfaces = Surfaces(graph: world.graph, kit: world.kit,
                                 tuning: world.configurations.tuning, map: world.map)

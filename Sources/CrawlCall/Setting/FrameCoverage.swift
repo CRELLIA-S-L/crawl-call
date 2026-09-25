@@ -9,7 +9,7 @@
 // affine in the drop from the focus to the ground and in the frame's aspect, so their
 // extremes are at the ends of their ranges; the pitch is sampled.
 //
-// implements: FR-MAP-140, FR-TOOL-200
+// implements: FR-MAP-140, FR-TOOL-200, FR-MAP-200
 import Foundation
 
 /// The camera a match can be seen through, over the whole range it can take.
@@ -59,6 +59,18 @@ struct GroundRect: Equatable {
 
     func grown(by margin: Double) -> GroundRect {
         GroundRect(lowest: lowest - margin, highest: highest + margin)
+    }
+
+    /// This rectangle less `hole`, as up to four rectangles round it: the strips
+    /// before and after it along z, the full width, and the two beside it between them.
+    func around(_ hole: GroundRect) -> [GroundRect] {
+        let low = pointwiseMax(hole.lowest, lowest), high = pointwiseMin(hole.highest, highest)
+        guard low.x < high.x, low.y < high.y else { return [self] }
+        return [GroundRect(lowest: lowest, highest: SIMD2(highest.x, low.y)),
+                GroundRect(lowest: SIMD2(lowest.x, high.y), highest: highest),
+                GroundRect(lowest: SIMD2(lowest.x, low.y), highest: SIMD2(low.x, high.y)),
+                GroundRect(lowest: SIMD2(high.x, low.y), highest: SIMD2(highest.x, high.y))]
+            .filter { $0.highest.x > $0.lowest.x && $0.highest.y > $0.lowest.y }
     }
 }
 
@@ -144,19 +156,6 @@ enum FrameCoverage {
         }
     }
 
-    /// How tall, above the underside of the arena's lowest floor — below which nothing
-    /// of the arena is in sight — a thing standing `gap` metres in
-    /// front of the arena — between it and the camera — may be without hiding any of
-    /// it from any camera of the range (ADR-0031). The line from the camera to the
-    /// arena's near edge falls at the pitch itself when the camera looks at that edge,
-    /// and more steeply when it looks further in or from a floor higher up; a line to
-    /// a point further in clears the thing by more. So the lowest pitch bounds it.
-    /// Beside the arena and behind it nothing can hide it: a line from the camera to
-    /// the arena stays over the arena's own columns and rows there.
-    static func tallestInFront(gap: Double, camera: CameraRange) -> Double {
-        guard gap > .zero else { return .zero }
-        return gap * tan(camera.pitches.lowerBound * .pi / Geometry.halfTurnDegrees)
-    }
 }
 
 /// What finding the coverage can fail at (FR-TOOL-200).

@@ -1,7 +1,7 @@
 {
   "cameraPitch": 55,
   "cameraFieldOfView": 50,
-  "cameraDistanceInMapWidths": 1.1,
+  "cameraDistanceInMapWidths": 0.88,
   "ambientColour": { "red": 0.62, "green": 0.68, "blue": 0.78 },
   "ambientIntensityExponent": 1.0,
   "sunIntensity": 12000,

@@ -62,7 +62,7 @@ final class MatchEndTests: XCTestCase {
     /// second definition of one.
     private func world(snake key: String? = nil, value: Any = 0,
                        squadSize: Int? = nil) throws -> World {
-        let base = try Launch.world().get()
+        let base = try Launch.world(map: "room").get()
         var configurations = base.configurations
         if let key {
             configurations = Configurations(
@@ -128,7 +128,7 @@ final class MatchEndTests: XCTestCase {
         // state FR-SNAKE-210 describes; the shot that kills it comes out of a real
         // match, from a bot that noticed it and chose to fire.
         let world = try world(snake: "startingSegmentCount", value: 0)
-        var game = Game(world: world, start: try XCTUnwrap(Game.start(in: world)))
+        var game = Game(world: world, start: try XCTUnwrap(Game.firstStart(in: world)))
         XCTAssertNil(game.outcome, "the match was over before it began")
         try walkAtSomebody(&game, frames: 1800) { $0.outcome != nil }
         XCTAssertEqual(game.outcome, .snakeDied, "nobody ever finished off a tailless snake")
@@ -139,7 +139,7 @@ final class MatchEndTests: XCTestCase {
         // FR-SCORE-140 ends the match, and an ended match that kept running would be
         // a screen where a dead snake is still being shot at.
         let world = try world(snake: "startingSegmentCount", value: 0)
-        var game = Game(world: world, start: try XCTUnwrap(Game.start(in: world)))
+        var game = Game(world: world, start: try XCTUnwrap(Game.firstStart(in: world)))
         try walkAtSomebody(&game, frames: 1800) { $0.outcome != nil }
         // Asserted rather than skipped over: with the end removed from the code this
         // test reported itself skipped instead of failing, which is a broken feature
@@ -162,7 +162,7 @@ final class MatchEndTests: XCTestCase {
         // FR-SCORE-150 from the other side of the condition: an arena with nobody in
         // it is over on the first frame, whatever the snake does.
         let world = try world(squadSize: 0)
-        var game = Game(world: world, start: try XCTUnwrap(Game.start(in: world)))
+        var game = Game(world: world, start: try XCTUnwrap(Game.firstStart(in: world)))
         XCTAssertTrue(game.bots.isEmpty)
         game.advance(seconds: 1.0 / 60)
         XCTAssertEqual(game.outcome, .arenaEmpty)
@@ -172,8 +172,8 @@ final class MatchEndTests: XCTestCase {
         // The negation: as long as somebody is alive, the end of FR-SCORE-150 must
         // not fire — a condition written the wrong way round would end every match
         // at the whistle, and the test above would still pass.
-        let world = try Launch.world().get()
-        var game = Game(world: world, start: try XCTUnwrap(Game.start(in: world)))
+        let world = try Launch.world(map: "room").get()
+        var game = Game(world: world, start: try XCTUnwrap(Game.firstStart(in: world)))
         try walkAtSomebody(&game, frames: 900)
         XCTAssertTrue(game.bots.contains { $0.health > 0 }, "the test ate the arena empty")
         XCTAssertNotEqual(game.outcome, .arenaEmpty)
@@ -190,8 +190,8 @@ final class MatchEndTests: XCTestCase {
     }
 
     func testStartingAgainGivesAWholeMatchInTheSameArena() throws {
-        let world = try Launch.world().get()
-        var game = Game(world: world, start: try XCTUnwrap(Game.start(in: world)))
+        let world = try Launch.world(map: "room").get()
+        var game = Game(world: world, start: try XCTUnwrap(Game.firstStart(in: world)))
         let began = game.snake.head
         try walkAtSomebody(&game, frames: 600)
         XCTAssertGreaterThan(Perception.metres(game.snake.head, began), 1,
@@ -217,8 +217,8 @@ final class RestartOnScreenTests: XCTestCase {
         // asks is whether the bodies that were taken off screen come back: a bot the
         // snake ate has to be standing in the arena again when the next match starts
         // (FR-VIEW-190).
-        let world = try Launch.world().get()
-        let game = Game(world: world, start: try XCTUnwrap(Game.start(in: world)))
+        let world = try Launch.world(map: "room").get()
+        let game = Game(world: world, start: try XCTUnwrap(Game.firstStart(in: world)))
         let built = SceneBuilder.scene(for: world.plan, view: world.configurations.view)
         let camera = try XCTUnwrap(built.root.children.first { $0.name == "camera" })
         let squads = BotEntity.make(for: game.bots, height: world.configurations.bot.figureHeight)

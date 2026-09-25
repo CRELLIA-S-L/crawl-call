@@ -1,46 +1,71 @@
-; The stage-1 blockout: one room, a balcony over its right half, one flight of stairs.
-; Grey primitives only — the kit is authored in this repository (ATTRIBUTION.md).
-; Every grid row is exactly 24 cells wide; a space is a cell with no module.
+; The stage-1 blockout: one room with a balcony over its right half and a flight of stairs,
+; standing on an island of grass of no particular shape, with trees and shrubs about it.
+; Every grid row is exactly 32 cells wide; a space is a cell with no module — the island's
+; edge is drawn round the map's outline (FR-MAP-200), and ',' is its ground.
+; The room is shifted 4 cells across and 4 down from its old place, with doorways two
+; cells wide west and south: the snake's body is wider than one (ADR-0021).
+; The flight rises east along rows 15 and 16, eight steps of 0.375 m, into an opening
+; three cells wide in the balcony's west wall (FR-MAP-150, ADR-0033).
+; The partition in column 14 is a wall with a doorway two cells wide in rows 10 and 11; no tree
+; stands one cell from a wall, at the island's edge, or corner to corner with the water; and two
+; rows lie between the flight and the south wall. Each of those would be a way the map shows and
+; the snake cannot take, which is refused (FR-MAP-260).
 ; The arena stands on Greenholm, an island (FR-MAP-120, FR-GREENHOLM-010).
-; The flight rises east along rows 12 and 13, two cells wide, eight steps of 0.375 m,
-; into an opening three cells wide in the balcony's west wall: wide enough for the
-; snake's body, which a single cell is not (ADR-0021) (FR-MAP-150, ADR-0033).
 
 kit blockout
 setting greenholm
+spawn 5,5 0
+spawn 15,21 0
+spawn 29,10 0
 
 floor 0
-########################
-#......................#
-#......................#
-#......................#
-#....oo...=............#
-#....o....=............#
-#.............oo.......#
-#.........=............#
-#......................#
-#......................#
-#................o.....#
-#........oo............#
-#.....>>>>>>>>.........#
-#.....>>>>>>>>.........#
-#......................#
-########################
+       ,,,,,,,,,,,,,,,,,,       
+      ,,,,,T,,,*,T,,T,,,,,      
+    ,,,,*,,,*,,,,,,,,,,,*,,,    
+  ,,,,,T,,,,,,,,,,,,,,,,T,,,,   
+ ,,,########################,,, 
+ ,,,#......................#,,, 
+ ,,T#......................#T,, 
+ ,,,#......................#,,, 
+ ,,*#....oo...#............#,,, 
+ ,,,#....o....#............#*,, 
+ ,,,#.............oo.......#,,, 
+ ,,,..................oo...#,,, 
+ ,,,.......................#,,, 
+ ,,,#......................#T,, 
+ ,,T#................o.....#,,, 
+ ,,,#.....>>>>>>>>.........#,*, 
+ ,,,#.....>>>>>>>>.........#,,, 
+ ,*,#......................#T,, 
+ ,,,#......................#,,, 
+ ,,,#####..#################,,, 
+  ,,,T,,,,,,,,,,,,,,,,,T,,,*,,  
+   ,,,,*,,,,,,,,,,,,*,,,,,,,    
+     ,,,,,,,T,,,*,,T,,,,,,      
+       ,,,,,,,,,,,,,,,,,        
 
 floor 1
-                        
-                        
-                        
-                        
-                        
-                        
-                        
-                        
-                        
-              ##########
-              #.........
-              ..........
-              ..........
-              ..........
-              #.........
-              #........#
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                  ##########    
+                  #.........    
+                  ..........    
+                  ..........    
+                  ..........    
+                  #.........    
+                  #........#    
+                                
+                                
+                                
+                                

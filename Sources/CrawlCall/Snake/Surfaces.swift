@@ -6,7 +6,7 @@
 // Heights are the graph's: a cell's surface is its node's, which on a flight of stairs
 // is not its floor's (FR-MAP-020, FR-MAP-150, ADR-0033).
 //
-// implements: FR-MAP-025, FR-SNAKE-010, FR-SNAKE-020, FR-SNAKE-220, FR-MAP-150, FR-MAP-020
+// implements: FR-MAP-025, FR-SNAKE-010, FR-SNAKE-020, FR-SNAKE-220, FR-MAP-150, FR-MAP-020, FR-MAP-220, FR-SNAKE-260
 import Foundation
 
 struct Surfaces {
@@ -33,14 +33,19 @@ struct Surfaces {
     /// stands more than a step above the body's feet — the side of a step too tall to
     /// climb onto — and is walked on otherwise (ADR-0021, ADR-0033).
     private let obstacles: [(lowest: SIMD3<Double>, highest: SIMD3<Double>, ground: Bool)]
+    /// The cells of gaps in a floor narrower than the body, which the snake crawls
+    /// across at the floor's height rather than falling into (FR-SNAKE-260). The graph
+    /// holds none of them: a bot does not cross a gap.
+    let bridges: Set<NavigationGraph.Node>
 
     init(graph: NavigationGraph, kit: Kit, tuning: TuningConfiguration, map: MapSpecification) {
-        self.occupied = Set(map.placements.filter { !$0.walkable }
+        self.occupied = Set(map.placements.filter { !$0.isPassable }
             .map { NavigationGraph.Node(floor: $0.floor, x: $0.x, z: $0.z) })
-        let ground = Set(kit.modules.values.filter(\.walkable).map(\.name))
+        // What stops no movement — a shrub — is no obstacle at all (FR-MAP-220).
         self.obstacles = ScenePlan.make(map: map, kit: kit, cellSize: tuning.navigationGraphCellSize).pieces
+            .filter { $0.stopsMovement || $0.ground }
             .map { (lowest: $0.centre - $0.size * Geometry.half, highest: $0.centre + $0.size * Geometry.half,
-                    ground: ground.contains($0.module)) }
+                    ground: $0.ground) }
         self.graph = graph
         self.cellSize = tuning.navigationGraphCellSize
         self.floorHeight = kit.floorHeight
@@ -48,6 +53,65 @@ struct Surfaces {
         self.bodyRadius = tuning.bodyRadius
         self.stepHeight = tuning.stepHeight
         self.slopeAngle = tuning.slopeAngle
+        self.bridges = Self.narrowGaps(in: graph, occupied: occupied, cellSize: tuning.navigationGraphCellSize,
+                                       floorHeight: kit.floorHeight, stepHeight: tuning.stepHeight,
+                                       bodyRadius: tuning.bodyRadius)
+    }
+
+    /// The cells of every floor that hold nothing to stand on, in a gap too narrow for
+    /// the body: somewhere no point is as far from the floor around it as the body's
+    /// radius. What holds the body at a floor's height is its cells — a surface from a
+    /// step below that height up to the floor above, on whichever floor, or a cell
+    /// something stands on — and a
+    /// gap is the empty ground among them, sampled on a fine grid. A gap that reaches
+    /// the grid's edge is as wide as the world beyond the map, and is a ledge.
+    private static func narrowGaps(in graph: NavigationGraph, occupied: Set<NavigationGraph.Node>,
+                                   cellSize: Double, floorHeight: Double, stepHeight: Double,
+                                   bodyRadius: Double) -> Set<NavigationGraph.Node> {
+        var found: Set<NavigationGraph.Node> = []
+        for floor in graph.floors {
+            let elevation = Double(floor) * floorHeight
+            // A surface near this floor's height holds the body; one rising from it — a
+            // flight's taller steps — stands on it, and is no gap either.
+            let holding = Set(graph.nodes.filter {
+                let h = graph.height(of: $0, floorHeight: floorHeight)
+                return h >= elevation - stepHeight && h < elevation + floorHeight
+            }.map { PieceIndex.Cell(x: $0.x, z: $0.z) })
+                .union(occupied.filter { $0.floor == floor }.map { PieceIndex.Cell(x: $0.x, z: $0.z) })
+            guard !holding.isEmpty else { continue }
+            let xs = holding.map(\.x), zs = holding.map(\.z)
+            let pad = cellSize + bodyRadius * Geometry.bothSides
+            let low = SIMD2(Double(xs.min() ?? .zero), Double(zs.min() ?? .zero)) * cellSize - pad
+            let high = SIMD2(Double(xs.max() ?? .zero), Double(zs.max() ?? .zero)) * cellSize + pad
+            let grid = SampleGrid(covering: low, high, step: OutlineGrid.step)
+            func cell(_ i: Int) -> PieceIndex.Cell {
+                let p = grid.point(i % grid.width, i / grid.width)
+                return PieceIndex.Cell(x: Int((p.x / cellSize).rounded()), z: Int((p.y / cellSize).rounded()))
+            }
+            let held = (Int.zero..<grid.count).map { holding.contains(cell($0)) }
+            let fromFloor = DistanceField.distance(to: held, on: grid)
+            var seen = [Bool](repeating: false, count: grid.count)
+            for start in held.indices where !held[start] && !seen[start] {
+                var stack = [start], members: [Int] = [], wide = false
+                seen[start] = true
+                while let i = stack.popLast() {
+                    members.append(i)
+                    let column = i % grid.width, row = i / grid.width
+                    if column == .zero || row == .zero || column == grid.width - Distances.oneMore
+                        || row == grid.height - Distances.oneMore || fromFloor[i] >= bodyRadius { wide = true }
+                    for j in grid.neighbours(i, diagonal: false) where !held[j] && !seen[j] {
+                        seen[j] = true
+                        stack.append(j)
+                    }
+                }
+                guard !wide else { continue }
+                for i in members {
+                    let c = cell(i)
+                    found.insert(NavigationGraph.Node(floor: floor, x: c.x, z: c.z))
+                }
+            }
+        }
+        return found
     }
 
     /// The cell a position falls in. Cells are centred on their coordinates, so the
@@ -68,11 +132,49 @@ struct Surfaces {
     /// the neighbour the graph joins it to there, on whichever floor — the same floor,
     /// or, off the top of a flight, the floor above (FR-MAP-020). The one nearest in
     /// height where there is more than one. Nil where the graph joins nothing there.
+    ///
+    /// A head that crosses a corner of its cell enters the cell corner to corner with
+    /// it, which the graph does not join directly: it joins cells side by side. It
+    /// goes through one of the two cells beside both, where the graph joins it to that
+    /// one and that one to the cell it entered. Taken for a ledge, a corner dropped the
+    /// head off a balcony wherever it crossed one (FR-SNAKE-220, ADR-0036). Where
+    /// neither cell beside both joins them, the two cells meet at a point, which is a
+    /// gap narrower than the body, crawled across (FR-SNAKE-260).
+    ///
+    /// A gap in the floor narrower than the body is crawled across at the floor's
+    /// height (FR-SNAKE-260): its cells, which the graph does not hold, are walked
+    /// onto and off like the floor's own.
     func step(from here: NavigationGraph.Node, into target: NavigationGraph.Node) -> NavigationGraph.Node? {
+        if let next = besideStep(from: here, into: target) { return next }
+        guard abs(target.x - here.x) == MapGrid.neighbourStep, abs(target.z - here.z) == MapGrid.neighbourStep else { return nil }
+        for through in [NavigationGraph.Node(floor: here.floor, x: target.x, z: here.z),
+                        NavigationGraph.Node(floor: here.floor, x: here.x, z: target.z)] {
+            if let middle = besideStep(from: here, into: through), let next = besideStep(from: middle, into: target) {
+                return next
+            }
+        }
+        return ground(at: target, near: height(of: here))
+    }
+
+    private func besideStep(from here: NavigationGraph.Node, into target: NavigationGraph.Node) -> NavigationGraph.Node? {
+        guard abs(target.x - here.x) + abs(target.z - here.z) == MapGrid.neighbourStep else { return nil }
         let at = height(of: here)
-        return graph.neighbours(of: here)
-            .filter { $0.x == target.x && $0.z == target.z }
-            .min { abs(height(of: $0) - at) < abs(height(of: $1) - at) }
+        // Off a bridge the graph joins nothing; onto one it joins nothing either. Both
+        // are ground within a step, as the graph's own edges are.
+        let joined = graph.isWalkable(here) && !bridges.contains(here)
+            ? graph.neighbours(of: here).filter { $0.x == target.x && $0.z == target.z }
+            : []
+        let candidates = joined.isEmpty ? (ground(at: target, near: at).map { [$0] } ?? []) : Array(joined)
+        return candidates.min { abs(height(of: $0) - at) < abs(height(of: $1) - at) }
+    }
+
+    /// Ground at a cell within a step of a height: a node of the graph, or a cell of a
+    /// gap narrower than the body (FR-SNAKE-260). Nil where there is none.
+    private func ground(at cell: NavigationGraph.Node, near at: Double) -> NavigationGraph.Node? {
+        let there = graph.floors.map { NavigationGraph.Node(floor: $0, x: cell.x, z: cell.z) }
+            .filter { graph.isWalkable($0) || bridges.contains($0) }
+            .filter { abs(height(of: $0) - at) <= stepHeight + Geometry.samePosition }
+        return there.min { abs(height(of: $0) - at) < abs(height(of: $1) - at) }
     }
 
     /// The floor a declared transition leads down to from this cell, if there is one.
@@ -221,9 +323,9 @@ struct Surfaces {
     /// of whatever it overlaps, without leaving the cell the position is in. The
     /// position itself where that cannot be done.
     ///
-    /// The match sets the head down with this (ADR-0021): it starts in the first
-    /// walkable cell of the lowest floor (`Game.start`), which in an arena walled all
-    /// round is a corner, and a body wider than a cell sits in both walls there.
+    /// The match sets the head down with this (ADR-0021): it starts at a spawn point
+    /// (`Game.start`, FR-MAP-180), which can be a corner of a room, and a body wider
+    /// than a cell sits in both walls there.
     func clear(_ position: SIMD3<Double>, feet: Double) -> SIMD3<Double> {
         var here = position
         for _ in Int.zero..<Motion.pushOutAttempts {

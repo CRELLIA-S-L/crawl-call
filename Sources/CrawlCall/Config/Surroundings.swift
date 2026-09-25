@@ -2,7 +2,7 @@
 // (ART-070); the look itself — how wide the island is, what colour its water, how
 // often birds cross it — is the setting's configuration (IF-GREENHOLM-010, ADR-0031).
 //
-// implements: FR-MAP-140, FR-GREENHOLM-010, FR-GREENHOLM-020, FR-GREENHOLM-030
+// implements: FR-MAP-140, FR-GREENHOLM-010, FR-GREENHOLM-020, FR-GREENHOLM-030, FR-MAP-200
 import Foundation
 
 /// The camera of a running match, as far as the surroundings must answer for it.
@@ -31,27 +31,18 @@ enum Coverage {
 enum SceneryShape {
     /// A unit mesh is one metre across and one high, so its scale is its size.
     static let unit: Float = 1
-    /// A cylinder, a cone or a sphere of unit size has half a metre of radius.
-    static let unitRadius: Float = 0.5
     /// How rough scenery's surfaces are, 0 a mirror and 1 chalk: matt, as the arena's.
     static let roughness: Float = 0.85
     static let metallic: Float = 0
 }
 
-/// Numbers of the island's shape that follow from geometry, not from taste.
+/// Numbers of the island that follow from geometry, not from taste.
 enum IslandShape {
-    /// The smallest ellipse round a rectangle passes through its corners with each
-    /// semi-axis this many times the rectangle's half-side.
-    static let circumscribing = 2.0.squareRoot()
     /// Metres the island's banks reach below the water, so that no gap shows at the
     /// waterline from any angle.
     static let submerged = 0.5
     /// Metres of water: a slab, not a plane, so that it has an underside to its top.
     static let waterDepth = 0.1
-    /// A ring of trees has at least this many, or it is not a ring.
-    static let fewestRimTrees = 8
-    /// Shrubs stand halfway between two trees of the ring.
-    static let shrubOffset = 0.5
 }
 
 /// Numbers of how the sky picture is painted (FR-GREENHOLM-020).
@@ -93,10 +84,31 @@ enum BirdShape {
     static let laneStep = (5.0.squareRoot() - 1) / 2
 }
 
-/// The constants of Ramanujan's second approximation of an ellipse's perimeter,
-/// π(a + b)(1 + 3h / (10 + √(4 − 3h))).
-enum Ramanujan {
-    static let a = 3.0
-    static let b = 10.0
-    static let c = 4.0
+/// Counting on the grids a setting's edge is drawn on (FR-MAP-200).
+enum Distances {
+    /// The next sample, and the one extra that a count of steps needs to be a count of
+    /// samples.
+    static let oneMore = 1
+    /// A squared distance, in samples, larger than any grid has: a sample of no set.
+    static let far = 1e20
+}
+
+/// The corners of a square of samples, in order round it, and the least a polygon is.
+enum Square {
+    static let origin = 0
+    static let across = 1
+    static let diagonal = 2
+    static let down = 3
+    static let triangle = 3
+}
+
+/// The grid a setting's edge is drawn on (FR-MAP-200).
+enum OutlineGrid {
+    /// Metres between samples: the edge is placed between samples by their values, so
+    /// it is smooth well below this, and the grid of an arena some tens of metres
+    /// across stays within a hundred thousand samples.
+    static let step = 0.05
+    /// Metres of grid beyond the shore, so that the water's own edge is never cut by
+    /// the grid's.
+    static let pad = 0.5
 }

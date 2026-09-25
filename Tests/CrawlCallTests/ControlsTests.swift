@@ -62,9 +62,9 @@ final class StickTests: XCTestCase {
 final class EatButtonTests: XCTestCase {
     /// A session over the shipped map, with the scene it needs to exist.
     private func session() throws -> GameSession {
-        let world = try Launch.world().get()
+        let world = try Launch.world(map: "room").get()
         let built = SceneBuilder.scene(for: world.plan, view: world.configurations.view)
-        let start = try XCTUnwrap(Game.start(in: world))
+        let start = try XCTUnwrap(Game.firstStart(in: world))
         let game = Game(world: world, start: start)
         let snake = SnakeEntity.make(radius: world.configurations.tuning.bodyRadius,
                                      segments: game.snake.segments)
@@ -88,8 +88,8 @@ final class EatButtonTests: XCTestCase {
         // Driven to a bot rather than asserted about: the same walk a player makes,
         // read off the session the button reads, so that a `canEat` wired to nothing
         // fails here rather than passing on the dark half alone.
-        let world = try Launch.world().get()
-        let start = try XCTUnwrap(Game.start(in: world))
+        let world = try Launch.world(map: "room").get()
+        let start = try XCTUnwrap(Game.firstStart(in: world))
         let cell = world.configurations.tuning.navigationGraphCellSize
         let session = try session()
         let prey = try XCTUnwrap(session.game.bots.filter { $0.floor == 0 }.first)

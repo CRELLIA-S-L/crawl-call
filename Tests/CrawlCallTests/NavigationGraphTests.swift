@@ -6,7 +6,12 @@ import XCTest
 @testable import CrawlCall
 
 final class NavigationGraphTests: XCTestCase {
-    private lazy var kit: Kit = { try! Kit.load(named: "blockout", from: .main) }()
+    private var kit: Kit!
+
+    override func setUpWithError() throws {
+        try super.setUpWithError()
+        kit = try Kit.load(named: "blockout", from: .main)
+    }
 
     private func graph(_ text: String) throws -> NavigationGraph {
         NavigationGraph.derive(from: try MapParser.parse(text, kit: kit), stepHeight: ShippedTuning.stepHeight)

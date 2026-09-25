@@ -7,7 +7,7 @@
 // is, and when debris stops blocking sight (FR-MAP-040) this is the one place that
 // learns about it.
 //
-// implements: FR-VIEW-150, FR-BOT-050
+// implements: FR-VIEW-150, FR-BOT-050, FR-MAP-220
 import Foundation
 
 enum Sight {
@@ -161,6 +161,9 @@ enum Sight {
         let high = SIMD3(max(eye.x, point.x), max(eye.y, point.y), max(eye.z, point.z))
         for candidate in plan.index.candidates(low: low, high: high) {
             let piece = plan.pieces[candidate]
+            // What stops no sight — a module its kit says a line of sight passes
+            // through — lets the line through (FR-MAP-220).
+            guard piece.stopsSight else { continue }
             guard piece.size.min() > .zero else { continue }
             let half = piece.size * Geometry.half
             if piece.centre.x + half.x < low.x || piece.centre.x - half.x > high.x { continue }

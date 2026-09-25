@@ -6,10 +6,15 @@ import XCTest
 @testable import CrawlCall
 
 final class PerceptionTests: XCTestCase {
-    private lazy var kit: Kit = { try! Kit.load(named: "blockout", from: .main) }()
-    private lazy var configuration: BotConfiguration = {
-        try! Launch.world().get().configurations.bot
-    }()
+    private var kit: Kit!
+    private var configuration: BotConfiguration!
+
+    override func setUpWithError() throws {
+        try super.setUpWithError()
+        kit = try Kit.load(named: "blockout", from: .main)
+        configuration = try Launch.world().get().configurations.bot
+    }
+
     private let cell = 0.5
 
     /// A row of floor with one wall in the middle of it:
@@ -32,13 +37,13 @@ final class PerceptionTests: XCTestCase {
     func testABotSeesTheSnakeAcrossAnEmptyFloor() throws {
         var bots = [try bot(at: 0, 0)]
         Perception.notice(&bots, snake: [at(6, 0)], plan: try plan("........"), configuration: configuration)
-        XCTAssertTrue(bots[0].knowsSnake)
+        XCTAssertTrue(try element(0, of: bots).knowsSnake)
     }
 
     func testAWallBetweenThemHidesIt() throws {
         var bots = [try bot(at: 0, 0)]
         Perception.notice(&bots, snake: [at(6, 0)], plan: try plan("...#...."), configuration: configuration)
-        XCTAssertFalse(bots[0].knowsSnake, "the bot saw through a wall")
+        XCTAssertFalse(try element(0, of: bots).knowsSnake, "the bot saw through a wall")
     }
 
     func testACrateHidesItToo() throws {
@@ -46,7 +51,7 @@ final class PerceptionTests: XCTestCase {
         // cover — a snake is a low creature and does not look over it.
         var bots = [try bot(at: 0, 0)]
         Perception.notice(&bots, snake: [at(6, 0)], plan: try plan("...o...."), configuration: configuration)
-        XCTAssertFalse(bots[0].knowsSnake)
+        XCTAssertFalse(try element(0, of: bots).knowsSnake)
     }
 
     // MARK: from the height of the eyes (ADR-0022)
@@ -69,7 +74,7 @@ final class PerceptionTests: XCTestCase {
         let low = configuration.eyeHeight / 2
         var bots = [try bot(at: 0, 0)]
         Perception.notice(&bots, snake: [at(8, 0)], plan: try kerb(at: 1, height: low), configuration: configuration)
-        XCTAssertTrue(bots[0].knowsSnake, "the bot did not look over a box lower than its eyes")
+        XCTAssertTrue(try element(0, of: bots).knowsSnake, "the bot did not look over a box lower than its eyes")
     }
 
     func testAFenceTheBotStandsAgainstHidesTheSnakeAcrossTheRoom() throws {
@@ -77,7 +82,7 @@ final class PerceptionTests: XCTestCase {
         // line from the eyes comes down below the fence's top before it is past it.
         var bots = [try bot(at: 0, 0)]
         Perception.notice(&bots, snake: [at(10, 0)], plan: try plan(".#.........."), configuration: configuration)
-        XCTAssertFalse(bots[0].knowsSnake, "the bot saw over a fence its eyes barely clear")
+        XCTAssertFalse(try element(0, of: bots).knowsSnake, "the bot saw over a fence its eyes barely clear")
     }
 
     func testAFenceCloseInFrontOfTheSnakeStillHidesIt() throws {
@@ -85,7 +90,7 @@ final class PerceptionTests: XCTestCase {
         // seventh of a metre by then.
         var bots = [try bot(at: 0, 0)]
         Perception.notice(&bots, snake: [at(9, 0)], plan: try plan("........#..."), configuration: configuration)
-        XCTAssertFalse(bots[0].knowsSnake, "the bot saw through a fence the snake was lying behind")
+        XCTAssertFalse(try element(0, of: bots).knowsSnake, "the bot saw through a fence the snake was lying behind")
     }
 
     func testWhatStandsTallerThanTheEyesHidesTheSnakeWhereverItStands() throws {
@@ -93,7 +98,7 @@ final class PerceptionTests: XCTestCase {
         // it hides what a fence there would not.
         var bots = [try bot(at: 0, 0)]
         Perception.notice(&bots, snake: [at(10, 0)], plan: try plan(".=.........."), configuration: configuration)
-        XCTAssertFalse(bots[0].knowsSnake, "the bot saw through a partition")
+        XCTAssertFalse(try element(0, of: bots).knowsSnake, "the bot saw through a partition")
     }
 
     func testTheFloorTheyBothStandOnIsNotInTheWay() throws {
@@ -102,7 +107,7 @@ final class PerceptionTests: XCTestCase {
         // whistle.
         var bots = [try bot(at: 0, 0)]
         Perception.notice(&bots, snake: [at(1, 0)], plan: try plan("...."), configuration: configuration)
-        XCTAssertTrue(bots[0].knowsSnake)
+        XCTAssertTrue(try element(0, of: bots).knowsSnake)
     }
 
     func testBeyondTheDetectionRangeItIsNotNoticed() throws {
@@ -111,13 +116,13 @@ final class PerceptionTests: XCTestCase {
         var bots = [try bot(at: 0, 0)]
         let row = String(repeating: ".", count: far + 1)
         Perception.notice(&bots, snake: [at(far, 0)], plan: try plan(row), configuration: configuration)
-        XCTAssertFalse(bots[0].knowsSnake, "a bot noticed the snake \(Double(far) * cell) m away")
+        XCTAssertFalse(try element(0, of: bots).knowsSnake, "a bot noticed the snake \(Double(far) * cell) m away")
         // And the same snake one step inside the range is noticed, so the test above
         // is about the range and not about the line.
         let near = Int((range / cell).rounded(.down)) - 1
         var again = [try bot(at: 0, 0)]
         Perception.notice(&again, snake: [at(near, 0)], plan: try plan(row), configuration: configuration)
-        XCTAssertTrue(again[0].knowsSnake)
+        XCTAssertTrue(try element(0, of: again).knowsSnake)
     }
 
     func testASegmentSeenIsTheSnakeSeen() throws {
@@ -129,21 +134,21 @@ final class PerceptionTests: XCTestCase {
                              "........")
         var head = [try bot(at: 0, 0)]
         Perception.notice(&head, snake: [at(6, 0)], plan: arena, configuration: configuration)
-        XCTAssertFalse(head[0].knowsSnake, "the head is behind the wall")
+        XCTAssertFalse(try element(0, of: head).knowsSnake, "the head is behind the wall")
 
         var bots = [try bot(at: 0, 0)]
         Perception.notice(&bots, snake: [at(6, 0), at(6, 2)], plan: arena, configuration: configuration)
-        XCTAssertTrue(bots[0].knowsSnake)
+        XCTAssertTrue(try element(0, of: bots).knowsSnake)
     }
 
     func testWhatIsAlreadyKnownStaysKnown() throws {
         var bots = [try bot(at: 0, 0)]
         let open = try plan("........")
         Perception.notice(&bots, snake: [at(6, 0)], plan: open, configuration: configuration)
-        XCTAssertTrue(bots[0].knowsSnake)
+        XCTAssertTrue(try element(0, of: bots).knowsSnake)
         // Out of sight afterwards: nothing in the specification says a bot forgets,
         // so nothing here does either.
         Perception.notice(&bots, snake: [at(6, 0)], plan: try plan("...#...."), configuration: configuration)
-        XCTAssertTrue(bots[0].knowsSnake)
+        XCTAssertTrue(try element(0, of: bots).knowsSnake)
     }
 }

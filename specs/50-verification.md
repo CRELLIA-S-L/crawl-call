@@ -70,6 +70,16 @@ Neither was a defect in the game. Both cost a run and read, for a moment, like o
 
 So: `XCTAssertEqual(_:_:accuracy:)` for a number, a component-by-component comparison for a vector, and a named epsilon where a test needs its own. Where a test really does mean "the same value", it compares integers — a cell index, a count, a floor number — and those the grid has in abundance.
 
+## A test that fails reports a failure, never a crash
+
+Whatever goes wrong in a test's own code — a fixture that will not load, a value that is not there, an error it did not expect — is reported as that test's failure. A crash ends the run, not the test: on 2026-09-25 a fixture that could no longer load the map took the test process down, and the run ended at its watchdog's limit with no count of the suite and no name for the test that failed — and macOS offered to report the crash to Apple.
+
+A crash of the game's own code under test is different: it is a defect of the game, and the crash is how it is found.
+
+So: a fixture is loaded where an error can fail the test — `setUpWithError`, a throwing test, `XCTUnwrap` — and never with `try!` or a forced unwrap.
+An element of a collection is taken with `element(_:of:)`, or `checkedIndex(_:of:)` where the test changes it (`Tests/CrawlCallTests/TestSupport.swift`), and never by a subscript of a number: a missing one then fails the test and says which it was and how many there were. A dictionary keyed by numbers is looked up by a named key. A subscript by a variable is safe where the variable walks the collection's own indices; where the index comes from the code under test, it goes through the same helpers.
+`TestHygieneTests` reads the suite's source and fails on any `try!`, `as!`, forced unwrap or subscript by a number, naming the file and the line, so the rule holds without anybody having to remember it.
+
 ## How the frame rate is measured
 
 A frame-rate claim is only as good as its instrument, and two instruments that look right are not:
