@@ -1,11 +1,9 @@
 // What a bot knows about the snake. One question at a time: is any part of it close
 // enough, and is there anything in the way (FR-BOT-050).
 //
-// What "in view" means is settled here as line of sight and nothing else. The
-// requirement says "field of view", the bot configuration carries a detection range
-// and no angle, and no bot has a facing to measure an angle from — so a cone would be
-// a number and a direction invented in this file. Said out loud rather than assumed:
-// if the maintainer wants a cone, IF-BOT-010 gains the angle first.
+// "In view" is three things: within the detection range, within the field of view —
+// a cone round the way the bot faces (FR-BOT-280), as wide as the configuration's
+// angle — and with nothing in the way. A bot does not see with the back of its head.
 //
 // implements: FR-BOT-050
 import Foundation
@@ -24,13 +22,23 @@ enum Perception {
             // How far is measured where the bot stands; what is in the way is measured
             // from its eyes, over whatever stands lower than the line (ADR-0022).
             let standing = bots[index].position
-            for point in snake where metres(standing, point) <= range {
+            for point in snake where metres(standing, point) <= range
+                && isInFieldOfView(point, of: bots[index], degrees: configuration.fieldOfView) {
                 if Sight.isClear(from: bots[index].eye, to: point, through: plan) {
                     bots[index].knowsSnake = true
                     break
                 }
             }
         }
+    }
+
+    /// Whether a point lies within a bot's field of view: no farther round from the way
+    /// it faces than half the field's angle. A point straight above or below it has no
+    /// way round, and is in view.
+    static func isInFieldOfView(_ point: SIMD3<Double>, of bot: Bot, degrees: Double) -> Bool {
+        guard let towards = Turning.angle(from: bot.position, to: point) else { return true }
+        let off = abs(atan2(sin(towards - bot.facing), cos(towards - bot.facing)))
+        return off <= degrees * Geometry.half * .pi / Geometry.halfTurnDegrees
     }
 
     static func metres(_ a: SIMD3<Double>, _ b: SIMD3<Double>) -> Double {

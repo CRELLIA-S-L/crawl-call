@@ -2,7 +2,7 @@
 // rather than the look (ART-070). What the models themselves look like — sizes,
 // colours, materials — waits for their rework (Q-280).
 //
-// implements: FR-VIEW-170, FR-MAP-210, FR-VIEW-240, FR-VIEW-250, FR-VIEW-260, FR-VIEW-270, FR-VIEW-280
+// implements: FR-VIEW-170, FR-MAP-210, FR-VIEW-240, FR-VIEW-250, FR-VIEW-260, FR-VIEW-270, FR-VIEW-280, FR-VIEW-290
 import Foundation
 
 /// How a module drawn as a figure fills its box (ADR-0034). Only the drawing: for sight
@@ -75,6 +75,21 @@ enum SnakeLump {
     static let width = 0.3
     static let behindHead = 0.45
     static let speed = 1.5
+}
+
+/// A bot's walk (FR-VIEW-290): metres of ground a stride takes — a step with each foot;
+/// how high the figure lifts at each step, in metres; how far it rocks to the side,
+/// leans forward and swings each leg, in radians; how fast the walk comes on and dies
+/// away, as a share a second; and the speed, in metres a second, below which a bot
+/// counts as standing.
+enum BotGait {
+    static let stride = 1.1
+    static let lift = 0.04
+    static let rock = 0.1
+    static let lean = 0.07
+    static let swing = 0.5
+    static let easing = 8.0
+    static let movingSpeed = 0.2
 }
 
 /// The snake's eyes (FR-VIEW-260), in shares of the head's radius: how big an eye is,

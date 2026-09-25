@@ -2,7 +2,7 @@
 // tuning (ART-070); the weight of each term against the others is tuning, and is in
 // the bot configuration (IF-BOT-010).
 //
-// implements: FR-BOT-080, FR-BOT-090, FR-BOT-210, FR-BOT-150, FR-BOT-160, FR-BOT-060
+// implements: FR-BOT-080, FR-BOT-090, FR-BOT-210, FR-BOT-150, FR-BOT-160, FR-BOT-060, FR-BOT-270, FR-BOT-280, FR-BOT-050
 import Foundation
 
 enum Utility {
@@ -28,6 +28,32 @@ enum Scheduling {
 enum Walking {
     /// Metres of a step left below which a bot has walked it all.
     static let arrived = 1e-9
+    /// How far apart, as a share of a cell, the points are that a straight walk is
+    /// tested at (FR-BOT-270): a quarter, so that no cell a line crosses is missed.
+    static let lookStep = 0.25
+}
+
+/// How a facing is worked out and turned (FR-BOT-280).
+enum Turning {
+    /// Metres a bot must move, or a point lie away from it, for there to be a way to
+    /// face.
+    static let noWay = 1e-6
+
+    /// The facing from one point to another, level: the angle round the vertical from
+    /// +z towards +x. Nil where the two are one above the other.
+    static func angle(from start: SIMD3<Double>, to end: SIMD3<Double>) -> Double? {
+        let x = end.x - start.x, z = end.z - start.z
+        return (x * x + z * z).squareRoot() > noWay ? atan2(x, z) : nil
+    }
+
+    /// `facing` turned towards `wanted` the short way round, by no more than `most`.
+    static func toward(_ wanted: Double, from facing: Double, by most: Double) -> Double {
+        let half = Double.pi, whole = Double.pi * Geometry.bothSides
+        var gap = (wanted - facing).truncatingRemainder(dividingBy: whole)
+        if gap > half { gap -= whole }
+        if gap < -half { gap += whole }
+        return abs(gap) <= most ? wanted : facing + (gap > .zero ? most : -most)
+    }
 }
 
 /// Numbers of firing (FR-BOT-060).

@@ -9,7 +9,7 @@
 // A figure's origin is at its feet, so that it stands on the floor as placed and
 // shrinks into the floor as it is swallowed.
 //
-// implements: FR-VIEW-060, FR-VIEW-070, FR-VIEW-100, FR-VIEW-190
+// implements: FR-VIEW-290, FR-VIEW-060, FR-VIEW-070, FR-VIEW-100, FR-VIEW-190, FR-BOT-280
 import CoreGraphics
 import Foundation
 import RealityKit
@@ -41,10 +41,14 @@ enum BotEntity {
     /// that a receiver on an entity reaches its children.
     @MainActor
     static func light(_ entity: Entity, by ambient: Entity) {
+        // Down the whole figure: the legs hang from hips (FR-VIEW-290), a level below
+        // the rest of its parts.
+        func lit(_ part: Entity) {
+            part.components.set(ImageBasedLightReceiverComponent(imageBasedLight: ambient))
+            for child in part.children { lit(child) }
+        }
         for figure in entity.children {
-            for part in figure.children {
-                part.components.set(ImageBasedLightReceiverComponent(imageBasedLight: ambient))
-            }
+            for part in figure.children { lit(part) }
         }
     }
 
@@ -56,7 +60,7 @@ enum BotEntity {
     /// bodies rather than the bots for that reason: what is gone is what has no bot
     /// left to answer for it.
     @MainActor
-    static func update(_ entity: Entity, from bots: [Bot]) {
+    static func update(_ entity: Entity, from bots: [Bot], gaits: [Int: Gait] = [:]) {
         var standing: [String: Bot] = [:]
         for bot in bots { standing[EntityName.numbered(EntityName.bot, bot.id)] = bot }
         for body in entity.children {
@@ -73,6 +77,18 @@ enum BotEntity {
             // every frame, by `swallow`.
             body.scale = .one
             body.position = SIMD3(Float(bot.position.x), Float(bot.position.y), Float(bot.position.z))
+            // Facing where the model has it face (FR-BOT-280): the figure's front is +z.
+            // Stepping as it walks (FR-VIEW-290): lifted at each step, rocking side to
+            // side, leaning into the walk, the legs swinging from the hips.
+            let pose = (gaits[bot.id] ?? Gait()).pose
+            body.position.y += Float(pose.lift)
+            body.orientation = simd_quatf(angle: Float(bot.facing), axis: SIMD3(0, 1, 0))
+                * simd_quatf(angle: Float(pose.lean), axis: SIMD3(1, 0, 0))
+                * simd_quatf(angle: Float(pose.rock), axis: SIMD3(0, 0, 1))
+            for (name, sign) in [(EntityName.leftHip, Float(1)), (EntityName.rightHip, Float(-1))] {
+                body.children.first { $0.name == name }?.orientation =
+                    simd_quatf(angle: -sign * Float(pose.swing), axis: SIMD3(1, 0, 0))
+            }
         }
     }
 

@@ -3,7 +3,7 @@
 // a file with an unknown key is rejected at load rather than silently defaulted,
 // which is what `Schema` is for.
 //
-// implements: IF-SNAKE-010, IF-MAP-020, IF-VIEW-020, IF-BOT-010, FR-SNAKE-220
+// implements: IF-SNAKE-010, IF-MAP-020, IF-VIEW-020, IF-BOT-010, FR-SNAKE-220, FR-BOT-280, FR-BOT-050, FR-BOT-290
 import Foundation
 
 // MARK: - Snake (IF-SNAKE-010)
@@ -207,6 +207,14 @@ struct BotConfiguration: Decodable, Equatable {
     /// How far above the ground it stands on a bot's eyes are, in metres: where it
     /// looks and fires from (FR-BOT-050, FR-BOT-060, ADR-0022).
     let eyeHeight: Double
+    /// Degrees a second a bot turns at, to face where it goes or what it fires at
+    /// (FR-BOT-280).
+    let turnSpeed: Double
+    /// Degrees across a bot's field of view, level, centred on the way it faces: it
+    /// sees nothing outside it (FR-BOT-050).
+    let fieldOfView: Double
+    /// Metres a second squared a bot gathers speed and slows at (FR-BOT-290).
+    let acceleration: Double
 
     private static let weights = Schema.object([
         "panic": .value, "discipline": .value, "aggression": .value, "selfSacrifice": .value,
@@ -236,6 +244,9 @@ struct BotConfiguration: Decodable, Equatable {
         ]),
         "figureHeight": .value,
         "eyeHeight": .value,
+        "turnSpeed": .value,
+        "fieldOfView": .value,
+        "acceleration": .value,
     ])
 }
 

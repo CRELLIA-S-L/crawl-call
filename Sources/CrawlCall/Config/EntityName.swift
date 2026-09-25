@@ -2,7 +2,7 @@
 // part of the scene finds another — the match looks the camera up by it — so it is
 // declared once and not spelled at each end.
 //
-// implements: FR-TOOL-020, FR-VIEW-020, FR-VIEW-100, FR-VIEW-170, FR-MAP-130, FR-GREENHOLM-030, FR-VIEW-260
+// implements: FR-TOOL-020, FR-VIEW-020, FR-VIEW-100, FR-VIEW-170, FR-MAP-130, FR-GREENHOLM-030, FR-VIEW-260, FR-VIEW-290
 import Foundation
 
 enum EntityName {
@@ -18,6 +18,8 @@ enum EntityName {
     static let leftEye = "leftEye"
     static let rightEye = "rightEye"
     static let pupil = "pupil"
+    static let leftHip = "leftHip"
+    static let rightHip = "rightHip"
     static let bots = "bots"
     static let bot = "bot"
     static let shots = "shots"

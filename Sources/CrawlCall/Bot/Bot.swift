@@ -2,7 +2,7 @@
 // personality its archetype gave it. No RealityKit here — this is the part a test
 // can read, the same split as `Snake`.
 //
-// implements: FR-BOT-030, FR-BOT-050, FR-BOT-060
+// implements: FR-BOT-030, FR-BOT-050, FR-BOT-060, FR-BOT-280, FR-BOT-290
 import Foundation
 
 /// The two sides. Which one the player is nearer to is never a property of a squad:
@@ -44,6 +44,12 @@ struct Bot: Equatable {
     /// What it decided to do at its last slot, and what is left of the way there.
     var action: Action?
     var path: [NavigationGraph.Node] = []
+    /// Which way the bot faces, as an angle round the vertical from +z towards +x, in
+    /// radians (FR-BOT-280): where it looks from, and where its figure faces.
+    var facing: Double = .zero
+    /// How fast it is going, in metres a second: up to its run speed as it sets off,
+    /// down to nothing as it arrives (FR-BOT-290).
+    var speed: Double = .zero
 
     /// A bot as its archetype starts it. Nil where the configuration carries no entry
     /// for that archetype — the caller says what that means, because at start-up it is

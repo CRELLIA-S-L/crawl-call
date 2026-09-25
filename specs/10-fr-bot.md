@@ -94,7 +94,7 @@ derives_from: []
 depends_on: []
 refines: []
 conflicts_with: []
-code: [Sources/CrawlCall/Bot/Perception.swift, Sources/CrawlCall/Map/Sight.swift, Sources/CrawlCall/Bot/Bot.swift, Sources/CrawlCall/Config/Geometry.swift, Sources/CrawlCall/Map/PieceIndex.swift]
+code: [Sources/CrawlCall/Bot/Perception.swift, Sources/CrawlCall/Map/Sight.swift, Sources/CrawlCall/Bot/Bot.swift, Sources/CrawlCall/Config/Geometry.swift, Sources/CrawlCall/Map/PieceIndex.swift, Sources/CrawlCall/Config/Utility.swift, Sources/CrawlCall/Config/Configurations.swift, config/bot.json]
 tests: [Tests/CrawlCallTests/PerceptionTests.swift, Tests/CrawlCallTests/PieceIndexTests.swift]
 created: 2026-09-21
 ```
@@ -105,6 +105,7 @@ When any segment of the snake is within a bot's field of view and within the det
 Known-to-a-bot is what deliberation (FR-BOT-080) and the interrupt on sight (FR-BOT-150) read.
 Until 2026-09-25 the requirement set a mark that the snake was known, and a bot so marked was handed where every part of the snake truly was, from then on. The maintainer ruled that a bot acts on what it has seen (ADR-0032), so what a sighting leaves is where and when, and deliberation reads that (FR-BOT-220). `partial` until the build keeps the sightings instead of the mark.
 
+The field of view is a cone round the way the bot faces (FR-BOT-280), as wide as the angle of the bot configuration (IF-BOT-010), since 2026-09-25: the maintainer asked that a bot see where it looks and not with the back of its head. Until then no bot had a facing, and it saw all round.
 A bot looks from the eye height of the bot configuration (IF-BOT-010), which the shipped numbers put on the eyes of the figure it is drawn as (FR-VIEW-070), and what it looks at is the ground under each part of the snake. A module stops that line only where it stands higher than the line at the place the line crosses it: a fence lower than a bot's eyes hides a snake lying close behind it and not a snake across the room, by the same geometry the player's camera sees by, from lower down. Until 2026-09-24 sight was measured along the surface on purpose, as Q-240 settled it, because a bot was a box with no head and an eye height would have been a number measured from nothing; the figure is what gives the eye somewhere to be.
 
 ### FR-BOT-060 — A bot fires at its target
@@ -635,3 +636,81 @@ Where the bot configuration sets a time after which a sighting of the snake or o
 
 **Rationale.** The maintainer, 2026-09-25: nothing needs forgetting, but forgetting the snake and the enemy is to be possible (ADR-0032).
 Where no time is set nothing is forgotten; the map is never forgotten, only replaced by what is seen later (FR-BOT-230).
+
+### FR-BOT-270 — A bot walks straight where it can
+
+```yaml
+status: implemented
+verification: T
+derives_from: []
+depends_on: [FR-MAP-020, FR-MAP-025]
+refines: []
+conflicts_with: []
+code: [Sources/CrawlCall/Bot/Execution.swift, Sources/CrawlCall/Config/Utility.swift]
+tests: [Tests/CrawlCallTests/BotPathTests.swift]
+created: 2026-09-25
+```
+
+When a bot walks to a destination, the system **shall** take it in a straight line between points of its route wherever the bot's body can pass between them over level ground, rather than from cell to cell.
+
+**Rationale.** The maintainer, 2026-09-25: the bots' movement is to look better, and the first of its steps. A route found over the grid runs from cell to cell, joined side by side (FR-MAP-020), so a bot going anywhere but along a row or a column walked a staircase or an L. ADR-0016 had promised that paths would be smoothed over cell corners so that bots do not walk in staircases; the code never did it.
+The body the bot passes with is the one FR-MAP-025 makes common to the snake and the bots, so that a shortcut never takes a bot through a gap the grid would not.
+Over level ground only: up a flight or down a step the route keeps to its cells, whose heights are the steps' (FR-MAP-150). How the line is found is ADR-0042.
+
+### FR-BOT-280 — A bot turns to face where it goes
+
+```yaml
+status: implemented
+verification: T
+derives_from: []
+depends_on: [FR-BOT-270, FR-BOT-060, IF-BOT-010]
+refines: []
+conflicts_with: []
+code: [Sources/CrawlCall/Bot/Bot.swift, Sources/CrawlCall/Bot/Execution.swift, Sources/CrawlCall/Bot/Squads.swift, Sources/CrawlCall/View/BotEntity.swift, Sources/CrawlCall/Config/Utility.swift, Sources/CrawlCall/Config/Configurations.swift, config/bot.json]
+tests: [Tests/CrawlCallTests/BotFacingTests.swift]
+created: 2026-09-25
+```
+
+While a match is running, the system **shall** turn each bot, no faster than the turn speed of the bot configuration, to face the way it is walking, or while it fires the point it fires at, each bot starting the match facing the other squad.
+
+**Rationale.** The maintainer, 2026-09-25: the second step of the bots' movement. A figure that never turns slides sideways and backwards, and a character that faces where it goes reads as going there.
+A facing of the model's and not only the drawing's, because what a bot can see is to depend on it: its field of view (FR-BOT-050) is measured from where it faces.
+No faster than a turn speed, so that a bot swings round rather than snapping; facing the other squad at the start, because the two are at war (FR-BOT-020) and the enemy is what a soldier watches for.
+
+### FR-BOT-290 — A bot gathers speed and slows to a stop
+
+```yaml
+status: implemented
+verification: T
+derives_from: []
+depends_on: [FR-BOT-270, IF-BOT-010]
+refines: []
+conflicts_with: []
+code: [Sources/CrawlCall/Bot/Execution.swift, Sources/CrawlCall/Bot/Bot.swift, Sources/CrawlCall/Config/Configurations.swift, config/bot.json]
+tests: [Tests/CrawlCallTests/BotMotionTests.swift]
+created: 2026-09-25
+```
+
+While a match is running, the system **shall** bring each bot up to its run speed and down again at the acceleration of the bot configuration, coming to rest where its route ends.
+
+**Rationale.** The maintainer, 2026-09-25: the fifth step of the bots' movement. A bot that is at full speed in its first frame and stopped dead in its last moves like a cursor, not a body.
+Only how fast the speed is reached changes, not the speed: a bot runs as fast as its archetype runs, so the chase the snake is built around is the same (INV-SNAKE-020). A bot that stops walking for another action — to fire — stops at once, since it has no route left to roll along.
+
+### FR-BOT-300 — Bots do not pass through one another
+
+```yaml
+status: implemented
+verification: T
+derives_from: []
+depends_on: [FR-MAP-025, FR-MAP-020]
+refines: []
+conflicts_with: []
+code: [Sources/CrawlCall/Bot/Execution.swift]
+tests: [Tests/CrawlCallTests/BotMotionTests.swift]
+created: 2026-09-25
+```
+
+While a match is running, the system **shall** keep any two bots on the same floor at least two body radii apart, moving neither onto ground no bot can stand on.
+
+**Rationale.** The maintainer, 2026-09-25: part of the fifth step of the bots' movement. Two figures standing inside each other read as a mistake, and a squad that walks through itself is not a squad of bodies.
+Two body radii, the radius FR-MAP-025 makes common to the snake and the bots. Each bot of a pair that has come too close gives way by half of what they overlap, where it can stand; a bot the snake is eating does not move (FR-SNAKE-090), and the other gives way by all of it.

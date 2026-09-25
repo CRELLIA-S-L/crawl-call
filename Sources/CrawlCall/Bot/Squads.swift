@@ -7,7 +7,7 @@
 // another over the graph the bots path on. Said out loud rather than passed off as a
 // rule: when a map gains spawn zones, this is what they replace.
 //
-// implements: FR-BOT-020, INV-BOT-030, FR-MAP-150
+// implements: FR-BOT-020, INV-BOT-030, FR-MAP-150, FR-BOT-280
 import Foundation
 
 enum Squads {
@@ -64,13 +64,16 @@ enum Squads {
                            keeping: apart, from: held, cellSize: cell, floorHeight: height)
 
         var bots: [Bot] = []
-        for (squad, cells) in [(Squad.red, red), (Squad.blue, blue)] {
+        let blueCentre = centre(of: blueAnchor, in: world.graph, cellSize: cell, floorHeight: height)
+        for (squad, cells, enemy) in [(Squad.red, red, blueCentre), (Squad.blue, blue, redCentre)] {
             for (index, node) in cells.enumerated() {
                 let kind = Archetype.allCases[index % Archetype.allCases.count]
                 let position = centre(of: node, in: world.graph, cellSize: cell, floorHeight: height)
-                guard let bot = Bot(id: bots.count, squad: squad, archetype: kind,
+                guard var bot = Bot(id: bots.count, squad: squad, archetype: kind,
                                     at: position, floor: node.floor,
                                     configuration: world.configurations.bot) else { continue }
+                // Facing the other squad: the two are at war (FR-BOT-280).
+                bot.facing = Turning.angle(from: position, to: enemy) ?? .zero
                 bots.append(bot)
             }
         }

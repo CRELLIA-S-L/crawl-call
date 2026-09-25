@@ -15,7 +15,7 @@
 // The figure faces +z, towards the camera (FR-VIEW-010), because a bot has no facing
 // of its own to turn it by.
 //
-// implements: FR-VIEW-060, FR-VIEW-070
+// implements: FR-VIEW-060, FR-VIEW-070, FR-VIEW-290
 import Foundation
 import RealityKit
 import UIKit
@@ -39,6 +39,9 @@ enum Figure {
     /// FR-VIEW-070 reads an archetype from, the eyes are where the bot looks from.
     enum Role: Equatable {
         case body, head, eye, headgear, weapon, kit
+        /// A leg and its boot, which swing together from the hip as the bot walks
+        /// (FR-VIEW-290); the right one is on −x, since the figure faces +z.
+        case leftLeg, rightLeg
     }
 
     struct Part: Equatable {
@@ -91,10 +94,10 @@ enum Figure {
         let torsoCentre = hips + torso.y / 2
         var parts: [Part] = [
             // Legs and boots.
-            Part(role: .body, shape: .box(SIMD3(0.15, 0.36, 0.16), corner: 0.04), centre: SIMD3(-0.1, 0.24, 0), paint: .cloth),
-            Part(role: .body, shape: .box(SIMD3(0.15, 0.36, 0.16), corner: 0.04), centre: SIMD3(0.1, 0.24, 0), paint: .cloth),
-            Part(role: .body, shape: .box(SIMD3(0.17, 0.08, 0.22), corner: 0.03), centre: SIMD3(-0.1, 0.04, 0.02), paint: .boots),
-            Part(role: .body, shape: .box(SIMD3(0.17, 0.08, 0.22), corner: 0.03), centre: SIMD3(0.1, 0.04, 0.02), paint: .boots),
+            Part(role: .rightLeg, shape: .box(SIMD3(0.15, 0.36, 0.16), corner: 0.04), centre: SIMD3(-0.1, 0.24, 0), paint: .cloth),
+            Part(role: .leftLeg, shape: .box(SIMD3(0.15, 0.36, 0.16), corner: 0.04), centre: SIMD3(0.1, 0.24, 0), paint: .cloth),
+            Part(role: .rightLeg, shape: .box(SIMD3(0.17, 0.08, 0.22), corner: 0.03), centre: SIMD3(-0.1, 0.04, 0.02), paint: .boots),
+            Part(role: .leftLeg, shape: .box(SIMD3(0.17, 0.08, 0.22), corner: 0.03), centre: SIMD3(0.1, 0.04, 0.02), paint: .boots),
             // Torso and arms, in the squad's colour.
             Part(role: .body, shape: .box(torso, corner: 0.08), centre: SIMD3(0, torsoCentre, 0), paint: .squad),
             Part(role: .body, shape: .box(SIMD3(0.11, 0.36, 0.13), corner: 0.05),
@@ -196,6 +199,15 @@ enum Figure {
     @MainActor
     static func make(_ archetype: Archetype, height: Double, materials: [Paint: any Material]) -> Entity {
         let figure = Entity()
+        // Each leg hangs from a hip, a joint at the top of the leg, so that the walk
+        // can swing it (FR-VIEW-290).
+        let joints = [Role.leftLeg, .rightLeg].map { side -> (Role, Entity) in
+            let joint = Entity()
+            joint.name = side == .leftLeg ? EntityName.leftHip : EntityName.rightHip
+            joint.position = SIMD3<Float>(hip(side, height: height))
+            figure.addChild(joint)
+            return (side, joint)
+        }
         for part in parts(for: archetype, height: height) {
             let model = ModelEntity(mesh: mesh(for: part.shape), materials: [materials[part.paint] ?? SimpleMaterial()])
             model.name = "\(part.role)"
@@ -204,10 +216,24 @@ enum Figure {
             if case .cylinder(_, _, true) = part.shape {
                 model.orientation = simd_quatf(angle: .pi / 2, axis: SIMD3<Float>(1, 0, 0))
             }
-            figure.addChild(model)
+            if let joint = joints.first(where: { $0.0 == part.role })?.1 {
+                model.position -= joint.position
+                joint.addChild(model)
+            } else {
+                figure.addChild(model)
+            }
         }
         return figure
     }
+
+    /// Where a leg's hip joint is on a figure `height` tall: at the top of the leg,
+    /// over its middle.
+    static func hip(_ side: Role, height: Double) -> SIMD3<Double> {
+        let scale = height / drawnHeight
+        return SIMD3(side == .rightLeg ? -legSpread : legSpread, hips, .zero) * scale
+    }
+    /// How far each leg stands off the middle, in the figure's own units.
+    private static let legSpread = 0.1
 
     @MainActor
     private static func mesh(for shape: Shape) -> MeshResource {

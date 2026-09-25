@@ -614,3 +614,23 @@ While the snake is eating, and after that for as long as the meal takes to pass 
 Growing as the prey goes in, because the prey is drawn shrinking into the head at the same time (FR-VIEW-100), and the two together say where it went. Travelling on after the meal, at a pace of its own, so that the snake goes on carrying what it ate for a moment after it is free to move.
 The swelling changes only how thick the body is along its length, so it adds no triangles to FR-VIEW-250's ceiling.
 Judged on the phone.
+
+### FR-VIEW-290 — A walking bot steps
+
+```yaml
+status: implemented
+verification: T
+derives_from: []
+depends_on: [FR-VIEW-070, FR-BOT-280]
+refines: []
+conflicts_with: []
+code: [Sources/CrawlCall/View/Gait.swift, Sources/CrawlCall/View/BotEntity.swift, Sources/CrawlCall/View/Figure.swift, Sources/CrawlCall/GameSession.swift, Sources/CrawlCall/Config/Drawing.swift, Sources/CrawlCall/Config/EntityName.swift]
+tests: [Tests/CrawlCallTests/GaitTests.swift]
+created: 2026-09-25
+```
+
+While a bot walks, the system **shall** draw it stepping — its legs swinging, its body bobbing and rocking — in time with the distance it covers, and standing still when it does not move.
+
+**Rationale.** The maintainer, 2026-09-25: the fourth step of the bots' movement. A figure that glides reads as a piece moved on a board; one that steps reads as a soldier running, and the concept's references move their characters with a bouncing, waddling walk (concept §2, Overcooked, Moving Out).
+In time with the distance covered and not with the clock, so that the feet neither skate at a run nor paddle in place; the walk comes on and dies away over a few frames rather than switching.
+The figures were static until now (ADR-0022); the walk moves the whole figure and swings its legs from the hips, and changes none of the figure's own numbers (Q-280).

@@ -24,14 +24,45 @@ final class PerceptionTests: XCTestCase {
         return ScenePlan.make(map: map, kit: kit, cellSize: cell)
     }
 
-    private func bot(at x: Int, _ z: Int, kind: Archetype = .assault) throws -> Bot {
-        try XCTUnwrap(Bot(id: 0, squad: .red, archetype: kind,
-                          at: SIMD3(Double(x) * cell, 0, Double(z) * cell), floor: 0,
-                          configuration: configuration))
+    /// A bot facing along the row, east, where these tests put the snake: what most of
+    /// them test is what stands in the way, not which way the bot looks.
+    private func bot(at x: Int, _ z: Int, kind: Archetype = .assault, facing: Double = .pi / 2) throws -> Bot {
+        var made = try XCTUnwrap(Bot(id: 0, squad: .red, archetype: kind,
+                                     at: SIMD3(Double(x) * cell, 0, Double(z) * cell), floor: 0,
+                                     configuration: configuration))
+        made.facing = facing
+        return made
     }
 
     private func at(_ x: Int, _ z: Int) -> SIMD3<Double> {
         SIMD3(Double(x) * cell, 0, Double(z) * cell)
+    }
+
+    func testABotDoesNotSeeWithTheBackOfItsHead() throws {
+        // FR-BOT-050: within the field of view only, round the way it faces.
+        let floor = try plan(String(repeating: ".", count: 13), String(repeating: ".", count: 13))
+        var ahead = [try bot(at: 6, 0, facing: .pi / 2)]
+        Perception.notice(&ahead, snake: [at(10, 0)], plan: floor, configuration: configuration)
+        XCTAssertTrue(try element(0, of: ahead).knowsSnake, "the snake straight ahead is not seen")
+        var behind = [try bot(at: 6, 0, facing: -.pi / 2)]
+        Perception.notice(&behind, snake: [at(10, 0)], plan: floor, configuration: configuration)
+        XCTAssertFalse(try element(0, of: behind).knowsSnake, "the bot saw the snake behind it")
+    }
+
+    func testTheFieldOfViewEndsAtHalfItsAngleEitherSide() throws {
+        // Just inside the edge of the field is seen; just outside is not, either side.
+        let half = configuration.fieldOfView / 2 * .pi / 180
+        let floor = try plan(String(repeating: ".", count: 13), String(repeating: ".", count: 13))
+        let snake = at(10, 0)
+        let towards = try XCTUnwrap(Turning.angle(from: at(6, 0), to: snake))
+        for side in [-1.0, 1.0] {
+            var inside = [try bot(at: 6, 0, facing: towards + side * (half - 0.02))]
+            Perception.notice(&inside, snake: [snake], plan: floor, configuration: configuration)
+            XCTAssertTrue(try element(0, of: inside).knowsSnake, "just inside the field, side \(side)")
+            var outside = [try bot(at: 6, 0, facing: towards + side * (half + 0.02))]
+            Perception.notice(&outside, snake: [snake], plan: floor, configuration: configuration)
+            XCTAssertFalse(try element(0, of: outside).knowsSnake, "just outside the field, side \(side)")
+        }
     }
 
     func testABotSeesTheSnakeAcrossAnEmptyFloor() throws {

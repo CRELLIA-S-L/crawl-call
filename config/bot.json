@@ -204,5 +204,8 @@
     "empty": 1.2
   },
   "figureHeight": 1.12,
-  "eyeHeight": 0.875
+  "eyeHeight": 0.875,
+  "turnSpeed": 540,
+  "fieldOfView": 140,
+  "acceleration": 16
 }

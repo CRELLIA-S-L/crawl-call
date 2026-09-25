@@ -5,7 +5,7 @@
 // measured with — `specs/50-verification.md` says why, and the two are different
 // questions asked of the same number.
 //
-// implements: FR-TOOL-070, FR-VIEW-020, FR-VIEW-030, FR-VIEW-060, FR-VIEW-100, FR-VIEW-140, FR-VIEW-150, FR-VIEW-155, FR-VIEW-160, FR-VIEW-170, FR-VIEW-250, FR-VIEW-190, FR-VIEW-230, FR-VIEW-210, FR-TOOL-230, FR-TOOL-240, FR-GREENHOLM-030, FR-TOOL-260, FR-TOOL-270, FR-SNAKE-220, FR-VIEW-280
+// implements: FR-TOOL-070, FR-VIEW-020, FR-VIEW-030, FR-VIEW-060, FR-VIEW-100, FR-VIEW-140, FR-VIEW-150, FR-VIEW-155, FR-VIEW-160, FR-VIEW-170, FR-VIEW-250, FR-VIEW-190, FR-VIEW-230, FR-VIEW-210, FR-TOOL-230, FR-TOOL-240, FR-GREENHOLM-030, FR-TOOL-260, FR-TOOL-270, FR-SNAKE-220, FR-VIEW-280, FR-VIEW-290
 import Foundation
 import Observation
 import RealityKit
@@ -129,6 +129,8 @@ final class GameSession {
         recorder?.note(.matchBegan)
         eatingAtLastFrame = false
         digestion = Digestion()
+        gaits = [:]
+        botsAt = [:]
         focus = game.snake.head
         place()
     }
@@ -144,6 +146,10 @@ final class GameSession {
     private var eatingAtLastFrame = false
     /// The meals passing along the snake's body, as the screen shows them (FR-VIEW-280).
     private var digestion = Digestion()
+    /// Each bot's walk as the screen shows it, and where it stood a frame ago
+    /// (FR-VIEW-290).
+    private var gaits: [Int: Gait] = [:]
+    private var botsAt: [Int: SIMD3<Double>] = [:]
 
     /// One frame: the world moves, then what is drawn catches up with it. `seconds` is
     /// the interval since the last frame, as the renderer measured it.
@@ -161,6 +167,13 @@ final class GameSession {
             digestion.step(seconds: min(seconds, Frame.longest),
                            swallowed: game.eating.flatMap(remaining(of:)).map { Fraction.whole - $0 },
                            length: Double(game.snake.tail.count) * game.snake.segmentSpacing)
+            for bot in game.bots {
+                let was = botsAt[bot.id] ?? bot.position
+                let across = bot.position.x - was.x, along = bot.position.z - was.z
+                let moved = (across * across + along * along).squareRoot()
+                gaits[bot.id, default: Gait()].step(moved: moved, seconds: min(seconds, Frame.longest))
+                botsAt[bot.id] = bot.position
+            }
         }
         let stepTime = clock.now - stepping
         let placed = place()
@@ -204,7 +217,7 @@ final class GameSession {
                                     tuning: game.world.configurations.tuning) != nil
         SnakeEntity.update(snakeEntity, from: game.snake,
                            radius: game.world.configurations.tuning.bodyRadius, lumps: digestion.lumps)
-        BotEntity.update(botEntities, from: game.bots)
+        BotEntity.update(botEntities, from: game.bots, gaits: gaits)
         // Every shot still alive is drawn where it went (FR-VIEW-170).
         ShotEntity.update(shotEntities, from: game.shots)
         // A meal under way is drawn going in (FR-VIEW-100). What is left of the prey
