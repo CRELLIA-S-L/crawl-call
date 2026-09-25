@@ -32,6 +32,8 @@ enum Resource {
     /// The surface shader that cuts a hole in a module, by its function's name in the
     /// app's default Metal library (ADR-0020).
     static let holeShader = "crawlCallHole"
+    /// The surface shader that moves glints across Greenholm's water (ADR-0038).
+    static let waterShader = "crawlCallWater"
 
     /// What a configuration failure names when the file it came from is not known.
     static let unknownConfiguration = "unknown"

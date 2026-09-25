@@ -12,6 +12,7 @@ One more was opened and settled on 2026-09-23, when the kit's wall came down to 
 Q-230 — the head kept to walkable cells by its centre while its body, wider than a cell, sank into the wall beside it — was opened on 2026-09-22 and settled on 2026-09-24 by ADR-0021: the body is kept out of walls by their geometry. The entry offered a finer grid as one way out and had it backwards; the ADR says why.
 Q-210 — whether the game targets iPadOS — was settled on 2026-09-24 by the maintainer: it does, CON-PUB-010 names iPadOS 27, and the target builds for iPhone and iPad alike (`TARGETED_DEVICE_FAMILY = 1,2`); the macOS half was never a divergence, only a sequence, and FR-VIEW-040 still brings it.
 Q-270 — the world around the arena, agreed and then built — was closed on 2026-09-25, when the maintainer judged the island, its sky and its birds on the phone and found them good; the sky showed grey-blue there rather than the configured blue, which the maintainer left as it is for now, and Q-350 holds why and what could change it.
+Q-400 — the corners of every drawn primitive are sharp — was opened and settled on 2026-09-25: the maintainer had every drawn box rounded as a trial, looked at it on the phone, and kept it, grooves between neighbouring modules included; it became FR-VIEW-240, and ADR-0037 holds what it cost and why RealityKit's own rounded box was not used. The bots' figures went on to Q-420.
 What remains is what a decision inside the repository cannot close.
 
 ### Q-120 — The name is chosen; the search that clears it is not done
@@ -123,16 +124,23 @@ What remains is what a decision inside the repository cannot close.
 - **The question:** whether to move the map to hexagonal cells. Hexagonal cells meet only along sides, never at a single point, so a corner between two cells — which a square grid has at every cell and which the head fell through until ADR-0036 — would not exist; every neighbour would be the same distance away, and a diagonal way would no longer be a staircase.
 - **Still needed:** how a hexagonal map is written as text, which rows a file can hold; what a wall is — a module on a cell, as now, or a module on a side between two cells; which ways a flight can rise, and how a building with square rooms is laid on hexagons; what the kit's modules become, and whether the blockout is redrawn or converted; what moving costs in the parts listed above; and whether to decide before the kit's models are reworked (Q-280, Q-380), since those are sized to the cell.
 
-### Q-400 — The corners of every drawn primitive are sharp
-
-- **Found:** the maintainer on 2026-09-25, looking at the blockout on the phone: walls, steps, crates and the rest look sharp enough to cut oneself on.
-- **What diverged:** every module is drawn as a box with square edges (`SceneBuilder.swift`), as are the parts the scenery and the figures are built from where they are boxes (`SceneryBuilder.swift`, `Figure.swift`). No requirement asks for their edges to be rounded, and none forbids it.
-- **The question:** whether to round slightly every corner and edge of the primitives the game draws.
-- **Still needed:** how much — a radius in metres or a share of the smaller side, and whether thin modules such as a partition of 0.1 m are rounded the same; whether it is the drawing's alone, with the body, sight and the see-through still measuring every module as its box (ADR-0034), and whether the see-through's hole shader still fits a rounded box; whether neighbouring modules — a wall of many cells, a flight of many steps — should show a seam between rounded pieces or be drawn as one; which of these belongs to the rework of how drawn models are parameterised (Q-280) or to moving them to Reality Composer Pro 3 (Q-380); and what it costs in triangles on the phone.
-
 ### Q-410 — Leaping a gap too wide to crawl across
 
 - **Found:** the maintainer on 2026-09-25, while settling that the snake crawls across a gap narrower than its body (FR-SNAKE-260).
 - **What diverged:** nothing yet. A gap as wide as the body or wider is a ledge: the snake drops into it where there is ground within the tuning's drop below (FR-SNAKE-220), and stops at it where there is none.
 - **The question:** whether the snake may, later, leap a gap wider than its body.
 - **Still needed:** how the player asks for a leap, or whether it happens by itself at speed; how wide a gap can be leapt, and whether that depends on the snake's length or speed; what the tail does in the air, since today every part lies on the ground or down a drop (FR-SNAKE-220); whether bots can follow across, which the navigation graph does not allow (FR-MAP-020); and what a map shows so that a gap that can be leapt looks different from one that cannot (FR-MAP-260).
+
+### Q-420 — The bots' figures are drawn with RealityKit's heaviest box
+
+- **Found:** 2026-09-25, while measuring the rounded box of FR-VIEW-240 (ADR-0037).
+- **What diverged:** every box a bot's figure is built from (`Figure.swift`, ADR-0022) is RealityKit's `generateBox(cornerRadius:)`, 13 068 triangles a part whatever its size, while a box FR-VIEW-240 rounds is 328. No requirement bounds a figure's triangles, and the frame rate held with them on the phone that day.
+- **The question:** whether the figures move to `MeshResource.roundedBox` and under FR-VIEW-240's ceiling.
+- **Still needed:** whether each part's own radius, which the figure's table sets and which is larger than FR-VIEW-240's, is kept; whether it is done now or with the rework of how drawn models are parameterised (Q-280) or their move to Reality Composer Pro 3 (Q-380); and what a match with eight bots costs in frames before and after.
+
+### Q-430 — Fish that leap from Greenholm's water
+
+- **Found:** the maintainer on 2026-09-25, while the water was being made prettier (FR-GREENHOLM-040 through FR-GREENHOLM-070): for later, some life in the water, such as fish leaping out at random with rings spreading on the water round them.
+- **What diverged:** nothing yet. The only life in Greenholm is its birds (FR-GREENHOLM-030); the water has waves (FR-GREENHOLM-070) and nothing in it.
+- **The question:** whether fish leap from the water, and what else lives in it.
+- **Still needed:** how often and where — within the match frame only, as the birds are (FR-GREENHOLM-030), or anywhere; what a fish is drawn as, whether from primitives like the birds or an asset (Q-380); how the rings are drawn — the water shader takes one value per material (ADR-0038), so rings at a point need another way in, or a drawn ring on the surface; whether a fish takes any part in play, which FR-MAP-130 forbids for scenery; and what it costs in frames.

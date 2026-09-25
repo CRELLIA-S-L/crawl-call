@@ -506,3 +506,24 @@ When the interface orientation lock is gained or lost on an iPad during a match 
 **Rationale.** The moment the lock comes or goes is the moment the scene's geometry changes under the player's thumbs — the window grows to the whole screen, shrinks back beside another app, or turns — and a match that ran on through it would be lost to a change the player did not make in the game. Apple's own example for games does this ("pauseIfNeeded(isInterfaceOrientationLocked:)"), and the maintainer asked for it on 2026-09-24.
 A match the player has steered, because iPadOS grants the lock as the scene becomes active full screen — in the same millisecond, in the log of the first build on 2026-09-24 — so every launch would have opened on a paused match nobody had played; a match not yet steered has nothing to lose to the change. Coming back to a match from the background is a change like the others, and pauses it.
 The plate is what makes the pause a pause rather than a freeze: the game could pause and had nothing to leave a pause by. It stands where the controls stood, drawn as the plate at the end of a match is (FR-VIEW-190), for the same reason — a stick that answers while the match is paused says it is not.
+
+### FR-VIEW-240 — Drawn boxes have rounded edges
+
+```yaml
+status: implemented
+verification: T
+derives_from: []
+depends_on: [FR-VIEW-170, FR-GREENHOLM-030]
+refines: []
+conflicts_with: []
+code: [Sources/CrawlCall/Map/SceneBuilder.swift, Sources/CrawlCall/View/ShotEntity.swift, Sources/CrawlCall/Setting/SceneryBuilder.swift, Sources/CrawlCall/Config/Drawing.swift]
+tests: [Tests/CrawlCallTests/RoundedBoxTests.swift]
+created: 2026-09-25
+```
+
+The system **shall** draw every box that stands for a module, a shot or a bird with its edges and corners rounded to a radius of 0.03 m, or of a quarter of the box's smallest side where that is less, and each such box with no more than 400 triangles.
+
+**Rationale.** The maintainer, 2026-09-25, looking at the blockout on the phone: square edges look sharp enough to cut oneself on (Q-400). Only the drawing is rounded: for the body, for sight and for the see-through a module is still its box (ADR-0034).
+Each module is rounded on its own, so a wall of many cells and a flight of many steps show a groove between their pieces; the maintainer saw it on the phone the same day and kept it.
+The water beyond the island is not rounded, because its slabs meet edge to edge and a rounded edge shows there as a seam. Neither are bots' figures, which ADR-0022 already rounds (Q-420).
+The ceiling on triangles is what keeps RealityKit's own rounded box, 13 068 triangles at any size, out of the game (ADR-0037).

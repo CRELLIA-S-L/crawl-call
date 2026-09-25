@@ -36,6 +36,13 @@ enum SceneryShape {
     static let metallic: Float = 0
 }
 
+/// How a surface's tangent frame is chosen (FR-GREENHOLM-070).
+enum TangentFrame {
+    /// A normal whose x is at least this is taken to face along x, and its tangent is
+    /// laid along z instead.
+    static let facingAlong = 0.9
+}
+
 /// Numbers of the island that follow from geometry, not from taste.
 enum IslandShape {
     /// Metres the island's banks reach below the water, so that no gap shows at the

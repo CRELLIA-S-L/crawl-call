@@ -47,6 +47,22 @@ struct Scenery: Equatable {
     let sky: Sky?
     /// Birds that cross over the arena now and then (FR-GREENHOLM-030).
     let birds: Birds?
+    /// How rough the water's surface is, 0 a mirror and 1 chalk (FR-GREENHOLM-060).
+    let waterRoughness: Double
+    /// How strongly the water reflects, 0 not at all (FR-GREENHOLM-060).
+    let waterSpecular: Double
+    /// The glints that move across the water (FR-GREENHOLM-070).
+    let ripple: Ripple
+
+    struct Ripple: Equatable {
+        /// Metres from one wave to the next, and metres a second they travel.
+        let wavelength: Double
+        let speed: Double
+        /// How far a glint lifts the water's colour towards white, 0 to 1.
+        let strength: Double
+        /// How steep the waves are: the largest tilt of the surface, as rise over run.
+        let slope: Double
+    }
 
     struct Sky: Equatable {
         let zenith: SIMD3<Double>

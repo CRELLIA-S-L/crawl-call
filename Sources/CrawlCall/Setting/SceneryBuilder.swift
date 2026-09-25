@@ -3,9 +3,10 @@
 // moves the birds. Nothing built here joins the map's entity or `SeeThrough`: scenery
 // is for the eye only (FR-MAP-130).
 //
-// implements: FR-GREENHOLM-010, FR-GREENHOLM-020, FR-GREENHOLM-030, FR-MAP-130, FR-TOOL-200, FR-MAP-200
+// implements: FR-GREENHOLM-010, FR-GREENHOLM-020, FR-GREENHOLM-030, FR-MAP-130, FR-TOOL-200, FR-MAP-200, FR-VIEW-240, FR-GREENHOLM-060, FR-GREENHOLM-070
 import CoreGraphics
 import Foundation
+import Metal
 import RealityKit
 import UIKit
 
@@ -50,11 +51,25 @@ enum SceneryBuilder {
         root.name = EntityName.scenery
         var meshes: [Scenery.Part.Shape: MeshResource] = [:]
         var materials: [SIMD3<Double>: PhysicallyBasedMaterial] = [:]
+        // Water is glossy where everything else is matt (FR-GREENHOLM-060), so its
+        // materials are kept apart even where a colour is the same.
+        var waters: [SIMD3<Double>: any Material] = [:]
+        func material(_ layer: Scenery.Part.Layer, _ colour: SIMD3<Double>) -> any Material {
+            switch layer {
+            case .ground:
+                let made = materials[colour] ?? matt(colour)
+                materials[colour] = made
+                return made
+            case .water:
+                let made = waters[colour] ?? water(colour, scenery: scenery)
+                waters[colour] = made
+                return made
+            }
+        }
         for part in scenery.parts where part.size.min() > .zero {
             let mesh = meshes[part.shape] ?? unitMesh(part.shape)
             meshes[part.shape] = mesh
-            let material = materials[part.colour] ?? matt(part.colour)
-            materials[part.colour] = material
+            let material = material(part.layer, part.colour)
             let model = ModelEntity(mesh: mesh, materials: [material])
             model.name = EntityName.sceneryPart
             model.scale = SIMD3(Float(part.size.x), Float(part.size.y), Float(part.size.z))
@@ -66,9 +81,8 @@ enum SceneryBuilder {
             guard let mesh = try? meshResource(surface.mesh) else {
                 preconditionFailure(String(describing: SceneryError.surfaceNotBuilt))
             }
-            var material = materials[surface.colour] ?? matt(surface.colour)
             // Walls and water are seen from either side as the camera goes round them.
-            material.faceCulling = .none
+            let material = seenFromEitherSide(material(surface.layer, surface.colour))
             let model = ModelEntity(mesh: mesh, materials: [material])
             model.name = EntityName.sceneryPart
             model.components.set(ImageBasedLightReceiverComponent(imageBasedLight: ambient))
@@ -86,11 +100,27 @@ enum SceneryBuilder {
         var descriptor = MeshDescriptor(name: EntityName.sceneryPart)
         descriptor.positions = MeshBuffers.Positions(mesh.positions.map { SIMD3<Float>($0) })
         descriptor.normals = MeshBuffers.Normals(mesh.normals.map { SIMD3<Float>($0) })
+        // A tangent frame at every vertex, so that a surface shader can tilt the
+        // normal — the water's waves do (FR-GREENHOLM-070, ADR-0038).
+        let frames = mesh.normals.map(tangentFrame)
+        descriptor.tangents = MeshBuffers.Tangents(frames.map(\.tangent))
+        descriptor.bitangents = MeshBuffers.Tangents(frames.map(\.bitangent))
         descriptor.primitives = .triangles(mesh.indices)
         return try MeshResource.generate(from: [descriptor])
     }
 
-    /// A mesh of the shape at unit size: one metre across and one high.
+    /// Two directions along a surface with this normal, at right angles to it and to
+    /// each other: x flattened onto the surface, or z where the surface faces along x.
+    static func tangentFrame(_ normal: SIMD3<Double>) -> (tangent: SIMD3<Float>, bitangent: SIMD3<Float>) {
+        let n = simd_normalize(normal)
+        let across = abs(n.x) < TangentFrame.facingAlong ? SIMD3<Double>(1, 0, 0) : SIMD3<Double>(0, 0, 1)
+        let tangent = simd_normalize(across - n * simd_dot(across, n))
+        return (SIMD3<Float>(tangent), SIMD3<Float>(simd_cross(n, tangent)))
+    }
+
+    /// A mesh of the shape at unit size: one metre across and one high. Not rounded
+    /// (FR-VIEW-240): the parts are slabs of water laid edge to edge, and a rounded
+    /// edge shows as a seam where two meet.
     @MainActor
     static func unitMesh(_ shape: Scenery.Part.Shape) -> MeshResource {
         switch shape {
@@ -98,11 +128,40 @@ enum SceneryBuilder {
         }
     }
 
-    static func matt(_ colour: SIMD3<Double>) -> PhysicallyBasedMaterial {
+    /// Water: glossy (FR-GREENHOLM-060), with glints moving across it through the
+    /// water shader (FR-GREENHOLM-070, ADR-0038); glossy and still where Metal or the
+    /// function is not there.
+    static func water(_ colour: SIMD3<Double>, scenery: Scenery) -> any Material {
+        var glossy = matt(colour, roughness: scenery.waterRoughness)
+        glossy.specular = .init(floatLiteral: Float(scenery.waterSpecular))
+        guard let library = shaderLibrary else { return glossy }
+        let shader = CustomMaterial.SurfaceShader(named: Resource.waterShader, in: library)
+        guard var rippled = try? CustomMaterial(from: glossy, surfaceShader: shader) else { return glossy }
+        rippled.custom.value = SIMD4(Float(scenery.ripple.wavelength), Float(scenery.ripple.speed),
+                                     Float(scenery.ripple.strength), Float(scenery.ripple.slope))
+        return rippled
+    }
+    private static let shaderLibrary: (any MTLLibrary)? = MTLCreateSystemDefaultDevice()?.makeDefaultLibrary()
+
+    static func seenFromEitherSide(_ material: any Material) -> any Material {
+        switch material {
+        case var pbr as PhysicallyBasedMaterial:
+            pbr.faceCulling = .none
+            return pbr
+        case var custom as CustomMaterial:
+            custom.faceCulling = .none
+            return custom
+        default:
+            return material
+        }
+    }
+
+    static func matt(_ colour: SIMD3<Double>,
+                     roughness: Double = Double(SceneryShape.roughness)) -> PhysicallyBasedMaterial {
         var material = PhysicallyBasedMaterial()
         material.baseColor = .init(tint: UIColor(red: CGFloat(colour.x), green: CGFloat(colour.y),
                                                  blue: CGFloat(colour.z), alpha: Colour.opaque))
-        material.roughness = .init(floatLiteral: SceneryShape.roughness)
+        material.roughness = .init(floatLiteral: Float(roughness))
         material.metallic = .init(floatLiteral: SceneryShape.metallic)
         return material
     }
@@ -147,13 +206,15 @@ enum SceneryBuilder {
         let root = Entity()
         root.name = EntityName.birds
         let material = matt(birds.colour)
-        let body = MeshResource.generateBox(size: SceneryShape.unit)
+        let body = MeshResource.roundedBox(SIMD3(Float(BirdShape.bodyWidth), Float(BirdShape.bodyHeight),
+                                                 Float(BirdShape.bodyLength)))
+        let wingMesh = MeshResource.roundedBox(SIMD3(Float(BirdShape.wingSpan), Float(BirdShape.wingThickness),
+                                                     Float(BirdShape.wingDepth)))
         for index in Int.zero..<birds.count {
             let bird = Entity()
             bird.name = EntityName.numbered(EntityName.bird, index)
             bird.scale = SIMD3(repeating: Float(birds.size))
             let trunk = ModelEntity(mesh: body, materials: [material])
-            trunk.scale = SIMD3(Float(BirdShape.bodyWidth), Float(BirdShape.bodyHeight), Float(BirdShape.bodyLength))
             bird.addChild(trunk)
             for side in [Geometry.belowSide, Geometry.aboveSide] {
                 // A wing hinges at the body: the hinge is an entity at the body's side,
@@ -161,8 +222,7 @@ enum SceneryBuilder {
                 let hinge = Entity()
                 hinge.name = side < .zero ? EntityName.leftWing : EntityName.rightWing
                 hinge.position = SIMD3(Float(side * BirdShape.bodyWidth * Geometry.half), .zero, .zero)
-                let wing = ModelEntity(mesh: body, materials: [material])
-                wing.scale = SIMD3(Float(BirdShape.wingSpan), Float(BirdShape.wingThickness), Float(BirdShape.wingDepth))
+                let wing = ModelEntity(mesh: wingMesh, materials: [material])
                 wing.position = SIMD3(Float(side * BirdShape.wingSpan * Geometry.half), .zero, .zero)
                 hinge.addChild(wing)
                 bird.addChild(hinge)

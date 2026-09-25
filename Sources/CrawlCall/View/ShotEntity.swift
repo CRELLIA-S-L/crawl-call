@@ -7,7 +7,7 @@
 // moved, because a shot a fifth of a second long would otherwise build and throw
 // away a mesh several times a second for every bot in the match.
 //
-// implements: FR-VIEW-170
+// implements: FR-VIEW-170, FR-VIEW-240
 import Foundation
 import RealityKit
 
@@ -27,8 +27,7 @@ enum ShotEntity {
         let materials: [Squad: PhysicallyBasedMaterial] = [
             .red: BotEntity.material(for: .red), .blue: BotEntity.material(for: .blue),
         ]
-        let mesh = MeshResource.generateBox(width: Float(thickness), height: Float(thickness),
-                                            depth: Tracers.unitLength)
+        let mesh = MeshResource.roundedBox(SIMD3(Float(thickness), Float(thickness), Tracers.unitLength))
         for index in Int.zero..<max(Tracers.least, bots.count * Tracers.perBot) {
             // The squads take turns down the pool, so each has half of it.
             let squad = Squad.allCases[index % Squad.allCases.count]

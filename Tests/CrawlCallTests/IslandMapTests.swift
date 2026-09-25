@@ -3,7 +3,7 @@
 // (FR-MAP-170); the snake born where the map says (FR-MAP-180, FR-MAP-190); and what
 // each module stops (FR-MAP-210, FR-MAP-220).
 //
-// verifies: FR-MAP-170, FR-MAP-180, FR-MAP-190, FR-MAP-200, FR-MAP-210, FR-MAP-220, FR-GREENHOLM-010, IF-MAP-010
+// verifies: FR-MAP-170, FR-MAP-180, FR-MAP-190, FR-MAP-200, FR-MAP-210, FR-MAP-220, FR-GREENHOLM-010, FR-GREENHOLM-040, FR-GREENHOLM-050, FR-GREENHOLM-060, FR-GREENHOLM-070, IF-MAP-010
 import RealityKit
 import XCTest
 @testable import CrawlCall
@@ -185,7 +185,10 @@ final class GreenholmIslandTests: XCTestCase {
         let s = try world.setting.scenery(around: world.plan, camera: camera)
         XCTAssertTrue(s.parts.allSatisfy { $0.layer == .water }, "scenery other than water is a primitive again")
         XCTAssertEqual(s.surfaces.filter { $0.layer == .ground }.count, 4)
-        XCTAssertEqual(s.surfaces.filter { $0.layer == .water }.count, 1)
+        // The foam, the shallows' bands and the water beyond them (FR-GREENHOLM-050,
+        // FR-GREENHOLM-040).
+        guard case .greenholm(let c) = world.setting else { return XCTFail("the shipped map is on Greenholm") }
+        XCTAssertEqual(s.surfaces.filter { $0.layer == .water }.count, c.shallowsBands + 2)
         XCTAssertTrue(s.surfaces.allSatisfy { !$0.mesh.isEmpty })
         // The water reaches everything the camera can show: the covered ground, less the
         // island's grid, in slabs, and the grid's own water cut to the shore.
@@ -213,6 +216,21 @@ final class GreenholmIslandTests: XCTestCase {
         let models = root.children.compactMap { $0 as? ModelEntity }
         XCTAssertEqual(models.count, s.parts.count + s.surfaces.filter { !$0.mesh.isEmpty }.count)
         XCTAssertTrue(models.allSatisfy { $0.components.has(ImageBasedLightReceiverComponent.self) })
+        // The water is as rough as the setting says, and the ground stays matt (FR-GREENHOLM-060).
+        let roughness = models.compactMap { model -> Float? in
+            switch model.model?.materials.first {
+            case let pbr as PhysicallyBasedMaterial: return pbr.roughness.scale
+            case let custom as CustomMaterial: return custom.roughness.scale
+            default: return nil
+            }
+        }
+        XCTAssertEqual(roughness.count, models.count)
+        XCTAssertTrue(roughness.contains { abs(Double($0) - s.waterRoughness) < 1e-6 })
+        XCTAssertTrue(roughness.contains { abs($0 - SceneryShape.roughness) < 1e-6 })
+        // And glints move across it, from the setting's ripple (FR-GREENHOLM-070).
+        let rippled = models.compactMap { $0.model?.materials.first as? CustomMaterial }
+        XCTAssertFalse(rippled.isEmpty)
+        XCTAssertTrue(rippled.allSatisfy { $0.custom.value.x == Float(s.ripple.wavelength) })
     }
 }
 

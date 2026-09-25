@@ -7,9 +7,10 @@
 // Colour comes from the kit's legend, not from here: what a module looks like is a
 // property of the kit a map is assembled from (FR-MAP-100).
 //
-// implements: FR-TOOL-020, FR-VIEW-140, FR-VIEW-150, FR-VIEW-155, FR-MAP-210
+// implements: FR-TOOL-020, FR-VIEW-140, FR-VIEW-150, FR-VIEW-155, FR-MAP-210, FR-VIEW-240
 import Foundation
 import RealityKit
+import struct SwiftUI.Path
 
 enum SceneBuilder {
     /// The whole scene: the map, the light it is read by, and the camera it is seen
@@ -54,8 +55,10 @@ enum SceneBuilder {
         // the suite's largest cost: its test phase ran in 5.6 s with one look built
         // per piece and in 1.3 s with two looks built per type.
         var looks: [String: (solid: [any Material], clear: [any Material], holed: [any Material]?)] = [:]
+        // So are the rounded boxes: a map's modules come in a handful of sizes (FR-VIEW-240).
+        var boxes: [SIMD3<Float>: MeshResource] = [:]
         for piece in plan.pieces where piece.size.min() > .zero {
-            let figure = Self.figure(for: piece)
+            let figure = Self.figure(for: piece, boxes: &boxes)
             // What a module looks like is the view's business, solid or see-through
             // alike; what colour it is comes from the kit's legend (FR-MAP-100).
             let look = looks[piece.module] ?? {
@@ -91,14 +94,16 @@ enum SceneBuilder {
     /// that box (FR-MAP-210, ADR-0034) — for a tree the crown, which the see-through
     /// cuts, with its trunk under it.
     @MainActor
-    static func figure(for piece: ScenePlan.Piece)
+    static func figure(for piece: ScenePlan.Piece, boxes: inout [SIMD3<Float>: MeshResource])
         -> (mesh: MeshResource, scale: SIMD3<Float>, position: SIMD3<Float>,
             trunk: (mesh: MeshResource, scale: SIMD3<Float>, offset: SIMD3<Float>)?) {
         let size = SIMD3<Float>(piece.size)
         let centre = SIMD3<Float>(piece.centre)
         switch piece.figure {
         case .box:
-            return (.generateBox(width: size.x, height: size.y, depth: size.z), SIMD3(repeating: ModuleFigures.unit),
+            let box = boxes[size] ?? .roundedBox(size)
+            boxes[size] = box
+            return (box, SIMD3(repeating: ModuleFigures.unit),
                     centre, nil)
         case .shrub:
             let wide = Float(ModuleFigures.shrubWidthShare)
@@ -119,4 +124,30 @@ enum SceneBuilder {
         }
     }
 
+}
+
+extension MeshResource {
+    /// A box of this size with its edges rounded (FR-VIEW-240, ADR-0037). Made at its own size, not
+    /// scaled to it, since a scale that is not the same on every axis would stretch
+    /// the rounding.
+    ///
+    /// A rounded rectangle across x and y, extruded along z with rounded rims: the
+    /// rims add the radius at each end, so the extrusion is shorter by two of them.
+    /// Where RealityKit cannot extrude it, the box is drawn with square edges.
+    @MainActor
+    static func roundedBox(_ size: SIMD3<Float>) -> MeshResource {
+        let corner = min(Rounding.radius, size.min() * Rounding.smallestSideShare)
+        let rect = CGRect(x: -CGFloat(size.x) / 2, y: -CGFloat(size.y) / 2,
+                          width: CGFloat(size.x), height: CGFloat(size.y))
+        var options = MeshResource.ShapeExtrusionOptions()
+        options.extrusionMethod = .linear(depth: size.z - 2 * corner)
+        options.chamferRadius = corner
+        options.boundaryResolution = .uniformSegmentsPerSpan(segmentCount: Rounding.segments)
+        options.chamferResolution = .uniformSegmentsPerSpan(segmentCount: Rounding.segments)
+        let outline = Path(roundedRect: rect, cornerRadius: CGFloat(corner), style: .circular)
+        guard let mesh = try? MeshResource(extruding: outline, extrusionOptions: options) else {
+            return .generateBox(size: size)
+        }
+        return mesh
+    }
 }

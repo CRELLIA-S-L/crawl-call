@@ -2,7 +2,7 @@
 // rather than the look (ART-070). What the models themselves look like — sizes,
 // colours, materials — waits for their rework (Q-280).
 //
-// implements: FR-VIEW-170, FR-MAP-210
+// implements: FR-VIEW-170, FR-MAP-210, FR-VIEW-240
 import Foundation
 
 /// How a module drawn as a figure fills its box (ADR-0034). Only the drawing: for sight
@@ -19,6 +19,19 @@ enum ModuleFigures {
     /// Primitives are generated at unit size and scaled.
     static let unit: Float = 1
     static let unitRadius: Float = 0.5
+}
+
+/// How much a drawn box's edges are rounded (FR-VIEW-240): this radius, or this
+/// share of the box's smallest side where that is less, so that a thin partition is
+/// not rounded into a bolster. Only the drawing: for sight and for the body a box has
+/// square edges.
+enum Rounding {
+    static let radius: Float = 0.03
+    static let smallestSideShare: Float = 0.25
+    /// Segments across each rounded edge and corner. RealityKit's own rounded box has
+    /// no such number and is 13 068 triangles at any size; an extruded one at two
+    /// segments is 328 (ADR-0037).
+    static let segments = 2
 }
 
 /// The pool of tracer bars the shots are drawn with (FR-VIEW-170).

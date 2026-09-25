@@ -5,7 +5,7 @@
 // and shrubs are the map's modules now, not a ring of scenery (FR-MAP-210, ADR-0034).
 // Laid out here as parts and surfaces; built in `SceneryBuilder`.
 //
-// implements: FR-GREENHOLM-010, FR-GREENHOLM-020, FR-GREENHOLM-030, FR-MAP-130, FR-MAP-140, FR-MAP-170, FR-MAP-200, FR-MAP-260
+// implements: FR-GREENHOLM-010, FR-GREENHOLM-020, FR-GREENHOLM-030, FR-GREENHOLM-040, FR-GREENHOLM-050, FR-GREENHOLM-060, FR-GREENHOLM-070, FR-MAP-130, FR-MAP-140, FR-MAP-170, FR-MAP-200, FR-MAP-260
 import Foundation
 
 enum Greenholm {
@@ -42,9 +42,27 @@ enum Greenholm {
                                   mesh: Outline.wall(along: outline.signed.map { $0 + c.shoreWidth }, on: grid,
                                                      top: shore, bottom: bottom)))
             // The water near the island is cut to its shore, so that it never runs
-            // under the island — where a basement is (FR-MAP-170).
+            // under the island — where a basement is (FR-MAP-170): foam along the
+            // shore (FR-GREENHOLM-050), the shallows in bands beyond it, a step
+            // nearer the water's colour each (FR-GREENHOLM-040), and the water's own
+            // colour beyond them.
+            let foam = c.shoreWidth + max(c.foamWidth, .zero)
+            surfaces.append(.init(layer: .water, colour: c.foamColour.rgb,
+                                  mesh: Outline.surface(where: outline.signed.map { min(-($0 + c.shoreWidth), $0 + foam) },
+                                                        on: grid, height: water)))
+            let band = c.shallowsWidth / Double(max(c.shallowsBands, 1))
+            for index in Int.zero..<max(c.shallowsBands, .zero) {
+                let inner = foam + band * Double(index)
+                let outer = inner + band
+                let share = Double(index) / Double(c.shallowsBands)
+                let colour = c.shallowsColour.rgb + (c.waterColour.rgb - c.shallowsColour.rgb) * share
+                surfaces.append(.init(layer: .water, colour: colour,
+                                      mesh: Outline.surface(where: outline.signed.map { min(-($0 + inner), $0 + outer) },
+                                                            on: grid, height: water)))
+            }
+            let open = foam + max(c.shallowsWidth, .zero)
             surfaces.append(.init(layer: .water, colour: c.waterColour.rgb,
-                                  mesh: Outline.surface(where: outline.signed.map { -($0 + c.shoreWidth) },
+                                  mesh: Outline.surface(where: outline.signed.map { -($0 + open) },
                                                         on: grid, height: water)))
             let far = grid.point(grid.width - Distances.oneMore, grid.height - Distances.oneMore)
             patch = GroundRect(lowest: grid.origin, highest: far)
@@ -66,7 +84,10 @@ enum Greenholm {
                           seen: arena.extent.z * Geometry.half)
         return Scenery(parts: parts, surfaces: surfaces, covered: covered, surface: water,
                        sky: .init(zenith: c.skyZenithColour.rgb, horizon: c.skyHorizonColour.rgb),
-                       birds: birds)
+                       birds: birds, waterRoughness: c.waterRoughness,
+                       waterSpecular: c.waterSpecular,
+                       ripple: .init(wavelength: c.rippleWavelength, speed: c.rippleSpeed,
+                                     strength: c.rippleStrength, slope: c.rippleSlope))
     }
 
     /// The island's edge round a plan (FR-MAP-200): the ground floor's cells are the
@@ -76,6 +97,7 @@ enum Greenholm {
         guard let groundLevel = plan.groundLevel else { return nil }
         return Outline.around(plan.cells { $0 == groundLevel }, basement: plan.cells { $0 < groundLevel },
                               cellSize: plan.cellSize, margin: c.edgeMargin, rounding: c.edgeRounding,
-                              reach: c.shoreWidth + OutlineGrid.pad)
+                              reach: c.shoreWidth + max(c.foamWidth, .zero) + max(c.shallowsWidth, .zero)
+                                  + OutlineGrid.pad)
     }
 }
