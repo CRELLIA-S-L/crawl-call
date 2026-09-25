@@ -2,7 +2,7 @@
 // (ART-070); the look itself — how wide the island is, what colour its water, how
 // often birds cross it — is the setting's configuration (IF-GREENHOLM-010, ADR-0031).
 //
-// implements: FR-MAP-140, FR-GREENHOLM-010, FR-GREENHOLM-020, FR-GREENHOLM-030, FR-MAP-200
+// implements: FR-MAP-140, FR-GREENHOLM-010, FR-GREENHOLM-020, FR-GREENHOLM-030, FR-MAP-200, FR-GREENHOLM-070
 import Foundation
 
 /// The camera of a running match, as far as the surroundings must answer for it.
