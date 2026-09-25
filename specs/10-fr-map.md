@@ -307,10 +307,11 @@ tests: [Tests/CrawlCallTests/SurroundingsTests.swift]
 created: 2026-09-24
 ```
 
-While a match is running, the system **shall** fill every part of the frame the match camera can show — at any pitch FR-VIEW-010 allows, in any window FR-VIEW-210 allows, over any point the camera can look at — with the arena or the map's surroundings, leaving no part of it empty.
+While a match is running, the system **shall** fill every part of the frame the match camera can show — at any pitch FR-VIEW-010 allows, at any yaw, in any window FR-VIEW-210 allows, over any point the camera can look at — with the arena or the map's surroundings, leaving no part of it empty.
 
 **Rationale.** Around the arena there is nothing today, drawn black on the phone and white in the simulator, and the frame shows it: at the arena's edge, and more of it when the head is on the balcony, a floor above the ground the rays then have further to fall to.
 The world need not be endless, because the released game's camera angle is frozen (FR-VIEW-010) and only the free camera of debug mode, a testing tool, can see past a finite one; it has to be larger than all the match camera can show, and no larger.
+At any yaw since 2026-09-25: the maintainer, turning the free camera, found the island at the very edge of the water on the camera's side, since the ground was sized for the one direction the match camera looks in; and the match camera may one day turn to follow the snake. A frame turned round the point looked at stays within a circle round it, so the ground is sized by the farthest corner of any frame, on every side (ADR-0041). It is still no larger than the frames it has to hold.
 How much that is follows from the camera, the map and the window — the distance scales with the arena, and the span across with the window's shape, which on an iPad is whatever the player gives it — so it is computed from them, never written down as a number, and a test computes it for the whole range.
 The sky is not part of it: with the shipped field of view of 50 degrees, the top of the frame looks 25 degrees or more below the horizon at every pitch FR-VIEW-010 allows.
 

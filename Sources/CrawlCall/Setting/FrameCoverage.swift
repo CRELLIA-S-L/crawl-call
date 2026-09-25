@@ -7,7 +7,10 @@
 // vertical in the iOS 27.0 SDK). A frame's footprint on flat ground is the
 // quadrilateral its four corner rays meet the ground at, and every coordinate of it is
 // affine in the drop from the focus to the ground and in the frame's aspect, so their
-// extremes are at the ends of their ranges; the pitch is sampled.
+// extremes are at the ends of their ranges — and so is a corner's distance from the
+// focus, which is convex in them; the pitch is sampled. The camera may be turned any
+// way round the focus (ADR-0041), so what is covered is the farthest corner's
+// distance round the arena on every side.
 //
 // implements: FR-MAP-140, FR-TOOL-200, FR-MAP-200
 import Foundation
@@ -76,11 +79,14 @@ struct GroundRect: Equatable {
 
 enum FrameCoverage {
     /// How far past the point looked at the frame reaches on the ground: `beyond` it,
-    /// away from the camera; `toward` the camera; and `across`, to either side.
+    /// away from the camera; `toward` the camera; `across`, to either side; and
+    /// `radius`, the farthest any corner lies from it in any direction — which is how
+    /// far the frame reaches whichever way the camera is turned round that point.
     struct Reach: Equatable {
         var beyond: Double
         var toward: Double
         var across: Double
+        var radius: Double
     }
 
     /// Where a frame's four corners meet a plane `drop` metres below the point looked
@@ -110,7 +116,7 @@ enum FrameCoverage {
     /// The reach over every pitch of the range, every frame up to the widest and every
     /// drop between the two given. Nil where some frame sees the horizon.
     static func reach(of camera: CameraRange, drops: ClosedRange<Double>) -> Reach? {
-        var reach = Reach(beyond: -.infinity, toward: -.infinity, across: -.infinity)
+        var reach = Reach(beyond: -.infinity, toward: -.infinity, across: -.infinity, radius: -.infinity)
         var pitch = camera.pitches.lowerBound
         var pitches: [Double] = []
         while pitch < camera.pitches.upperBound {
@@ -127,6 +133,7 @@ enum FrameCoverage {
                     reach.beyond = max(reach.beyond, -corner.y)
                     reach.toward = max(reach.toward, corner.y)
                     reach.across = max(reach.across, abs(corner.x))
+                    reach.radius = max(reach.radius, (corner.x * corner.x + corner.y * corner.y).squareRoot())
                 }
             }
         }
@@ -136,12 +143,15 @@ enum FrameCoverage {
     /// The ground a setting must cover at `surface` metres up, for a camera that can
     /// look at any point of the arena's footprint at any height between its lowest and
     /// its highest (FR-VIEW-020 keeps the point inside the arena and at the head's
-    /// height). Grown by `Coverage.slack` on every side.
+    /// height), turned any way round that point. Grown by `Coverage.slack` on every side.
     static func covered(arena: ScenePlan.Bounds, camera: CameraRange, surface: Double) -> GroundRect? {
         let drops = (arena.lowest.y - surface)...(arena.highest.y - surface)
         guard let reach = reach(of: camera, drops: drops) else { return nil }
-        return GroundRect(lowest: SIMD2(arena.lowest.x - reach.across, arena.lowest.z - reach.beyond),
-                          highest: SIMD2(arena.highest.x + reach.across, arena.highest.z + reach.toward))
+        // At any yaw: the camera may turn round the point it looks at — the free camera
+        // of debug mode does, and the match camera may one day follow the snake — and a
+        // frame turned round a point stays within a circle of the radius round it.
+        return GroundRect(lowest: SIMD2(arena.lowest.x, arena.lowest.z) - reach.radius,
+                          highest: SIMD2(arena.highest.x, arena.highest.z) + reach.radius)
             .grown(by: Coverage.slack)
     }
 

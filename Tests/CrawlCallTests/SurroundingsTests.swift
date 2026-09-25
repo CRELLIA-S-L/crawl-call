@@ -16,7 +16,7 @@ final class CoverageTests: XCTestCase {
     /// Where a frame's corners meet the plane at `surface`, found from the camera
     /// entity: RealityKit's camera looks down its own -z, with y up and x right.
     private func corners(focus: SIMD3<Double>, pitch: Double, fieldOfView: Double, distance: Double,
-                         aspect: Double, surface: Double) -> [SIMD2<Double>] {
+                         aspect: Double, surface: Double, yaw: Double = 0) -> [SIMD2<Double>] {
         let camera = Entity()
         SceneView.place(camera, lookingAt: focus, pitchDegrees: pitch, distance: distance)
         let t = tan(fieldOfView * .pi / 360)
@@ -28,7 +28,10 @@ final class CoverageTests: XCTestCase {
             let along = (surface - origin.y) / ray.y
             XCTAssertGreaterThan(along, 0, "a corner ray looks above the horizon")
             let hit = origin + ray * along
-            hits.append(SIMD2(hit.x, hit.z))
+            // Turned round the point looked at, as a camera turned round it would see.
+            let offset = SIMD2(hit.x - focus.x, hit.z - focus.z)
+            let (c, s) = (cos(yaw * .pi / 180), sin(yaw * .pi / 180))
+            hits.append(SIMD2(focus.x + offset.x * c - offset.y * s, focus.z + offset.x * s + offset.y * c))
         }
         return hits
     }
@@ -76,15 +79,17 @@ final class CoverageTests: XCTestCase {
         let xs = [arena.lowest.x, arena.centre.x, arena.highest.x]
         let zs = [arena.lowest.z, arena.centre.z, arena.highest.z]
         let ys = [arena.lowest.y, 0, 3, arena.highest.y]
+        // And turned any way round the point looked at (ADR-0041).
+        let yaws = [0.0, 37, 90, 145, 180, 233, 270, 315]
         for pitch in pitches {
             for aspect in [0.4, 1, 2.174, widest] {
-                for x in xs { for z in zs { for y in ys {
+                for x in xs { for z in zs { for y in ys { for yaw in yaws {
                     for hit in corners(focus: SIMD3(x, y, z), pitch: pitch, fieldOfView: camera.fieldOfView,
-                                       distance: camera.distance, aspect: aspect, surface: surface) {
+                                       distance: camera.distance, aspect: aspect, surface: surface, yaw: yaw) {
                         XCTAssertTrue(covered.contains(hit),
-                                      "pitch \(pitch), aspect \(aspect), focus \(x),\(y),\(z): \(hit) outside")
+                                      "pitch \(pitch), aspect \(aspect), yaw \(yaw), focus \(x),\(y),\(z): \(hit) outside")
                     }
-                } } }
+                } } } }
             }
         }
     }
@@ -98,10 +103,31 @@ final class CoverageTests: XCTestCase {
         let arena = world.plan.bounds
         let covered = try XCTUnwrap(FrameCoverage.covered(arena: arena, camera: camera, surface: arena.lowest.y))
         let tight = covered.grown(by: -Coverage.slack - 0.05)
-        let far = corners(focus: SIMD3(arena.lowest.x, arena.highest.y, arena.lowest.z), pitch: 50,
-                          fieldOfView: camera.fieldOfView, distance: camera.distance, aspect: 2.174,
-                          surface: arena.lowest.y)
-        XCTAssertFalse(far.allSatisfy(tight.contains))
+        // The frame's farthest corner, from the arena's highest point at its lowest
+        // pitch, turned to point straight out past the arena's west edge: that is
+        // where the covered ground has to reach, and the tight rectangle does not.
+        let focus = SIMD3(arena.lowest.x, arena.highest.y, arena.centre.z)
+        let far = corners(focus: focus, pitch: 50, fieldOfView: camera.fieldOfView, distance: camera.distance,
+                          aspect: 2.174, surface: arena.lowest.y)
+        let farthest = try XCTUnwrap(far.map { simd_length($0 - SIMD2(focus.x, focus.z)) }.max())
+        let turnedOut = SIMD2(focus.x - farthest, focus.z)
+        XCTAssertTrue(covered.contains(turnedOut), "the covered ground misses a frame turned west")
+        XCTAssertFalse(tight.contains(turnedOut))
+    }
+
+    func testTheRadiusIsTheFarthestCornerFromThePointLookedAt() throws {
+        // FrameCoverage's radius against the corners themselves, at the ends of the
+        // range the reach is taken over.
+        let camera = CameraRange(pitches: 50...60, fieldOfView: 50, distance: 13.2, widestAspect: 2.174)
+        let reach = try XCTUnwrap(FrameCoverage.reach(of: camera, drops: 0...3))
+        var farthest = 0.0
+        for pitch in [50.0, 60] { for drop in [0.0, 3] {
+            let corners = try XCTUnwrap(FrameCoverage.footprint(pitchDegrees: pitch, fieldOfViewDegrees: 50,
+                                                                distance: 13.2, aspect: 2.174, drop: drop))
+            farthest = max(farthest, try XCTUnwrap(corners.map(simd_length).max()))
+        } }
+        XCTAssertEqual(reach.radius, farthest, accuracy: 1e-9)
+        XCTAssertGreaterThan(reach.radius, max(reach.beyond, reach.across), "a corner is no farther than an edge")
     }
 
     func testAWiderFrameNeedsMoreGroundAcrossAndNoMoreInDepth() throws {

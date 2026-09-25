@@ -1,6 +1,8 @@
 # ADR-0031 — The world around the arena is a named setting of scenery, sized by what the match camera can show
 
 > Partly superseded on 2026-09-25 by ADR-0034: the island is no longer an ellipse round the arena with a ring of trees and shrubs on it, but the map's own ground, its edge the map's outline rounded; trees and shrubs are the map's modules; and the rule on how tall scenery in front of the arena may be went with the ring. The coverage, the setting as a named family, the sky and the birds stand as written here.
+>
+> Also refined on 2026-09-25 by ADR-0041: the coverage below is worked out for a camera turned any way round the point it looks at, so the ground reaches the farthest corner of any frame on every side of the arena, not far beyond it and a few metres towards the camera.
 
 - **Status:** accepted
 - **Date:** 2026-09-24
