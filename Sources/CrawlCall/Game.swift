@@ -5,7 +5,7 @@
 // or a key: the schemes produce intents (FR-VIEW-050), the logic consumes them, and
 // neither knows about the other.
 //
-// implements: FR-VIEW-030, FR-VIEW-170, FR-VIEW-190, FR-SNAKE-010, FR-SNAKE-030, FR-BOT-020, FR-BOT-150, FR-SNAKE-060, FR-SNAKE-070, FR-SNAKE-090, FR-SCORE-140, FR-SCORE-150, INV-BOT-010, FR-VIEW-230, FR-TOOL-230, FR-MAP-150, FR-MAP-180, FR-MAP-170
+// implements: FR-VIEW-030, FR-VIEW-170, FR-VIEW-190, FR-SNAKE-010, FR-SNAKE-030, FR-BOT-020, FR-BOT-150, FR-SNAKE-060, FR-SNAKE-070, FR-SNAKE-090, FR-SCORE-140, FR-SCORE-150, INV-BOT-010, FR-VIEW-230, FR-TOOL-230, FR-MAP-150, FR-MAP-180, FR-MAP-170, FR-SNAKE-220
 import Foundation
 
 struct Game {
@@ -86,11 +86,13 @@ struct Game {
         }
     }
 
-    /// Begins a meal on the bot named, if it is there and nothing else is already
-    /// being eaten. Whether the snake may begin — reach, intent — is settled by the
+    /// Begins a meal on the bot named, if it is there, nothing else is already being
+    /// eaten, and the snake is not in the air off a ledge: a meal holds the head where
+    /// it is (FR-SNAKE-090), and one begun mid-drop would hold it there, in the air
+    /// (FR-SNAKE-220). Whether the snake may begin — reach, intent — is settled by the
     /// caller; this is the act itself.
     mutating func begin(eating id: Int) {
-        guard eating == nil, let prey = bots.first(where: { $0.id == id }) else { return }
+        guard eating == nil, snake.drop == nil, let prey = bots.first(where: { $0.id == id }) else { return }
         eating = Eating(prey: id, alive: prey.health > .zero, archetype: prey.archetype,
                         configuration: world.configurations.snake)
     }

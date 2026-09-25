@@ -344,13 +344,108 @@ final class SnakeTests: XCTestCase {
     func testSteeringOffALedgeLandsOnTheFloorBelow() throws {
         // FR-SNAKE-220: a drop is a path. The upper floor ends at x = 0; below it the
         // ground floor continues.
-        let s = try surfaces("kit blockout\nsetting greenholm\nfloor 0\n..\nfloor 1\n. \n")
+        let s = try surfaces("kit blockout\nsetting greenholm\nfloor 0\n..........\nfloor 1\n.         \n")
         var snake = self.snake(at: 0, 0, floor: 1)
         XCTAssertEqual(snake.head.y, kit.floorHeight, accuracy: 1e-9)
-        snake.advance(direction: SIMD2(1, 0), speed: 3, seconds: 0.2, over: s)
+        for _ in 0..<90 { snake.advance(direction: SIMD2(1, 0), speed: 3, seconds: 1.0 / 60, over: s) }
         XCTAssertEqual(snake.floor, 0)
+        XCTAssertNil(snake.drop, "the head is still in the air after a second and a half")
         XCTAssertEqual(snake.head.y, 0, accuracy: 1e-9)
-        XCTAssertEqual(snake.head.x, 0.6, accuracy: 1e-9)
+    }
+
+    /// Walks a snake off the upper floor's edge frame by frame and returns it the
+    /// moment it goes over, with the arc it took.
+    private func overTheEdge(_ s: Surfaces, speed: Double = 3) throws -> (Snake, Snake.Drop) {
+        var snake = self.snake(at: 0, 0, floor: 1)
+        var frames = 0
+        while snake.drop == nil && snake.floor == 1 && frames < 120 {
+            snake.advance(direction: SIMD2(1, 0), speed: speed, seconds: 1.0 / 60, over: s)
+            frames += 1
+        }
+        return (snake, try XCTUnwrap(snake.drop, "the head did not go over the edge in an arc"))
+    }
+
+    func testADropIsAnArcAtTheWalkingSpeedUnderTheDropGravity() throws {
+        // FR-SNAKE-220, ADR-0040: on across at the speed it walked off at, down as a
+        // body falls, landing as far on as that takes it where the ground is open.
+        let s = try surfaces("kit blockout\nsetting greenholm\nfloor 0\n..........\nfloor 1\n.         \n")
+        XCTAssertEqual(s.dropGravity, tuning.dropGravity)
+        let (start, arc) = try overTheEdge(s)
+        let height = kit.floorHeight
+        let fall = (2 * height / tuning.dropGravity).squareRoot()
+        XCTAssertEqual(arc.seconds, fall, accuracy: 1e-9)
+        XCTAssertEqual(arc.from.y, height, accuracy: 1e-9)
+        XCTAssertEqual(arc.to.y, 0, accuracy: 1e-9)
+        let across = arc.to.x - arc.from.x
+        XCTAssertLessThanOrEqual(across, 3 * fall + 1e-9, "farther than the speed carries it in the fall")
+        XCTAssertGreaterThan(across, 3 * fall - Motion.arcSearchStep - 1e-9, "shorter than open ground asks")
+        XCTAssertEqual(arc.to.z, arc.from.z, accuracy: 1e-12)
+
+        // Frame by frame: across at a steady rate, down as the square of the time.
+        let frame = 1.0 / 60
+        var snake = start
+        var time = arc.elapsed
+        while snake.drop != nil {
+            snake.advance(direction: SIMD2(1, 0), speed: 3, seconds: frame, over: s)
+            time += frame
+            guard snake.drop != nil else { break }
+            let share = time / arc.seconds
+            XCTAssertEqual(snake.head.x, arc.from.x + across * share, accuracy: 1e-9)
+            XCTAssertEqual(snake.head.y, height * (1 - share * share), accuracy: 1e-9)
+        }
+        XCTAssertEqual(time, arc.seconds, accuracy: frame + 1e-9)
+        XCTAssertEqual(snake.head.y, 0, accuracy: 1e-9)
+        XCTAssertGreaterThanOrEqual(snake.head.x, arc.to.x - 1e-9, "the head did not land where the arc ends")
+    }
+
+    func testAnArcIsCutShortWhereSomethingBelowIsInTheWay() throws {
+        // A wall on the ground floor a metre and a half out: the arc lands short of
+        // it, clear of it, rather than through it.
+        let s = try surfaces("kit blockout\nsetting greenholm\nfloor 0\n...#......\nfloor 1\n.         \n")
+        let (_, arc) = try overTheEdge(s)
+        let cell = tuning.navigationGraphCellSize
+        let wallStarts = 3 * cell - cell / 2
+        XCTAssertLessThanOrEqual(arc.to.x, wallStarts - tuning.bodyRadius + 1e-9, "the arc lands in the wall")
+        XCTAssertTrue(s.fits(arc.to, feet: arc.to.y, leaving: arc.from.y))
+        XCTAssertGreaterThan(arc.to.x, arc.from.x, "the arc came straight down though the ground before the wall is open")
+    }
+
+    func testAnArcWithNoGroundFartherOnLandsOnTheGroundThereIs() throws {
+        // The ground floor ends a cell past the edge: the arc lands on it, not beyond.
+        let s = try surfaces("kit blockout\nsetting greenholm\nfloor 0\n..\nfloor 1\n. \n")
+        let (_, arc) = try overTheEdge(s)
+        let cell = tuning.navigationGraphCellSize
+        XCTAssertLessThanOrEqual(arc.to.x, cell * 1.5 + 1e-9, "the arc landed where there is no ground")
+        XCTAssertEqual(arc.to.y, 0, accuracy: 1e-9)
+    }
+
+    func testAnArcDoesNotGoOnUnderTheFloorItLeft() throws {
+        // A hole two cells across in an upper floor, the floor going on past it: the
+        // arc lands in the hole, not on across under the floor on the far side, which
+        // it would pass through to get there.
+        let upper = "......\n.  ...\n.  ...\n......"
+        let ground = "......\n......\n......\n......"
+        let s = try surfaces("kit blockout\nsetting greenholm\nfloor 0\n\(ground)\nfloor 1\n\(upper)\n")
+        var snake = self.snake(at: 0, 0.5, floor: 1)
+        var frames = 0
+        while snake.drop == nil && frames < 120 {
+            snake.advance(direction: SIMD2(1, 0), speed: 3, seconds: 1.0 / 60, over: s)
+            frames += 1
+        }
+        let arc = try XCTUnwrap(snake.drop, "the head did not go into the hole")
+        let cell = tuning.navigationGraphCellSize
+        let farSide = 3 * cell - cell / 2
+        XCTAssertLessThan(arc.to.x, farSide, "the arc lands under the floor beyond the hole, at \(arc.to)")
+        XCTAssertEqual(arc.to.y, 0, accuracy: 1e-9)
+    }
+
+    func testADropIsComeDownWithNoDirectionHeld() throws {
+        // A drop is not walked: letting go of the stick does not leave the head in the air.
+        let s = try surfaces("kit blockout\nsetting greenholm\nfloor 0\n..........\nfloor 1\n.         \n")
+        var (snake, _) = try overTheEdge(s)
+        for _ in 0..<90 { snake.advance(direction: .zero, speed: 3, seconds: 1.0 / 60, over: s) }
+        XCTAssertNil(snake.drop)
+        XCTAssertEqual(snake.head.y, 0, accuracy: 1e-9)
     }
 
     func testCrossingACornerOfACellOnAnUpperFloorIsNoLedge() throws {
@@ -422,20 +517,57 @@ final class SnakeTests: XCTestCase {
         XCTAssertEqual(snake.floor, 1, "the snake fell through a joint")
     }
 
-    func testTheDropIsInTheTrailAsAVerticalPortion() throws {
-        let s = try surfaces("kit blockout\nsetting greenholm\nfloor 0\n..\nfloor 1\n. \n")
-        var snake = self.snake(at: 0, 0, floor: 1)
-        snake.advance(direction: SIMD2(1, 0), speed: 3, seconds: 0.2, over: s)
-
-        // Somewhere in the trail two points share a place on the map and differ in
-        // height: that pair is the drop, and it is what the tail lies down. Where it
-        // sits in the trail depends on how the frame was cut into steps, which is not
-        // what the requirement is about.
-        let vertical = zip(snake.trail, snake.trail.dropFirst()).first { a, b in
-            abs(a.x - b.x) < 1e-12 && abs(a.z - b.z) < 1e-12 && abs(a.y - b.y) > 1e-9
+    func testEveryDropOffTheShippedFlightAndBalconyLandsClear() throws {
+        // The blockout's flight and balcony, walked off every way from every cell of
+        // them: each arc lands where the body fits, on the ground it lands on, and
+        // some go farther than straight down (FR-SNAKE-220, ADR-0040).
+        let world = try Launch.world().get()
+        let cell = world.configurations.tuning.navigationGraphCellSize
+        let s = Surfaces(graph: world.graph, kit: world.kit, tuning: world.configurations.tuning, map: world.map)
+        let raised = world.graph.nodes.filter { s.height(of: $0) > world.configurations.tuning.stepHeight }
+        XCTAssertFalse(raised.isEmpty, "the shipped map has no flight or balcony, so the test proves nothing")
+        var drops = 0, arcs = 0
+        for node in raised {
+            for direction in [SIMD2(1.0, 0), SIMD2(-1.0, 0), SIMD2(0, 1.0), SIMD2(0, -1.0)] {
+                let start = SIMD3(Double(node.x) * cell, s.height(of: node), Double(node.z) * cell)
+                guard s.fits(start, feet: start.y) else { continue }
+                var snake = Snake(head: start, floor: node.floor, segments: 4, segmentSpacing: cell)
+                var frames = 0
+                while snake.drop == nil && frames < 60 {
+                    snake.advance(direction: direction, speed: 3, seconds: 1.0 / 60, over: s)
+                    frames += 1
+                }
+                guard let arc = snake.drop else { continue }
+                drops += 1
+                XCTAssertTrue(s.fits(arc.to, feet: arc.to.y, leaving: arc.from.y),
+                              "an arc off \(node) going \(direction) lands inside something at \(arc.to)")
+                XCTAssertLessThan(arc.to.y, arc.from.y, "an arc off \(node) does not go down")
+                let across = ((arc.to.x - arc.from.x) * (arc.to.x - arc.from.x)
+                              + (arc.to.z - arc.from.z) * (arc.to.z - arc.from.z)).squareRoot()
+                if across > 0.1 { arcs += 1 }
+                for _ in 0..<120 where snake.drop != nil {
+                    snake.advance(direction: direction, speed: 3, seconds: 1.0 / 60, over: s)
+                }
+                XCTAssertNil(snake.drop, "the head off \(node) is still in the air after two seconds")
+            }
         }
-        let pair = try XCTUnwrap(vertical, "no vertical portion in the trail")
-        XCTAssertEqual(abs(pair.0.y - pair.1.y), kit.floorHeight, accuracy: 1e-9)
+        XCTAssertGreaterThan(drops, 10, "hardly anything on the shipped map is a ledge, so the test proves little")
+        XCTAssertGreaterThan(arcs, drops / 2, "most drops came straight down")
+    }
+
+    func testTheTrailFollowsTheArcDown() throws {
+        // The tail lies down the drop: the trail holds the heights between the two
+        // floors, each farther on than the one above it (FR-SNAKE-220).
+        let s = try surfaces("kit blockout\nsetting greenholm\nfloor 0\n..........\nfloor 1\n.         \n")
+        var snake = self.snake(at: 0, 0, floor: 1, segments: 12)
+        for _ in 0..<90 { snake.advance(direction: SIMD2(1, 0), speed: 3, seconds: 1.0 / 60, over: s) }
+        let inAir = snake.trail.filter { $0.y > 1e-9 && $0.y < kit.floorHeight - 1e-9 }
+        XCTAssertGreaterThan(inAir.count, 10, "the trail does not hold the arc")
+        // Newest first: going back along the trail, higher and nearer the edge.
+        for (later, earlier) in zip(inAir, inAir.dropFirst()) {
+            XCTAssertGreaterThan(earlier.y, later.y)
+            XCTAssertLessThan(earlier.x, later.x)
+        }
         XCTAssertEqual(snake.head.y, 0, accuracy: 1e-9)
         XCTAssertEqual(snake.floor, 0)
     }
@@ -526,6 +658,7 @@ final class SnakeTests: XCTestCase {
         XCTAssertEqual(s.stepHeight, tuning.stepHeight)
         XCTAssertEqual(s.slopeAngle, tuning.slopeAngle)
         XCTAssertEqual(s.maximumDropHeight, tuning.maximumDropHeight)
+        XCTAssertEqual(s.dropGravity, tuning.dropGravity)
         XCTAssertEqual(s.floorHeight, kit.floorHeight)
     }
 }

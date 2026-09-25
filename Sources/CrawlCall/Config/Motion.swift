@@ -36,6 +36,13 @@ enum Motion {
     /// Which way a climb goes along y.
     static let down = -1.0
     static let up = 1.0
+    /// Metres between the landings tried for a drop's arc, from the farthest the
+    /// speed and the fall allow back to straight down (FR-SNAKE-220, ADR-0040), and
+    /// between the places along its way where the body is asked whether it fits.
+    static let arcSearchStep = 0.05
+    static let arcCheckStep = 0.1
+    /// The fall's height goes as the square of the share of its time gone by.
+    static let fallPower = 2.0
 }
 
 extension Motion {

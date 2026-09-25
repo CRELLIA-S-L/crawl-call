@@ -42,7 +42,7 @@ tests: [Tests/CrawlCallTests/ConfigurationTests.swift, Tests/CrawlCallTests/Laun
 created: 2026-09-21
 ```
 
-When the game starts, the system **shall** read from the tuning configuration — the JSON file `config/tuning.json` (ADR-0012) — the damage thresholds of each module type per state; the destruction damage of each bot weapon and its destruction ammunition; the destruction damage of the snake's body per segment of length; the trap width, trap length and tail-gap tolerance; the maximum drop height; the navigation-graph cell size; and the step height, slope angle and body radius that FR-MAP-025 makes common to the snake and the bots.
+When the game starts, the system **shall** read from the tuning configuration — the JSON file `config/tuning.json` (ADR-0012) — the damage thresholds of each module type per state; the destruction damage of each bot weapon and its destruction ammunition; the destruction damage of the snake's body per segment of length; the trap width, trap length and tail-gap tolerance; the maximum drop height and the gravity the snake falls under off a ledge (FR-SNAKE-220); the navigation-graph cell size; and the step height, slope angle and body radius that FR-MAP-025 makes common to the snake and the bots.
 
 **Rationale.** Concept §7: strength thresholds by module type, damage by source, the destroying weapons' ammunition, the snake's weight — all in a separate config, tuned experimentally; the risk it guards against is a map turned to wasteland by mid-match.
 

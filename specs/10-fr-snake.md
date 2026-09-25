@@ -453,15 +453,16 @@ derives_from: [FR-SNAKE-010, FR-SNAKE-020]
 depends_on: [IF-MAP-020]
 refines: [FR-SNAKE-020]
 conflicts_with: []
-code: [Sources/CrawlCall/Snake/Snake.swift, Sources/CrawlCall/Snake/Surfaces.swift, Sources/CrawlCall/Config/Motion.swift, Sources/CrawlCall/Config/MapFormat.swift]
-tests: [Tests/CrawlCallTests/SnakeTests.swift]
+code: [Sources/CrawlCall/Snake/Snake.swift, Sources/CrawlCall/Snake/Surfaces.swift, Sources/CrawlCall/Config/Motion.swift, Sources/CrawlCall/Config/MapFormat.swift, Sources/CrawlCall/Config/Configurations.swift, config/tuning.json, Sources/CrawlCall/Game.swift, Sources/CrawlCall/GameSession.swift]
+tests: [Tests/CrawlCallTests/SnakeTests.swift, Tests/CrawlCallTests/EatingTests.swift]
 created: 2026-09-21
 ```
 
-When the head is steered off a ledge no higher than the maximum drop of the tuning configuration, the system **shall** let it fall to the surface below and lay the tail down the drop as a vertical portion of the path, with no damage and no break in the tail.
+When the head is steered off a ledge no higher than the maximum drop of the tuning configuration, the system **shall** carry it down to the surface below along an arc — on across at the speed it walked off at, down under the drop gravity of the tuning configuration, and landing no farther on than the body can land clear — and lay the tail down the arc as a portion of the path, with no damage and no break in the tail.
 
 **Rationale.** Concept §4: verticality works both ways — the snake cuts through drops the bots will not jump; a drop that hurt or severed the tail would take that away (Q-040, closed 2026-09-21).
 A ledge higher than the maximum drop is fenced by geometry the head cannot pass, so it never goes over one; the tail's sag is rendering.
+Along an arc, since 2026-09-25: the maintainer found on the phone that the snake fell off the side of the flight and off the balcony in a single frame. The game had never done otherwise off a ledge; the one-cell transition that led to the balcony before the flight replaced it was walked like a climb, and the first spike's snake, on a character controller under gravity, went off a ledge in an arc. A flight two cells wide under a body wider than one is easy to step off, so almost every way down had become a fall. Coming straight down at a speed of its own was tried first and turned down by the maintainer the same day: a jump off the balcony is an arc. How the arc is chosen is ADR-0040.
 
 ### FR-SNAKE-230 — The snake bites off its own tail
 

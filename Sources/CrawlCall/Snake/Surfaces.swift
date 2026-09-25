@@ -15,6 +15,8 @@ struct Surfaces {
     let floorHeight: Double
     /// The largest drop the head may take and still call it a path (IF-MAP-020).
     let maximumDropHeight: Double
+    /// Metres a second squared the head falls under off a ledge (FR-SNAKE-220).
+    let dropGravity: Double
     /// How wide the body is, which is how close to a wall the head may come.
     let bodyRadius: Double
     /// The tallest step the head may climb; with the stage-1 grid nothing is stepped,
@@ -50,6 +52,7 @@ struct Surfaces {
         self.cellSize = tuning.navigationGraphCellSize
         self.floorHeight = kit.floorHeight
         self.maximumDropHeight = tuning.maximumDropHeight
+        self.dropGravity = tuning.dropGravity
         self.bodyRadius = tuning.bodyRadius
         self.stepHeight = tuning.stepHeight
         self.slopeAngle = tuning.slopeAngle
@@ -215,6 +218,54 @@ struct Surfaces {
         guard let node = graph.node(atX: here.x, z: here.z, below: height - stepHeight - Geometry.samePosition),
               height - self.height(of: node) <= maximumDropHeight + Geometry.samePosition else { return nil }
         return node
+    }
+
+    /// Where a head that walked off a ledge at `edge`, at `speed` along `unit`, comes
+    /// down (FR-SNAKE-220, ADR-0040): as far on as it goes in the time it falls under
+    /// the drop gravity, and no farther than the air at the ledge's height is open,
+    /// or nearer, where that is where the ground below first lets the body land clear
+    /// with nothing in its way to it; straight down where nothing farther does. The
+    /// caller has already found straight down open.
+    func arc(from edge: SIMD3<Double>, floor: Int, along unit: SIMD2<Double>,
+             speed: Double) -> (landing: SIMD3<Double>, floor: Int, seconds: Double)? {
+        let feet = edge.y
+        func fallTime(to height: Double) -> Double {
+            dropGravity > .zero ? (Geometry.bothSides * max(feet - height, .zero) / dropGravity).squareRoot() : .zero
+        }
+        func point(_ metres: Double, at height: Double) -> SIMD3<Double> {
+            SIMD3(edge.x + unit.x * metres, height, edge.z + unit.y * metres)
+        }
+        func landing(_ metres: Double) -> (landing: SIMD3<Double>, floor: Int, seconds: Double)? {
+            guard let below = self.landing(below: point(metres, at: feet), from: floor, at: feet) else { return nil }
+            let ground = height(of: below)
+            let seconds = fallTime(to: ground)
+            guard metres <= speed * seconds + Geometry.samePosition,
+                  fits(point(metres, at: ground), feet: ground, leaving: feet) else { return nil }
+            // Nothing down there in the body's way to it, asked at the landing's height:
+            // what stands lower than the ledge it leaves is flown over.
+            var along = Motion.arcCheckStep
+            while along < metres {
+                guard fits(point(along, at: ground), feet: ground, leaving: feet) else { return nil }
+                along += Motion.arcCheckStep
+            }
+            return (point(metres, at: ground), below.floor, seconds)
+        }
+        // The arc flies through open air at the ledge's height: where ground comes back
+        // at that height — the far side of a hole — the arc ends short of it by the
+        // body's radius, rather than going on under the floor it left.
+        var open: Double = .zero
+        let farthest = speed * fallTime(to: feet - maximumDropHeight)
+        while open < farthest,
+              ground(at: cell(of: point(open + Motion.arcCheckStep, at: feet), floor: floor), near: feet) == nil {
+            open += Motion.arcCheckStep
+        }
+        let reach = open < farthest ? max(open - bodyRadius, .zero) : farthest
+        var metres = (reach / Motion.arcSearchStep).rounded(.down) * Motion.arcSearchStep
+        while metres > .zero {
+            if let found = landing(metres) { return found }
+            metres -= Motion.arcSearchStep
+        }
+        return landing(.zero)
     }
 
     // MARK: the body against what stands on the ground (ADR-0021)

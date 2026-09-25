@@ -159,7 +159,7 @@ Total requirements: 232.
 | **FR-SNAKE-190** Heavy: faster destruction | `deferred` | T | — | — |
 | **FR-SNAKE-200** The body destroys what it crosses | `deferred` | T | — | — |
 | **FR-SNAKE-210** The snake dies when hit with no tail left | `implemented` | T | `Sources/CrawlCall/Snake/Snake.swift` | `Tests/CrawlCallTests/MatchEndTests.swift` |
-| **FR-SNAKE-220** A drop is a path, not a fall | `implemented` | D | `Sources/CrawlCall/Snake/Snake.swift`<br>`Sources/CrawlCall/Snake/Surfaces.swift`<br>`Sources/CrawlCall/Config/Motion.swift`<br>`Sources/CrawlCall/Config/MapFormat.swift` | `Tests/CrawlCallTests/SnakeTests.swift` |
+| **FR-SNAKE-220** A drop is a path, not a fall | `implemented` | D | `Sources/CrawlCall/Snake/Snake.swift`<br>`Sources/CrawlCall/Snake/Surfaces.swift`<br>`Sources/CrawlCall/Config/Motion.swift`<br>`Sources/CrawlCall/Config/MapFormat.swift`<br>`Sources/CrawlCall/Config/Configurations.swift`<br>`config/tuning.json`<br>`Sources/CrawlCall/Game.swift`<br>`Sources/CrawlCall/GameSession.swift` | `Tests/CrawlCallTests/SnakeTests.swift`<br>`Tests/CrawlCallTests/EatingTests.swift` |
 | **FR-SNAKE-230** The snake bites off its own tail | `draft` | T | — | — |
 | **FR-SNAKE-240** Biting off takes time and holds the snake in place | `draft` | T | — | — |
 | **FR-SNAKE-250** A severed segment leaves nothing behind | `draft` | T | — | — |

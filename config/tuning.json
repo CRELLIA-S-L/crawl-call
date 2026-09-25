@@ -12,6 +12,7 @@
   "trapLength": 6.0,
   "tailGapTolerance": 0.25,
   "maximumDropHeight": 3.0,
+  "dropGravity": 9.8,
   "navigationGraphCellSize": 0.5,
   "stepHeight": 0.4,
   "slopeAngle": 50,

@@ -21,6 +21,28 @@ struct Snake {
     /// A stair is walked up at the configured speed like any other ground
     /// (FR-SNAKE-030), so it takes the time it takes.
     private var climbingTo: Double?
+    /// A drop under way: an arc from the edge the head walked off to where it lands,
+    /// taken in the time the fall takes, the direction held waiting until it has
+    /// landed (FR-SNAKE-220, ADR-0040).
+    private(set) var drop: Drop?
+    /// The speed the head last walked at, which it goes on across at off a ledge.
+    private var pace: Double = .zero
+
+    struct Drop: Equatable {
+        let from: SIMD3<Double>
+        let to: SIMD3<Double>
+        let seconds: Double
+        var elapsed: Double = .zero
+
+        /// Where the head is `time` seconds after it went over: across at a steady
+        /// speed, and down as the square of the time, as a body falls.
+        func position(at time: Double) -> SIMD3<Double> {
+            guard seconds > .zero else { return to }
+            let share = min(max(time / seconds, .zero), Fraction.whole)
+            let across = from + (to - from) * share
+            return SIMD3(across.x, from.y + (to.y - from.y) * pow(share, Motion.fallPower), across.z)
+        }
+    }
 
     /// The distance between one segment and the next, taken from the body's own width
     /// rather than a number of its own: a segment is a body length along the path.
@@ -43,7 +65,12 @@ struct Snake {
     /// (FR-SNAKE-030).
     mutating func advance(direction: SIMD2<Double>, speed: Double, seconds: Double, over surfaces: Surfaces) {
         guard speed > .zero, seconds > .zero else { return }
-        var budget = speed * seconds
+        pace = speed
+        // A drop under way is come down first, whether or not a direction is held;
+        // what is left of the frame once it has landed is walked.
+        let left = fall(for: seconds)
+        guard left > .zero else { return }
+        var budget = speed * left
 
         // A climb already under way is paid for first, and paid for whether or not
         // the player is still holding a direction: a snake halfway up a stair is on
@@ -72,7 +99,29 @@ struct Snake {
             let step = min(budget, longest)
             guard let spent = slide(unit: unit, distance: step, over: surfaces) else { return }
             budget -= spent
+            // A piece that went off a ledge: the rest of the frame is the drop's, and
+            // what the drop leaves of it is walked on from where the head landed.
+            if drop != nil {
+                budget = fall(for: max(budget, .zero) / speed) * speed
+            }
         }
+    }
+
+    /// Goes on along a drop under way for up to `seconds`, and says how much of that
+    /// time is left once the head has landed: none while it is still in the air.
+    /// Every place on the way goes into the trail, so the tail follows the arc.
+    private mutating func fall(for seconds: Double) -> Double {
+        guard var current = drop else { return seconds }
+        let remaining = current.seconds - current.elapsed
+        if seconds < remaining {
+            current.elapsed += seconds
+            drop = current
+            moveTo(current.position(at: current.elapsed))
+            return .zero
+        }
+        drop = nil
+        moveTo(current.to)
+        return seconds - max(remaining, .zero)
     }
 
     /// One piece of a frame's movement, taken along the obstacle where the way the
@@ -101,6 +150,8 @@ struct Snake {
             guard let step = stepOnce(unit: direction, distance: left, over: surfaces) else {
                 return slideAcrossCells(unit: direction, distance: left, over: surfaces) || moved ? distance : nil
             }
+            // Off a ledge: nothing more is walked until the head has come down.
+            if drop != nil { return step.covered }
             guard let against = step.against else { return distance }
             moved = moved || step.covered > Motion.negligibleDistance
             let pressing = direction.x * against.x + direction.y * against.y
@@ -182,12 +233,17 @@ struct Snake {
         // down there is refused like a wall.
         if let below = surfaces.landing(below: wanted, from: floor, at: feet),
            surfaces.fits(wanted, feet: surfaces.height(of: below), leaving: feet) {
-            // The drop is part of the path: the corner it leaves and the ground it
-            // lands on both go into the trail, so the tail lies down the drop rather
-            // than cutting the corner (FR-SNAKE-220).
+            // The drop is part of the path: the edge it leaves goes into the trail now,
+            // and every place along the arc as the head goes over it in the frames that
+            // follow, so the tail follows the head down (FR-SNAKE-220, ADR-0040). The
+            // arc lands straight below where nothing farther lets the body land clear.
             moveTo(SIMD3(wanted.x, feet, wanted.z))
-            floor = below.floor
-            moveTo(SIMD3(wanted.x, surfaces.height(of: below), wanted.z))
+            climbingTo = nil
+            let arc = surfaces.arc(from: head, floor: floor, along: unit, speed: pace)
+                ?? (SIMD3(wanted.x, surfaces.height(of: below), wanted.z), below.floor, .zero)
+            floor = arc.floor
+            drop = Drop(from: head, to: arc.landing, seconds: arc.seconds)
+            if arc.seconds <= .zero { _ = fall(for: .zero) }
             return (room.metres, room.against)
         }
         return nil

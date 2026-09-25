@@ -1,7 +1,7 @@
 // Eating: the time it takes (FR-SNAKE-090), that live prey takes longer than a body
 // (FR-SNAKE-100), and the tail it leaves behind (FR-SNAKE-060).
 //
-// verifies: FR-SNAKE-060, FR-SNAKE-090, FR-SNAKE-100
+// verifies: FR-SNAKE-060, FR-SNAKE-090, FR-SNAKE-100, FR-SNAKE-220
 import XCTest
 @testable import CrawlCall
 
@@ -80,6 +80,30 @@ final class EatingTests: XCTestCase {
         for _ in 0..<180 { game.advance(seconds: 1.0 / 60) }
         XCTAssertNil(game.eating)
         XCTAssertGreaterThan(game.snake.head.x, stood.x)
+    }
+
+    func testNoMealIsBegunInTheAirOffALedge() throws {
+        // A meal holds the head where it is (FR-SNAKE-090); begun mid-drop it would
+        // hold it in the air, so none is (FR-SNAKE-220). Off the balcony's west edge,
+        // beside the top of the flight, into the room below.
+        let world = try world()
+        let edge = NavigationGraph.Node(floor: 1, x: 20, z: 17)
+        XCTAssertTrue(world.graph.isWalkable(edge), "the balcony's west edge moved, so the test proves nothing")
+        var game = Game(world: world, start: edge)
+        let prey = try XCTUnwrap(game.bots.first)
+        game.apply(.move(direction: SIMD2(-1, 0)))
+        var frames = 0
+        while game.snake.drop == nil && frames < 120 {
+            game.advance(seconds: 1.0 / 60)
+            frames += 1
+        }
+        XCTAssertNotNil(game.snake.drop, "the head did not go off the balcony")
+        game.begin(eating: prey.id)
+        XCTAssertNil(game.eating, "a meal was begun in the air")
+        for _ in 0..<120 where game.snake.drop != nil { game.advance(seconds: 1.0 / 60) }
+        XCTAssertNil(game.snake.drop)
+        game.begin(eating: prey.id)
+        XCTAssertNotNil(game.eating, "no meal begins on the ground either, so the test proves nothing")
     }
 
     func testFinishingAMealTakesTheBotAndLengthensTheTail() throws {

@@ -3,7 +3,7 @@
 // a file with an unknown key is rejected at load rather than silently defaulted,
 // which is what `Schema` is for.
 //
-// implements: IF-SNAKE-010, IF-MAP-020, IF-VIEW-020, IF-BOT-010
+// implements: IF-SNAKE-010, IF-MAP-020, IF-VIEW-020, IF-BOT-010, FR-SNAKE-220
 import Foundation
 
 // MARK: - Snake (IF-SNAKE-010)
@@ -69,6 +69,9 @@ struct TuningConfiguration: Decodable, Equatable {
     let trapLength: Double
     let tailGapTolerance: Double
     let maximumDropHeight: Double
+    /// Metres a second squared the snake's head falls under off a ledge, going on
+    /// across at the speed it walked off at, so that a drop is an arc (FR-SNAKE-220).
+    let dropGravity: Double
     let navigationGraphCellSize: Double
     let stepHeight: Double
     let slopeAngle: Double
@@ -82,6 +85,7 @@ struct TuningConfiguration: Decodable, Equatable {
         "trapLength": .value,
         "tailGapTolerance": .value,
         "maximumDropHeight": .value,
+        "dropGravity": .value,
         "navigationGraphCellSize": .value,
         "stepHeight": .value,
         "slopeAngle": .value,

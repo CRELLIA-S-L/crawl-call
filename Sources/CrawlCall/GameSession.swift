@@ -5,7 +5,7 @@
 // measured with — `specs/50-verification.md` says why, and the two are different
 // questions asked of the same number.
 //
-// implements: FR-TOOL-070, FR-VIEW-020, FR-VIEW-030, FR-VIEW-060, FR-VIEW-100, FR-VIEW-140, FR-VIEW-150, FR-VIEW-155, FR-VIEW-160, FR-VIEW-170, FR-VIEW-180, FR-VIEW-190, FR-VIEW-230, FR-VIEW-210, FR-TOOL-230, FR-TOOL-240, FR-GREENHOLM-030, FR-TOOL-260, FR-TOOL-270
+// implements: FR-TOOL-070, FR-VIEW-020, FR-VIEW-030, FR-VIEW-060, FR-VIEW-100, FR-VIEW-140, FR-VIEW-150, FR-VIEW-155, FR-VIEW-160, FR-VIEW-170, FR-VIEW-180, FR-VIEW-190, FR-VIEW-230, FR-VIEW-210, FR-TOOL-230, FR-TOOL-240, FR-GREENHOLM-030, FR-TOOL-260, FR-TOOL-270, FR-SNAKE-220
 import Foundation
 import Observation
 import RealityKit
@@ -188,8 +188,10 @@ final class GameSession {
     private func place() -> Placed {
         let clock = ContinuousClock()
         let drawing = clock.now
-        canEat = Game.preyWithinReach(of: game.snake.head, among: game.bots,
-                                      tuning: game.world.configurations.tuning) != nil
+        // Nothing is eaten in the air off a ledge (FR-SNAKE-220), so the button says so.
+        canEat = game.snake.drop == nil
+            && Game.preyWithinReach(of: game.snake.head, among: game.bots,
+                                    tuning: game.world.configurations.tuning) != nil
         SnakeEntity.update(snakeEntity, from: game.snake,
                            radius: game.world.configurations.tuning.bodyRadius)
         BotEntity.update(botEntities, from: game.bots)
