@@ -11,7 +11,7 @@
 // configuration (IF-BOT-010), as is how much an unhurt bot fears the snake
 // (FR-BOT-210). What shapes each term — a share, a whole — is in `Utility`.
 //
-// implements: FR-BOT-080, FR-BOT-090, FR-BOT-118, FR-BOT-200, FR-BOT-210, FR-MAP-150
+// implements: FR-BOT-080, FR-BOT-090, FR-BOT-118, FR-BOT-200, FR-BOT-210, FR-MAP-150, FR-BOT-220
 import Foundation
 
 enum Deliberation {
@@ -26,6 +26,10 @@ enum Deliberation {
         /// it: an action about the snake is then not available at all, rather than
         /// available and scoring zero.
         var snake: [SIMD3<Double>] = []
+        /// The parts of the snake the bot sees now: what it can fire at (FR-BOT-220).
+        var inView: [SIMD3<Double>] = []
+        /// Whether the bot knows a cell: where it may hide or run to (FR-BOT-220).
+        var knows: (NavigationGraph.Node) -> Bool = { _ in true }
         var allies: [Bot] = []
         var orderedZone: NavigationGraph.Node?
         let plan: ScenePlan
@@ -47,11 +51,15 @@ enum Deliberation {
         let health = entry.health > .zero ? bot.health / entry.health : .zero
         let ammunition = entry.magazine > .zero ? Double(bot.ammunition) / Double(entry.magazine) : .zero
 
-        // Fire: needs something to shoot at, a line to it and a round to send.
-        if let nearest, bot.ammunition > .zero,
-           Sight.isClear(from: bot.eye, to: nearest.point, through: situation.plan) {
-            let closeness = nearness(nearest.metres, within: entry.detectionRange)
-            scored.append((.fire(at: .snake(at: nearest.point)),
+        // Fire: needs something to shoot at that the bot sees now, a line to it and a
+        // round to send; a remembered snake is somewhere to be afraid of, not a target.
+        let target = situation.inView
+            .map { (point: $0, metres: Perception.metres(bot.position, $0)) }
+            .min { $0.metres < $1.metres }
+        if let target, bot.ammunition > .zero,
+           Sight.isClear(from: bot.eye, to: target.point, through: situation.plan) {
+            let closeness = nearness(target.metres, within: entry.detectionRange)
+            scored.append((.fire(at: .snake(at: target.point)),
                            term.attack * closeness * ammunition * bot.weights.aggression))
         }
 
@@ -154,7 +162,8 @@ enum Deliberation {
             let there = centre(of: node, in: situation)
             let metres = Perception.metres(bot.position, there)
             guard metres <= reach else { continue }
-            if metres > .zero {
+            // Only a cell the bot knows is somewhere it would think of hiding (FR-BOT-220).
+            if metres > .zero, situation.knows(node) {
                 let watched = byNearness.contains { Sight.isClear(from: $0, to: there, through: situation.plan) }
                 if !watched { return (node: node, metres: metres) }
             }
@@ -194,7 +203,9 @@ enum Deliberation {
             // approached through cells the bot would have to cross to get there.
             guard Perception.metres(bot.position, there) <= reach else { continue }
             let gained = Perception.metres(there, danger)
-            if best == nil || gained > best!.1 { best = (node, gained) }
+            // Only a cell the bot knows is somewhere it would think of running to
+            // (FR-BOT-220).
+            if situation.knows(node), best == nil || gained > best!.1 { best = (node, gained) }
             for next in situation.graph.neighbours(of: node).sorted(by: order)
             where next.floor == bot.floor && seen.insert(next).inserted {
                 queue.append(next)

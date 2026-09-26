@@ -9,7 +9,7 @@
 // rather than an accident: no requirement gives a weapon a rate of fire, and
 // inventing one would put a number in this file that no interface carries.
 //
-// implements: FR-BOT-060, FR-VIEW-170, INV-BOT-010, FR-BOT-165, FR-MAP-150, FR-BOT-270, FR-BOT-280, FR-BOT-290, FR-BOT-300
+// implements: FR-BOT-060, FR-VIEW-170, INV-BOT-010, FR-BOT-165, FR-MAP-150, FR-BOT-270, FR-BOT-280, FR-BOT-290, FR-BOT-300, FR-BOT-220, FR-BOT-310
 import Foundation
 
 enum Execution {
@@ -23,8 +23,7 @@ enum Execution {
     /// One deliberation step: the bots holding a slot choose, and a bot whose choice
     /// is to fire fires once. The damage is returned rather than applied, because the
     /// snake is not the bots' to change.
-    static func deliberate(_ bots: inout [Bot], slots: [Int], snake: [SIMD3<Double>],
-                           world: World) -> Volley {
+    static func deliberate(_ bots: inout [Bot], slots: [Int], world: World, now: Double = .zero) -> Volley {
         var volley = Volley()
         for id in slots {
             guard let index = bots.firstIndex(where: { $0.id == id }) else { continue }
@@ -33,9 +32,13 @@ enum Execution {
                                                    graph: world.graph,
                                                    configuration: world.configurations.bot,
                                                    cellSize: world.configurations.tuning.navigationGraphCellSize)
-            // A bot acts on what it knows: one that has not seen the snake has no
-            // snake to fire at, flee from or hide behind cover from (FR-BOT-050).
-            situation.snake = bots[index].knowsSnake ? snake : []
+            // A bot acts on what it knows and on nothing else (FR-BOT-220): the snake
+            // where it last saw it, and fires only at what it sees now; the cells it
+            // may hide or run to are the cells it knows.
+            let knowledge = bots[index].knowledge
+            situation.snake = knowledge.snakePoints
+            situation.inView = knowledge.snake(seenAt: now)
+            situation.knows = { knowledge.knows($0) }
             situation.allies = bots.filter { $0.squad == bots[index].squad }
 
             let chosen = Deliberation.choose(for: bots[index], in: situation)
@@ -154,6 +157,20 @@ enum Execution {
             }
         }
         if bot.path.isEmpty, Execution.destination(of: bot.action) != nil { bot.action = nil }
+    }
+
+    /// What each bot of a squad has seen reaches the rest of it once the squad's delay
+    /// has passed since it was seen (FR-BOT-310). Heard at most once a frame, from
+    /// every other bot of the squad, the later of two sightings of one thing winning.
+    static func share(_ bots: inout [Bot], now: Double, configuration: BotConfiguration) {
+        let before = bots
+        for index in bots.indices {
+            let squad = bots[index].squad
+            guard let delay = configuration.shareDelay[squad.name] else { continue }
+            for mate in before where mate.squad == squad && mate.id != bots[index].id {
+                bots[index].knowledge.hear(mate.knowledge, seenBy: now - delay)
+            }
+        }
     }
 
     /// Metres left along a bot's route, from where it stands through every point of it.

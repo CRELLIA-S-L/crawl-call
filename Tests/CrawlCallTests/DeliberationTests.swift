@@ -4,7 +4,7 @@
 // The arena is built here rather than loaded, so that what is in the way, where the
 // cover is and how far the snake stands are all known quantities.
 //
-// verifies: FR-BOT-080, FR-BOT-090, FR-BOT-118, FR-BOT-200, FR-BOT-210, IF-BOT-010
+// verifies: FR-BOT-080, FR-BOT-090, FR-BOT-118, FR-BOT-200, FR-BOT-210, IF-BOT-010, FR-BOT-220
 import XCTest
 @testable import CrawlCall
 
@@ -62,6 +62,7 @@ final class DeliberationTests: XCTestCase {
                                   "....#.....",
                                   "..........")
         situation.snake = [at(8, 0)]
+        situation.inView = situation.snake  // seen now, as these tests pose it (FR-BOT-220)
         situation.orderedZone = NavigationGraph.Node(floor: 0, x: 2, z: 2)
         var hurt = try bot(.assault, at: 1, 1, id: 1)
         hurt.health = 10
@@ -92,6 +93,7 @@ final class DeliberationTests: XCTestCase {
     func testTheChosenActionIsTheHighestScoring() throws {
         var situation = try arena("..........", "..........")
         situation.snake = [at(6, 0)]
+        situation.inView = situation.snake  // seen now, as these tests pose it (FR-BOT-220)
         var medic = try bot(.medic, at: 1, 0)
         medic.ammunition = 9
         var hurt = try bot(.heavy, at: 1, 1, id: 1)
@@ -107,6 +109,7 @@ final class DeliberationTests: XCTestCase {
     func testAmmunitionMovesTheChoice() throws {
         var situation = try arena("..........")
         situation.snake = [at(5, 0)]
+        situation.inView = situation.snake  // seen now, as these tests pose it (FR-BOT-220)
         let armed = try bot(.assault, at: 1, 0)
         XCTAssertEqual(Deliberation.choose(for: armed, in: situation).map(isFire), true)
 
@@ -119,6 +122,7 @@ final class DeliberationTests: XCTestCase {
     func testHealthMovesTheChoice() throws {
         var situation = try arena("..........")
         situation.snake = [at(4, 0)]
+        situation.inView = situation.snake  // seen now, as these tests pose it (FR-BOT-220)
         var whole = try bot(.scout, at: 1, 0)
         // Panic low enough that the standing fear of FR-BOT-210 does not by itself
         // outrank shooting: what is under test here is the wound, not the panic.
@@ -138,8 +142,10 @@ final class DeliberationTests: XCTestCase {
         let range = try XCTUnwrap(configuration.archetypes[Archetype.assault.rawValue]).detectionRange
         var near = try arena(String(repeating: ".", count: 60))
         near.snake = [at(4, 0)]
+        near.inView = near.snake  // seen now, as these tests pose it (FR-BOT-220)
         var far = near
         far.snake = [at(Int((range / cell).rounded(.down)) - 1, 0)]
+        far.inView = far.snake  // seen now, as these tests pose it (FR-BOT-220)
         let bot = try bot(.assault, at: 1, 0)
 
         let close = try XCTUnwrap(utility(of: isFire, for: bot, in: near))
@@ -150,11 +156,13 @@ final class DeliberationTests: XCTestCase {
     func testALineOfFireIsWhatMakesFiringAvailable() throws {
         var blocked = try arena("...#......")
         blocked.snake = [at(6, 0)]
+        blocked.inView = blocked.snake  // seen now, as these tests pose it (FR-BOT-220)
         let bot = try bot(.assault, at: 0, 0)
         XCTAssertNil(utility(of: isFire, for: bot, in: blocked), "a bot fired through a wall")
 
         var open = try arena("..........")
         open.snake = [at(6, 0)]
+        open.inView = open.snake  // seen now, as these tests pose it (FR-BOT-220)
         XCTAssertNotNil(utility(of: isFire, for: bot, in: open))
     }
 
@@ -164,9 +172,11 @@ final class DeliberationTests: XCTestCase {
         var near = try arena("..........",
                              ".#........")
         near.snake = [at(9, 0)]
+        near.inView = near.snake  // seen now, as these tests pose it (FR-BOT-220)
         var far = try arena("..........",
                             "........#.")
         far.snake = [at(9, 0)]
+        far.inView = far.snake  // seen now, as these tests pose it (FR-BOT-220)
         let bot = try bot(.assault, at: 1, 0)
 
         let handy = try XCTUnwrap(utility(of: isCover, for: bot, in: near))
@@ -182,6 +192,7 @@ final class DeliberationTests: XCTestCase {
         // measures the distance across the map instead of along it.
         var cut = try arena("...#........")
         cut.snake = [at(0, 0)]
+        cut.inView = cut.snake  // seen now, as these tests pose it (FR-BOT-220)
         let bot = try bot(.assault, at: 1, 0)
 
         let flight = try XCTUnwrap(Deliberation.scores(for: bot, in: cut).first { isFlight($0.action) })
@@ -198,6 +209,7 @@ final class DeliberationTests: XCTestCase {
                               "#.###",
                               "#####")
         boxed.snake = [at(4, 1)]
+        boxed.inView = boxed.snake  // seen now, as these tests pose it (FR-BOT-220)
         let bot = try bot(.assault, at: 1, 1)
 
         XCTAssertNil(utility(of: isFlight, for: bot, in: boxed))
@@ -211,6 +223,7 @@ final class DeliberationTests: XCTestCase {
         // while the bot is whole — and nothing but the snake's mouth ever wounds one.
         var close = try arena("..........")
         close.snake = [at(2, 0)]
+        close.inView = close.snake  // seen now, as these tests pose it (FR-BOT-220)
         let bot = try bot(.assault, at: 0, 0)
 
         let urge = try XCTUnwrap(utility(of: isFlight, for: bot, in: close))
@@ -224,8 +237,10 @@ final class DeliberationTests: XCTestCase {
         // and would have made this one look satisfied for the wrong reason.
         var near = try arena("....................")
         near.snake = [at(8, 0)]
+        near.inView = near.snake  // seen now, as these tests pose it (FR-BOT-220)
         var far = try arena("....................")
         far.snake = [at(2, 0)]
+        far.inView = far.snake  // seen now, as these tests pose it (FR-BOT-220)
         let bot = try bot(.assault, at: 10, 0)
 
         let pressing = try XCTUnwrap(utility(of: isFlight, for: bot, in: near))
@@ -238,6 +253,7 @@ final class DeliberationTests: XCTestCase {
         // of the fear rather than instead of it.
         var arena = try arena("..........")
         arena.snake = [at(2, 0)]
+        arena.inView = arena.snake  // seen now, as these tests pose it (FR-BOT-220)
         let whole = try bot(.assault, at: 0, 0)
         var hurt = whole
         hurt.health /= 2
@@ -253,6 +269,7 @@ final class DeliberationTests: XCTestCase {
         var situation = try arena("..........",
                                   ".#........")
         situation.snake = [at(7, 0)]
+        situation.inView = situation.snake  // seen now, as these tests pose it (FR-BOT-220)
         var calm = try bot(.assault, at: 1, 0)
         calm.weights = weights(panic: 0.2, aggression: 0.2)
         var fierce = calm

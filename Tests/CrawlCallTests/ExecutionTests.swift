@@ -48,7 +48,7 @@ final class SlotsTests: XCTestCase {
     private func bot(_ id: Int, at x: Double, knows: Bool = false) throws -> Bot {
         var made = try XCTUnwrap(Bot(id: id, squad: .red, archetype: .assault,
                                      at: SIMD3(x, 0, 0), floor: 0, configuration: configuration))
-        made.knowsSnake = knows
+        if knows { made.knowledge.snake = [0: .init(point: .zero, time: 0)] }
         return made
     }
 
@@ -77,7 +77,7 @@ final class SlotsTests: XCTestCase {
 
         // With nobody watching, the same queue goes round instead — which is what
         // makes the assertion above about importance and not about the queue.
-        bots[try checkedIndex(3, of: bots)].knowsSnake = false
+        bots[try checkedIndex(3, of: bots)].knowledge = Knowledge()
         var calm = Slots()
         let calmFirst = calm.next(among: bots, snake: [], configuration: configuration)
         let calmSecond = calm.next(among: bots, snake: [], configuration: configuration)
@@ -150,7 +150,7 @@ final class ExecutionTests: XCTestCase {
         let world = try world()
         let ground = cells(in: world)
         var bots = [try bot(0, at: element(0, of: ground), in: world)]
-        bots[try checkedIndex(0, of: bots)].knowsSnake = true
+        bots[try checkedIndex(0, of: bots)].knowledge.snake = [0: .init(point: .zero, time: 0)]
         bots[try checkedIndex(0, of: bots)].health = 5  // frightened enough to run
         bots[try checkedIndex(0, of: bots)].weights = BotConfiguration.Weights(panic: 0.9, discipline: 0.5,
                                                    aggression: 0.1, selfSacrifice: 0.5)
@@ -158,7 +158,14 @@ final class ExecutionTests: XCTestCase {
         let snake = [try element(0, of: bots).position + SIMD3(1, 0, 0)]
 
         var slots = Slots()
-        for _ in 0..<120 {
+        let modules = Perception.modules(of: world.map)
+        for frame in 0..<120 {
+            // It looks round as a match has it look, so that it knows somewhere to run
+            // to (FR-BOT-220, FR-BOT-230).
+            if frame % 12 == 0 {
+                Perception.lookAtMap(&bots[try checkedIndex(0, of: bots)], world: world, modules: modules,
+                                     now: Double(frame) / 60)
+            }
             let steps = slots.steps(after: 1.0 / 60, period: world.configurations.bot.deliberationPeriod)
             for _ in 0..<steps {
                 let holders = slots.next(among: bots, snake: snake, configuration: world.configurations.bot)
@@ -178,7 +185,7 @@ final class ExecutionTests: XCTestCase {
         let here = try element(0, of: ground)
         let cell = world.configurations.tuning.navigationGraphCellSize
         var bots = [try bot(0, at: here, in: world)]
-        bots[try checkedIndex(0, of: bots)].knowsSnake = true
+        bots[try checkedIndex(0, of: bots)].knowledge.snake = [0: .init(point: .zero, time: 0)]
         let target = SIMD3(Double(here.x) * cell + cell, 0, Double(here.z) * cell)
         let before = try element(0, of: bots).ammunition
 
@@ -204,7 +211,7 @@ final class ExecutionTests: XCTestCase {
         let here = try element(0, of: cells(in: world))
         let cell = world.configurations.tuning.navigationGraphCellSize
         var bots = [try bot(0, at: here, in: world)]
-        bots[try checkedIndex(0, of: bots)].knowsSnake = true
+        bots[try checkedIndex(0, of: bots)].knowledge.snake = [0: .init(point: .zero, time: 0)]
         bots[try checkedIndex(0, of: bots)].ammunition = 0
         let target = SIMD3(Double(here.x) * cell + cell, 0, Double(here.z) * cell)
         XCTAssertEqual(Execution.deliberate(&bots, slots: [0], snake: [target], world: world).damage, 0)

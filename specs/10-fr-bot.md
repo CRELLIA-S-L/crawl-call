@@ -88,14 +88,14 @@ A role rather than a seventh archetype, and no marker: the role-holder is found 
 ### FR-BOT-050 — A bot notices the snake in view
 
 ```yaml
-status: partial
+status: implemented
 verification: T
 derives_from: []
 depends_on: []
 refines: []
 conflicts_with: []
-code: [Sources/CrawlCall/Bot/Perception.swift, Sources/CrawlCall/Map/Sight.swift, Sources/CrawlCall/Bot/Bot.swift, Sources/CrawlCall/Config/Geometry.swift, Sources/CrawlCall/Map/PieceIndex.swift, Sources/CrawlCall/Config/Utility.swift, Sources/CrawlCall/Config/Configurations.swift, config/bot.json]
-tests: [Tests/CrawlCallTests/PerceptionTests.swift, Tests/CrawlCallTests/PieceIndexTests.swift]
+code: [Sources/CrawlCall/Bot/Perception.swift, Sources/CrawlCall/Bot/Knowledge.swift, Sources/CrawlCall/Game.swift, Sources/CrawlCall/Map/Sight.swift, Sources/CrawlCall/Bot/Bot.swift, Sources/CrawlCall/Config/Geometry.swift, Sources/CrawlCall/Map/PieceIndex.swift, Sources/CrawlCall/Config/Utility.swift, Sources/CrawlCall/Config/Configurations.swift, config/bot.json]
+tests: [Tests/CrawlCallTests/PerceptionTests.swift, Tests/CrawlCallTests/KnowledgeTests.swift, Tests/CrawlCallTests/PieceIndexTests.swift]
 created: 2026-09-21
 ```
 
@@ -103,7 +103,8 @@ When any segment of the snake is within a bot's field of view and within the det
 
 **Rationale.** Concept §13 stage 1: bots see the snake, flee, shoot.
 Known-to-a-bot is what deliberation (FR-BOT-080) and the interrupt on sight (FR-BOT-150) read.
-Until 2026-09-25 the requirement set a mark that the snake was known, and a bot so marked was handed where every part of the snake truly was, from then on. The maintainer ruled that a bot acts on what it has seen (ADR-0032), so what a sighting leaves is where and when, and deliberation reads that (FR-BOT-220). `partial` until the build keeps the sightings instead of the mark.
+Until 2026-09-25 the requirement set a mark that the snake was known, and a bot so marked was handed where every part of the snake truly was, from then on. The maintainer ruled that a bot acts on what it has seen (ADR-0032), so what a sighting leaves is where and when, and deliberation reads that (FR-BOT-220).
+Since 2026-09-25 each part of the snake is told apart by its place from the head, and a part seen again replaces its own earlier sighting while the parts not seen keep theirs (ADR-0043).
 
 The field of view is a cone round the way the bot faces (FR-BOT-280), as wide as the angle of the bot configuration (IF-BOT-010), since 2026-09-25: the maintainer asked that a bot see where it looks and not with the back of its head. Until then no bot had a facing, and it saw all round.
 A bot looks from the eye height of the bot configuration (IF-BOT-010), which the shipped numbers put on the eyes of the figure it is drawn as (FR-VIEW-070), and what it looks at is the ground under each part of the snake. A module stops that line only where it stands higher than the line at the place the line crosses it: a fence lower than a bot's eyes hides a snake lying close behind it and not a snake across the room, by the same geometry the player's camera sees by, from lower down. Until 2026-09-24 sight was measured along the surface on purpose, as Q-240 settled it, because a bot was a box with no head and an eye height would have been a number measured from nothing; the figure is what gives the eye somewhere to be.
@@ -544,14 +545,14 @@ How a bot sees is FR-BOT-050's: a clear line from its eyes within the detection 
 ### FR-BOT-220 — A bot acts on what it knows
 
 ```yaml
-status: deferred
+status: partial
 verification: T
 derives_from: []
 depends_on: [FR-BOT-050, FR-BOT-230, FR-BOT-240, FR-BOT-250]
 refines: [FR-BOT-080]
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Bot/Execution.swift, Sources/CrawlCall/Bot/Deliberation.swift, Sources/CrawlCall/Bot/Knowledge.swift, Sources/CrawlCall/Game.swift]
+tests: [Tests/CrawlCallTests/KnowledgeTests.swift, Tests/CrawlCallTests/DeliberationTests.swift]
 created: 2026-09-25
 ```
 
@@ -559,18 +560,21 @@ When scoring actions for a bot, the system **shall** read the snake, the enemy a
 
 **Rationale.** The maintainer's rule of 2026-09-25: a bot's movement must not rest on what the snake sees, since a bot is not the snake and cannot know it, nor on where anything truly is beyond what the bot has perceived (ADR-0032).
 A test holds it by moving the snake or an enemy where the bot has not seen it and nobody has told it, and finding the choice unchanged.
+The snake a bot flees from and hides from is where it last saw each part; it fires only at a part it sees now, since what it remembers is somewhere to be afraid of and not a target; the cells it may run or hide to are the cells it knows (ADR-0043).
+`partial` because two readings of the map are still the truth's: the route to a chosen cell is found over the whole map, and whether a cell is cover is tested against the obstacles as they stand, seen or not. ADR-0032 replaces both — floods over the map as the squad knows it, and a lines-of-fire table — each to be written as its own requirement and put to the maintainer.
+The enemy is recorded (FR-BOT-240) and read by no action yet, since none of FR-BOT-200 is aimed at an enemy bot. The order in which bots are given slots still reads how near the snake truly is (FR-BOT-160): that is when a bot thinks, not what it chooses.
 
 ### FR-BOT-230 — A bot remembers the map it has seen
 
 ```yaml
-status: deferred
+status: implemented
 verification: T
 derives_from: []
 depends_on: [FR-BOT-050, FR-MAP-020]
 refines: []
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Bot/Perception.swift, Sources/CrawlCall/Bot/Knowledge.swift, Sources/CrawlCall/Game.swift, Sources/CrawlCall/Config/Utility.swift]
+tests: [Tests/CrawlCallTests/KnowledgeTests.swift]
 created: 2026-09-25
 ```
 
@@ -578,18 +582,19 @@ When a cell of the map is within a bot's field of view and within the detection 
 
 **Rationale.** The maintainer, 2026-09-25: a bot learns the map as it sees it and, once it has seen it, remembers it (ADR-0032).
 The same sight as the snake's (FR-BOT-050), so that a bot cannot know a cell it could not have seen; the latest sighting wins, so that a crate a bot saw fall to debris (FR-MAP-030) is debris in what it knows once it has seen that.
+A bot looks round once a deliberation period (FR-BOT-150), at the near side of each cell just off its ground, so that a wall is seen by its face and a floor by its near edge (ADR-0043).
 
 ### FR-BOT-240 — A bot remembers the enemy it has seen
 
 ```yaml
-status: deferred
+status: implemented
 verification: T
 derives_from: []
 depends_on: [FR-BOT-050]
 refines: []
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Bot/Perception.swift, Sources/CrawlCall/Bot/Knowledge.swift, Sources/CrawlCall/Game.swift]
+tests: [Tests/CrawlCallTests/KnowledgeTests.swift]
 created: 2026-09-25
 ```
 
@@ -597,18 +602,19 @@ When an enemy bot is within a bot's field of view and within the detection range
 
 **Rationale.** The maintainer, 2026-09-25: movements of the enemy are learnt when a bot sees them and remembered (ADR-0032).
 Apart from the map's cells because the two are built and tested apart; the snake's own sightings are FR-BOT-050's.
+What a bot looks at is the enemy's eyes, the part of it that shows over cover first.
 
 ### FR-BOT-250 — What a bot knows at the start
 
 ```yaml
-status: deferred
+status: implemented
 verification: T
 derives_from: []
 depends_on: [FR-BOT-010]
 refines: []
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Bot/Squads.swift, Sources/CrawlCall/Bot/Knowledge.swift]
+tests: [Tests/CrawlCallTests/KnowledgeTests.swift]
 created: 2026-09-25
 ```
 
@@ -617,18 +623,19 @@ When a match starts, the system **shall** give each bot knowledge of the outline
 **Rationale.** The maintainer, 2026-09-25: a bot knows the map roughly at the start — the shape of the ground, the large buildings, roughly where the enemy squad is — and the rest as it sees it (ADR-0032).
 The ways between floors are part of the building's shape: a bot that did not know them could plan no route to a floor it has not been on, since a cell it has not seen is taken as passable but a way up is not a cell.
 The island around the arena is scenery and takes no part in play (FR-MAP-130), so the ground a bot fights on is the building.
+The ways between floors are the cells of the flights of stairs; the enemy's area is the circle round the other squad's spawn cells, one cell wider than the farthest of them (ADR-0043).
 
 ### FR-BOT-260 — Forgetting is possible and off
 
 ```yaml
-status: deferred
+status: implemented
 verification: T
 derives_from: []
 depends_on: [IF-BOT-010, FR-BOT-050, FR-BOT-240]
 refines: []
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Bot/Knowledge.swift, Sources/CrawlCall/Game.swift, Sources/CrawlCall/Config/Configurations.swift, config/bot.json]
+tests: [Tests/CrawlCallTests/KnowledgeTests.swift]
 created: 2026-09-25
 ```
 
@@ -714,3 +721,23 @@ While a match is running, the system **shall** keep any two bots on the same flo
 
 **Rationale.** The maintainer, 2026-09-25: part of the fifth step of the bots' movement. Two figures standing inside each other read as a mistake, and a squad that walks through itself is not a squad of bodies.
 Two body radii, the radius FR-MAP-025 makes common to the snake and the bots. Each bot of a pair that has come too close gives way by half of what they overlap, where it can stand; a bot the snake is eating does not move (FR-SNAKE-090), and the other gives way by all of it.
+
+### FR-BOT-310 — A squad hears what its bots have seen after a delay
+
+```yaml
+status: implemented
+verification: T
+derives_from: []
+depends_on: [FR-BOT-050, FR-BOT-230, FR-BOT-240, IF-BOT-010]
+refines: []
+conflicts_with: []
+code: [Sources/CrawlCall/Bot/Execution.swift, Sources/CrawlCall/Bot/Knowledge.swift, Sources/CrawlCall/Game.swift, Sources/CrawlCall/Config/Configurations.swift, config/bot.json]
+tests: [Tests/CrawlCallTests/KnowledgeTests.swift]
+created: 2026-09-25
+```
+
+When a bot has seen the snake, an enemy bot or a cell of the map, the system **shall** add that sighting to the knowledge of every other bot of its squad once the share delay the bot configuration sets for that squad has passed since the sighting, a later sighting of the same thing winning over an earlier one.
+
+**Rationale.** The maintainer, 2026-09-25: what a bot sees reaches its squad after a delay (ADR-0032). A squad whose bots cannot warn one another is not the squad the concept is built on; one that knows at once what its first witness knows leaves the witness's report worth nothing (FR-SCORE-090).
+One delay per squad, so that the two squads can be made to differ. The squads pass their records on once a deliberation period, so a report arrives up to one period after its delay (ADR-0043).
+A collapsed squad shares nothing more (ADR-0032); squad collapse is not built, and this requirement says nothing about it until it is.

@@ -12,6 +12,8 @@ enum Squad: Int, CaseIterable, Equatable {
     case blue = 1
 
     var enemy: Squad { self == .red ? .blue : .red }
+    /// Its name as the configuration writes it.
+    var name: String { self == .red ? "red" : "blue" }
 }
 
 struct Bot: Equatable {
@@ -38,9 +40,13 @@ struct Bot: Equatable {
     /// inputs (FR-BOT-080), and both start from the archetype's entry (IF-BOT-010).
     var health: Double
     var ammunition: Int
-    /// Whether this bot has seen the snake (FR-BOT-050). What un-marks it is not
-    /// specified anywhere, so nothing here does.
-    var knowsSnake = false
+    /// What this bot knows: what it has seen and been told (ADR-0032). It acts on
+    /// this and on nothing else (FR-BOT-220).
+    var knowledge = Knowledge()
+    /// When it last looked over the map round it, in seconds of the match (FR-BOT-230).
+    var lastLook = -Double.infinity
+    /// Whether any part of the snake is in what it knows (FR-BOT-050).
+    var knowsSnake: Bool { knowledge.knowsSnake }
     /// What it decided to do at its last slot, and what is left of the way there.
     var action: Action?
     var path: [NavigationGraph.Node] = []

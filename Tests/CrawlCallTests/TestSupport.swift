@@ -39,3 +39,16 @@ func vertex(_ corner: Int, of mesh: Mesh, file: StaticString = #filePath, line: 
     try element(Int(element(corner, of: mesh.indices, file: file, line: line)), of: mesh.positions,
                 file: file, line: line)
 }
+
+extension Execution {
+    /// Deliberation as a test poses it: every bot that knows the snake at all sees it
+    /// now, where `snake` says, and one that does not has not seen it (FR-BOT-220).
+    static func deliberate(_ bots: inout [Bot], slots: [Int], snake: [SIMD3<Double>], world: World) -> Volley {
+        for index in bots.indices where bots[index].knowsSnake {
+            bots[index].knowledge.snake = Dictionary(uniqueKeysWithValues: snake.enumerated().map {
+                ($0.offset, Knowledge.Sighting(point: $0.element, time: .zero))
+            })
+        }
+        return deliberate(&bots, slots: slots, world: world, now: .zero)
+    }
+}

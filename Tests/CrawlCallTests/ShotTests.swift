@@ -25,7 +25,7 @@ final class ShotTests: XCTestCase {
         let here = try element(0, of: cells(in: world))
         let cell = world.configurations.tuning.navigationGraphCellSize
         var bots = [try bot(at: here, in: world)]
-        bots[try checkedIndex(0, of: bots)].knowsSnake = true
+        bots[try checkedIndex(0, of: bots)].knowledge.snake = [0: .init(point: .zero, time: 0)]
         let target = SIMD3(Double(here.x) * cell + cell, 0, Double(here.z) * cell)
 
         let volley = Execution.deliberate(&bots, slots: [0], snake: [target], world: world)
@@ -60,7 +60,7 @@ final class ShotTests: XCTestCase {
         XCTAssertTrue(Sight.isClear(from: try element(0, of: bots).eye, to: try element(0, of: snake), through: plan))
         XCTAssertFalse(Sight.isClear(from: try element(0, of: bots).position, to: try element(0, of: snake), through: plan),
                        "the box does not stand in the way from the floor, so this proves nothing")
-        bots[try checkedIndex(0, of: bots)].knowsSnake = true
+        bots[try checkedIndex(0, of: bots)].knowledge.snake = [0: .init(point: .zero, time: 0)]
         let volley = Execution.deliberate(&bots, slots: [0], snake: snake, world: world)
         XCTAssertEqual(volley.shots.count, 1, "the bot saw the snake over the box and did not fire")
     }
@@ -84,7 +84,7 @@ final class ShotTests: XCTestCase {
         let here = try element(0, of: cells(in: world))
         let cell = world.configurations.tuning.navigationGraphCellSize
         var bots = [try bot(at: here, in: world)]
-        bots[try checkedIndex(0, of: bots)].knowsSnake = true
+        bots[try checkedIndex(0, of: bots)].knowledge.snake = [0: .init(point: .zero, time: 0)]
         let target = SIMD3(Double(here.x) * cell + cell, 0, Double(here.z) * cell)
         let volley = Execution.deliberate(&bots, slots: [0], snake: [target], world: world)
         let shot = try XCTUnwrap(volley.shots.first)

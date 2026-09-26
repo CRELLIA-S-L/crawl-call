@@ -2,7 +2,7 @@
 // tuning (ART-070); the weight of each term against the others is tuning, and is in
 // the bot configuration (IF-BOT-010).
 //
-// implements: FR-BOT-080, FR-BOT-090, FR-BOT-210, FR-BOT-150, FR-BOT-160, FR-BOT-060, FR-BOT-270, FR-BOT-280, FR-BOT-050
+// implements: FR-BOT-080, FR-BOT-090, FR-BOT-210, FR-BOT-150, FR-BOT-160, FR-BOT-060, FR-BOT-270, FR-BOT-280, FR-BOT-050, FR-BOT-230
 import Foundation
 
 enum Utility {
@@ -54,6 +54,15 @@ enum Turning {
         if gap < -half { gap += whole }
         return abs(gap) <= most ? wanted : facing + (gap > .zero ? most : -most)
     }
+}
+
+/// How a bot looks at the map round it (FR-BOT-230): how far in from a cell's centre,
+/// as a share of a cell, towards the bot the point it looks at is — past the edge of
+/// what stands in the cell, so that a wall is seen by its face — and how far off the
+/// ground, in metres, so that the floor it lies on is not in the way.
+enum Looking {
+    static let nearSide = 0.55
+    static let offGround = 0.05
 }
 
 /// Numbers of firing (FR-BOT-060).

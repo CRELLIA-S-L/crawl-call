@@ -5,7 +5,7 @@
 // or a key: the schemes produce intents (FR-VIEW-050), the logic consumes them, and
 // neither knows about the other.
 //
-// implements: FR-VIEW-030, FR-VIEW-170, FR-VIEW-190, FR-SNAKE-010, FR-SNAKE-030, FR-BOT-020, FR-BOT-150, FR-SNAKE-060, FR-SNAKE-070, FR-SNAKE-090, FR-SCORE-140, FR-SCORE-150, INV-BOT-010, FR-VIEW-230, FR-TOOL-230, FR-MAP-150, FR-MAP-180, FR-MAP-170, FR-SNAKE-220
+// implements: FR-BOT-050, FR-BOT-220, FR-BOT-230, FR-BOT-240, FR-BOT-260, FR-BOT-310, FR-VIEW-030, FR-VIEW-170, FR-VIEW-190, FR-SNAKE-010, FR-SNAKE-030, FR-BOT-020, FR-BOT-150, FR-SNAKE-060, FR-SNAKE-070, FR-SNAKE-090, FR-SCORE-140, FR-SCORE-150, INV-BOT-010, FR-VIEW-230, FR-TOOL-230, FR-MAP-150, FR-MAP-180, FR-MAP-170, FR-SNAKE-220
 import Foundation
 
 struct Game {
@@ -41,6 +41,12 @@ struct Game {
     }
     /// The bots' own clock, which the frame rate does not set (FR-BOT-150).
     private var slots = Slots()
+    /// Seconds of the match played: when a sighting was made (ADR-0032).
+    private(set) var elapsed: Double = .zero
+    /// When the squads last passed on what they had seen (FR-BOT-310).
+    private var lastShared = -Double.infinity
+    /// Which module stands in each cell, for what the bots see of the map (FR-BOT-230).
+    private let modules: [NavigationGraph.Node: String]
     /// The meal under way, if there is one (FR-SNAKE-090).
     private(set) var eating: Eating?
     /// The shots still being drawn, each with what is left of its time (FR-VIEW-170).
@@ -53,6 +59,7 @@ struct Game {
         self.world = world
         self.start = start
         self.surfaces = Surfaces(graph: world.graph, kit: world.kit, tuning: world.configurations.tuning, map: world.map)
+        self.modules = Perception.modules(of: world.map)
         let cell = world.configurations.tuning.navigationGraphCellSize
         // The start cell's centre, moved out of any wall the body would overlap there:
         // the body is wider than a cell, and a head set down in the corner of the
@@ -120,6 +127,36 @@ struct Game {
         return nearest
     }
 
+    /// What the bots come to know this frame (ADR-0032): the snake and the enemy they
+    /// see (FR-BOT-050, FR-BOT-240), the map round them once a deliberation period
+    /// (FR-BOT-230), what their squad tells them after its delay (FR-BOT-310), less
+    /// what they have forgotten (FR-BOT-260).
+    private mutating func learn(snake body: [SIMD3<Double>]) {
+        let configuration = world.configurations.bot
+        Perception.notice(&bots, snake: body, plan: world.plan, configuration: configuration, now: elapsed)
+        Perception.noticeEnemies(&bots, plan: world.plan, configuration: configuration, now: elapsed)
+        for index in bots.indices where elapsed - bots[index].lastLook >= configuration.deliberationPeriod {
+            let first = bots[index].lastLook == -.infinity
+            Perception.lookAtMap(&bots[index], world: world, modules: modules, now: elapsed)
+            // Every bot looks in the first frame; from then on each takes its turn
+            // across the period, so that the looks are spread over frames rather than
+            // all falling in one (ADR-0043).
+            if first {
+                bots[index].lastLook -= configuration.deliberationPeriod * Double(index) / Double(bots.count)
+            }
+        }
+        // Passed on once a deliberation period rather than every frame: a record is
+        // hundreds of cells, and the delay it waits out is seconds.
+        if elapsed - lastShared >= configuration.deliberationPeriod {
+            Execution.share(&bots, now: elapsed, configuration: configuration)
+            lastShared = elapsed
+        }
+        for index in bots.indices {
+            bots[index].knowledge.forget(at: elapsed, snakeAfter: configuration.snakeForgottenAfter,
+                                         enemyAfter: configuration.enemyForgottenAfter)
+        }
+    }
+
     private mutating func beginEatingWhatTheHeadHasReached() {
         guard let prey = Game.preyWithinReach(of: snake.head, among: bots,
                                               tuning: world.configurations.tuning) else { return }
@@ -162,9 +199,9 @@ struct Game {
                           over: surfaces)
         }
 
+        elapsed += seconds
         let body = [snake.head] + snake.tail
-        Perception.notice(&bots, snake: body, plan: world.plan,
-                          configuration: world.configurations.bot)
+        learn(snake: body)
         // Aged before this frame's shots are added, so that a shot fired now is drawn
         // for its whole period and not for that period less one frame.
         shots = shots.compactMap { shot in
@@ -177,7 +214,7 @@ struct Game {
         for _ in Int.zero..<steps {
             let holders = slots.next(among: bots, snake: body, configuration: world.configurations.bot)
             let deciding = clock.now
-            let volley = Execution.deliberate(&bots, slots: holders, snake: body, world: world)
+            let volley = Execution.deliberate(&bots, slots: holders, world: world, now: elapsed)
             report.deliberationTime += clock.now - deciding
             report.deliberations += holders.count
             shots += volley.shots

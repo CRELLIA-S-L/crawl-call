@@ -207,5 +207,11 @@
   "eyeHeight": 0.875,
   "turnSpeed": 540,
   "fieldOfView": 140,
-  "acceleration": 16
+  "acceleration": 16,
+  "snakeForgottenAfter": 0,
+  "enemyForgottenAfter": 0,
+  "shareDelay": {
+    "red": 1.0,
+    "blue": 1.0
+  }
 }

@@ -7,7 +7,7 @@
 // another over the graph the bots path on. Said out loud rather than passed off as a
 // rule: when a map gains spawn zones, this is what they replace.
 //
-// implements: FR-BOT-020, INV-BOT-030, FR-MAP-150, FR-BOT-280
+// implements: FR-BOT-020, INV-BOT-030, FR-MAP-150, FR-BOT-280, FR-BOT-250
 import Foundation
 
 enum Squads {
@@ -65,6 +65,22 @@ enum Squads {
 
         var bots: [Bot] = []
         let blueCentre = centre(of: blueAnchor, in: world.graph, cellSize: cell, floorHeight: height)
+        // What every bot knows at the start (FR-BOT-250): the building's outline, floor
+        // by floor, and the ways between its floors — not what stands in its cells —
+        // and roughly where the enemy squad starts.
+        var start = Knowledge()
+        start.outline = Set(world.map.placements.map { NavigationGraph.Node(floor: $0.floor, x: $0.x, z: $0.z) })
+            .union(world.graph.nodes)
+        start.ways = Set(world.map.placements.filter { $0.step != nil }
+            .map { NavigationGraph.Node(floor: $0.floor, x: $0.x, z: $0.z) })
+        func area(_ cells: [NavigationGraph.Node]) -> Knowledge.Area? {
+            let points = cells.map { centre(of: $0, in: world.graph, cellSize: cell, floorHeight: height) }
+            guard !points.isEmpty else { return nil }
+            let middle = points.reduce(.zero, +) / Double(points.count)
+            let radius = points.map { Perception.metres($0, middle) }.max() ?? .zero
+            return Knowledge.Area(centre: middle, radius: radius + cell)
+        }
+        let startAreas: [Squad: Knowledge.Area?] = [.red: area(blue), .blue: area(red)]
         for (squad, cells, enemy) in [(Squad.red, red, blueCentre), (Squad.blue, blue, redCentre)] {
             for (index, node) in cells.enumerated() {
                 let kind = Archetype.allCases[index % Archetype.allCases.count]
@@ -74,6 +90,8 @@ enum Squads {
                                     configuration: world.configurations.bot) else { continue }
                 // Facing the other squad: the two are at war (FR-BOT-280).
                 bot.facing = Turning.angle(from: position, to: enemy) ?? .zero
+                bot.knowledge = start
+                bot.knowledge.enemyStart = startAreas[squad] ?? nil
                 bots.append(bot)
             }
         }

@@ -3,7 +3,7 @@
 // a file with an unknown key is rejected at load rather than silently defaulted,
 // which is what `Schema` is for.
 //
-// implements: IF-SNAKE-010, IF-MAP-020, IF-VIEW-020, IF-BOT-010, FR-SNAKE-220, FR-BOT-280, FR-BOT-050, FR-BOT-290
+// implements: IF-SNAKE-010, IF-MAP-020, IF-VIEW-020, IF-BOT-010, FR-SNAKE-220, FR-BOT-280, FR-BOT-050, FR-BOT-290, FR-BOT-260, FR-BOT-310
 import Foundation
 
 // MARK: - Snake (IF-SNAKE-010)
@@ -215,6 +215,13 @@ struct BotConfiguration: Decodable, Equatable {
     let fieldOfView: Double
     /// Metres a second squared a bot gathers speed and slows at (FR-BOT-290).
     let acceleration: Double
+    /// Seconds after which a bot forgets a sighting of the snake, and of an enemy;
+    /// nothing is forgotten where the time is zero (FR-BOT-260).
+    let snakeForgottenAfter: Double
+    let enemyForgottenAfter: Double
+    /// Seconds it takes what one bot sees to reach the rest of its squad, per squad
+    /// (FR-BOT-310).
+    let shareDelay: [String: Double]
 
     private static let weights = Schema.object([
         "panic": .value, "discipline": .value, "aggression": .value, "selfSacrifice": .value,
@@ -247,6 +254,9 @@ struct BotConfiguration: Decodable, Equatable {
         "turnSpeed": .value,
         "fieldOfView": .value,
         "acceleration": .value,
+        "snakeForgottenAfter": .value,
+        "enemyForgottenAfter": .value,
+        "shareDelay": .named(of: .value),
     ])
 }
 
