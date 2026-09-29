@@ -95,6 +95,8 @@ enum SceneryBuilder {
             }
             model.name = EntityName.sceneryPart
             model.components.set(ImageBasedLightReceiverComponent(imageBasedLight: ambient))
+            // The water casts no shadow: the floor is seen through it (ADR-0050).
+            if part.layer == .water { model.components.set(DynamicLightShadowComponent(castsShadow: false)) }
             root.addChild(model)
         }
         for surface in scenery.surfaces where !surface.mesh.isEmpty {
@@ -106,6 +108,8 @@ enum SceneryBuilder {
             let model = ModelEntity(mesh: mesh, materials: [material])
             model.name = EntityName.sceneryPart
             model.components.set(ImageBasedLightReceiverComponent(imageBasedLight: ambient))
+            // As the water beyond it: no shadow (ADR-0050).
+            if surface.layer == .water { model.components.set(DynamicLightShadowComponent(castsShadow: false)) }
             root.addChild(model)
         }
         if let birds = scenery.birds {

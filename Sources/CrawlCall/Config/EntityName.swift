@@ -39,4 +39,7 @@ enum EntityName {
 
     /// `segment<index>`, `bot<id>`: one of many of a kind, by its number.
     static func numbered(_ kind: String, _ number: Int) -> String { kind + String(number) }
+    /// The ground slabs of one module, drawn as one mesh (ADR-0047).
+    static let slabsPrefix = "slabs:"
+    static func slabs(_ module: String) -> String { slabsPrefix + module }
 }

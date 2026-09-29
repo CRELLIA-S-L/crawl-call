@@ -4,6 +4,14 @@
 //
 // implements: FR-VIEW-130, FR-VIEW-030
 import Foundation
+import RealityKit
+
+/// How the frame is rendered. No multisampling: at the phone's 2622 × 1206 its edges
+/// show little stair-stepping, and it cost the GPU about a thirteenth of its work a
+/// frame at the steady performance level a match runs at (ADR-0048).
+enum Rendering {
+    static let antialiasing = AntialiasingMode.none
+}
 
 /// The flat image the ambient light is generated from.
 enum AmbientImage {

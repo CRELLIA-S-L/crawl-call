@@ -15,9 +15,13 @@ final class FrameRecorder {
     private let clock = ContinuousClock()
     private let began: ContinuousClock.Instant
     let fileURL: URL
+    /// Where the device's thermal state is read from: the system's, but for a test.
+    private let thermal: () -> ProcessInfo.ThermalState
 
-    init(capacity: Int = FrameRecording.capacity, fileURL: URL = FrameRecorder.defaultFileURL) {
+    init(capacity: Int = FrameRecording.capacity, fileURL: URL = FrameRecorder.defaultFileURL,
+         thermal: @escaping () -> ProcessInfo.ThermalState = { ProcessInfo.processInfo.thermalState }) {
         record = FrameRecord(capacity: capacity)
+        self.thermal = thermal
         began = clock.now
         self.fileURL = fileURL
         // A record left by an earlier run must not pass for this one's: a run that
@@ -50,6 +54,7 @@ final class FrameRecorder {
         var complete = frame
         complete.time = Self.milliseconds(clock.now - began)
         complete.interval = seconds * FrameRecording.millisecondsPerSecond
+        complete.thermal = thermal()
         for event in FrameEvent.allCases {
             complete.add(event, times: pending.count(of: event))
         }

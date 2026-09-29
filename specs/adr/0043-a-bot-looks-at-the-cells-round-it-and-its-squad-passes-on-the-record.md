@@ -31,7 +31,7 @@ The squad's merge keeps no second structure: a sighting carries when it was made
 ### How it works
 
 **Looking at the map.** Once a deliberation period (FR-BOT-150) a bot looks at every cell of every floor within its detection range that holds a module or can be stood in. For each it takes the cell's centre at the height of its ground, moves it towards the bot by 0.55 of a cell — onto the near side of the cell, just past its edge — and lifts it 0.05 m off the ground; a wall is thus seen by its face and a floor by its near edge, where a line to the centre would cross the module standing in the cell itself. The cell is recorded with the module that stands in it, or with nothing, and when.
-Every bot looks in the match's first frame; from then on the bots take turns spread evenly across the period, since all of them looking in one frame measured 2.4 ms a step at the 99th percentile on the iPhone, five times a second, against 0.05 ms before.
+Every bot looks in the match's first frame; from then on the bots take turns spread evenly across the period, since all of them looking in one frame measured 2.4 ms a step at the 99th percentile on the iPhone, five times a second, against 0.05 ms before. A bot's next look is due a whole number of periods after its last due time, not after the frame the look fell in: counted from the frame, a long frame made several bots due at once and they looked together from then on, which on the phone had all eight looking in one frame, 2.7 ms, within twenty seconds (2026-09-28).
 
 **The snake's parts** are told apart by their place from the head: part 0 is the head. A part seen again replaces its earlier sighting; parts not seen keep theirs, so a bot's picture of the snake can be pieced together from several moments.
 

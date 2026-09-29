@@ -3,7 +3,7 @@
 // A bot acts on this and on nothing else (FR-BOT-220): the truth is the world's, the
 // record is the bot's.
 //
-// implements: FR-BOT-050, FR-BOT-220, FR-BOT-230, FR-BOT-240, FR-BOT-250, FR-BOT-260, FR-BOT-310
+// implements: FR-BOT-050, FR-BOT-220, FR-BOT-230, FR-BOT-240, FR-BOT-250, FR-BOT-260, FR-BOT-310, FR-BOT-320, FR-BOT-330
 import Foundation
 
 struct Knowledge: Equatable {
@@ -31,6 +31,9 @@ struct Knowledge: Equatable {
     var snake: [Int: Sighting] = [:]
     /// The latest sighting of each enemy bot, by its id (FR-BOT-240).
     var enemies: [Int: Sighting] = [:]
+    /// The enemy bots it has seen dead, or been told of, and when they were seen so:
+    /// no longer anyone to fire at or hide from (FR-BOT-320).
+    var fallen: [Int: Double] = [:]
     /// The latest sighting of each cell of the map (FR-BOT-230).
     var cells: [NavigationGraph.Node: Cell] = [:]
     /// Given at the start (FR-BOT-250): the building's outline, floor by floor — which
@@ -53,6 +56,24 @@ struct Knowledge: Equatable {
         snake.keys.sorted().compactMap { key in
             snake[key].flatMap { $0.time >= time ? $0.point : nil }
         }
+    }
+
+    /// The enemy bots seen at `time` — in view now — by id, where they stand.
+    func enemies(seenAt time: Double) -> [(id: Int, point: SIMD3<Double>)] {
+        enemies.keys.sorted().compactMap { id in
+            enemies[id].flatMap { $0.time >= time ? (id: id, point: $0.point) : nil }
+        }
+    }
+
+    /// Where the enemy bots were last seen, as far as the record goes.
+    var enemyPoints: [SIMD3<Double>] {
+        enemies.keys.sorted().compactMap { enemies[$0]?.point }
+    }
+
+    /// Records an enemy seen dead at `time`: it leaves the enemies the bot fights.
+    mutating func saw(fallen id: Int, at time: Double) {
+        if fallen[id] == nil { fallen[id] = time }
+        enemies[id] = nil
     }
 
     /// Whether the bot knows a cell: it has seen it, or it is a way between floors it
@@ -83,5 +104,9 @@ struct Knowledge: Equatable {
         merge(&snake, other.snake) { $0.time }
         merge(&enemies, other.enemies) { $0.time }
         merge(&cells, other.cells) { $0.time }
+        // A death is heard as the rest is; a body stays dead, and an older sighting
+        // of it standing is heard no more.
+        for (id, time) in other.fallen where time <= before { saw(fallen: id, at: time) }
+        for id in fallen.keys { enemies[id] = nil }
     }
 }

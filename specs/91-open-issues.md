@@ -13,6 +13,7 @@ Q-230 — the head kept to walkable cells by its centre while its body, wider th
 Q-210 — whether the game targets iPadOS — was settled on 2026-09-24 by the maintainer: it does, CON-PUB-010 names iPadOS 27, and the target builds for iPhone and iPad alike (`TARGETED_DEVICE_FAMILY = 1,2`); the macOS half was never a divergence, only a sequence, and FR-VIEW-040 still brings it.
 Q-270 — the world around the arena, agreed and then built — was closed on 2026-09-25, when the maintainer judged the island, its sky and its birds on the phone and found them good; the sky showed grey-blue there rather than the configured blue, which the maintainer left as it is for now, and Q-350 holds why and what could change it.
 Q-400 — the corners of every drawn primitive are sharp — was opened and settled on 2026-09-25: the maintainer had every drawn box rounded as a trial, looked at it on the phone, and kept it, grooves between neighbouring modules included; it became FR-VIEW-240, and ADR-0037 holds what it cost and why RealityKit's own rounded box was not used. The bots' figures went on to Q-420.
+Q-420 and Q-450 — the bots' figures and the shrubs drawn with RealityKit's own rounded box and sphere, tens of thousands of triangles each — were settled on 2026-09-29 by ADR-0046, when the frame rate on the phone fell and the figures were found to be four fifths of the scene's triangles: both are drawn with the game's own shapes, the figures at their own radii.
 What remains is what a decision inside the repository cannot close.
 
 ### Q-120 — The name is chosen; the search that clears it is not done
@@ -131,13 +132,6 @@ What remains is what a decision inside the repository cannot close.
 - **The question:** whether the snake may, later, leap a gap wider than its body.
 - **Still needed:** how the player asks for a leap, or whether it happens by itself at speed; how wide a gap can be leapt, and whether that depends on the snake's length or speed; what the tail does in the air, since today every part lies on the ground or down a drop (FR-SNAKE-220); whether bots can follow across, which the navigation graph does not allow (FR-MAP-020); and what a map shows so that a gap that can be leapt looks different from one that cannot (FR-MAP-260).
 
-### Q-420 — The bots' figures are drawn with RealityKit's heaviest box
-
-- **Found:** 2026-09-25, while measuring the rounded box of FR-VIEW-240 (ADR-0037).
-- **What diverged:** every box a bot's figure is built from (`Figure.swift`, ADR-0022) is RealityKit's `generateBox(cornerRadius:)`, 13 068 triangles a part whatever its size, while a box FR-VIEW-240 rounds is 328. No requirement bounds a figure's triangles, and the frame rate held with them on the phone that day.
-- **The question:** whether the figures move to `MeshResource.roundedBox` and under FR-VIEW-240's ceiling.
-- **Still needed:** whether each part's own radius, which the figure's table sets and which is larger than FR-VIEW-240's, is kept; whether it is done now or with the rework of how drawn models are parameterised (Q-280) or their move to Reality Composer Pro 3 (Q-380); and what a match with eight bots costs in frames before and after.
-
 ### Q-430 — Fish that leap from Greenholm's water
 
 - **Found:** the maintainer on 2026-09-25, while the water was being made prettier (FR-GREENHOLM-040 through FR-GREENHOLM-070): for later, some life in the water, such as fish leaping out at random with rings spreading on the water round them.
@@ -151,11 +145,3 @@ What remains is what a decision inside the repository cannot close.
 - **What diverged:** the first frame of a match came 0.48–0.58 s after launch in six runs before the water had a shader, 0.97–1.46 s in four with the waves (FR-GREENHOLM-070), and 1.0–1.57 s in three with the floor under the water as well (FR-MAP-270, FR-MAP-280) — so the floor is not clearly a part of it; once running, the match holds 60 frames a second. No requirement bounds the time from launch to a match on screen.
 - **The question:** what the time goes to — compiling the two surface shaders when their materials are first made, building the floor's height field and the distance field under it, or the transparent water's first draw — and whether it matters.
 - **Still needed:** a cold launch measured with the shaders and without, and with the floor and without, each run straight after the other on a cool phone that nobody touches; whether a second launch, with the shaders compiled once, is faster; and whether a bound on the time to a match belongs with NFR-PERF-010.
-
-
-### Q-450 — RealityKit's generated sphere is eight thousand triangles, and the shrubs and figures are drawn with it
-
-- **Found:** 2026-09-25, counting the triangles of `MeshResource.generateSphere` before giving the snake eyes (FR-VIEW-260): 8064 at every radius tried, from 5 cm to a metre, on the Mac with the iOS 27.0 SDK. Its cone is 128 and its cylinder 256.
-- **What diverged:** every shrub a map places is a generated sphere (`SceneBuilder.swift`, FR-MAP-210), and so is every sphere a bot's figure is built from (`Figure.swift`, ADR-0022). No requirement bounds their triangles; the snake's eyes are built from a sphere of the game's own instead, and the snake's old body of one generated sphere a segment is gone with FR-VIEW-250.
-- **The question:** whether the shrubs and the figures move to a sphere of the game's own, as the rounded box moved in ADR-0037, and with the same kind of ceiling.
-- **Still needed:** how many triangles a shrub needs at the camera's distance; whether it goes with Q-420, which asks the same of the figures' boxes; and what the blockout's shrubs and eight bots cost in frames before and after.

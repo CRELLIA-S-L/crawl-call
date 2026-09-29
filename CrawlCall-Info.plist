@@ -6,6 +6,10 @@
      build generates from CrawlCall.xcconfig. -->
 <plist version="1.0">
 <dict>
+	<key>LSApplicationCategoryType</key>
+	<string>public.app-category.games</string>
+	<key>LSSupportsGameMode</key>
+	<true/>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

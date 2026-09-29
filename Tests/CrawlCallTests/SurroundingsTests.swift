@@ -288,8 +288,9 @@ final class GreenholmTests: XCTestCase {
         let scenery = try XCTUnwrap(built.root.children.first { $0.name == EntityName.scenery })
         XCTAssertGreaterThan(scenery.children.count, 0)
         XCTAssertEqual(map.children.count, before)
-        // What is cut open is judged over the map's modules alone: one per piece.
-        XCTAssertEqual(map.children.count, world.plan.pieces.filter { $0.size.min() > 0 }.count)
+        // What is cut open is judged over the map's modules alone: one per piece, but
+        // the ground slabs, which nothing cuts and which are joined (ADR-0047).
+        XCTAssertEqual(built.seeThrough.moduleCount, world.plan.pieces.filter { $0.size.min() > 0 }.count - world.plan.groundSlabs.count)
         XCTAssertFalse(scenery.children.contains { $0.parent === map })
         XCTAssertNotNil(result.sky)
         XCTAssertNotNil(result.flock)

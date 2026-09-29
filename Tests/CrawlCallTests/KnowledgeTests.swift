@@ -121,21 +121,31 @@ final class KnowledgeTests: XCTestCase {
             XCTAssertFalse(bot.knowledge.cells.isEmpty, "bot \(bot.id) has seen nothing of the map")
         }
         // From then on the bots take turns: every bot looks once a period, and no frame
-        // carries the looks of the whole squad.
+        // carries the looks of the whole squad — not even after long frames, each of
+        // which makes several bots due at once (ADR-0043).
         let period = shipped.configurations.bot.deliberationPeriod
         let frames = Int((period * 60).rounded())
-        var looked: [Int: Int] = [:], most = 0
-        for _ in 0..<(frames * 3) {
-            _ = game.advance(seconds: 1.0 / 60)
-            let now = game.bots.filter { $0.lastLook == game.elapsed }
+        var looked: [Int: Int] = [:], most = 0, afterHitches = 0
+        var before = Dictionary(uniqueKeysWithValues: game.bots.map { ($0.id, $0.lastLook) })
+        let periods = 40
+        for frame in 0..<(frames * periods) {
+            // A long frame, a period long, now and then: in it every bot is due, and in
+            // the ordinary frames after it they are to be apart again.
+            let long = frame % 50 == 25
+            _ = game.advance(seconds: long ? period : 1.0 / 60)
+            let now = game.bots.filter { $0.lastLook != before[$0.id] }
             most = max(most, now.count)
+            if !long, frame > frames * periods / 2 { afterHitches = max(afterHitches, now.count) }
             for bot in now { looked[bot.id, default: 0] += 1 }
+            before = Dictionary(uniqueKeysWithValues: game.bots.map { ($0.id, $0.lastLook) })
         }
-        XCTAssertLessThanOrEqual(most, Int((Double(game.bots.count) / Double(frames)).rounded(.up)) + 1,
-                                 "\(most) bots looked round in one frame")
+        let fair = Int((Double(game.bots.count) / Double(frames)).rounded(.up)) + 1
+        XCTAssertLessThanOrEqual(afterHitches, fair,
+                                 "\(afterHitches) bots looked round in one frame after the long frames")
         for bot in game.bots {
-            XCTAssertGreaterThanOrEqual(looked[bot.id] ?? 0, 2, "bot \(bot.id) stopped looking round")
+            XCTAssertGreaterThanOrEqual(looked[bot.id] ?? 0, periods - periods / 4, "bot \(bot.id) stopped looking round")
         }
+        _ = most
     }
 
     // MARK: the start (FR-BOT-250)

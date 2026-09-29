@@ -15,7 +15,7 @@
 // The figure faces +z, towards the camera (FR-VIEW-010), because a bot has no facing
 // of its own to turn it by.
 //
-// implements: FR-VIEW-060, FR-VIEW-070, FR-VIEW-290
+// implements: FR-VIEW-060, FR-VIEW-070, FR-VIEW-290, FR-VIEW-240
 import Foundation
 import RealityKit
 import UIKit
@@ -238,11 +238,15 @@ enum Figure {
     @MainActor
     private static func mesh(for shape: Shape) -> MeshResource {
         switch shape {
+        // Of the game's own low shapes: RealityKit's rounded box is 13 068 triangles and
+        // its sphere 8064 at any size, which made the eight figures four fifths of every
+        // triangle in the frame (ADR-0046).
         case .box(let size, let corner):
-            return .generateBox(width: Float(size.x), height: Float(size.y), depth: Float(size.z),
-                                cornerRadius: Float(corner))
+            return .roundedBox(SIMD3<Float>(size), corner: Float(corner), segments: LowPoly.figureCornerSegments)
         case .sphere(let radius):
-            return .generateSphere(radius: Float(radius))
+            return LowPolySphere.mesh(radius: Float(radius), rings: LowPoly.figureRings,
+                                      segments: LowPoly.figureSegments)
+                ?? .generateSphere(radius: Float(radius))
         case .cylinder(let radius, let height, _):
             return .generateCylinder(height: Float(height), radius: Float(radius))
         }

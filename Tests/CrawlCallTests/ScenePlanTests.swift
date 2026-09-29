@@ -148,10 +148,13 @@ final class SceneBuilderTests: XCTestCase {
         let scene = try scene()
         let map = try XCTUnwrap(scene.children.first { $0.name == "map" })
         let ambient = try XCTUnwrap(scene.children.first { $0.name == "ambient" })
-        // Every piece the plan holds, which is now the cells plus the floors implied
-        // under whatever stands on them.
-        XCTAssertEqual(map.children.count, world.plan.pieces.count)
-        XCTAssertGreaterThan(map.children.count, 454)
+        // Every piece the plan holds — the cells plus the floors implied under whatever
+        // stands on them — is a model of its own, but the ground slabs, joined into one
+        // mesh a module (ADR-0047).
+        let slabs = world.plan.groundSlabs
+        let modules = Set(slabs.map { world.plan.pieces[$0].module })
+        XCTAssertEqual(map.children.count, world.plan.pieces.count - slabs.count + modules.count)
+        XCTAssertGreaterThan(world.plan.pieces.count, 454)
         // Without this component a model is lit only by the directional lights, and
         // whatever they miss renders black — which FR-VIEW-130 forbids.
         for model in map.children {

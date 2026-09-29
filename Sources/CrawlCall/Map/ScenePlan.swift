@@ -120,6 +120,25 @@ struct ScenePlan: Equatable {
         return surface - (slabs.map(\.size.y).min() ?? .zero)
     }
 
+    /// The pieces, by index, that lie under everything else: boxes of the ground floor
+    /// whose tops are its walking surface, over no basement. Nothing stands under
+    /// them for them to hide, and a head is never below them, so the see-through never
+    /// touches them (FR-VIEW-140, FR-VIEW-150, FR-VIEW-155), and they can be drawn as
+    /// one mesh rather than one entity each (ADR-0047).
+    var groundSlabs: [Int] {
+        guard let lowest = groundLevel else { return [] }
+        let surface = Double(lowest) * floorHeight
+        let basements = cells { $0 < lowest }
+        return pieces.indices.filter { index in
+            let piece = pieces[index]
+            let cell = PieceIndex.Cell(x: Int((piece.centre.x / cellSize).rounded()),
+                                       z: Int((piece.centre.z / cellSize).rounded()))
+            return piece.level == lowest && piece.figure == .box && piece.size.min() > .zero
+                && abs(piece.centre.y + piece.size.y * Geometry.half - surface) < Geometry.samePosition
+                && !basements.contains(cell)
+        }
+    }
+
     /// Empty where there are no pieces, so a caller need not special-case an empty map.
     var bounds: Bounds {
         guard let first = pieces.first else { return Bounds(lowest: .zero, highest: .zero) }

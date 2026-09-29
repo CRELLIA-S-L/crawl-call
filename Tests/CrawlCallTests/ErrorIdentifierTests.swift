@@ -44,6 +44,7 @@ final class ErrorIdentifierTests: XCTestCase {
         let setting: [IdentifiedError] = [
             SettingError.unknown(name: "atlantis"),
             CoverageError.horizonInFrame(fieldOfView: 110, lowestPitch: 50),
+            SceneBuilderError.slabsNotJoined,
             SceneryError.noAmbientLight, SceneryError.surfaceNotBuilt, SceneryError.skyImageNotPainted,
             SceneryError.skyNotGenerated(underlying: Underlying()),
         ]

@@ -501,11 +501,12 @@ tests: [Tests/CrawlCallTests/FrameRecordTests.swift]
 created: 2026-09-24
 ```
 
-When the game is launched with the frame record switched on, the system **shall** record for every frame the interval since the previous frame, the time its own step took in each of its phases — the match's step, the bots' deliberation, the see-through and the update of what is drawn — and the events of the match in that frame.
+When the game is launched with the frame record switched on, the system **shall** record for every frame the interval since the previous frame, the time its own step took in each of its phases — the match's step, the bots' deliberation, the see-through and the update of what is drawn — the thermal state the device reported, and the events of the match in that frame.
 
 **Rationale.** A freeze the HUD shows is a spike with no name. The interval is what RealityKit measured between its frames; the phases are what this game spent of it. A long interval over short phases puts the time in the renderer or on the GPU — a shader compiled on first use, a material swapped on many modules at once — where moving the game's work to another thread would change nothing; a long phase puts it in the game. The events say what happened in the frame the time went: a match beginning or ending, a bot's deliberation, a meal beginning or ending — the tail grows as it ends — a hit on the snake, a module cut open for the first time, a module changing its look.
 Switched on by the launch rather than built in, so that the build measured is the build played, Debug or Release alike; and kept in memory of a fixed size, so that recording costs no allocation on a frame and cannot itself be the spike it looks for.
 The maintainer asked for the instrument on 2026-09-24, to decide by measurement whether the match's work should move off the main thread; on its first reading it stays (ADR-0030).
+The thermal state since 2026-09-28, when the maintainer asked for it: back-to-back runs on the iPhone slowed from 58 frames a second to 43 over twenty-five seconds with the game's own phases flat at 0.3 ms, and a device throttling itself is the likeliest reading of that which the record could not show.
 
 ### FR-TOOL-240 — The frame record is written where the run tool can take it
 
@@ -540,7 +541,7 @@ tests: [scripts/run-on-device-selftest.sh]
 created: 2026-09-24
 ```
 
-When a run on the device ends, the run tool **shall** copy the frame record from the device where there is one, and print the number of frames, how many came more than one and a half frame periods of 60 per second after the one before, and for each of the slowest frames its interval, its phases and its events.
+When a run on the device ends, the run tool **shall** copy the frame record from the device where there is one, and print the number of frames, how many came more than one and a half frame periods of 60 per second after the one before, how many frames were drawn in each thermal state of the device, and for each of the slowest frames its interval, its phases, its thermal state and its events.
 
 **Rationale.** The record is read where the run is, so that a freeze is named the minute it was seen rather than after somebody opens a spreadsheet.
 Late is one and a half frame periods at 60 per second, 25 ms: a frame of 16.67 ms is on time at NFR-PERF-010's rate, and a frame that came after a skipped one is at least 33 ms, so the line between them falls where no on-time frame reaches and every skipped one does. "More than 16.6 ms", as first drafted, would have called every frame late.

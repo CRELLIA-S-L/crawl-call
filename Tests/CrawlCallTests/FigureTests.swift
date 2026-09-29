@@ -5,7 +5,7 @@
 // they are six different ones and that the figure is built the way that judgement
 // assumes.
 //
-// verifies: FR-VIEW-060, FR-VIEW-070
+// verifies: FR-VIEW-060, FR-VIEW-070, FR-VIEW-240
 import RealityKit
 import XCTest
 @testable import CrawlCall
@@ -140,6 +140,27 @@ final class FigureTests: XCTestCase {
         // Four times as long as it is thick, drawn; three is the least that still
         // says lying rather than standing whatever size the figure is set down at.
         XCTAssertGreaterThan(extent.z, 3 * extent.y, "the tube is not lying along z")
+    }
+
+    @MainActor
+    func testNoPartOfAFigureIsDrawnWithTensOfThousandsOfTriangles() {
+        // Eight figures of RealityKit's own boxes and spheres were four fifths of every
+        // triangle in the frame (ADR-0046); the game draws them with its own shapes.
+        for archetype in Archetype.allCases {
+            let figure = Figure.make(archetype, height: height, materials: Figure.materials(for: .red))
+            var parts: [ModelEntity] = []
+            func collect(_ entity: Entity) {
+                if let model = entity as? ModelEntity { parts.append(model) }
+                entity.children.forEach(collect)
+            }
+            collect(figure)
+            XCTAssertFalse(parts.isEmpty)
+            for part in parts {
+                guard let mesh = part.model?.mesh else { continue }
+                XCTAssertLessThanOrEqual(triangles(of: mesh), mostTrianglesOfOneShape,
+                                         "a part of the \(archetype) is \(triangles(of: mesh)) triangles")
+            }
+        }
     }
 
     @MainActor

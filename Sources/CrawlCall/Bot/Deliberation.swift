@@ -11,7 +11,7 @@
 // configuration (IF-BOT-010), as is how much an unhurt bot fears the snake
 // (FR-BOT-210). What shapes each term — a share, a whole — is in `Utility`.
 //
-// implements: FR-BOT-080, FR-BOT-090, FR-BOT-118, FR-BOT-200, FR-BOT-210, FR-MAP-150, FR-BOT-220
+// implements: FR-BOT-080, FR-BOT-090, FR-BOT-118, FR-BOT-200, FR-BOT-210, FR-MAP-150, FR-BOT-220, FR-BOT-060, FR-BOT-140, FR-BOT-330
 import Foundation
 
 enum Deliberation {
@@ -30,6 +30,11 @@ enum Deliberation {
         var inView: [SIMD3<Double>] = []
         /// Whether the bot knows a cell: where it may hide or run to (FR-BOT-220).
         var knows: (NavigationGraph.Node) -> Bool = { _ in true }
+        /// Where the enemy bots it knows of were last seen, standing: what it hides
+        /// from, as it hides from the snake (FR-BOT-330).
+        var enemies: [SIMD3<Double>] = []
+        /// The enemy bots it sees now, by id: what it can fire at (FR-BOT-060).
+        var enemiesInView: [(id: Int, point: SIMD3<Double>)] = []
         var allies: [Bot] = []
         var orderedZone: NavigationGraph.Node?
         let plan: ScenePlan
@@ -53,21 +58,24 @@ enum Deliberation {
 
         // Fire: needs something to shoot at that the bot sees now, a line to it and a
         // round to send; a remembered snake is somewhere to be afraid of, not a target.
-        let target = situation.inView
-            .map { (point: $0, metres: Perception.metres(bot.position, $0)) }
-            .min { $0.metres < $1.metres }
-        if let target, bot.ammunition > .zero,
-           Sight.isClear(from: bot.eye, to: target.point, through: situation.plan) {
-            let closeness = nearness(target.metres, within: entry.detectionRange)
-            scored.append((.fire(at: .snake(at: target.point)),
-                           term.attack * closeness * ammunition * bot.weights.aggression))
+        // Of the targets, the nearest part of the snake and each enemy bot in view
+        // (FR-BOT-060), the one it is already firing at is kept unless another is
+        // worth more by the hysteresis margin (FR-BOT-140).
+        if bot.ammunition > .zero,
+           let target = target(for: bot, in: situation, worth: { metres in
+               term.attack * nearness(metres, within: entry.detectionRange) * ammunition * bot.weights.aggression
+           }) {
+            scored.append((.fire(at: target.target), target.utility))
         }
 
-        // Cover: worth more the nearer it is, the nearer the snake is and the less
-        // of the bot is left.
-        if let nearest, let cover = cover(for: bot, from: situation.snake, in: situation) {
+        // Cover: worth more the nearer it is, the nearer the danger is — the snake or
+        // an enemy (FR-BOT-330) — and the less of the bot is left.
+        let danger = (situation.snake + situation.enemies)
+            .map { Perception.metres(bot.position, $0) }
+            .min()
+        if let danger, let cover = cover(for: bot, from: situation.snake, enemies: situation.enemies, in: situation) {
             let reach = coverSearch(situation.configuration)
-            let closeness = nearness(nearest.metres, within: entry.detectionRange)
+            let closeness = nearness(danger, within: entry.detectionRange)
             let handy = nearness(Perception.metres(bot.position, centre(of: cover.node, in: situation)), within: reach)
             scored.append((.takeCover(at: cover.node),
                            term.threat * closeness * handy * (term.wounded - health * Utility.coverHealthShare)
@@ -121,6 +129,45 @@ enum Deliberation {
         return scored.map { (action: $0.0, utility: $0.1) }
     }
 
+    /// What the bot fires at, and what firing at it is worth: the best of the nearest
+    /// part of the snake it sees and each enemy bot it sees with a line of fire to it,
+    /// by `worth` of the distance, except that the target it is already firing at is
+    /// kept while nothing else is worth more by the hysteresis margin (FR-BOT-140).
+    /// Two targets are one where both are the snake, or both the same bot.
+    static func target(for bot: Bot, in situation: Situation,
+                       worth: (Double) -> Double) -> (target: Target, utility: Double)? {
+        var candidates: [(target: Target, utility: Double)] = []
+        let snake = situation.inView
+            .map { (point: $0, metres: Perception.metres(bot.position, $0)) }
+            .min { $0.metres < $1.metres }
+        if let snake, Sight.isClear(from: bot.eye, to: snake.point, through: situation.plan) {
+            candidates.append((.snake(at: snake.point), worth(snake.metres)))
+        }
+        for enemy in situation.enemiesInView {
+            let eye = enemy.point + SIMD3(0, bot.eyeHeight, 0)
+            guard Sight.isClear(from: bot.eye, to: eye, through: situation.plan) else { continue }
+            candidates.append((.bot(id: enemy.id), worth(Perception.metres(bot.position, enemy.point))))
+        }
+        // The first of the best, so that a tie goes the same way every time.
+        var best: (target: Target, utility: Double)?
+        for candidate in candidates where candidate.utility > (best?.utility ?? -.infinity) { best = candidate }
+        guard let best else { return nil }
+        guard case .fire(let current) = bot.action,
+              let kept = candidates.first(where: { same($0.target, current) }),
+              best.utility - kept.utility < situation.configuration.hysteresisMargin else { return best }
+        return kept
+    }
+
+    /// Whether two targets are one: both the snake, wherever it was aimed at, or both
+    /// the same bot.
+    static func same(_ a: Target, _ b: Target) -> Bool {
+        switch (a, b) {
+        case (.snake, .snake): return true
+        case (.bot(let x), .bot(let y)): return x == y
+        default: return false
+        }
+    }
+
     /// The action with the highest score, or nothing when a bot has nothing to do.
     /// Ties go to the action scored first, which keeps a match repeatable.
     static func choose(for bot: Bot, in situation: Situation) -> Action? {
@@ -139,9 +186,17 @@ enum Deliberation {
     /// the first hidden one is the nearest, and every sight test after it would be
     /// asked about a worse answer. On the blockout that is a handful of tests where
     /// the scan was three hundred (NFR-PERF-020).
-    static func cover(for bot: Bot, from snake: [SIMD3<Double>],
+    ///
+    /// A cell is watched by a part of the snake that has a line to its ground, and by
+    /// an enemy whose eyes have a line to where the bot's would be, standing in it: an
+    /// enemy fires from its eyes at a bot's head, which shows over a wall lower than
+    /// both (FR-BOT-330, ADR-0022).
+    static func cover(for bot: Bot, from snake: [SIMD3<Double>], enemies: [SIMD3<Double>] = [],
                       in situation: Situation) -> (node: NavigationGraph.Node, metres: Double)? {
-        guard !snake.isEmpty else { return nil }
+        guard !snake.isEmpty || !enemies.isEmpty else { return nil }
+        let rise = SIMD3(0, bot.eyeHeight, 0)
+        let shooters = enemies.map { $0 + rise }
+            .sorted { Perception.metres(bot.position, $0) < Perception.metres(bot.position, $1) }
         let reach = coverSearch(situation.configuration)
         let here = NavigationGraph.Node(floor: bot.floor,
                                         x: Int((bot.position.x / situation.cellSize).rounded()),
@@ -165,6 +220,7 @@ enum Deliberation {
             // Only a cell the bot knows is somewhere it would think of hiding (FR-BOT-220).
             if metres > .zero, situation.knows(node) {
                 let watched = byNearness.contains { Sight.isClear(from: $0, to: there, through: situation.plan) }
+                    || shooters.contains { Sight.isClear(from: $0, to: there + rise, through: situation.plan) }
                 if !watched { return (node: node, metres: metres) }
             }
             for next in situation.graph.neighbours(of: node).sorted(by: order)

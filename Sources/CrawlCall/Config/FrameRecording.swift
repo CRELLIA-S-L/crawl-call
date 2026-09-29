@@ -16,13 +16,17 @@ enum FrameRecording {
     /// Milliseconds in a second, for the record's times.
     static let millisecondsPerSecond = 1_000.0
     /// How the record's columns are named, separated and written.
-    static let header = "frame,time_ms,interval_ms,step_ms,deliberation_ms,see_through_ms,draw_ms,events"
+    static let header = "frame,time_ms,interval_ms,step_ms,deliberation_ms,see_through_ms,draw_ms,thermal,events"
     static let columnSeparator = ","
     static let eventSeparator = ";"
     /// An event that happened more than once in a frame is written with its count:
     /// `deliberation*2`.
     static let countMark = "*"
     static let lineBreak = "\n"
+    /// The device's thermal state as the column writes it, by the state's raw value:
+    /// the names the system gives them, and the match configuration's threshold uses.
+    static let thermalNames = ["nominal", "fair", "serious", "critical"]
+    static let unknownThermal = "unknown"
     /// Times are written to the microsecond.
     static let timeFormat = "%.3f"
     /// Frames are recorded one at a time, and numbered from one in the file.

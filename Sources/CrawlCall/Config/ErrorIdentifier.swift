@@ -60,6 +60,7 @@ enum ErrorIdentifier: String, CaseIterable {
     // The setting a map names (FR-MAP-120, FR-MAP-140).
     case settingUnknown = "SETTING_UNKNOWN"
     case settingHorizonInFrame = "SETTING_HORIZON_IN_FRAME"
+    case sceneSlabsNotJoined = "SCENE_SLABS_NOT_JOINED"
     case sceneryNoAmbientLight = "SCENERY_NO_AMBIENT_LIGHT"
     case scenerySurfaceNotBuilt = "SCENERY_SURFACE_NOT_BUILT"
     case scenerySkyImageNotPainted = "SCENERY_SKY_IMAGE_NOT_PAINTED"

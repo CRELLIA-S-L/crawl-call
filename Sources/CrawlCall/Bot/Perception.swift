@@ -5,7 +5,7 @@
 // a cone round the way the bot faces (FR-BOT-280), as wide as the configuration's
 // angle — and with nothing in the way. A bot does not see with the back of its head.
 //
-// implements: FR-BOT-050, FR-BOT-230, FR-BOT-240
+// implements: FR-BOT-050, FR-BOT-230, FR-BOT-240, FR-BOT-320
 import Foundation
 
 enum Perception {
@@ -16,7 +16,7 @@ enum Perception {
     /// behind a crate and whose tail is not has been seen.
     static func notice(_ bots: inout [Bot], snake: [SIMD3<Double>],
                        plan: ScenePlan, configuration: BotConfiguration, now: Double = .zero) {
-        for index in bots.indices {
+        for index in bots.indices where bots[index].isAlive {
             guard let range = configuration.archetypes[bots[index].archetype.rawValue]?.detectionRange
             else { continue }
             for (part, point) in snake.enumerated()
@@ -28,15 +28,23 @@ enum Perception {
 
     /// Writes into every bot's knowledge each enemy bot it can see, where and when
     /// (FR-BOT-240). What it looks at is the enemy's eyes: its head, the part that
-    /// shows over cover first.
+    /// shows over cover first. An enemy seen dead is a body, and leaves the enemies it
+    /// fights (FR-BOT-320); a body lies on the ground, and is looked at there.
     static func noticeEnemies(_ bots: inout [Bot], plan: ScenePlan, configuration: BotConfiguration, now: Double) {
         let everyone = bots
-        for index in bots.indices {
+        for index in bots.indices where bots[index].isAlive {
             guard let range = configuration.archetypes[bots[index].archetype.rawValue]?.detectionRange
             else { continue }
-            for enemy in everyone where enemy.squad != bots[index].squad
-                && sees(enemy.eye, from: bots[index], within: range, plan: plan, configuration: configuration) {
-                bots[index].knowledge.enemies[enemy.id] = .init(point: enemy.position, time: now)
+            for enemy in everyone where enemy.squad != bots[index].squad {
+                if enemy.isAlive {
+                    guard sees(enemy.eye, from: bots[index], within: range, plan: plan, configuration: configuration)
+                    else { continue }
+                    bots[index].knowledge.enemies[enemy.id] = .init(point: enemy.position, time: now)
+                } else if bots[index].knowledge.fallen[enemy.id] == nil,
+                          sees(enemy.position + SIMD3(0, Looking.offGround, 0), from: bots[index], within: range,
+                               plan: plan, configuration: configuration) {
+                    bots[index].knowledge.saw(fallen: enemy.id, at: now)
+                }
             }
         }
     }

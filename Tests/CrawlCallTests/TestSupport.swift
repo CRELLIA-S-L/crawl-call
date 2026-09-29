@@ -5,6 +5,7 @@
 // element was missing and how many there were.
 //
 // implements: FR-TOOL-280
+import RealityKit
 import XCTest
 @testable import CrawlCall
 
@@ -52,3 +53,16 @@ extension Execution {
         return deliberate(&bots, slots: slots, world: world, now: .zero)
     }
 }
+
+/// How many triangles a mesh draws, over all its models and parts.
+@MainActor
+func triangles(of mesh: MeshResource) -> Int {
+    mesh.contents.models.reduce(0) { sum, model in
+        sum + model.parts.reduce(0) { $0 + ($1.triangleIndices?.count ?? 0) / 3 }
+    }
+}
+
+/// The most triangles one shape of the game's own may take: RealityKit's generated
+/// sphere is 8064 and its rounded box 13 068 at any size, where the game's own are a few
+/// hundred; a tenth of the sphere tells the two kinds apart (ADR-0037, ADR-0046).
+let mostTrianglesOfOneShape = 800

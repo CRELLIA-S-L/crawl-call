@@ -137,6 +137,7 @@ struct MatchView: View {
             // it, so that nothing of play reaches it (FR-MAP-130).
             let scenery = SceneryBuilder.world(for: world, widestAspect: host.widestAspect, in: scene)
             if let sky = scenery.sky { content.environment = .skybox(sky) }
+            content.renderingEffects.antialiasing = Rendering.antialiasing
 
             guard let start = Game.start(in: world),
                   let camera = scene.children.first(where: { $0.name == EntityName.camera }),

@@ -9,7 +9,7 @@
 // A figure's origin is at its feet, so that it stands on the floor as placed and
 // shrinks into the floor as it is swallowed.
 //
-// implements: FR-VIEW-290, FR-VIEW-060, FR-VIEW-070, FR-VIEW-100, FR-VIEW-190, FR-BOT-280
+// implements: FR-VIEW-290, FR-VIEW-060, FR-VIEW-070, FR-VIEW-100, FR-VIEW-190, FR-BOT-280, FR-VIEW-300
 import CoreGraphics
 import Foundation
 import RealityKit
@@ -88,6 +88,13 @@ enum BotEntity {
             for (name, sign) in [(EntityName.leftHip, Float(1)), (EntityName.rightHip, Float(-1))] {
                 body.children.first { $0.name == name }?.orientation =
                     simd_quatf(angle: -sign * Float(pose.swing), axis: SIMD3(1, 0, 0))
+            }
+            // A body lies where it fell, on its back, its feet where it stood
+            // (FR-VIEW-300).
+            if !bot.isAlive {
+                body.position.y = Float(bot.position.y) + Float(BotBody.lyingLift)
+                body.orientation = simd_quatf(angle: Float(bot.facing), axis: SIMD3(0, 1, 0))
+                    * simd_quatf(angle: -.pi / 2, axis: SIMD3(1, 0, 0))
             }
         }
     }

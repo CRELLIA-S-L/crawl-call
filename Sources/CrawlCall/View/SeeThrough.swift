@@ -37,6 +37,8 @@ struct SeeThrough {
     }
 
     private let modules: [Module]
+    /// How many modules the see-through looks after: every one it may cut open or fade.
+    var moduleCount: Int { modules.count }
     private let boxes: [Box]
     /// What was drawn last frame, by place in `modules`, so that a module whose look
     /// has not changed is not written to sixty times a second. A hole moves with the

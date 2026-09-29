@@ -686,4 +686,64 @@ final class SeeThroughTests: XCTestCase {
         seeThrough.show(headOn: 0, head: .zero, surface: 0, snake: [head], from: eye, margin: 0.2, visibilityRadius: 0)
         XCTAssertGreaterThan(seeThroughCount(scene.root), above, "the room's own wall is in the line and stayed solid")
     }
+
+    // MARK: the ground slabs, which nothing cuts (ADR-0047)
+
+    func testAGroundSlabIsABoxOfTheGroundFloorLyingAtItsSurfaceOverNoBasement() throws {
+        let kit = try Kit.load(named: "blockout", from: .main)
+        // A floor over two cells of basement, a wall on the ground floor, a balcony
+        // cell on floor 1: the slabs are the floor over solid ground, the floor the map
+        // implies under the wall among them (FR-TOOL-020), and not the wall itself,
+        // whose top stands above the surface.
+        let map = try MapParser.parse("kit blockout\nsetting greenholm\nfloor -1\n..\nfloor 0\n....#\nfloor 1\n   .\n", kit: kit)
+        let plan = ScenePlan.make(map: map, kit: kit, cellSize: 0.5)
+        let slabs = Set(plan.groundSlabs)
+        func cell(_ piece: ScenePlan.Piece) -> (Int, Int) {
+            (Int((piece.centre.x / 0.5).rounded()), Int((piece.centre.z / 0.5).rounded()))
+        }
+        for (index, piece) in plan.pieces.enumerated() {
+            let (x, z) = cell(piece)
+            let expected = piece.level == 0 && piece.module == "floor" && (2...4).contains(x) && z == 0
+                && abs(piece.centre.y + piece.size.y / 2) < 1e-9
+            XCTAssertEqual(slabs.contains(index), expected, "\(piece.module) at \(x),\(z) on floor \(piece.level)")
+        }
+        XCTAssertFalse(slabs.isEmpty, "the map has no slab, so the test proves nothing")
+    }
+
+    func testNoGroundSlabIsEverCutOrFadedWhereverTheHeadAndTheCameraAre() throws {
+        // The rules of FR-VIEW-140, FR-VIEW-150 and FR-VIEW-155 over the shipped map,
+        // with the head on every cell anybody can stand on and the camera turned every
+        // eighth of a turn: a slab the see-through could touch would be drawn wrong
+        // once it is joined to the rest (ADR-0047).
+        let world = try Launch.world().get()
+        let plan = world.plan
+        let slabs = Set(plan.groundSlabs)
+        XCTAssertFalse(slabs.isEmpty, "the map has no ground slabs, so the test proves nothing")
+        let boxes = plan.pieces.map { SeeThrough.Box(centre: $0.centre, size: $0.size, level: $0.level) }
+        let cell = world.configurations.tuning.navigationGraphCellSize
+        let distance = SceneView.distance(framing: plan, view: world.configurations.view)
+        let pitch = world.configurations.view.cameraPitch * .pi / 180
+        let margin = world.configurations.tuning.bodyRadius + world.configurations.view.seeThroughMargin
+        let radius = world.configurations.tuning.bodyRadius
+        var heads = 0
+        for node in world.graph.nodes {
+            let ground = world.graph.centre(of: node, cellSize: cell, floorHeight: world.kit.floorHeight)
+            let head = ground + SIMD3(0, radius, 0)
+            let snake = [head, head + SIMD3(2 * radius, 0, 0), head + SIMD3(4 * radius, 0, radius), head + SIMD3(-2 * radius, 0, 2 * radius)]
+            heads += 1
+            for eighth in 0..<8 {
+                let yaw = Double(eighth) * .pi / 4
+                let across = distance * cos(pitch)
+                let eye = SIMD3(head.x + across * sin(yaw), head.y + distance * sin(pitch), head.z + across * cos(yaw))
+                let holes = SeeThrough.holes(in: boxes, headOn: node.floor, head: head, surface: ground.y, snake: snake,
+                                             from: eye, margin: margin,
+                                             visibilityRadius: world.configurations.view.visibilityRadius)
+                let cut = slabs.intersection(holes.keys)
+                XCTAssertTrue(cut.isEmpty, "head at \(node), yaw \(eighth)/8 cuts ground slabs \(cut.sorted())")
+                let lids = slabs.filter { boxes[$0].level > node.floor }
+                XCTAssertTrue(lids.isEmpty, "head at \(node) fades ground slabs \(lids.sorted())")
+            }
+        }
+        XCTAssertGreaterThan(heads, 0)
+    }
 }

@@ -249,6 +249,9 @@ final class GreenholmIslandTests: XCTestCase {
             // water has no clearcoat (ADR-0039).
             XCTAssertEqual(material.clearcoatRoughness.scale, Float(s.waterOpacity), accuracy: 1e-6)
             XCTAssertEqual(material.clearcoat.scale, 0)
+            // It casts no shadow: the floor is seen through it (ADR-0050).
+            let shadow = try XCTUnwrap(model.components[DynamicLightShadowComponent.self], model.name)
+            XCTAssertFalse(shadow.castsShadow, model.name)
         }
         // The floor is coloured towards its colour at depth (FR-MAP-270), and opaque.
         for model in floor {
@@ -362,6 +365,18 @@ final class PermeabilityTests: XCTestCase {
         try super.setUpWithError()
         kit = try Kit.load(named: "blockout", from: .main)
         tuning = try Configurations.load(from: .main).tuning
+    }
+
+    @MainActor
+    func testAShrubIsDrawnWithAFewHundredTrianglesNotThousands() throws {
+        // A shrub was RealityKit's sphere, 8064 triangles, a dozen of them on the map
+        // (ADR-0046).
+        let world = try Launch.world().get()
+        let shrub = try XCTUnwrap(world.plan.pieces.first { $0.figure == .shrub }, "the map has no shrub, so the test proves nothing")
+        var boxes: [SIMD3<Float>: MeshResource] = [:]
+        let mesh = SceneBuilder.figure(for: shrub, boxes: &boxes).mesh
+        XCTAssertLessThanOrEqual(triangles(of: mesh), mostTrianglesOfOneShape)
+        XCTAssertGreaterThan(triangles(of: mesh), 0)
     }
 
     func testTheKitSaysWhatEachModuleStops() throws {

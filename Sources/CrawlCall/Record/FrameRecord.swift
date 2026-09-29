@@ -19,6 +19,9 @@ struct FrameRecord {
         var interval: Double = .zero
         /// Milliseconds spent in each phase, by `FramePhase.rawValue`.
         var phases = SIMD4<Double>.zero
+        /// The device's thermal state as the system reported it when the frame was
+        /// drawn: what says whether a slow stretch is the device throttling itself.
+        var thermal: ProcessInfo.ThermalState = .nominal
         /// How many times each event happened, by its place in `FrameEvent.allCases`.
         var events = SIMD8<UInt16>.zero
 
@@ -72,7 +75,7 @@ struct FrameRecord {
                            Self.time(frame.time), Self.time(frame.interval),
                            Self.time(frame[.step]), Self.time(frame[.deliberation]),
                            Self.time(frame[.seeThrough]), Self.time(frame[.draw]),
-                           Self.events(of: frame)]
+                           Self.thermal(frame.thermal), Self.events(of: frame)]
             text += columns.joined(separator: FrameRecording.columnSeparator) + FrameRecording.lineBreak
         }
         return text
@@ -84,6 +87,11 @@ struct FrameRecord {
 
     private static func time(_ milliseconds: Double) -> String {
         String(format: FrameRecording.timeFormat, milliseconds)
+    }
+
+    static func thermal(_ state: ProcessInfo.ThermalState) -> String {
+        FrameRecording.thermalNames.indices.contains(state.rawValue)
+            ? FrameRecording.thermalNames[state.rawValue] : FrameRecording.unknownThermal
     }
 
     private static func events(of frame: Frame) -> String {

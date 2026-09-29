@@ -22,7 +22,7 @@ final class FrameRecordTests: XCTestCase {
 
     func testAnEmptyRecordIsItsHeaderAlone() {
         XCTAssertEqual(FrameRecord(capacity: 4).csv(),
-                       "frame,time_ms,interval_ms,step_ms,deliberation_ms,see_through_ms,draw_ms,events\n")
+                       "frame,time_ms,interval_ms,step_ms,deliberation_ms,see_through_ms,draw_ms,thermal,events\n")
     }
 
     func testAFullRingKeepsTheNewestFramesInOrderAndCountsWhatItDropped() throws {
@@ -59,7 +59,7 @@ final class FrameRecordTests: XCTestCase {
         one.interval = 16.6666666
         record.record(one)
         let row = try element(1, of: record.csv().split(separator: "\n"))
-        XCTAssertEqual(row, "1,1000.000,16.667,2.500,1.250,0.063,0.333,")
+        XCTAssertEqual(row, "1,1000.000,16.667,2.500,1.250,0.063,0.333,nominal,")
     }
 
     func testEventsAreWrittenInTheirOwnOrderWithACountWhereThereIsMoreThanOne() throws {
@@ -121,6 +121,22 @@ final class FrameRecordTests: XCTestCase {
         XCTAssertEqual(try element(0, of: frames).interval, 50, accuracy: 1e-9)
         XCTAssertEqual(try element(1, of: frames).interval, 20, accuracy: 1e-9)
         XCTAssertGreaterThanOrEqual(try element(1, of: frames).time, try element(0, of: frames).time)
+    }
+
+    @MainActor
+    func testEachFrameCarriesTheThermalStateAsTheDeviceReportedItThen() throws {
+        var state = ProcessInfo.ThermalState.nominal
+        let recorder = FrameRecorder(capacity: 4, fileURL: file, thermal: { state })
+        recorder.add(interval: 1.0 / 60, frame())
+        state = .serious
+        recorder.add(interval: 1.0 / 60, frame())
+        state = .critical
+        recorder.add(interval: 1.0 / 60, frame())
+        XCTAssertEqual(recorder.record.frames.map(\.thermal), [.nominal, .serious, .critical])
+        let column = try recorder.record.csv().split(separator: "\n").dropFirst()
+            .map { try element(7, of: $0.split(separator: ",", omittingEmptySubsequences: false)) }
+        XCTAssertEqual(column, ["nominal", "serious", "critical"])
+        XCTAssertEqual(FrameRecord.thermal(.fair), "fair")
     }
 
     @MainActor

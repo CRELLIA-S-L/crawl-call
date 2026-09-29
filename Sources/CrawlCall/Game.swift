@@ -5,7 +5,7 @@
 // or a key: the schemes produce intents (FR-VIEW-050), the logic consumes them, and
 // neither knows about the other.
 //
-// implements: FR-BOT-050, FR-BOT-220, FR-BOT-230, FR-BOT-240, FR-BOT-260, FR-BOT-310, FR-VIEW-030, FR-VIEW-170, FR-VIEW-190, FR-SNAKE-010, FR-SNAKE-030, FR-BOT-020, FR-BOT-150, FR-SNAKE-060, FR-SNAKE-070, FR-SNAKE-090, FR-SCORE-140, FR-SCORE-150, INV-BOT-010, FR-VIEW-230, FR-TOOL-230, FR-MAP-150, FR-MAP-180, FR-MAP-170, FR-SNAKE-220
+// implements: FR-BOT-060, FR-BOT-320, FR-BOT-050, FR-BOT-220, FR-BOT-230, FR-BOT-240, FR-BOT-260, FR-BOT-310, FR-VIEW-030, FR-VIEW-170, FR-VIEW-190, FR-SNAKE-010, FR-SNAKE-030, FR-BOT-020, FR-BOT-150, FR-SNAKE-060, FR-SNAKE-070, FR-SNAKE-090, FR-SCORE-140, FR-SCORE-150, INV-BOT-010, FR-VIEW-230, FR-TOOL-230, FR-MAP-150, FR-MAP-180, FR-MAP-170, FR-SNAKE-220
 import Foundation
 
 struct Game {
@@ -135,15 +135,20 @@ struct Game {
         let configuration = world.configurations.bot
         Perception.notice(&bots, snake: body, plan: world.plan, configuration: configuration, now: elapsed)
         Perception.noticeEnemies(&bots, plan: world.plan, configuration: configuration, now: elapsed)
-        for index in bots.indices where elapsed - bots[index].lastLook >= configuration.deliberationPeriod {
-            let first = bots[index].lastLook == -.infinity
+        for index in bots.indices
+        where bots[index].isAlive && elapsed - bots[index].lastLook >= configuration.deliberationPeriod {
+            let previous = bots[index].lastLook
             Perception.lookAtMap(&bots[index], world: world, modules: modules, now: elapsed)
             // Every bot looks in the first frame; from then on each takes its turn
             // across the period, so that the looks are spread over frames rather than
-            // all falling in one (ADR-0043).
-            if first {
-                bots[index].lastLook -= configuration.deliberationPeriod * Double(index) / Double(bots.count)
-            }
+            // all falling in one (ADR-0043). A turn is kept by the bot's own schedule,
+            // whole periods on from its last, and not by the frame it fell in: a long
+            // frame makes several bots due at once, and counted from that frame they
+            // would look together from then on.
+            let period = configuration.deliberationPeriod
+            bots[index].lastLook = previous == -.infinity
+                ? elapsed - period * Double(index) / Double(bots.count)
+                : previous + period * ((elapsed - previous) / period).rounded(.down)
         }
         // Passed on once a deliberation period rather than every frame: a record is
         // hundreds of cells, and the delay it waits out is seconds.
@@ -212,14 +217,15 @@ struct Game {
         let steps = slots.steps(after: seconds, period: world.configurations.bot.deliberationPeriod)
         let clock = ContinuousClock()
         for _ in Int.zero..<steps {
-            let holders = slots.next(among: bots, snake: body, configuration: world.configurations.bot)
+            // Only the living are given a turn to think (FR-BOT-320).
+            let holders = slots.next(among: bots.filter(\.isAlive), snake: body, configuration: world.configurations.bot)
             let deciding = clock.now
             let volley = Execution.deliberate(&bots, slots: holders, world: world, now: elapsed)
             report.deliberationTime += clock.now - deciding
             report.deliberations += holders.count
             shots += volley.shots
             if volley.damage > .zero {
-                report.hits += volley.shots.count
+                report.hits += volley.hits
                 snake.take(damage: volley.damage, perSegment: world.configurations.snake.damagePerSegment)
                 // FR-SCORE-140. Checked inside the loop rather than after it: the
                 // remaining deliberation steps of a long frame belong to a match that

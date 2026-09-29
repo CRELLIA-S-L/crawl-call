@@ -9,7 +9,7 @@
 // rather than an accident: no requirement gives a weapon a rate of fire, and
 // inventing one would put a number in this file that no interface carries.
 //
-// implements: FR-BOT-060, FR-VIEW-170, INV-BOT-010, FR-BOT-165, FR-MAP-150, FR-BOT-270, FR-BOT-280, FR-BOT-290, FR-BOT-300, FR-BOT-220, FR-BOT-310
+// implements: FR-BOT-060, FR-VIEW-170, INV-BOT-010, FR-BOT-165, FR-MAP-150, FR-BOT-270, FR-BOT-280, FR-BOT-290, FR-BOT-300, FR-BOT-220, FR-BOT-310, FR-BOT-320, FR-BOT-330, FR-BOT-340
 import Foundation
 
 enum Execution {
@@ -17,16 +17,20 @@ enum Execution {
     /// dealt it, to be drawn where they went (FR-VIEW-170).
     struct Volley: Equatable {
         var damage: Double = .zero
+        /// How many of the shots struck the snake.
+        var hits = Int.zero
         var shots: [Shot] = []
     }
 
     /// One deliberation step: the bots holding a slot choose, and a bot whose choice
-    /// is to fire fires once. The damage is returned rather than applied, because the
-    /// snake is not the bots' to change.
+    /// is to fire fires once. The damage to the snake is returned rather than applied,
+    /// because the snake is not the bots' to change; the damage to an enemy bot is
+    /// applied here, since the bots are (FR-BOT-060).
     static func deliberate(_ bots: inout [Bot], slots: [Int], world: World, now: Double = .zero) -> Volley {
         var volley = Volley()
         for id in slots {
-            guard let index = bots.firstIndex(where: { $0.id == id }) else { continue }
+            // A body decides nothing (FR-BOT-320).
+            guard let index = bots.firstIndex(where: { $0.id == id }), bots[index].isAlive else { continue }
             guard let entry = world.configurations.bot.archetypes[bots[index].archetype.rawValue] else { continue }
             var situation = Deliberation.Situation(plan: world.plan,
                                                    graph: world.graph,
@@ -39,20 +43,38 @@ enum Execution {
             situation.snake = knowledge.snakePoints
             situation.inView = knowledge.snake(seenAt: now)
             situation.knows = { knowledge.knows($0) }
-            situation.allies = bots.filter { $0.squad == bots[index].squad }
+            situation.enemies = knowledge.enemyPoints
+            situation.enemiesInView = knowledge.enemies(seenAt: now)
+            situation.allies = bots.filter { $0.squad == bots[index].squad && $0.isAlive }
 
             let chosen = Deliberation.choose(for: bots[index], in: situation)
             bots[index].action = chosen
             switch chosen {
             case .fire(let target):
-                guard case .snake(let point) = target else { break }
+                let aim: SIMD3<Double>
+                var struck: Int?
+                switch target {
+                case .snake(let point):
+                    aim = point
+                case .bot(let enemy):
+                    guard let other = bots.firstIndex(where: { $0.id == enemy }), bots[other].isAlive else { continue }
+                    aim = bots[other].eye
+                    struck = other
+                }
                 guard bots[index].ammunition > .zero,
-                      Sight.isClear(from: bots[index].eye, to: point, through: world.plan) else { break }
+                      Sight.isClear(from: bots[index].eye, to: aim, through: world.plan) else { break }
                 bots[index].ammunition -= Firing.roundsPerShot
-                volley.damage += entry.weaponDamage
+                if let struck {
+                    // A bot with no health left is a body (FR-BOT-320).
+                    bots[struck].health = max(.zero, bots[struck].health - entry.weaponDamage)
+                    if !bots[struck].isAlive { fall(&bots[struck]) }
+                } else {
+                    volley.damage += entry.weaponDamage
+                    volley.hits += 1
+                }
                 // Drawn for one deliberation period, which is also how long it is
                 // until this bot may fire again (FR-VIEW-170).
-                volley.shots.append(Shot(from: bots[index].eye, to: point,
+                volley.shots.append(Shot(from: bots[index].eye, to: aim,
                                          squad: bots[index].squad,
                                          left: world.configurations.bot.deliberationPeriod))
             case .reload:
@@ -66,6 +88,14 @@ enum Execution {
             }
         }
         return volley
+    }
+
+    /// A bot that has died stops where it is: it has nothing left to do, nowhere to go
+    /// and no speed (FR-BOT-320).
+    static func fall(_ bot: inout Bot) {
+        bot.action = nil
+        bot.path = []
+        bot.speed = .zero
     }
 
     /// One frame: every bot walks what is left of its route.
@@ -83,15 +113,16 @@ enum Execution {
             // went (FR-BOT-280).
             separate(&bots, holding: held, over: world.graph, cellSize: cell, floorHeight: world.kit.floorHeight,
                      radius: world.configurations.tuning.bodyRadius)
-            turn(&bots, from: before, seconds: seconds, holding: held, configuration: world.configurations.bot)
+            turn(&bots, from: before, seconds: seconds, holding: held, world: world)
         }
         var routed = false
         let queue = routeOrder.isEmpty
             ? Array(bots.indices)
             : routeOrder.compactMap { id in bots.firstIndex { $0.id == id } }
         for index in queue {
-            // A bot in the snake's mouth does not walk away from it (FR-SNAKE-090).
-            guard bots[index].id != held else { bots[index].speed = .zero; continue }
+            // A bot in the snake's mouth does not walk away from it (FR-SNAKE-090), and a
+            // body does not walk at all (FR-BOT-320).
+            guard bots[index].id != held, bots[index].isAlive else { bots[index].speed = .zero; continue }
             // A bot with nowhere to walk has nothing to roll along: it stops (FR-BOT-290).
             guard let goal = destination(of: bots[index].action) else { bots[index].speed = .zero; continue }
             if bots[index].path.isEmpty {
@@ -164,10 +195,11 @@ enum Execution {
     /// every other bot of the squad, the later of two sightings of one thing winning.
     static func share(_ bots: inout [Bot], now: Double, configuration: BotConfiguration) {
         let before = bots
-        for index in bots.indices {
+        // The dead neither tell nor hear (FR-BOT-320).
+        for index in bots.indices where bots[index].isAlive {
             let squad = bots[index].squad
             guard let delay = configuration.shareDelay[squad.name] else { continue }
-            for mate in before where mate.squad == squad && mate.id != bots[index].id {
+            for mate in before where mate.squad == squad && mate.id != bots[index].id && mate.isAlive {
                 bots[index].knowledge.hear(mate.knowledge, seenBy: now - delay)
             }
         }
@@ -191,7 +223,9 @@ enum Execution {
                          cellSize: Double, floorHeight: Double, radius: Double) {
         let apart = radius * Geometry.bothSides
         for a in bots.indices {
-            for b in bots.indices where b > a && bots[a].floor == bots[b].floor {
+            // A body lies on the floor and is stepped over, not pushed (FR-BOT-320).
+            guard bots[a].isAlive else { continue }
+            for b in bots.indices where b > a && bots[a].floor == bots[b].floor && bots[b].isAlive {
                 let offset = SIMD2(bots[b].position.x - bots[a].position.x, bots[b].position.z - bots[a].position.z)
                 let distance = (offset * offset).sum().squareRoot()
                 guard distance < apart else { continue }
@@ -225,19 +259,70 @@ enum Execution {
     /// way it walked this frame, no faster than the turn speed (FR-BOT-280); a bot
     /// that neither fires nor moved keeps facing as it did.
     static func turn(_ bots: inout [Bot], from before: [SIMD3<Double>], seconds: Double, holding held: Int?,
-                     configuration: BotConfiguration) {
+                     world: World) {
+        let configuration = world.configurations.bot
         let most = configuration.turnSpeed * .pi / Geometry.halfTurnDegrees * max(seconds, .zero)
-        for index in bots.indices where bots[index].id != held {
+        // A body turns no more (FR-BOT-320).
+        for index in bots.indices where bots[index].id != held && bots[index].isAlive {
             let bot = bots[index]
             var wanted: Double?
-            if case .fire(let target) = bot.action, case .snake(let point) = target {
-                wanted = Turning.angle(from: bot.position, to: point)
-            } else if index < before.count {
-                wanted = Turning.angle(from: before[index], to: bot.position)
+            if case .fire(let target) = bot.action {
+                switch target {
+                case .snake(let point): wanted = Turning.angle(from: bot.position, to: point)
+                case .bot(let id): wanted = bot.knowledge.enemies[id].flatMap { Turning.angle(from: bot.position, to: $0.point) }
+                }
+                bots[index].lookout = nil
+            } else if bot.speed > .zero, index < before.count,
+                      let went = Turning.angle(from: before[index], to: bot.position) {
+                wanted = went
+                bots[index].lookout = nil
+            } else {
+                // Standing: looking where there is something to see, not at a wall a
+                // step away (FR-BOT-340). Chosen once as it stops, and kept.
+                if bots[index].lookout == nil { bots[index].lookout = lookout(for: bot, world: world) }
+                wanted = bots[index].lookout
             }
             guard let wanted else { continue }
             bots[index].facing = Turning.toward(wanted, from: bot.facing, by: most)
         }
+    }
+
+    /// Which way a standing bot looks (FR-BOT-340): the way it faces, while as much
+    /// open ground as `Looking.openEnough` lies before it; otherwise, of the ways round
+    /// it, the one with the most open ground before it, the nearest to the way it faces
+    /// among equals. Open is what the bot knows: a cell is in the way where it lies
+    /// outside the building's outline, or where the bot has seen it and nobody can
+    /// stand in it; a cell it has not seen is open until it has (ADR-0032).
+    static func lookout(for bot: Bot, world: World) -> Double {
+        let cell = world.configurations.tuning.navigationGraphCellSize
+        let range = world.configurations.bot.archetypes[bot.archetype.rawValue]?.detectionRange ?? .zero
+        func open(_ angle: Double) -> Double {
+            let along = SIMD2(sin(angle), cos(angle))
+            let step = cell * Walking.lookStep
+            var metres = step
+            while metres <= range {
+                let point = SIMD2(bot.position.x, bot.position.z) + along * metres
+                let node = NavigationGraph.Node(floor: bot.floor, x: Int((point.x / cell).rounded()),
+                                                z: Int((point.y / cell).rounded()))
+                let blocked = !bot.knowledge.outline.contains(node)
+                    || (bot.knowledge.knows(node) && !world.graph.isWalkable(node))
+                if blocked { return metres - step }
+                metres += step
+            }
+            return range
+        }
+        guard open(bot.facing) < Looking.openEnough else { return bot.facing }
+        var best = (angle: bot.facing, open: open(bot.facing), turn: Double.zero)
+        for way in 0..<Looking.ways {
+            let angle = Double(way) / Double(Looking.ways) * .pi * Geometry.bothSides
+            let seen = open(angle)
+            let turn = abs(atan2(sin(angle - bot.facing), cos(angle - bot.facing)))
+            if seen > best.open + Geometry.samePosition
+                || (abs(seen - best.open) <= Geometry.samePosition && turn < best.turn) {
+                best = (angle, seen, turn)
+            }
+        }
+        return best.angle
     }
 
     /// Drops the next point of a bot's route while the one after it can be walked to

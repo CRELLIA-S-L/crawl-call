@@ -57,8 +57,17 @@ enum SceneBuilder {
         var looks: [String: (solid: [any Material], clear: [any Material], holed: [any Material]?)] = [:]
         // So are the rounded boxes: a map's modules come in a handful of sizes (FR-VIEW-240).
         var boxes: [SIMD3<Float>: MeshResource] = [:]
-        for piece in plan.pieces where piece.size.min() > .zero {
+        // The ground slabs go into one mesh per module rather than an entity each: the
+        // renderer draws every entity several times a frame, and six hundred slabs that
+        // never change were most of the frame's draws (ADR-0047).
+        let slabs = Set(plan.groundSlabs)
+        var merged: [String: (colour: SIMD3<Double>, parts: [(mesh: MeshResource, at: SIMD3<Float>)])] = [:]
+        for (index, piece) in plan.pieces.enumerated() where piece.size.min() > .zero {
             let figure = Self.figure(for: piece, boxes: &boxes)
+            if slabs.contains(index) {
+                merged[piece.module, default: (piece.colour, [])].parts.append((figure.mesh, figure.position))
+                continue
+            }
             // What a module looks like is the view's business, solid or see-through
             // alike; what colour it is comes from the kit's legend (FR-MAP-100).
             let look = looks[piece.module] ?? {
@@ -87,7 +96,39 @@ enum SceneBuilder {
                                              solid: look.solid, clear: look.clear,
                                              holed: look.holed))
         }
+        for module in merged.keys.sorted() {
+            guard let group = merged[module] else { continue }
+            guard let mesh = try? joined(group.parts) else {
+                preconditionFailure(String(describing: SceneBuilderError.slabsNotJoined))
+            }
+            let model = ModelEntity(mesh: mesh, materials: [SeeThrough.solid(colour: group.colour)])
+            model.name = EntityName.slabs(module)
+            root.addChild(model)
+        }
         return (root, SeeThrough(modules))
+    }
+
+    /// Many meshes as one: each part's triangles moved to where it stands.
+    @MainActor
+    static func joined(_ parts: [(mesh: MeshResource, at: SIMD3<Float>)]) throws -> MeshResource {
+        var positions: [SIMD3<Float>] = []
+        var normals: [SIMD3<Float>] = []
+        var indices: [UInt32] = []
+        for part in parts {
+            for model in part.mesh.contents.models {
+                for piece in model.parts {
+                    let base = UInt32(positions.count)
+                    positions += piece.positions.elements.map { $0 + part.at }
+                    normals += piece.normals?.elements ?? []
+                    indices += (piece.triangleIndices?.elements ?? []).map { $0 + base }
+                }
+            }
+        }
+        var descriptor = MeshDescriptor(name: EntityName.map)
+        descriptor.positions = MeshBuffers.Positions(positions)
+        if normals.count == positions.count { descriptor.normals = MeshBuffers.Normals(normals) }
+        descriptor.primitives = .triangles(indices)
+        return try MeshResource.generate(from: [descriptor])
     }
 
     /// What a piece is drawn as: its box, or the figure its module names fitted into
@@ -107,7 +148,11 @@ enum SceneBuilder {
                     centre, nil)
         case .shrub:
             let wide = Float(ModuleFigures.shrubWidthShare)
-            return (.generateSphere(radius: ModuleFigures.unitRadius), SIMD3(size.x * wide, size.y, size.z * wide),
+            // Of the game's own sphere: RealityKit's is 8064 triangles at any size (ADR-0046).
+            let sphere = LowPolySphere.mesh(radius: ModuleFigures.unitRadius, rings: LowPoly.shrubRings,
+                                            segments: LowPoly.shrubSegments)
+                ?? .generateSphere(radius: ModuleFigures.unitRadius)
+            return (sphere, SIMD3(size.x * wide, size.y, size.z * wide),
                     centre, nil)
         case .tree:
             let bottom = centre.y - size.y * Float(Geometry.half)
@@ -134,20 +179,43 @@ extension MeshResource {
     /// A rounded rectangle across x and y, extruded along z with rounded rims: the
     /// rims add the radius at each end, so the extrusion is shorter by two of them.
     /// Where RealityKit cannot extrude it, the box is drawn with square edges.
+    ///
+    /// A caller that draws its own rounding — a bot's figure (FR-VIEW-070) — gives the
+    /// radius and how many segments round each edge; the map's modules take the
+    /// shared ones (FR-VIEW-240).
     @MainActor
-    static func roundedBox(_ size: SIMD3<Float>) -> MeshResource {
-        let corner = min(Rounding.radius, size.min() * Rounding.smallestSideShare)
+    static func roundedBox(_ size: SIMD3<Float>, corner asked: Float? = nil,
+                           segments: Int = Rounding.segments) -> MeshResource {
+        let corner = asked.map { min($0, size.min() * LowPoly.figureCornerShare) }
+            ?? min(Rounding.radius, size.min() * Rounding.smallestSideShare)
         let rect = CGRect(x: -CGFloat(size.x) / 2, y: -CGFloat(size.y) / 2,
                           width: CGFloat(size.x), height: CGFloat(size.y))
         var options = MeshResource.ShapeExtrusionOptions()
         options.extrusionMethod = .linear(depth: size.z - 2 * corner)
         options.chamferRadius = corner
-        options.boundaryResolution = .uniformSegmentsPerSpan(segmentCount: Rounding.segments)
-        options.chamferResolution = .uniformSegmentsPerSpan(segmentCount: Rounding.segments)
+        options.boundaryResolution = .uniformSegmentsPerSpan(segmentCount: segments)
+        options.chamferResolution = .uniformSegmentsPerSpan(segmentCount: segments)
         let outline = Path(roundedRect: rect, cornerRadius: CGFloat(corner), style: .circular)
         guard let mesh = try? MeshResource(extruding: outline, extrusionOptions: options) else {
             return .generateBox(size: size)
         }
         return mesh
+    }
+}
+
+/// What building the map's entities can fail at.
+enum SceneBuilderError: IdentifiedError {
+    case slabsNotJoined
+
+    var identifier: ErrorIdentifier {
+        switch self {
+        case .slabsNotJoined: return .sceneSlabsNotJoined
+        }
+    }
+
+    var details: String {
+        switch self {
+        case .slabsNotJoined: return "the ground slabs could not be joined into one mesh"
+        }
     }
 }

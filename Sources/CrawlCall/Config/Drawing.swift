@@ -2,7 +2,7 @@
 // rather than the look (ART-070). What the models themselves look like — sizes,
 // colours, materials — waits for their rework (Q-280).
 //
-// implements: FR-VIEW-170, FR-MAP-210, FR-VIEW-240, FR-VIEW-250, FR-VIEW-260, FR-VIEW-270, FR-VIEW-280, FR-VIEW-290
+// implements: FR-VIEW-170, FR-MAP-210, FR-VIEW-240, FR-VIEW-250, FR-VIEW-260, FR-VIEW-270, FR-VIEW-280, FR-VIEW-290, FR-VIEW-300
 import Foundation
 
 /// How a module drawn as a figure fills its box (ADR-0034). Only the drawing: for sight
@@ -19,6 +19,20 @@ enum ModuleFigures {
     /// Primitives are generated at unit size and scaled.
     static let unit: Float = 1
     static let unitRadius: Float = 0.5
+}
+
+/// How many faces the game's own shapes are given where RealityKit's would be tens of
+/// thousands (ADR-0046): segments round each rounded edge of a bot's figure, and the
+/// bands and faces round a figure's head and eyes and round a shrub.
+enum LowPoly {
+    static let figureCornerSegments = 3
+    /// A figure keeps the radius its drawing gives each part, up to just under half
+    /// the part's smallest side, past which the extrusion would have no length left.
+    static let figureCornerShare: Float = 0.48
+    static let figureRings = 10
+    static let figureSegments = 16
+    static let shrubRings = 10
+    static let shrubSegments = 16
 }
 
 /// How much a drawn box's edges are rounded (FR-VIEW-240): this radius, or this
@@ -90,6 +104,13 @@ enum BotGait {
     static let swing = 0.5
     static let easing = 8.0
     static let movingSpeed = 0.2
+}
+
+/// A dead bot's figure (FR-VIEW-300): how far above the ground it stands, in metres,
+/// lying on its back — half the depth of its torso (`Figure`), so that its back rests on
+/// the ground rather than in it.
+enum BotBody {
+    static let lyingLift = 0.15
 }
 
 /// The snake's eyes (FR-VIEW-260), in shares of the head's radius: how big an eye is,

@@ -518,8 +518,8 @@ derives_from: []
 depends_on: [FR-VIEW-170, FR-GREENHOLM-030]
 refines: []
 conflicts_with: []
-code: [Sources/CrawlCall/Map/SceneBuilder.swift, Sources/CrawlCall/View/ShotEntity.swift, Sources/CrawlCall/Setting/SceneryBuilder.swift, Sources/CrawlCall/Config/Drawing.swift]
-tests: [Tests/CrawlCallTests/RoundedBoxTests.swift]
+code: [Sources/CrawlCall/Map/SceneBuilder.swift, Sources/CrawlCall/View/ShotEntity.swift, Sources/CrawlCall/Setting/SceneryBuilder.swift, Sources/CrawlCall/Config/Drawing.swift, Sources/CrawlCall/View/Figure.swift]
+tests: [Tests/CrawlCallTests/RoundedBoxTests.swift, Tests/CrawlCallTests/FigureTests.swift]
 created: 2026-09-25
 ```
 
@@ -527,7 +527,7 @@ The system **shall** draw every box that stands for a module, a shot or a bird w
 
 **Rationale.** The maintainer, 2026-09-25, looking at the blockout on the phone: square edges look sharp enough to cut oneself on (Q-400). Only the drawing is rounded: for the body, for sight and for the see-through a module is still its box (ADR-0034).
 Each module is rounded on its own, so a wall of many cells and a flight of many steps show a groove between their pieces; the maintainer saw it on the phone the same day and kept it.
-The water beyond the island is not rounded, because its slabs meet edge to edge and a rounded edge shows there as a seam. Neither are bots' figures, which ADR-0022 already rounds (Q-420).
+The water beyond the island is not rounded, because its slabs meet edge to edge and a rounded edge shows there as a seam. Neither are bots' figures to this radius: ADR-0022 gives each part of a figure its own; since 2026-09-29 they are drawn with the same extruded box, at those radii (ADR-0046).
 The ceiling on triangles is what keeps RealityKit's own rounded box, 13 068 triangles at any size, out of the game (ADR-0037).
 
 ### FR-VIEW-250 — The snake is one smooth body
@@ -634,3 +634,22 @@ While a bot walks, the system **shall** draw it stepping — its legs swinging, 
 **Rationale.** The maintainer, 2026-09-25: the fourth step of the bots' movement. A figure that glides reads as a piece moved on a board; one that steps reads as a soldier running, and the concept's references move their characters with a bouncing, waddling walk (concept §2, Overcooked, Moving Out).
 In time with the distance covered and not with the clock, so that the feet neither skate at a run nor paddle in place; the walk comes on and dies away over a few frames rather than switching.
 The figures were static until now (ADR-0022); the walk moves the whole figure and swings its legs from the hips, and changes none of the figure's own numbers (Q-280).
+
+### FR-VIEW-300 — A dead bot is drawn lying
+
+```yaml
+status: implemented
+verification: T
+derives_from: []
+depends_on: [FR-BOT-320, FR-VIEW-070]
+refines: []
+conflicts_with: []
+code: [Sources/CrawlCall/View/BotEntity.swift, Sources/CrawlCall/Config/Drawing.swift]
+tests: [Tests/CrawlCallTests/WarTests.swift]
+created: 2026-09-26
+```
+
+While a bot is a body, the system **shall** draw its figure lying on its back where it fell.
+
+**Rationale.** The maintainer, 2026-09-26: the squads fight, and the dead stay on the map (FR-BOT-320). A body drawn standing would read as a bot that stopped; lying, it reads as one that fell.
+On its back with its feet where it stood, the figure tipped over backwards, so that the body lies on the cell the bot died in (ADR-0044).

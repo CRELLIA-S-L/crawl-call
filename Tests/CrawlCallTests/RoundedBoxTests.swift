@@ -63,16 +63,38 @@ final class RoundedBoxTests: XCTestCase {
 
     func testEveryModuleDrawnAsABoxIsRounded() throws {
         let world = try Launch.world(map: "room").get()
-        let pieces = world.plan.pieces.filter { $0.size.min() > .zero }
+        // The ground slabs are drawn joined, one mesh a module (ADR-0047); every other
+        // piece is an entity of its own, in the plan's order.
+        let slabs = Set(world.plan.groundSlabs)
+        let pieces = world.plan.pieces.enumerated().filter { $0.element.size.min() > .zero && !slabs.contains($0.offset) }.map(\.element)
         let map = SceneBuilder.entity(for: world.plan).root
-        XCTAssertEqual(map.children.count, pieces.count)
-        let boxes = zip(pieces, map.children).filter { $0.0.figure == .box }
+        let joined = map.children.filter { $0.name.hasPrefix(EntityName.slabsPrefix) }
+        let single = map.children.filter { !$0.name.hasPrefix(EntityName.slabsPrefix) }
+        XCTAssertEqual(single.count, pieces.count)
+        let boxes = zip(pieces, single).filter { $0.0.figure == .box }
         XCTAssertFalse(boxes.isEmpty, "the room is built of boxes")
         for (piece, entity) in boxes {
             let mesh = try XCTUnwrap((entity as? ModelEntity)?.model?.mesh)
             let count = triangles(mesh)
             XCTAssertGreaterThan(count, Self.squareBox, piece.module)
             XCTAssertLessThanOrEqual(count, Self.ceiling, piece.module)
+        }
+        // A joined mesh is its slabs' rounded boxes and nothing else: each of them
+        // rounded and under the ceiling, their triangles summing to the mesh's.
+        XCTAssertFalse(slabs.isEmpty, "the room has no ground slabs, so the test proves nothing about them")
+        for entity in joined {
+            let module = String(entity.name.dropFirst(EntityName.slabsPrefix.count))
+            let own = slabs.map { world.plan.pieces[$0] }.filter { $0.module == module }
+            XCTAssertFalse(own.isEmpty, entity.name)
+            var expected = 0
+            for slab in own {
+                let count = triangles(MeshResource.roundedBox(SIMD3<Float>(slab.size)))
+                XCTAssertGreaterThan(count, Self.squareBox, module)
+                XCTAssertLessThanOrEqual(count, Self.ceiling, module)
+                expected += count
+            }
+            let mesh = try XCTUnwrap((entity as? ModelEntity)?.model?.mesh)
+            XCTAssertEqual(triangles(mesh), expected, module)
         }
     }
 

@@ -78,7 +78,7 @@ It depends on start-up because the cell size it measures in is tuning (IF-MAP-02
 ```yaml
 status: built
 carries: [Sources/CrawlCall/View]
-requirements: [FR-VIEW-010, FR-VIEW-130, FR-VIEW-020, FR-VIEW-060, FR-VIEW-070, FR-TOOL-070, FR-VIEW-100, FR-VIEW-120, FR-VIEW-140, FR-VIEW-150, FR-VIEW-155, FR-VIEW-160, FR-VIEW-170, FR-VIEW-180, FR-VIEW-190, FR-VIEW-200, IF-VIEW-030, FR-VIEW-210, FR-VIEW-220, FR-VIEW-230, FR-TOOL-260, FR-TOOL-270]
+requirements: [FR-VIEW-010, FR-VIEW-130, FR-VIEW-020, FR-VIEW-060, FR-VIEW-070, FR-TOOL-070, FR-VIEW-100, FR-VIEW-120, FR-VIEW-140, FR-VIEW-150, FR-VIEW-155, FR-VIEW-160, FR-VIEW-170, FR-VIEW-180, FR-VIEW-190, FR-VIEW-200, IF-VIEW-030, FR-VIEW-210, FR-VIEW-220, FR-VIEW-230, FR-TOOL-260, FR-TOOL-270, FR-VIEW-300]
 depends_on: [E-040]
 interface: a scene plan in; the camera it is seen through and the light it is read by, out
 ```
@@ -139,7 +139,7 @@ Whether a match is still on belongs here for the same reason: the two ends (FR-S
 ```yaml
 status: built
 carries: [Sources/CrawlCall/Bot]
-requirements: [FR-BOT-010, FR-BOT-020, FR-BOT-030, FR-BOT-050, FR-BOT-060, FR-BOT-080, FR-BOT-090, FR-BOT-118, FR-BOT-150, FR-BOT-160, FR-BOT-165, FR-BOT-200, FR-BOT-210, FR-VIEW-170, INV-BOT-010, INV-BOT-030]
+requirements: [FR-BOT-010, FR-BOT-020, FR-BOT-030, FR-BOT-050, FR-BOT-060, FR-BOT-080, FR-BOT-090, FR-BOT-118, FR-BOT-150, FR-BOT-160, FR-BOT-165, FR-BOT-200, FR-BOT-210, FR-BOT-140, FR-BOT-320, FR-BOT-330, FR-BOT-340, FR-VIEW-170, INV-BOT-010, INV-BOT-030]
 depends_on: [E-020, E-040]
 interface: a world, where the snake is and a frame's time in; squads that see, decide, walk and fire out
 ```

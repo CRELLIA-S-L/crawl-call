@@ -36,11 +36,12 @@ WATCH="${CRAWLCALL_WATCH:-6}"
 RECORD="${CRAWLCALL_RECORD:-}"
 TOP="${CRAWLCALL_RECORD_TOP:-5}"
 
-# The frame record's summary (FR-TOOL-250): how many frames, how many came late, and
-# the slowest by name with where their time went. Late is one and a half frame periods
+# The frame record's summary (FR-TOOL-250): how many frames, how many came late, how
+# many were drawn in each thermal state of the device, and the slowest by name with
+# where their time went and how hot the device was. Late is one and a half frame periods
 # at 60 a second, 25 ms: an on-time frame is 16.7 ms, one after a skipped frame 33.
 # The columns are the app's own (FrameRecording.header): frame, time, interval, step,
-# deliberation, see-through, draw, events.
+# deliberation, see-through, draw, thermal, events.
 #
 # implements: FR-TOOL-250
 LATE_MS=25
@@ -49,9 +50,12 @@ frames_report() {
   frames=$(awk 'NR > 1' "$file" | wc -l | tr -d ' ')
   late=$(awk -F, -v late="$LATE_MS" 'NR > 1 && $3 + 0 > late + 0 { n++ } END { print n + 0 }' "$file")
   echo "frames: $frames, late (over ${LATE_MS} ms): $late"
+  thermal=$(awk -F, 'NR > 1 { if (!($8 in n)) order[++k] = $8; n[$8]++ }
+    END { for (i = 1; i <= k; i++) printf "%s%s %d", (i > 1 ? ", " : ""), order[i], n[order[i]] }' "$file")
+  echo "thermal: $thermal"
   awk 'NR > 1' "$file" | sort -t, -k3,3 -g -r | head -n "$top" | awk -F, '{
-    printf "  frame %s at %s ms: interval %s ms — step %s (deliberation %s), see-through %s, draw %s", $1, $2, $3, $4, $5, $6, $7
-    if ($8 != "") printf " — %s", $8
+    printf "  frame %s at %s ms: interval %s ms — step %s (deliberation %s), see-through %s, draw %s, thermal %s", $1, $2, $3, $4, $5, $6, $7, $8
+    if ($9 != "") printf " — %s", $9
     printf "\n"
   }'
 }

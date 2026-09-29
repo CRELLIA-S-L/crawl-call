@@ -30,15 +30,43 @@ using namespace metal;
 /// water carries a wave of its length, ω = √(g k), so that long waves overtake short
 /// ones and the pattern never holds still; each in its own direction within a spread
 /// round the wind; and each shaped exp(sin − 1), a narrow crest over a wide trough.
+///
+/// What is the same for every point of the water is worked out once, here, and not
+/// again for each: the shader runs over most of the screen, and on the phone it was a
+/// quarter of the frame's GPU time while it did (ADR-0045). Each wave's direction,
+/// from the wind (0.8, 0.6) turned by up to 1.05 radians either side, and its phase
+/// at the start, both fixed by its number, fract(sin(n · 12.9898) · 43758.5453) for n
+/// and n + ½; how many times shorter than the longest it is, 1.18 to the power of its
+/// number, and so how many times faster it turns, the square root of that, since deep
+/// water turns a wave at ω = √(g k); and how high it is, 0.82 to the power of its
+/// number.
 constant int kWaves = 12;
-/// How much shorter each wave is than the one before, and how much lower.
-constant float kShorter = 1.18;
-constant float kLower = 0.82;
-/// Where the wind comes from, and how far to either side of it, in radians, a wave may
-/// run.
-constant float2 kWind = float2(0.8, 0.6);
-constant float kSpread = 1.05;
 constant float kGravity = 9.81;
+constant float2 kDirection[kWaves] = {
+    float2(0.918511, -0.395396), float2(0.041733, 0.999129), float2(0.959284, -0.282444),
+    float2(0.720850, 0.693091), float2(0.929278, 0.369380), float2(0.854708, 0.519109),
+    float2(0.615100, 0.788449), float2(0.998273, -0.058747), float2(0.959764, 0.280806),
+    float2(0.747363, 0.664416), float2(-0.062839, 0.998024), float2(0.250113, 0.968217),
+};
+constant float kStart[kWaves] = {
+    1.712756, 4.150483, 2.834551, 0.981825, 1.612035, 0.213887,
+    1.405638, 5.715645, 2.007865, 0.625641, 5.134091, 6.189084,
+};
+constant float kShorterBy[kWaves] = {
+    1.000000, 1.180000, 1.392400, 1.643032, 1.938778, 2.287758,
+    2.699554, 3.185474, 3.758859, 4.435454, 5.233836, 6.175926,
+};
+constant float kFasterBy[kWaves] = {
+    1.000000, 1.086278, 1.180000, 1.281808, 1.392400, 1.512534,
+    1.643032, 1.784790, 1.938778, 2.106052, 2.287758, 2.485141,
+};
+constant float kWeight[kWaves] = {
+    1.000000, 0.820000, 0.672400, 0.551368, 0.452122, 0.370740,
+    0.304007, 0.249285, 0.204414, 0.167620, 0.137448, 0.112707,
+};
+/// The weights' sum and the root of the sum of their squares.
+constant float kWeights = 5.042111;
+constant float kSpreadOfWeights = 1.739664;
 /// Slow noise bends the crests and lets the waves rise and fall from place to place,
 /// so that no line of them runs straight across the water: how many of the longest
 /// wavelengths one lump of it spans, how far it moves the waves, in the same
@@ -61,20 +89,18 @@ constant float kSlopeSpread = 0.328;
 constant float kGlintFrom = 1.3;
 constant float kGlintFull = 2.3;
 
-/// A number from 0 to 1 fixed for each whole number: a wave's direction and its start.
-static float scatter(float n)
-{
-    return fract(sin(n * 12.9898) * 43758.5453);
-}
-
-/// Value noise: -1 to 1, smooth between the whole points of the plane.
+/// Value noise: -1 to 1, smooth between the whole points of the plane. Each whole
+/// point's value is hashed by multiplying and folding alone, with no sine to pay for
+/// at every corner (Hoskins, "Hash without Sine").
 static float noise(float2 p)
 {
     float2 whole = floor(p);
     float2 part = p - whole;
     float2 ease = part * part * (3.0 - 2.0 * part);
     auto corner = [&](float2 offset) {
-        return fract(sin(dot(whole + offset, float2(127.1, 311.7))) * 43758.5453) * 2.0 - 1.0;
+        float3 q = fract(float3((whole + offset).xyx) * 0.1031);
+        q += dot(q, q.yzx + 33.33);
+        return fract((q.x + q.y) * q.z) * 2.0 - 1.0;
     };
     return mix(mix(corner(float2(0, 0)), corner(float2(1, 0)), ease.x),
                mix(corner(float2(0, 1)), corner(float2(1, 1)), ease.x), ease.y);
@@ -109,32 +135,29 @@ void crawlCallWater(realitykit::surface_parameters params)
         * float2(noise(here / kBendSpan + drift), noise(here / kBendSpan + 17.0 - drift));
     float height = mix(kLowest, 1.0, noise(here / kHeightSpan + 41.0 + drift) * 0.5 + 0.5);
 
-    float2 wind = normalize(kWind);
-    float span = wavelength, weight = 1.0, weights = 0.0, squares = 0.0, crest = 0.0;
+    // The longest wave's number of waves a metre, in radians, and its turns a second
+    // at deep water's speed slowed by the configured share; each shorter wave's are
+    // these times its own factors.
+    float k0 = 2.0 * M_PI_F / wavelength;
+    float turnsPerSecond = sqrt(kGravity * k0) * ripple.y / (2.0 * M_PI_F);
+    float crest = 0.0;
     float2 slope = float2(0.0);                  // rise over run along x and along z
     for (int wave = 0; wave < kWaves; ++wave) {
-        float turn = (scatter(float(wave)) * 2.0 - 1.0) * kSpread;
-        float2 direction = float2(wind.x * cos(turn) - wind.y * sin(turn), wind.x * sin(turn) + wind.y * cos(turn));
-        float k = 2.0 * M_PI_F / span;
-        // Deep water's dispersion, slowed by the configured share; the turns are
-        // counted modulo one so that a long session keeps its precision.
-        float turns = fract(sqrt(kGravity * k) * ripple.y * time / (2.0 * M_PI_F));
-        float phase = k * dot(bent, direction) - 2.0 * M_PI_F * turns + 2.0 * M_PI_F * scatter(float(wave) + 0.5);
-        float shape = exp(sin(phase) - 1.0);
-        crest += weight * shape;
-        slope += weight * shape * cos(phase) * direction;
-        weights += weight;
-        squares += weight * weight;
-        span /= kShorter;
-        weight *= kLower;
+        // The turns are counted modulo one so that a long session keeps its precision.
+        float turns = fract(turnsPerSecond * kFasterBy[wave] * time);
+        float phase = k0 * kShorterBy[wave] * dot(bent, kDirection[wave]) - 2.0 * M_PI_F * turns + kStart[wave];
+        float cosine;
+        float sine = sincos(phase, cosine);
+        float shape = kWeight[wave] * exp(sine - 1.0);
+        crest += shape;
+        slope += shape * cosine * kDirection[wave];
     }
     // The slope of a·exp(sin(kx) − 1) is a·k·exp(…)·cos(…), with a taken as its
     // weight over k; summed over waves in random phases it spreads as the root of the
     // sum of squared weights, and is scaled so that its typical size is the
     // configured steepness.
-    float spread = sqrt(squares);
-    slope *= height * ripple.w / (kSlopeSpread * spread);
-    float above = (crest - kMeanShape * weights) / (kShapeSpread * spread);
+    slope *= height * ripple.w / (kSlopeSpread * kSpreadOfWeights);
+    float above = (crest - kMeanShape * kWeights) / (kShapeSpread * kSpreadOfWeights);
     float glint = smoothstep(kGlintFrom, kGlintFull, above) * height;
     surface.set_base_color(mix(colour, half3(1.0), half(glint * saturate(ripple.z))));
 

@@ -112,14 +112,14 @@ A bot looks from the eye height of the bot configuration (IF-BOT-010), which the
 ### FR-BOT-060 — A bot fires at its target
 
 ```yaml
-status: partial
+status: implemented
 verification: T
 derives_from: []
 depends_on: [FR-BOT-080]
 refines: []
 conflicts_with: []
-code: [Sources/CrawlCall/Bot/Execution.swift, Sources/CrawlCall/Bot/Bot.swift, Sources/CrawlCall/Config/Utility.swift]
-tests: [Tests/CrawlCallTests/ExecutionTests.swift, Tests/CrawlCallTests/ShotTests.swift]
+code: [Sources/CrawlCall/Bot/Execution.swift, Sources/CrawlCall/Bot/Deliberation.swift, Sources/CrawlCall/Bot/Bot.swift, Sources/CrawlCall/Config/Utility.swift, Sources/CrawlCall/Game.swift]
+tests: [Tests/CrawlCallTests/ExecutionTests.swift, Tests/CrawlCallTests/ShotTests.swift, Tests/CrawlCallTests/WarTests.swift]
 created: 2026-09-21
 ```
 
@@ -129,7 +129,7 @@ While a bot's chosen action is to fire and it has a line of fire to its target, 
 A target may be an enemy bot or any segment of the snake — shooting at the tail is a meaningful action because of FR-SNAKE-070.
 A line of fire leaves from the bot's eyes, the height it looks from (FR-BOT-050): what a bot can see over, it can shoot over, and a line of sight it could not fire along would be a bot that watches the snake and cannot touch it (ADR-0022).
 
-**Partial, and how.** What is built is fire at the snake: a bot whose slot chooses to fire spends a round and deals its weapon's damage to the segment it aimed at. Fire at an enemy bot is not, because nothing yet chooses an enemy bot as a target — that needs the target hysteresis of FR-BOT-140 and a squad war the vertical slice does not ask for (concept §13 stage 1 is the snake and the hunt). The damage side is the same code the day a target is a bot.
+**Fire at an enemy bot**, since 2026-09-26, when the maintainer asked for the squads to fight: a bot fires at an enemy it sees now, its line of fire running to the enemy's eyes, and the enemy is dealt the damage at once (ADR-0044). Until then only the snake was fired at, the vertical slice asking for the snake and the hunt alone (concept §13 stage 1).
 A shot goes off once per deliberation step rather than once per frame, so that the damage a second does not depend on the frame rate. No requirement gives a weapon a rate of fire; when one does, the cadence moves out of the deliberation period and into the bot configuration.
 
 ### FR-BOT-070 — Heavy and sapper weapons destroy cover
@@ -340,14 +340,14 @@ The formula is the simplest one that makes discipline 1.0 mean "always the order
 ### FR-BOT-140 — Target choice has hysteresis
 
 ```yaml
-status: deferred
+status: implemented
 verification: T
 derives_from: [FR-BOT-080]
 depends_on: []
 refines: [FR-BOT-080]
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Bot/Deliberation.swift]
+tests: [Tests/CrawlCallTests/WarTests.swift]
 created: 2026-09-21
 ```
 
@@ -357,6 +357,7 @@ If the utility of a bot's current target and that of the best alternative differ
 Written as behaviour — no flapping under a margin — so that a test can show it.
 
 ## Scheduling
+Built on 2026-09-26 with fire at an enemy (FR-BOT-060), the first time a bot had two targets to be caught between. The snake is one target wherever on it the bot aims, since its nearest part moves as it does; each bot is one target (ADR-0044).
 
 ### FR-BOT-150 — Deliberation runs on a fixed step, not per frame
 
@@ -741,3 +742,60 @@ When a bot has seen the snake, an enemy bot or a cell of the map, the system **s
 **Rationale.** The maintainer, 2026-09-25: what a bot sees reaches its squad after a delay (ADR-0032). A squad whose bots cannot warn one another is not the squad the concept is built on; one that knows at once what its first witness knows leaves the witness's report worth nothing (FR-SCORE-090).
 One delay per squad, so that the two squads can be made to differ. The squads pass their records on once a deliberation period, so a report arrives up to one period after its delay (ADR-0043).
 A collapsed squad shares nothing more (ADR-0032); squad collapse is not built, and this requirement says nothing about it until it is.
+
+### FR-BOT-320 — A bot with no health left is a body
+
+```yaml
+status: implemented
+verification: T
+derives_from: []
+depends_on: [FR-BOT-060]
+refines: []
+conflicts_with: []
+code: [Sources/CrawlCall/Bot/Execution.swift, Sources/CrawlCall/Bot/Bot.swift, Sources/CrawlCall/Bot/Perception.swift, Sources/CrawlCall/Bot/Knowledge.swift, Sources/CrawlCall/Game.swift]
+tests: [Tests/CrawlCallTests/WarTests.swift]
+created: 2026-09-26
+```
+
+When a bot's health reaches zero, the system **shall** leave it where it fell as a body that takes no action, moves no more, is fired at by no bot and is not pushed aside by other bots.
+
+**Rationale.** The maintainer, 2026-09-26: the squads fight, and a fight has dead (ADR-0044). The concept keeps the dead on the map: squads do not remove bodies, only the snake does (glossary, *body*; concept §6.2), and a body is what the snake eats when it eats a bot not alive (FR-SNAKE-090).
+A bot that sees a body where it knew an enemy stops counting it an enemy, and its squad hears of the death as of anything else it sees (FR-BOT-310). What a body shows of how it died is FR-SCORE-110's, not built.
+
+### FR-BOT-330 — A bot hides from the enemy as from the snake
+
+```yaml
+status: implemented
+verification: T
+derives_from: []
+depends_on: [FR-BOT-240, FR-BOT-060]
+refines: []
+conflicts_with: []
+code: [Sources/CrawlCall/Bot/Deliberation.swift, Sources/CrawlCall/Bot/Execution.swift, Sources/CrawlCall/Bot/Knowledge.swift]
+tests: [Tests/CrawlCallTests/WarTests.swift]
+created: 2026-09-26
+```
+
+When scoring cover for a bot, the system **shall** count a cell as watched where the eyes of an enemy bot, where the bot last saw it, have a line of sight to the bot's eyes standing in that cell, as well as where the snake it knows of sees into the cell.
+
+**Rationale.** The maintainer, 2026-09-26, choosing the war with cover in it: a bot fired at hides (ADR-0044). To the eyes, because an enemy fires from its eyes at a head (FR-BOT-060), which shows over a wall lower than both; the snake's line runs to the ground, as it did.
+Where the bot last saw the enemy, because a bot acts on what it knows (FR-BOT-220).
+
+### FR-BOT-340 — A standing bot does not look at a wall
+
+```yaml
+status: implemented
+verification: T
+derives_from: []
+depends_on: [FR-BOT-280, FR-BOT-250, FR-BOT-230]
+refines: []
+conflicts_with: []
+code: [Sources/CrawlCall/Bot/Execution.swift, Sources/CrawlCall/Bot/Bot.swift, Sources/CrawlCall/Config/Utility.swift]
+tests: [Tests/CrawlCallTests/WarTests.swift]
+created: 2026-09-26
+```
+
+When a bot stops with less than 1.5 m of open ground before it, as far as it knows, the system **shall** turn it to the way round it with the most open ground before it.
+
+**Rationale.** The maintainer, 2026-09-26: bots are not to stand looking at a wall. A bot that faces where it last walked (FR-BOT-280) arrives at cover facing the wall it hides behind, and a bot sees only within its field of view (FR-BOT-050), so it would stand blind.
+As far as it knows: open ground ends at the building's outline (FR-BOT-250) and at a cell it has seen that nobody can stand in (FR-BOT-230); a cell it has not seen is open, and is what is worth looking at (ADR-0044). Three cells, 1.5 m, is more than a wall at arm's length and less than a corridor's length.
