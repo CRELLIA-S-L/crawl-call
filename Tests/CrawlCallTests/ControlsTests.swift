@@ -50,6 +50,37 @@ final class StickTests: XCTestCase {
         XCTAssertGreaterThan(outside.direction.y, 0)
     }
 
+    func testTheStickStandsWhereTheThumbLands() {
+        // Anywhere on the left half with room round it, the plate is centred under the
+        // thumb (FR-VIEW-050, ADR-0051).
+        let half = CGSize(width: 440, height: 400)
+        for touch in [CGPoint(x: 200, y: 200), CGPoint(x: 90, y: 310), CGPoint(x: 380, y: 70)] {
+            let centre = TouchScheme.stickCentre(at: touch, in: half)
+            XCTAssertEqual(Double(centre.x), Double(touch.x), accuracy: 1e-9)
+            XCTAssertEqual(Double(centre.y), Double(touch.y), accuracy: 1e-9)
+        }
+    }
+
+    func testAThumbLandingByAnEdgeHasTheWholePlateOnTheHalf() {
+        let half = CGSize(width: 440, height: 400)
+        let plate = Stick.radius * Stick.plateInRadii / 2
+        for touch in [CGPoint(x: 0, y: 0), CGPoint(x: 5, y: 399), CGPoint(x: 439, y: 200), CGPoint(x: 200, y: -30)] {
+            let centre = TouchScheme.stickCentre(at: touch, in: half)
+            XCTAssertGreaterThanOrEqual(Double(centre.x) - plate, -1e-9, "\(touch)")
+            XCTAssertLessThanOrEqual(Double(centre.x) + plate, Double(half.width) + 1e-9, "\(touch)")
+            XCTAssertGreaterThanOrEqual(Double(centre.y) - plate, -1e-9, "\(touch)")
+            XCTAssertLessThanOrEqual(Double(centre.y) + plate, Double(half.height) + 1e-9, "\(touch)")
+        }
+        // Moved in only as far as it takes: along the edge it stays under the thumb.
+        let alongTheLeft = TouchScheme.stickCentre(at: CGPoint(x: 0, y: 200), in: half)
+        XCTAssertEqual(Double(alongTheLeft.x), plate, accuracy: 1e-9)
+        XCTAssertEqual(Double(alongTheLeft.y), 200, accuracy: 1e-9)
+        // A half smaller than the plate has it in its middle.
+        let small = TouchScheme.stickCentre(at: CGPoint(x: 3, y: 3), in: CGSize(width: 50, height: 80))
+        XCTAssertEqual(Double(small.x), 25, accuracy: 1e-9)
+        XCTAssertEqual(Double(small.y), 40, accuracy: 1e-9)
+    }
+
     func testInsideTheBaseTheKnobFollowsTheThumbExactly() {
         let pushed = CGSize(width: 20, height: -15)
         let reading = TouchScheme.stick(pushed)

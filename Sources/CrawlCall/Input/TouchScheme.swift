@@ -1,4 +1,5 @@
-// Touch, turned into the intents the logic consumes (FR-VIEW-050). The mapping itself
+// Touch, turned into the intents the logic consumes (FR-VIEW-050): a stick where the
+// thumb lands on the left half, and a meal from a touch on the right (ADR-0051). The mapping itself
 // is arithmetic and lives here so that a test can read it; the controls that feed it
 // are SwiftUI's and live in the view.
 //
@@ -38,7 +39,18 @@ enum TouchScheme {
         return SIMD2(x / length, z / length)
     }
 
-    /// The button on the right asks for a meal.
+    /// Where the stick stands for a thumb that lands at `touch` on a half `size` big:
+    /// under the thumb, moved in only as far as it takes for the whole plate to be on
+    /// the half (FR-VIEW-050). A half narrower or lower than the plate has it centred.
+    static func stickCentre(at touch: CGPoint, in size: CGSize, radius: Double = Stick.radius) -> CGPoint {
+        let plate = radius * Stick.plateInRadii * Geometry.half
+        func within(_ value: Double, _ length: Double) -> Double {
+            length < plate * Geometry.bothSides ? length * Geometry.half : min(max(value, plate), length - plate)
+        }
+        return CGPoint(x: within(Double(touch.x), Double(size.width)), y: within(Double(touch.y), Double(size.height)))
+    }
+
+    /// A touch anywhere on the right half asks for a meal.
     static let eat = Intent.eat
 
     /// Lifting the thumb off the stick stops the snake: the direction is held *while

@@ -199,6 +199,17 @@ struct MatchView: View {
             aspect = newAspect
             session?.aspect = newAspect
         }
+        // FR-VIEW-050: the left half steers and the right half eats, each thumb on a
+        // half of its own. Under everything else drawn over the arena, so that a
+        // debug switch or a plate takes its own touches (ADR-0051).
+        .overlay {
+            if session?.game.outcome == nil, session?.isPaused != true {
+                Controls(steer: { session?.apply(.move(direction: $0)) },
+                         release: { session?.apply(TouchScheme.release) },
+                         eat: { session?.apply(TouchScheme.eat) },
+                         canEat: session?.canEat ?? false)
+            }
+        }
         // Debug mode's free camera (FR-TOOL-070): pinch and two-finger drag on the
         // arena, and a button back to the snake; nothing at all in a Release build.
         .freeCamera(session)
@@ -206,22 +217,14 @@ struct MatchView: View {
         // FR-TOOL-270, Q-260); nothing at all in a Release build.
         .seeThroughSwitches(session)
         // One or the other, never both (FR-VIEW-190): while the match is on, the
-        // controls; once it is over, the plate that says how it ended and starts
-        // another.
+        // controls, above; once it is over, the plate that says how it ended and
+        // starts another.
         .overlay {
             if let outcome = session?.game.outcome {
                 MatchEnd(outcome: outcome, again: { session?.restart() })
             } else if session?.isPaused == true {
                 // FR-VIEW-230: a paused match says so, and one press resumes it.
                 ChoicePlate(headline: .pauseHeadline, control: .pauseResume, action: { session?.resume() })
-            } else {
-                // FR-VIEW-050: a stick on the left steers and a button on the right
-                // eats, each in a corner of its own so that one cannot be taken for
-                // the other.
-                Controls(steer: { session?.apply(.move(direction: $0)) },
-                         release: { session?.apply(TouchScheme.release) },
-                         eat: { session?.apply(TouchScheme.eat) },
-                         canEat: session?.canEat ?? false)
             }
         }
     }

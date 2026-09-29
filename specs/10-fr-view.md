@@ -177,11 +177,12 @@ tests: [Tests/CrawlCallTests/TouchSchemeTests.swift, Tests/CrawlCallTests/Contro
 created: 2026-09-21
 ```
 
-Where the game runs on iOS, the system **shall** produce every intent IF-VIEW-010 defines from touch, the movement direction coming from a stick on the left of the screen and held while the finger rests on it, and the intent to eat from a button on the right.
+Where the game runs on iOS, the system **shall** produce every intent IF-VIEW-010 defines from touch, the movement direction coming from a stick that stands where a finger lands on the left half of the screen and held while that finger rests on the screen, and the intent to eat from a touch anywhere on the right half.
 
 **Rationale.** Concept §3: touch on iOS — holding a direction.
-A stick and a button rather than gestures over the whole screen, because gestures collide: eating was a long press and steering a drag, and a thumb that pauses before it moves asks for a meal instead of a step. Tried on the device on 2026-09-23 and rejected there. Controls that occupy their own corners cannot be mistaken for one another, and the left-right split is what a thumb on each side of a phone reaches.
+A stick and a button rather than gestures over the whole screen, because gestures collide: eating was a long press and steering a drag, and a thumb that pauses before it moves asks for a meal instead of a step. Tried on the device on 2026-09-23 and rejected there. Controls that occupy their own sides of the screen cannot be mistaken for one another, and the left-right split is what a thumb on each side of a phone reaches.
 iPhone is the primary target (concept §15), so this scheme is not the port of the other one.
+The stick where the thumb lands and the meal anywhere on the right since 2026-09-29, the maintainer's ask, as most games on a phone do it: a thumb need not find a control it cannot feel. Apple advises the same for a thumbstick — the whole half of the screen as its area, hidden while nobody touches it (WWDC26, "Make your game great with touch") — and its Touch Controller framework gives any control a collider of either half (`TCColliderShape.leftSide`, `.rightSide`, iOS 26). The halves are still the two thumbs' own, so a touch is never taken for the other control. How it is built is ADR-0051.
 
 ### FR-VIEW-160 — The eat button says whether there is anything to eat
 
