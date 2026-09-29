@@ -4,13 +4,14 @@ Standing engineering principles of the project.
 Every plan and every diff is checked against them.
 Unlike requirements (what the system does) and ADRs (single decisions with their context), articles apply to all work at all times and change only through the amendment procedure in ART-090.
 
-- **Version:** 1.5.0
+- **Version:** 1.6.0
 - **Ratified:** 2026-08-05
 - **Amended:** 2026-08-05 — v1.1.0: ART-020 tightened to approved requirements; ART-090 taxonomy extended to classify tightening and relaxing (both changes MINOR per ART-090)
 - **Amended:** 2026-09-24 — v1.2.0: ART-070 added, named values in place of literals in code (MINOR per ART-090)
 - **Amended:** 2026-09-24 — v1.3.0: ART-070 sends text a player reads to the string catalog, so that it can be translated (MINOR per ART-090)
 - **Amended:** 2026-09-24 — v1.4.0: ART-080 added, no warnings and nothing deprecated (MINOR per ART-090)
 - **Amended:** 2026-09-25 — v1.5.0: ART-030 tightened: a change to a setting outside the repository needs the same confirmation, and no project script makes one (MINOR per ART-090)
+- **Amended:** 2026-09-29 — v1.6.0: ART-100 added, decisions rest on sources of the platform the project targets, and what it adopts is current (MINOR per ART-090)
 
 Articles are numbered in steps of 10 and referenced from plans, reviews, and ADRs the same way requirements are: “rejected per ART-040”.
 The set below is a starting point — adapt the articles to your project, but keep the amendment procedure.
@@ -64,6 +65,12 @@ Code written before this article is brought to it when a change touches it.
 A build of the game and its tests reports no warning, the specification's checkers report none, and the code and its configuration use nothing the SDK they are built with marks deprecated.
 A warning or a deprecation is cleared in the change that brought it; one that arrives with a new SDK or tool is cleared before the next change is called done.
 Where it cannot be cleared from inside the project, it is named in `specs/91-open-issues.md` with the reason, and only then may it stand.
+
+## ART-100 — Current sources, current technology
+
+A decision about the platform — an API, a framework, a tool, a method of measuring, a practice — rests on sources for the versions the project targets (iOS 27 and its SDK, CON-PUB-120): the documentation of the SDK and the tools installed, and Apple's material from the release that brought those versions — WWDC26 for iOS 27 — or later.
+An older source is used only where nothing current covers the question, and is cited with its year, so that a reader sees it is old.
+What the project takes up is the current generation of each: a tool, framework or API that a newer one has superseded, or that its SDK marks deprecated, is not taken up (ART-080), and one found in use is named in `specs/91-open-issues.md`.
 
 ## ART-090 — Amendments
 
