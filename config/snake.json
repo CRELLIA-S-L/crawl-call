@@ -13,6 +13,8 @@
   "damagePerSegment": 10,
   "bodyEatingDuration": 1.2,
   "eatingDamagePerSecond": 50.0,
+  "lunge": { "reach": 1.5, "windUp": 0.25, "speed": 7.0 },
+  "coil": { "seconds": 0.6, "shoveReach": 1.0, "shoveSpeed": 2.0 },
   "abilities": {
     "assault": { "dashSpeed": 9.0, "dashDuration": 0.6 },
     "scout": { "duration": 6.0 },

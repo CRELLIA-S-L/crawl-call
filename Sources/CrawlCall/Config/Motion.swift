@@ -2,7 +2,7 @@
 // tuning (ART-070): how small a movement is no movement, how many times a step is
 // retried along what stopped it, how precisely a contact is found.
 //
-// implements: FR-SNAKE-010, FR-SNAKE-015, FR-SNAKE-020, FR-SNAKE-030, FR-SNAKE-220
+// implements: FR-SNAKE-010, FR-SNAKE-015, FR-SNAKE-020, FR-SNAKE-030, FR-SNAKE-220, FR-SNAKE-270, FR-SNAKE-280
 import Foundation
 
 enum Motion {
@@ -48,4 +48,27 @@ enum Motion {
 extension Motion {
     /// The tail's segments are spaced a body's width apart along the path: two radii.
     static let widthInRadii = 2.0
+}
+
+/// How a lunge's travel eases out (FR-SNAKE-270, ADR-0052): its speed at a share u of
+/// its time is `peak` · (1 − u²) times its average, fastest as it sets off and nothing
+/// as it ends. `peak` is 3/2, which makes the average one; `covered` is its integral,
+/// the share of the reach covered by the share u of the time.
+enum LungeEase {
+    static let peak = 1.5
+    static let cube = 3.0
+
+    static func covered(_ u: Double) -> Double {
+        let t = min(max(u, .zero), Fraction.whole)
+        return peak * (t - t * t * t / cube)
+    }
+}
+
+/// How the room for a coil is found (FR-SNAKE-280, ADR-0053): the points round the ring
+/// the body is tried at, the ways round the bot a place is looked for, and the step
+/// outwards between rings of places, in metres.
+enum CoilRoom {
+    static let ringPoints = 16
+    static let searchWays = 16
+    static let searchStep = 0.1
 }

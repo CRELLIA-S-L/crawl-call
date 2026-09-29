@@ -140,6 +140,7 @@ Where debug mode is enabled, the system **shall** let the user detach the camera
 **Rationale.** Concept §11.3: an external viewer cannot answer "does the tail fit", "where does it catch"; the debug build can.
 One requirement per debug facility because each can be built and used without the others.
 Debug mode is the Debug build configuration; the camera is zoomed by a pinch, panned by a two-finger drag, turned by a two-finger twist and tilted by a three-finger drag, within the limits of the view configuration, and put back on the snake by a button; ADR-0023 says why.
+The fingers of a camera gesture lie on one half of the screen: two thumbs, one on each half, are the stick and a meal of FR-VIEW-050, and taken for a camera gesture they moved the camera at every meal (ADR-0051).
 
 ### FR-TOOL-080 — Navigation graph overlay
 

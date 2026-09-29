@@ -8,6 +8,7 @@
   "sunElevation": 60,
   "sunAzimuth": 36,
   "centralRegion": { "width": 0.4, "height": 0.4 },
+  "cameraFollowLag": 0.3,
   "seeThroughMargin": 0.15,
   "visibilityRadius": 1.6,
   "stragglerDistance": 8.0,

@@ -5,7 +5,7 @@
 // measured with — `specs/50-verification.md` says why, and the two are different
 // questions asked of the same number.
 //
-// implements: FR-TOOL-070, FR-VIEW-020, FR-VIEW-030, FR-VIEW-060, FR-VIEW-100, FR-VIEW-140, FR-VIEW-150, FR-VIEW-155, FR-VIEW-160, FR-VIEW-170, FR-VIEW-250, FR-VIEW-190, FR-VIEW-230, FR-VIEW-210, FR-TOOL-230, FR-TOOL-240, FR-GREENHOLM-030, FR-TOOL-260, FR-TOOL-270, FR-SNAKE-220, FR-VIEW-280, FR-VIEW-290
+// implements: FR-TOOL-070, FR-VIEW-020, FR-VIEW-030, FR-VIEW-060, FR-VIEW-100, FR-VIEW-140, FR-VIEW-150, FR-VIEW-155, FR-VIEW-160, FR-VIEW-170, FR-VIEW-250, FR-VIEW-190, FR-VIEW-230, FR-VIEW-210, FR-TOOL-230, FR-TOOL-240, FR-GREENHOLM-030, FR-TOOL-260, FR-TOOL-270, FR-SNAKE-220, FR-VIEW-280, FR-VIEW-290, FR-VIEW-310, FR-VIEW-320
 import Foundation
 import Observation
 import RealityKit
@@ -25,6 +25,11 @@ final class GameSession {
     /// Where the match camera looks (FR-VIEW-020); read by the scenery, whose birds
     /// cross where the player is looking (FR-GREENHOLM-030).
     private(set) var focus: SIMD3<Double>
+    /// How fast the focus is moving across the ground, in metres a second: the camera's
+    /// spring carries it from frame to frame (FR-VIEW-020).
+    private var focusVelocity = SIMD2<Double>.zero
+    /// How far the head is reared over a living bot it swallows (FR-VIEW-320).
+    private var swallowPose = SwallowPose()
     private let distance: Double
     private let fieldOfView: Double
     /// The camera the user has taken off the snake in debug mode (FR-TOOL-070), or nil
@@ -131,6 +136,7 @@ final class GameSession {
         digestion = Digestion()
         gaits = [:]
         botsAt = [:]
+        swallowPose = SwallowPose()
         focus = game.snake.head
         place()
     }
@@ -176,7 +182,7 @@ final class GameSession {
             }
         }
         let stepTime = clock.now - stepping
-        let placed = place()
+        let placed = place(seconds: min(seconds, Frame.longest))
         guard let recorder else { return }
 
         var frame = FrameRecord.Frame()
@@ -208,31 +214,60 @@ final class GameSession {
     }
 
     @discardableResult
-    private func place() -> Placed {
+    /// What is drawn brought up to the match. `seconds` is the frame's, for what eases
+    /// in over time; nil puts the camera where it should be at once — a match begun,
+    /// resumed or restarted.
+    private func place(seconds: Double? = nil) -> Placed {
         let clock = ContinuousClock()
         let drawing = clock.now
-        // Nothing is eaten in the air off a ledge (FR-SNAKE-220), so the button says so.
-        canEat = game.snake.drop == nil
-            && Game.preyWithinReach(of: game.snake.head, among: game.bots,
-                                    tuning: game.world.configurations.tuning) != nil
+        // Lit exactly when a touch would lunge (FR-VIEW-160, FR-SNAKE-270): nothing
+        // under way, not in the air off a ledge (FR-SNAKE-220), a bot within reach.
+        canEat = game.canLunge
+        // Reared over a living bot being eaten, and down again after it (FR-VIEW-320).
+        let figureHeight = game.world.configurations.bot.figureHeight
+        let alive = game.eating.flatMap { meal in
+            meal.alive ? game.bots.first { $0.id == meal.prey }?.position : nil
+        }
+        // Moved on only by a frame's time: the free camera's gestures place the scene too,
+        // and a meal's head stays as it is under them.
+        if let seconds {
+            let gone = game.eating.flatMap { remaining(of: $0) }.map { Fraction.whole - $0 } ?? .zero
+            swallowPose.step(seconds: seconds, eatingAlive: alive, height: figureHeight, gone: gone)
+        }
         SnakeEntity.update(snakeEntity, from: game.snake,
-                           radius: game.world.configurations.tuning.bodyRadius, lumps: digestion.lumps)
-        BotEntity.update(botEntities, from: game.bots, gaits: gaits)
+                           radius: game.world.configurations.tuning.bodyRadius, lumps: digestion.lumps,
+                           lunge: LungePose.of(game), swallow: swallowPose)
+        BotEntity.update(botEntities, from: game.bots, gaits: gaits, eaten: game.eating?.prey)
         // Every shot still alive is drawn where it went (FR-VIEW-170).
         ShotEntity.update(shotEntities, from: game.shots)
         // A meal under way is drawn going in (FR-VIEW-100). What is left of the prey
         // is measured by whatever ends that meal: live prey by the health it has
-        // left, a body by the time it has left.
+        // left, a body by the time it has left. Live prey is cut away at the mouth of the
+        // head coming down over it (FR-VIEW-320); a body is pulled in along the ground.
         if let meal = game.eating, let left = remaining(of: meal) {
-            BotEntity.swallow(botEntities, prey: meal.prey, head: game.snake.head, left: left)
+            if meal.alive, let feet = alive {
+                BotEntity.slurp(botEntities, prey: meal.prey, feet: feet, height: figureHeight, left: left)
+            } else {
+                BotEntity.swallow(botEntities, prey: meal.prey, head: game.snake.head, left: left)
+            }
         }
-        focus = SceneView.focus(keeping: game.snake.head,
-                                inside: game.world.configurations.view.centralRegion,
-                                from: focus,
-                                distance: distance,
-                                fieldOfViewDegrees: fieldOfView,
-                                aspect: aspect,
-                                within: game.world.plan.bounds)
+        // Where the region would have the camera, caught up with over the follow lag
+        // rather than at once: a lunge moves the head faster than the eye follows a
+        // jump of the whole frame (FR-VIEW-020).
+        let target = SceneView.focus(keeping: game.snake.head,
+                                     inside: game.world.configurations.view.centralRegion,
+                                     from: focus,
+                                     distance: distance,
+                                     fieldOfViewDegrees: fieldOfView,
+                                     aspect: aspect,
+                                     within: game.world.plan.bounds)
+        if let seconds {
+            focus = SceneView.followed(from: focus, velocity: &focusVelocity, to: target, seconds: seconds,
+                                       lag: game.world.configurations.view.cameraFollowLag)
+        } else {
+            focus = target
+            focusVelocity = .zero
+        }
         // Where the camera looks: after the head, or where the user left it. The
         // following goes on underneath either way, so that the camera comes back to
         // where the match would have had it.

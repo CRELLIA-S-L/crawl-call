@@ -42,5 +42,5 @@ The controls are drawn under everything else over the arena. The debug switches 
 ### Consequences
 
 Nothing on the screen is out of a thumb's reach any more, and a touch on the right half in the middle of the arena is a meal asked for: a later control on the right, an ability button, has to be drawn over the half, as the debug switches are.
-The free camera's two- and three-finger gestures are carried by the view the controls now lie inside; whether they still reach it through the halves is judged on the phone.
+The free camera's two- and three-finger gestures are carried by the view the controls now lie inside, and they reached it through the halves too readily: a thumb on the stick and one on the right half are two fingers, and every meal panned, zoomed and turned the camera away from the snake, which the maintainer found on the phone on 2026-09-29. A camera gesture now does not begin on touches that lie on both halves; two or three fingers of one hand on one half still move the camera.
 Apple's advice to take a control that cannot act off the screen is not followed: the eat button stays, dim, because FR-VIEW-160 asks it to say that there is nothing to eat.

@@ -2,7 +2,7 @@
 // rather than the look (ART-070). What the models themselves look like — sizes,
 // colours, materials — waits for their rework (Q-280).
 //
-// implements: FR-VIEW-170, FR-MAP-210, FR-VIEW-240, FR-VIEW-250, FR-VIEW-260, FR-VIEW-270, FR-VIEW-280, FR-VIEW-290, FR-VIEW-300
+// implements: FR-VIEW-170, FR-MAP-210, FR-VIEW-240, FR-VIEW-250, FR-VIEW-260, FR-VIEW-270, FR-VIEW-280, FR-VIEW-290, FR-VIEW-300, FR-VIEW-310, FR-VIEW-320
 import Foundation
 
 /// How a module drawn as a figure fills its box (ADR-0034). Only the drawing: for sight
@@ -69,6 +69,9 @@ enum SnakeShape {
     /// metres behind it the body swells to that.
     static let headShare = 1.3
     static let headLength = 0.5
+    /// Points of line the body is made with room for beyond the tail's own: the neck of a
+    /// head reared over its meal, its bend and where the match has the head (FR-VIEW-320).
+    static let neckPoints = 2
 }
 
 /// The snake's skin (FR-VIEW-270): its green, the darker green of its spots, and how
@@ -89,6 +92,39 @@ enum SnakeLump {
     static let width = 0.3
     static let behindHead = 0.45
     static let speed = 1.5
+}
+
+/// A lunge drawn as a cartoon (FR-VIEW-310), in shares of the head's size along the way
+/// it goes and across it: squashed at the end of the wind-up by `windUpSquash` and
+/// widened by `windUpBulge`, stretched through the travel by `stretch` and thinned by
+/// `thin`, and squashed where it ends by `landingSquash` and widened by `landingBulge`,
+/// easing back to its own shape over `landingSeconds`.
+enum LungeLook {
+    static let windUpSquash = 0.3
+    static let windUpBulge = 0.18
+    static let stretch = 0.45
+    static let thin = 0.2
+    static let landingSquash = 0.3
+    static let landingBulge = 0.2
+    static let landingSeconds = 0.3
+}
+
+/// A living bot swallowed from the top down (FR-VIEW-320): how long the head takes to
+/// rear up over the bot at the meal's start and to come down after it, in seconds; how
+/// far below the cut the head's line comes, in metres, so that its mouth covers the
+/// edge where the figure is cut away; how far it tips mouth-down, in degrees, short of
+/// straight down so that its eyes still show; the least of the figure's height left
+/// showing under the head, as a share of it, so that its boots never vanish before the
+/// match has it gone (FR-VIEW-100); how far behind the reared head the neck bends over,
+/// in metres, so that the body comes to the head from above and behind and its end
+/// points down at the bot; and the opacity below which the cut figure is not drawn.
+enum Swallowing {
+    static let rearSeconds = 0.25
+    static let mouthSink = 0.05
+    static let tipDegrees = 70.0
+    static let smallest = 0.15
+    static let neckBend = 0.35
+    static let cutThreshold = 0.5
 }
 
 /// A bot's walk (FR-VIEW-290): metres of ground a stride takes — a step with each foot;

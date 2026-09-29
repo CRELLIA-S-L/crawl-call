@@ -6,7 +6,7 @@
 // what the requirements promise is that a match stops, and a flag nothing sets would
 // satisfy a test that only read it back.
 //
-// verifies: FR-SNAKE-210, FR-SCORE-140, FR-SCORE-150, FR-VIEW-190
+// verifies: FR-SNAKE-210, FR-SCORE-140, FR-SCORE-150, FR-VIEW-190, FR-VIEW-320
 import RealityKit
 import XCTest
 @testable import CrawlCall
@@ -260,7 +260,12 @@ final class RestartOnScreenTests: XCTestCase {
             !session.game.bots.contains { $0.id == id }
         })
         let body = try XCTUnwrap(squads.children.first { $0.name == "bot\(eaten)" })
-        XCTAssertLessThan(body.scale.x, 1, "the bot was never drawn going into the snake")
+        // Smaller, or cut at the mouth: a body shrinks whole, a living bot is cut away
+        // under the head coming down over it (FR-VIEW-320).
+        func cut(_ entity: Entity) -> Bool {
+            entity.components.has(BotEntity.UncutMaterials.self) || entity.children.contains(where: cut)
+        }
+        XCTAssertTrue(body.scale.min() < 1 || cut(body), "the bot was never drawn going into the snake")
 
         session.restart()
         XCTAssertNil(session.game.outcome)
@@ -268,8 +273,11 @@ final class RestartOnScreenTests: XCTestCase {
         XCTAssertEqual(squads.children.filter(\.isEnabled).count, game.bots.count,
                        "a bot eaten in the last match is still off screen in this one")
         // Found in play on 2026-09-23: it came back the size the last bite left it.
-        XCTAssertEqual(Double(body.scale.x), 1, accuracy: 1e-6,
-                       "a bot eaten in the last match is still the size it was swallowed at")
+        for axis in [body.scale.x, body.scale.y, body.scale.z] {
+            XCTAssertEqual(Double(axis), 1, accuracy: 1e-6,
+                           "a bot eaten in the last match is still the size it was swallowed at")
+        }
+        XCTAssertFalse(cut(body), "a bot eaten in the last match is still cut at the snake's mouth")
         // And where the new match has it, not where the snake's mouth had pulled it.
         let again = try XCTUnwrap(session.game.bots.first { $0.id == eaten })
         XCTAssertEqual(Double(body.position.x), again.position.x, accuracy: 1e-5,

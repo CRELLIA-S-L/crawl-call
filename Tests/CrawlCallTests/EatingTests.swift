@@ -135,10 +135,11 @@ final class EatingTests: XCTestCase {
         XCTAssertEqual(game.eating?.prey, first.id, "the second bite replaced the first")
     }
 
-    func testTheEatIntentTakesTheNearestBotTheHeadHasReached() throws {
+    func testThePreyTakenIsTheNearestBotWithinReach() throws {
         let world = try world()
         let tuning = world.configurations.tuning
-        let reach = tuning.bodyRadius + tuning.navigationGraphCellSize / 2
+        let reach = Game.biteReach(tuning)
+        XCTAssertEqual(reach, tuning.bodyRadius + tuning.navigationGraphCellSize / 2, accuracy: 1e-12)
         let head = SIMD3<Double>(5, 0, 5)
         func bot(_ id: Int, at offset: Double) throws -> Bot {
             try XCTUnwrap(Bot(id: id, squad: .red, archetype: .assault,
@@ -150,13 +151,13 @@ final class EatingTests: XCTestCase {
         let beyond = try bot(3, at: reach * 1.5)
 
         XCTAssertEqual(Game.preyWithinReach(of: head, among: [beyond, atArmsLength, touching],
-                                            tuning: tuning), touching.id,
+                                            reach: reach), touching.id,
                        "the nearest of those in reach is what the head takes")
-        XCTAssertEqual(Game.preyWithinReach(of: head, among: [beyond, atArmsLength], tuning: tuning),
+        XCTAssertEqual(Game.preyWithinReach(of: head, among: [beyond, atArmsLength], reach: reach),
                        atArmsLength.id)
-        XCTAssertNil(Game.preyWithinReach(of: head, among: [beyond], tuning: tuning),
+        XCTAssertNil(Game.preyWithinReach(of: head, among: [beyond], reach: reach),
                      "a bot beyond reach was eaten from a distance")
-        XCTAssertNil(Game.preyWithinReach(of: head, among: [], tuning: tuning))
+        XCTAssertNil(Game.preyWithinReach(of: head, among: [], reach: reach))
     }
 
     func testTheEatIntentWithNothingInReachStartsNothing() throws {

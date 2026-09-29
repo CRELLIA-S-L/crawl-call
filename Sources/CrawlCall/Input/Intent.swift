@@ -14,9 +14,10 @@ enum Intent: Equatable {
     case point(at: SIMD2<Double>)
     /// Pause.
     case pause
-    /// Eat what the head has reached. A meal is asked for rather than triggered by
-    /// touching something, because the choice between eating a body and leaving it
-    /// is what the concept's economy of stealth is built on (§6.2).
+    /// Eat: lunge at the nearest bot within the lunge reach (FR-SNAKE-270). A meal is
+    /// asked for rather than triggered by touching something, because the choice
+    /// between eating a body and leaving it is what the concept's economy of stealth is
+    /// built on (§6.2).
     case eat
 
     /// The five the contract names. A scheme is complete when it can produce each of

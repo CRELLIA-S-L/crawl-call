@@ -386,6 +386,69 @@ final class CameraFollowTests: XCTestCase {
         XCTAssertGreaterThan(focus.x, 0)      // it did follow
     }
 
+    func testTheCameraSetsOffFromRestCatchesUpAndDoesNotOvershoot() {
+        // FR-VIEW-020: the camera does not jump to where it should be.
+        let target = SIMD3(2.0, 1.0, -1.0)
+        let frame = 1.0 / 60
+        var velocity = SIMD2<Double>.zero
+        var focus = SIMD3(0.0, 0.0, 0.0)
+        var speeds: [Double] = []
+        for _ in 0..<600 {
+            let before = focus
+            focus = SceneView.followed(from: focus, velocity: &velocity, to: target, seconds: frame, lag: 0.3)
+            speeds.append((focus.x - before.x) / frame)
+            XCTAssertEqual(focus.y, target.y, accuracy: 1e-12, "the height lagged, and a floor change leaves the frame")
+            XCTAssertLessThanOrEqual(focus.x, target.x + 1e-9, "the camera overshot")
+            XCTAssertEqual(focus.x / target.x, focus.z / target.z, accuracy: 1e-9, "it went off the line to the target")
+        }
+        XCTAssertEqual(focus.x, target.x, accuracy: 1e-6)
+        XCTAssertLessThan(speeds.first ?? .infinity, (speeds.max() ?? 0) * 0.2, "the camera set off at speed")
+        // No lag is no spring.
+        var still = SIMD2<Double>(3, 3)
+        XCTAssertEqual(SceneView.followed(from: .zero, velocity: &still, to: target, seconds: frame, lag: 0), target)
+        XCTAssertEqual(still, .zero)
+    }
+
+    func testALungeMovesTheCameraWithoutAJolt() {
+        // Where the region would have the camera, as a lunge moves the head: still, then
+        // off at once at lunge speed for a fifth of a second, then still again. Followed,
+        // the camera's own speed changes by little from frame to frame, and it comes to
+        // rest without going past where the head stopped.
+        let frame = 1.0 / 60
+        let lunge = 10.0
+        var velocity = SIMD2<Double>.zero
+        var focus = SIMD3(0.0, 0.0, 0.0)
+        var target = focus
+        var speeds: [Double] = []
+        for k in 0..<300 {
+            if (30..<42).contains(k) { target.x += lunge * frame }
+            let before = focus
+            focus = SceneView.followed(from: focus, velocity: &velocity, to: target, seconds: frame, lag: 0.3)
+            speeds.append((focus.x - before.x) / frame)
+            XCTAssertLessThanOrEqual(focus.x, target.x + 1e-9, "the camera went past where the head stopped")
+        }
+        for (a, b) in zip(speeds, speeds.dropFirst()) {
+            XCTAssertLessThan(abs(b - a), lunge * 0.1, "the camera's speed jumped")
+        }
+        XCTAssertEqual(focus.x, target.x, accuracy: 1e-3)
+    }
+
+    func testAFollowingCameraKeepsPaceWithASteadyHead() {
+        var velocity = SIMD2<Double>.zero
+        var focus = SIMD3(0.0, 0.0, 0.0)
+        var target = focus
+        let frame = 1.0 / 60
+        var pace = 0.0
+        for _ in 0..<600 {
+            target.x += 3 * frame
+            let before = focus
+            focus = SceneView.followed(from: focus, velocity: &velocity, to: target, seconds: frame, lag: 0.3)
+            pace = (focus.x - before.x) / frame
+        }
+        XCTAssertEqual(pace, 3, accuracy: 1e-3)
+        XCTAssertEqual(focus.z, 0, accuracy: 1e-9)
+    }
+
     func testTheCameraStopsAtTheArenasEdgeRatherThanShowingTheVoid() {
         // A match begins in a corner: obeying the region alone would centre the
         // picture on the head and spend half the screen on ground that is not there.

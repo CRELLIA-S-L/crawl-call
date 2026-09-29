@@ -50,6 +50,14 @@ enum TouchScheme {
         return CGPoint(x: within(Double(touch.x), Double(size.width)), y: within(Double(touch.y), Double(size.height)))
     }
 
+    /// Whether touches at these distances across a view `width` wide lie on both its
+    /// halves: two thumbs, one on the stick and one asking for a meal (FR-VIEW-050), and
+    /// not a gesture of several fingers of one hand.
+    static func spanBothHalves(_ across: [Double], width: Double) -> Bool {
+        let middle = width * Geometry.half
+        return across.contains { $0 < middle } && across.contains { $0 >= middle }
+    }
+
     /// A touch anywhere on the right half asks for a meal.
     static let eat = Intent.eat
 

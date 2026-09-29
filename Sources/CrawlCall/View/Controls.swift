@@ -10,9 +10,9 @@
 // nothing slanted, bevelled or military.
 //
 // A control that does nothing looks broken, so the eat button still says whether a
-// touch would do anything (FR-VIEW-160): lit when the head has reached somebody, dim
-// when it has not. It is where the right thumb rests, and only a sign: the whole half
-// is what answers.
+// touch would do anything (FR-VIEW-160): lit when somebody is within the snake's lunge,
+// dim when nobody is (FR-SNAKE-270). It is where the right thumb rests, and only a
+// sign: the whole half is what answers.
 //
 // implements: FR-VIEW-050, FR-VIEW-120, FR-VIEW-160, FR-VIEW-200
 import SwiftUI

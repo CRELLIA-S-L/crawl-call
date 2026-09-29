@@ -1,7 +1,7 @@
 // Where the game's files are in its bundle (ADR-0012): the directories, the
 // extensions and the names it asks for them by (ART-070).
 //
-// implements: IF-SNAKE-010, IF-MAP-020, IF-VIEW-020, IF-BOT-010, IF-MAP-010, FR-MAP-100, FR-VIEW-150, FR-MAP-120, IF-GREENHOLM-010, FR-GREENHOLM-070, FR-MAP-270, FR-VIEW-270
+// implements: IF-SNAKE-010, IF-MAP-020, IF-VIEW-020, IF-BOT-010, IF-MAP-010, FR-MAP-100, FR-VIEW-150, FR-MAP-120, IF-GREENHOLM-010, FR-GREENHOLM-070, FR-MAP-270, FR-VIEW-270, FR-VIEW-320
 import Foundation
 
 enum Resource {
@@ -40,6 +40,9 @@ enum Resource {
     /// The surface shader that paints the snake's skin: its belly and its spots
     /// (FR-VIEW-270).
     static let skinShader = "crawlCallSnakeSkin"
+    /// The surface shader that cuts away the part of a bot inside the snake's mouth
+    /// (FR-VIEW-320).
+    static let botCutShader = "crawlCallBotCut"
 
     /// What a configuration failure names when the file it came from is not known.
     static let unknownConfiguration = "unknown"

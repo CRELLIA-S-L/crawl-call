@@ -81,6 +81,17 @@ final class StickTests: XCTestCase {
         XCTAssertEqual(Double(small.y), 40, accuracy: 1e-9)
     }
 
+    func testThumbsOnBothHalvesAreTheControlsAndNotACameraGesture() {
+        // A thumb on the stick and one asking for a meal lie on the two halves; two or
+        // three fingers of one hand on one half are the free camera's (FR-TOOL-070).
+        XCTAssertTrue(TouchScheme.spanBothHalves([120, 700], width: 800))
+        XCTAssertTrue(TouchScheme.spanBothHalves([399.9, 400], width: 800))
+        XCTAssertFalse(TouchScheme.spanBothHalves([100, 250], width: 800))
+        XCTAssertFalse(TouchScheme.spanBothHalves([450, 600, 790], width: 800))
+        XCTAssertFalse(TouchScheme.spanBothHalves([300], width: 800))
+        XCTAssertFalse(TouchScheme.spanBothHalves([], width: 800))
+    }
+
     func testInsideTheBaseTheKnobFollowsTheThumbExactly() {
         let pushed = CGSize(width: 20, height: -15)
         let reading = TouchScheme.stick(pushed)

@@ -41,11 +41,12 @@ tests: [Tests/CrawlCallTests/ScenePlanTests.swift]
 created: 2026-09-21
 ```
 
-While a match is running, the system **shall** keep the snake's head within the central region of the frame the view configuration defines, moving the camera as the head moves, except where that would show ground beyond the arena, where the camera stops at its edge.
+While a match is running, the system **shall** keep the snake's head within the central region of the frame the view configuration defines, moving the camera after the head and catching up with it over the follow lag the same configuration sets, except where that would show ground beyond the arena, where the camera stops at its edge.
 
 **Rationale.** Concept §3: the camera follows the snake.
 The exception is what a match starts in: the blockout's first cell is a corner, and a camera obeying the region alone put sixty-one per cent of the screen outside the map, measured on the device on 2026-09-22. Ground beyond the arena was then nothing — there was no world there to draw — so a frame spent on it was a frame not spent on the room the player is in. A camera stopped at the edge lets the head leave the central region, which is the lesser of the two: the head is still on screen, and what surrounds it is the arena rather than the void.
 Since 2026-09-24 there is a world around the arena (FR-MAP-140, ADR-0031), so the void is gone; the stop stays, as the maintainer agreed with the plan for it, because a frame spent on the island is still a frame not spent on the room, and the free camera of debug mode shows the island to anyone who wants to look.
+Catching up since 2026-09-29, when the maintainer found the camera jerking during the snake's lunge (FR-SNAKE-270): a camera held to the region moved exactly as the head did, starting and stopping with it at seven metres a second. Eased, a quick movement of the head leaves the region for a moment and the frame follows it smoothly. First eased at a steady rate, the camera still jerked on the phone: it set off at full speed the moment the head left the region. It follows as a critically damped spring since, which sets off from rest, slows as it arrives and does not overshoot, at a spring time of 0.3 s (ADR-0055).
 
 ### FR-VIEW-140 — A floor above the head is drawn see-through
 
@@ -190,19 +191,20 @@ The stick where the thumb lands and the meal anywhere on the right since 2026-09
 status: implemented
 verification: D
 derives_from: [FR-VIEW-050]
-depends_on: [FR-SNAKE-090]
+depends_on: [FR-SNAKE-090, FR-SNAKE-270]
 refines: []
 conflicts_with: []
-code: [Sources/CrawlCall/View/Controls.swift, Sources/CrawlCall/GameSession.swift, Sources/CrawlCall/CrawlCallApp.swift, Sources/CrawlCall/Config/Interface.swift]
-tests: [Tests/CrawlCallTests/ControlsTests.swift]
+code: [Sources/CrawlCall/View/Controls.swift, Sources/CrawlCall/GameSession.swift, Sources/CrawlCall/CrawlCallApp.swift, Sources/CrawlCall/Config/Interface.swift, Sources/CrawlCall/Game.swift]
+tests: [Tests/CrawlCallTests/ControlsTests.swift, Tests/CrawlCallTests/LungeTests.swift]
 created: 2026-09-23
 ```
 
-While a match is running, the system **shall** show the eat button as available exactly when the head has reached a bot it could begin eating.
+While a match is running, the system **shall** show the eat button as available exactly when asking to eat would begin a lunge (FR-SNAKE-270).
 
 **Rationale.** A control that does nothing looks broken. Tried on the device on 2026-09-23: the button was pressed with nothing in reach, nothing happened, and nothing on screen said why — the reading was "the button does not work", which is what any player would conclude.
 Reach is a distance the player cannot see and would otherwise have to guess at; the button is where they are already looking when they want to eat, so that is where it is said.
 "Exactly when" is the whole of it: a button that lit up hopefully would be the same lie in the other direction.
+Since 2026-09-29 the reach it says is the lunge's (FR-SNAKE-270), and a meal or a lunge under way leaves it dark, since a touch then begins nothing.
 
 ## Readability
 
@@ -301,6 +303,7 @@ While the snake is consuming a bot, the system **shall** show the bot swallowed 
 **Rationale.** Concept §2: in stylisation eating stops being a problem — funny and without gore; F-030 is the boundary this serves.
 
 **Partial, and how.** What is built is the half that says a meal is happening: the bot is drawn towards the head and shrinks as what is left of it does, and it is gone from the screen when it is gone from the match. The bulge travelling down the body and the boots at the mouth need a snake that is more than a chain of spheres: since ADR-0022 a bot is a figure with boots on it, drawn shrinking into the floor at the head, but there is no mouth for the boots to stick out of until the snake has one. What is already true is the part that matters for the boundary: whole, no dismemberment, nothing red.
+Since 2026-09-25 the bulge travels down the body (FR-VIEW-280), and since 2026-09-29 a living bot goes into a head reared over it from the top down, its boots the last of it to show (FR-VIEW-320). What is still partial is a body, eaten as the maintainer asked "simply": it is pulled in along the ground shrinking, with no boots at the mouth.
 Found by playing on 2026-09-23: with none of this, a meal was a bot standing still and then standing still for ever, because the view went on drawing a body the match had already removed.
 
 ### FR-VIEW-110 — The snake squashes and stretches
@@ -654,3 +657,41 @@ While a bot is a body, the system **shall** draw its figure lying on its back wh
 
 **Rationale.** The maintainer, 2026-09-26: the squads fight, and the dead stay on the map (FR-BOT-320). A body drawn standing would read as a bot that stopped; lying, it reads as one that fell.
 On its back with its feet where it stood, the figure tipped over backwards, so that the body lies on the cell the bot died in (ADR-0044).
+
+### FR-VIEW-310 — A lunge is drawn as a cartoon
+
+```yaml
+status: implemented
+verification: D
+derives_from: [FR-SNAKE-270]
+depends_on: [FR-VIEW-260]
+refines: []
+conflicts_with: []
+code: [Sources/CrawlCall/View/LungePose.swift, Sources/CrawlCall/View/SnakeEntity.swift, Sources/CrawlCall/GameSession.swift, Sources/CrawlCall/Config/Drawing.swift]
+tests: [Tests/CrawlCallTests/LungeTests.swift]
+created: 2026-09-29
+```
+
+While the snake lunges, the system **shall** draw its head turned to the prey, squashed through the wind-up and stretched along the way it goes while it moves, and squashed for a moment where the lunge ends.
+
+**Rationale.** The maintainer, 2026-09-29, chose the wind-up, the stretch and the squash from the options put: anticipation, stretch and squash are what make a movement half a second long read on screen, and they keep it as soft and toy-like as concept §2 draws the whole game.
+Only the head is drawn so; the body follows it as it follows any movement (FR-VIEW-250). Judged on the phone.
+
+### FR-VIEW-320 — A living bot is swallowed from the top down
+
+```yaml
+status: implemented
+verification: D
+derives_from: [FR-VIEW-100, FR-SNAKE-280]
+depends_on: [FR-SNAKE-090, FR-VIEW-250, FR-VIEW-260]
+refines: []
+conflicts_with: []
+code: [Sources/CrawlCall/View/SwallowPose.swift, Sources/CrawlCall/View/SnakeEntity.swift, Sources/CrawlCall/View/BotEntity.swift, Sources/CrawlCall/View/BotCut.metal, Sources/CrawlCall/GameSession.swift, Sources/CrawlCall/Config/Drawing.swift, Sources/CrawlCall/Config/Resource.swift]
+tests: [Tests/CrawlCallTests/SwallowTests.swift, Tests/CrawlCallTests/MatchEndTests.swift]
+created: 2026-09-29
+```
+
+While the snake eats a living bot, the system **shall** draw its head reared over the bot and tipped mouth-down, coming down over the bot, which stays where it stands, as the meal goes, the bot's boots the last of it to show, with the head rising at the meal's start and lowering after it rather than at once.
+
+**Rationale.** The maintainer, 2026-09-29: after the coil (FR-SNAKE-280) the snake swallows its prey from the top down; a body is simply eaten, as it was. It is the "boots protruding from the mouth" FR-VIEW-100 asked for from the start, for living prey.
+Only the drawing: the head stays where the coil left it in the match (FR-SNAKE-090), and the body is drawn from the reared head down to that point, as a neck. The head comes down over the bot and not the bot up into the head, the maintainer's correction of the first build on the phone the same day. What is inside the head is not drawn: the figure stands where it stood, as big as it was, cut away above the mouth. First drawn squashed down to what was still outside, it read on the phone as the bot pressed into the ground rather than into the snake. Tipped short of straight down, so that the eyes still show. Judged on the phone.

@@ -3,7 +3,7 @@
 // a file with an unknown key is rejected at load rather than silently defaulted,
 // which is what `Schema` is for.
 //
-// implements: IF-SNAKE-010, IF-MAP-020, IF-VIEW-020, IF-BOT-010, FR-SNAKE-220, FR-BOT-280, FR-BOT-050, FR-BOT-290, FR-BOT-260, FR-BOT-310
+// implements: IF-SNAKE-010, IF-MAP-020, IF-VIEW-020, IF-BOT-010, FR-SNAKE-220, FR-BOT-280, FR-BOT-050, FR-BOT-290, FR-BOT-260, FR-BOT-310, FR-SNAKE-270, FR-SNAKE-280
 import Foundation
 
 // MARK: - Snake (IF-SNAKE-010)
@@ -33,6 +33,17 @@ struct SnakeConfiguration: Decodable, Equatable {
     /// How fast the snake chews through a living bot: its health, taken out at this
     /// rate, is what a live meal lasts (FR-SNAKE-100).
     let eatingDamagePerSecond: Double
+    /// The snake's lunge at what it would eat (FR-SNAKE-270): how far from the head a
+    /// bot may be, in metres; how long the head is held back first, in seconds; and how
+    /// fast it then goes, in metres a second.
+    struct Lunge: Decodable, Equatable { let reach: Double; let windUp: Double; let speed: Double }
+    let lunge: Lunge
+    /// The coil round a living bot the lunge has reached (FR-SNAKE-280): how long the
+    /// head takes to go once round it, in seconds; how far from where it stands the bot
+    /// may be shoved to make room for the coil, in metres; and how fast, in metres a
+    /// second.
+    struct Coil: Decodable, Equatable { let seconds: Double; let shoveReach: Double; let shoveSpeed: Double }
+    let coil: Coil
     let abilities: Abilities
 
     // The sapper ability takes no parameter — FR-SNAKE-140 sets a partition to its
@@ -45,6 +56,8 @@ struct SnakeConfiguration: Decodable, Equatable {
         "damagePerSegment": .value,
         "bodyEatingDuration": .value,
         "eatingDamagePerSecond": .value,
+        "lunge": .object(["reach": .value, "windUp": .value, "speed": .value]),
+        "coil": .object(["seconds": .value, "shoveReach": .value, "shoveSpeed": .value]),
         "abilities": .object([
             "assault": .object(["dashSpeed": .value, "dashDuration": .value]),
             "scout": .object(["duration": .value]),
@@ -116,6 +129,10 @@ struct ViewConfiguration: Decodable, Equatable {
     let sunElevation: Double
     let sunAzimuth: Double
     let centralRegion: CentralRegion
+    /// Seconds the camera takes to catch up with the head, as the time of a critically
+    /// damped spring, so that a quick movement of the head is not a jolt of the frame
+    /// (FR-VIEW-020).
+    let cameraFollowLag: Double
     /// Metres beyond the body itself at which a module stops hiding the snake and
     /// starts being drawn through (FR-VIEW-150).
     let seeThroughMargin: Double
@@ -144,6 +161,7 @@ struct ViewConfiguration: Decodable, Equatable {
         "sunElevation": .value,
         "sunAzimuth": .value,
         "centralRegion": .object(["width": .value, "height": .value]),
+        "cameraFollowLag": .value,
         "seeThroughMargin": .value,
         "visibilityRadius": .value,
         "stragglerDistance": .value,

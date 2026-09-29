@@ -9,7 +9,7 @@
 //
 // Its skin is green and spotted (FR-VIEW-270), painted by `SnakeSkin.metal`.
 //
-// implements: FR-SNAKE-010, FR-SNAKE-020, FR-VIEW-250, FR-VIEW-260, FR-VIEW-270, FR-VIEW-280
+// implements: FR-SNAKE-010, FR-SNAKE-020, FR-VIEW-250, FR-VIEW-260, FR-VIEW-270, FR-VIEW-280, FR-VIEW-310, FR-VIEW-320
 import Foundation
 import Metal
 import RealityKit
@@ -34,7 +34,7 @@ enum SnakeEntity {
         head.name = EntityName.head
         for eye in eyes(radius: radius) { head.addChild(eye) }
         root.addChild(head)
-        if let body = body(forPoints: segments, radius: radius) {
+        if let body = body(forPoints: segments + SnakeShape.neckPoints, radius: radius) {
             root.addChild(body)
         }
         return root
@@ -44,9 +44,12 @@ enum SnakeEntity {
     /// tail. A body too small for the tail is made again at the tail's length, so that
     /// a snake that has eaten is drawn as long as it is (FR-VIEW-250).
     @MainActor
-    static func update(_ entity: Entity, from snake: Snake, radius: Double, lumps: [Digestion.Lump] = []) {
+    static func update(_ entity: Entity, from snake: Snake, radius: Double, lumps: [Digestion.Lump] = [],
+                       lunge: LungePose = LungePose(), swallow: SwallowPose = SwallowPose()) {
         guard let head = entity.children.first(where: { $0.name == EntityName.head }) else { return }
-        head.position = SIMD3(Float(snake.head.x), Float(snake.head.y), Float(snake.head.z))
+        // Reared over a living bot it is swallowing, or where the match has it
+        // (FR-VIEW-320).
+        let drawn = swallow.head(from: snake.head)
         // What lights the head lights its eyes: the app lights the snake's own parts, and
         // the eyes hang on the head (FR-VIEW-130).
         if let light = head.components[ImageBasedLightReceiverComponent.self] {
@@ -56,16 +59,52 @@ enum SnakeEntity {
                 }
             }
         }
-        // The head faces the way it last moved: from the first point of the tail to it,
-        // level. Where that is no way at all — nothing behind it yet, or straight down
-        // a drop — it keeps facing as it did (FR-VIEW-260).
+        // The way the head faces, level, as an angle round the vertical: the way it last
+        // moved, from the first point of the tail to it. Where that is no way at all —
+        // nothing behind it yet, or straight down a drop — as it faced before, read off
+        // the head without the tip a meal gives it (FR-VIEW-260).
+        let before = head.orientation.act(SIMD3<Float>(0, 0, 1))
+        var yaw = atan2(Double(before.x), Double(before.z))
         if let behind = snake.tail.first {
             let way = SIMD2(snake.head.x - behind.x, snake.head.z - behind.z)
-            if simd_length(way) > SnakeShape.samePoint {
-                head.orientation = simd_quatf(angle: Float(atan2(way.x, way.y)), axis: SIMD3(0, 1, 0))
-            }
+            if simd_length(way) > SnakeShape.samePoint { yaw = atan2(way.x, way.y) }
         }
-        let shape = SnakeBody.tube(head: snake.head, tail: snake.tail, radius: radius, lumps: lumps)
+        // A lunge turns the head to its prey, and squashes and stretches it along the
+        // way it faces (FR-VIEW-310).
+        if let aim = lunge.aim {
+            let way = SIMD2(aim.x - snake.head.x, aim.z - snake.head.z)
+            if simd_length(way) > SnakeShape.samePoint { yaw = atan2(way.x, way.y) }
+        }
+        // Reared over the bot it swallows (FR-VIEW-320), it turns as it rises to face away
+        // from its neck, over the bot, and the neck bends over behind it, so that the end
+        // of the body the head is comes down on the bot mouth-first and the eyes on top
+        // of it stay on top of it.
+        var neck: [SIMD3<Double>] = []
+        if simd_distance(drawn, snake.head) > SnakeShape.samePoint {
+            if let over = swallow.over {
+                let away = SIMD2(over.x - snake.head.x, over.z - snake.head.z)
+                if simd_length(away) > SnakeShape.samePoint {
+                    let turn = atan2(sin(atan2(away.x, away.y) - yaw), cos(atan2(away.x, away.y) - yaw))
+                    yaw += turn * swallow.eased
+                }
+            }
+            let back = SIMD3(-sin(yaw), .zero, -cos(yaw))
+            let bend = (back * cos(swallow.tip) + SIMD3(.zero, Fraction.whole, .zero) * sin(swallow.tip))
+                * Swallowing.neckBend * swallow.eased
+            if simd_length(bend) > SnakeShape.samePoint { neck.append(drawn + bend) }
+            neck.append(snake.head)
+        }
+        let orientation = simd_quatf(angle: Float(yaw), axis: SIMD3(0, 1, 0))
+            * simd_quatf(angle: Float(swallow.tip), axis: SIMD3(1, 0, 0))
+        head.orientation = orientation
+        head.scale = SIMD3(Float(lunge.across), Float(lunge.across), Float(lunge.along))
+        // The head's own centre on the body's end, whichever way it is tipped: the body is
+        // drawn round its line lifted by its radius (`SnakeBody.tube`), and the eyes hang
+        // that radius up from the entity in its own frame.
+        let lift = radius * SnakeShape.headShare
+        let centre = SIMD3<Float>(drawn + SIMD3(.zero, lift, .zero))
+        head.position = centre - orientation.act(SIMD3(0, Float(lift) * Float(lunge.across), 0))
+        let shape = SnakeBody.tube(head: drawn, tail: neck + snake.tail, radius: radius, lumps: lumps)
 
         var model = entity.children.first { $0.name == EntityName.body } as? ModelEntity
         if let mesh = model?.model?.mesh.lowLevelMesh,
@@ -73,7 +112,9 @@ enum SnakeEntity {
             model?.removeFromParent()
             model = nil
         }
-        if model == nil, let made = body(forPoints: snake.tail.count, radius: radius) {
+        // Points to spare, for the neck of a head reared over its meal, so that a meal
+        // does not make the body again (FR-VIEW-320).
+        if model == nil, let made = body(forPoints: snake.tail.count + SnakeShape.neckPoints, radius: radius) {
             // Whatever lights the head lights the new body, as it lit the old one: the
             // app gives the scene's light to every part of the snake it is handed.
             if let light = head.components[ImageBasedLightReceiverComponent.self] {

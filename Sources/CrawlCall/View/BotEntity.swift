@@ -9,9 +9,10 @@
 // A figure's origin is at its feet, so that it stands on the floor as placed and
 // shrinks into the floor as it is swallowed.
 //
-// implements: FR-VIEW-290, FR-VIEW-060, FR-VIEW-070, FR-VIEW-100, FR-VIEW-190, FR-BOT-280, FR-VIEW-300
+// implements: FR-VIEW-290, FR-VIEW-060, FR-VIEW-070, FR-VIEW-100, FR-VIEW-190, FR-BOT-280, FR-VIEW-300, FR-VIEW-320
 import CoreGraphics
 import Foundation
+import Metal
 import RealityKit
 import UIKit
 
@@ -60,7 +61,7 @@ enum BotEntity {
     /// bodies rather than the bots for that reason: what is gone is what has no bot
     /// left to answer for it.
     @MainActor
-    static func update(_ entity: Entity, from bots: [Bot], gaits: [Int: Gait] = [:]) {
+    static func update(_ entity: Entity, from bots: [Bot], gaits: [Int: Gait] = [:], eaten: Int? = nil) {
         var standing: [String: Bot] = [:]
         for bot in bots { standing[EntityName.numbered(EntityName.bot, bot.id)] = bot }
         for body in entity.children {
@@ -69,6 +70,9 @@ enum BotEntity {
                 continue
             }
             body.isEnabled = true
+            // A figure cut by a meal it is no longer the prey of is drawn whole again
+            // (FR-VIEW-320) — in a new match above all.
+            if bot.id != eaten { uncut(body) }
             // Everything a meal did to this body is undone here, and not only where
             // it stood: a bot swallowed in the last match came back in the next one
             // the size the last bite had left it (found in play on 2026-09-23,
@@ -118,6 +122,69 @@ enum BotEntity {
         let z = bot(body.position.z, towards: Float(head.z), by: Float(gone))
         body.position = SIMD3(x, Float(head.y), z)
     }
+
+    /// Draws a living bot being swallowed from the top down (FR-VIEW-320): where it
+    /// stands and as big as it is, with what is above the mouth of the head coming down
+    /// over it cut away — inside the head — so that its boots are the last of it to show.
+    /// `left` is what remains of it, as for `swallow`.
+    @MainActor
+    static func slurp(_ entity: Entity, prey id: Int, feet: SIMD3<Double>, height: Double, left: Double) {
+        guard let body = entity.children.first(where: { $0.name == EntityName.numbered(EntityName.bot, id) }) else { return }
+        let pose = SwallowPose.prey(at: feet, height: height, gone: Fraction.whole - left)
+        body.scale = .one
+        body.position = SIMD3<Float>(pose.position)
+        let cut = Float(pose.position.y + height * pose.height)
+        for model in models(in: body) {
+            guard var materials = model.model?.materials else { continue }
+            if !model.components.has(UncutMaterials.self) {
+                model.components.set(UncutMaterials(materials: materials))
+                materials = materials.map { cutting($0) ?? $0 }
+            }
+            model.model?.materials = materials.map { material in
+                guard var cutting = material as? CustomMaterial else { return material }
+                cutting.custom.value = SIMD4(cut, .zero, .zero, .zero)
+                return cutting
+            }
+        }
+    }
+
+    /// The materials a part of a figure was drawn with before a meal cut it
+    /// (FR-VIEW-320), kept to be put back.
+    struct UncutMaterials: Component {
+        let materials: [any Material]
+    }
+
+    /// A figure drawn whole again, with the materials it had before it was cut.
+    @MainActor
+    static func uncut(_ body: Entity) {
+        for model in models(in: body) {
+            guard let kept = model.components[UncutMaterials.self] else { continue }
+            model.model?.materials = kept.materials
+            model.components.remove(UncutMaterials.self)
+        }
+    }
+
+    /// Every part of a figure that is drawn, down to the legs hung from the hips.
+    @MainActor
+    private static func models(in entity: Entity) -> [ModelEntity] {
+        entity.children.flatMap { child -> [ModelEntity] in
+            ((child as? ModelEntity).map { [$0] } ?? []) + models(in: child)
+        }
+    }
+
+    /// A material drawn as `material` below the cut and not at all above it: the cut's
+    /// shader, and an opacity threshold that throws out what the shader clears
+    /// (RealityKitSurfaceShader.h, iOS 27.0 SDK). Nil where Metal or the function is not
+    /// there, and the figure is then drawn whole.
+    @MainActor
+    private static func cutting(_ material: any Material) -> CustomMaterial? {
+        guard let library = cutLibrary else { return nil }
+        let shader = CustomMaterial.SurfaceShader(named: Resource.botCutShader, in: library)
+        guard var cut = try? CustomMaterial(from: material, surfaceShader: shader) else { return nil }
+        cut.opacityThreshold = Float(Swallowing.cutThreshold)
+        return cut
+    }
+    private static let cutLibrary: (any MTLLibrary)? = MTLCreateSystemDefaultDevice()?.makeDefaultLibrary()
 
     private static func bot(_ from: Float, towards target: Float, by part: Float) -> Float {
         from + (target - from) * min(part, Float(Fraction.whole))

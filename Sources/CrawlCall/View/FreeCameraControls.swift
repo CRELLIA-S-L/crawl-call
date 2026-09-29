@@ -1,7 +1,8 @@
 // The free camera's controls, in debug mode only (FR-TOOL-070, ADR-0023): two fingers
 // pinched zoom it, dragged pan it and twisted turn it, three fingers dragged up or down
 // tilt it, and a button puts it back on the snake. Never one finger, which is the
-// stick's.
+// stick's, and never two thumbs on the two halves of the screen, which are the stick
+// and a meal.
 //
 // Debug mode is the Debug build configuration: in any other build the modifier passes
 // the view through untouched, the gestures and the button are not compiled, and the
@@ -52,10 +53,20 @@ struct FreeCameraControls: ViewModifier {
 }
 
 #if DEBUG
-/// Lets the gestures run together, so that one hand can pinch, drag and twist at once.
+/// Lets the gestures run together, so that one hand can pinch, drag and twist at once;
+/// and keeps them from starting on two thumbs, one on each half of the screen, which
+/// are the stick and a meal under them (FR-VIEW-050, ADR-0051).
 final class TogetherWithOthers: NSObject, UIGestureRecognizerDelegate {
     func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer,
                            shouldRecognizeSimultaneouslyWith other: UIGestureRecognizer) -> Bool { true }
+
+    func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
+        guard let view = gestureRecognizer.view else { return true }
+        let across = (Int.zero..<gestureRecognizer.numberOfTouches).map {
+            Double(gestureRecognizer.location(ofTouch: $0, in: view).x)
+        }
+        return !TouchScheme.spanBothHalves(across, width: Double(view.bounds.width))
+    }
 }
 
 struct PinchToZoom: UIGestureRecognizerRepresentable {

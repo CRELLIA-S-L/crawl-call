@@ -141,6 +141,31 @@ enum SceneView {
         return moved
     }
 
+    /// The focus moved over `seconds` towards where it should be as a critically damped
+    /// spring moves, carrying its `velocity` across the ground from frame to frame
+    /// (FR-VIEW-020): it sets off gently rather than at once at speed, slows as it
+    /// arrives, and does not overshoot a target that has stopped. `lag` is the spring's
+    /// time, 2/ω: about how long it takes to catch up. The height is taken at once, as
+    /// `focus(keeping:)` takes it; no lag is no spring.
+    ///
+    /// The step is the spring's exact solution over the frame, x(t) = (c + (v + ωc)t)e^(−ωt)
+    /// for c the gap to the target, so a long frame does not throw it off.
+    static func followed(from focus: SIMD3<Double>, velocity: inout SIMD2<Double>, to target: SIMD3<Double>,
+                         seconds: Double, lag: Double) -> SIMD3<Double> {
+        guard lag > .zero else {
+            velocity = .zero
+            return target
+        }
+        let omega = Geometry.bothSides / lag
+        let t = max(seconds, .zero)
+        let decay = exp(-omega * t)
+        let gap = SIMD2(focus.x - target.x, focus.z - target.z)
+        let pull = (velocity + gap * omega) * t
+        velocity = (velocity - pull * omega) * decay
+        let moved = SIMD2(target.x, target.z) + (gap + pull) * decay
+        return SIMD3(moved.x, target.y, moved.y)
+    }
+
     /// Keeps a window of `2 * half` inside the range, or centres it where the range
     /// is narrower than the window and nothing can keep it inside.
     private static func stopped(_ value: Double, half: Double,

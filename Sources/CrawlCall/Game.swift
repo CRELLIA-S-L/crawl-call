@@ -5,7 +5,7 @@
 // or a key: the schemes produce intents (FR-VIEW-050), the logic consumes them, and
 // neither knows about the other.
 //
-// implements: FR-BOT-060, FR-BOT-320, FR-BOT-050, FR-BOT-220, FR-BOT-230, FR-BOT-240, FR-BOT-260, FR-BOT-310, FR-VIEW-030, FR-VIEW-170, FR-VIEW-190, FR-SNAKE-010, FR-SNAKE-030, FR-BOT-020, FR-BOT-150, FR-SNAKE-060, FR-SNAKE-070, FR-SNAKE-090, FR-SCORE-140, FR-SCORE-150, INV-BOT-010, FR-VIEW-230, FR-TOOL-230, FR-MAP-150, FR-MAP-180, FR-MAP-170, FR-SNAKE-220
+// implements: FR-SNAKE-270, FR-SNAKE-280, FR-VIEW-160, FR-BOT-060, FR-BOT-320, FR-BOT-050, FR-BOT-220, FR-BOT-230, FR-BOT-240, FR-BOT-260, FR-BOT-310, FR-VIEW-030, FR-VIEW-170, FR-VIEW-190, FR-SNAKE-010, FR-SNAKE-030, FR-BOT-020, FR-BOT-150, FR-SNAKE-060, FR-SNAKE-070, FR-SNAKE-090, FR-SCORE-140, FR-SCORE-150, INV-BOT-010, FR-VIEW-230, FR-TOOL-230, FR-MAP-150, FR-MAP-180, FR-MAP-170, FR-SNAKE-220
 import Foundation
 
 struct Game {
@@ -49,6 +49,13 @@ struct Game {
     private let modules: [NavigationGraph.Node: String]
     /// The meal under way, if there is one (FR-SNAKE-090).
     private(set) var eating: Eating?
+    /// The lunge under way, if there is one (FR-SNAKE-270).
+    private(set) var lunge: Lunge?
+    /// The coil round a living bot under way, if there is one (FR-SNAKE-280).
+    private(set) var coil: Coil?
+    /// When the last lunge ended, on its prey or not, in the match's seconds: what the
+    /// drawing squashes the head by for a moment after (FR-VIEW-310).
+    private(set) var landedAt: Double?
     /// The shots still being drawn, each with what is left of its time (FR-VIEW-170).
     private(set) var shots: [Shot] = []
 
@@ -89,7 +96,7 @@ struct Game {
             // Used by the debug viewer's teleport (FR-TOOL-100), not by a match.
             break
         case .eat:
-            beginEatingWhatTheHeadHasReached()
+            lungeAtWhatIsWithinReach()
         }
     }
 
@@ -104,15 +111,18 @@ struct Game {
                         configuration: world.configurations.snake)
     }
 
-    /// What the eat intent means: the nearest bot the head has actually reached.
-    ///
-    /// Reach is the head's own body plus half a cell — touching, give or take the
-    /// grid. No requirement gives a number for it; this one is said out loud rather
-    /// than passed off as a rule, and it moves into the tuning configuration the day
-    /// somebody wants to feel it out.
-    static func preyWithinReach(of head: SIMD3<Double>, among bots: [Bot],
-                                tuning: TuningConfiguration) -> Int? {
-        let reach = tuning.bodyRadius + tuning.navigationGraphCellSize * Geometry.half
+    /// How near the head has to be to a bot to have reached it, where a lunge ends in a
+    /// meal (FR-SNAKE-270): the head's own body plus half a cell — touching, give or
+    /// take the grid. No requirement gives a number for it; this one is said out loud
+    /// rather than passed off as a rule, and it moves into the tuning configuration the
+    /// day somebody wants to feel it out.
+    static func biteReach(_ tuning: TuningConfiguration) -> Double {
+        tuning.bodyRadius + tuning.navigationGraphCellSize * Geometry.half
+    }
+
+    /// The nearest bot within `reach` metres of the head: what the eat intent lunges
+    /// at, with the lunge reach (FR-SNAKE-270).
+    static func preyWithinReach(of head: SIMD3<Double>, among bots: [Bot], reach: Double) -> Int? {
         var nearest: Int?
         var best = Double.infinity
         for bot in bots {
@@ -162,10 +172,73 @@ struct Game {
         }
     }
 
-    private mutating func beginEatingWhatTheHeadHasReached() {
-        guard let prey = Game.preyWithinReach(of: snake.head, among: bots,
-                                              tuning: world.configurations.tuning) else { return }
-        begin(eating: prey)
+    /// Whether the eat intent would begin a lunge now (FR-SNAKE-270): no meal and no
+    /// lunge under way, the snake not in the air off a ledge (FR-SNAKE-220), and a bot
+    /// within the lunge reach. What the eat button shows (FR-VIEW-160).
+    var canLunge: Bool { lungePrey() != nil }
+
+    private func lungePrey() -> Int? {
+        guard eating == nil, lunge == nil, coil == nil, snake.drop == nil else { return nil }
+        return Game.preyWithinReach(of: snake.head, among: bots, reach: world.configurations.snake.lunge.reach)
+    }
+
+    private mutating func lungeAtWhatIsWithinReach() {
+        guard let prey = lungePrey() else { return }
+        lunge = Lunge(prey: prey, configuration: world.configurations.snake.lunge)
+    }
+
+    /// One frame of a lunge (FR-SNAKE-270): the head held through the wind-up, then
+    /// sent at the prey where it is now, by the snake's own movement rules. It ends in
+    /// a meal where the head reaches the prey, and where it does not in its time, or
+    /// goes off a ledge, or the prey is gone, it ends where the head is.
+    private mutating func advanceLunge(seconds: Double) {
+        guard var current = lunge, let prey = bots.first(where: { $0.id == current.prey }) else {
+            endLunge()
+            return
+        }
+        let result = Lunge.step(&current, snake: &snake, prey: prey.position, seconds: seconds,
+                                bite: Game.biteReach(world.configurations.tuning), over: surfaces)
+        lunge = current
+        switch result {
+        case .going: break
+        case .reached:
+            endLunge()
+            // A living bot is coiled round first (FR-SNAKE-280); a body is eaten at once.
+            if prey.isAlive { beginCoil(round: prey) } else { begin(eating: prey.id) }
+        case .missed:
+            endLunge()
+        }
+    }
+
+    private mutating func beginCoil(round prey: Bot) {
+        let configuration = world.configurations.snake.coil
+        let radius = world.configurations.tuning.bodyRadius * Geometry.bothSides
+        let room = Coil.room(around: prey.position, floor: prey.floor, radius: radius,
+                             reach: configuration.shoveReach, over: surfaces)
+        coil = Coil(prey: prey.id, at: prey.position, head: snake.head, radius: radius, room: room,
+                    configuration: configuration)
+    }
+
+    /// One frame of a coil (FR-SNAKE-280): the bot shoved towards where the ring fits
+    /// round it, and the head sent on round it. Once round, the meal begins; a bot that
+    /// is gone meanwhile ends it with nothing.
+    private mutating func advanceCoil(seconds: Double) {
+        guard var current = coil, let index = bots.firstIndex(where: { $0.id == current.prey }) else {
+            coil = nil
+            return
+        }
+        Coil.step(&current, snake: &snake, prey: &bots[index].position, seconds: seconds,
+                  shoveSpeed: world.configurations.snake.coil.shoveSpeed, over: surfaces)
+        coil = current
+        if current.isDone {
+            coil = nil
+            begin(eating: current.prey)
+        }
+    }
+
+    private mutating func endLunge() {
+        lunge = nil
+        landedAt = elapsed
     }
 
     /// What one step did that the frame record counts (FR-TOOL-230): how many bots
@@ -197,6 +270,13 @@ struct Game {
             } else if eating?.isFinished == true || !bots.contains(where: { $0.id == eating!.prey }) {
                 finishEating()
             }
+        } else if coil != nil {
+            // FR-SNAKE-280: the head goes round the bot, and the stick is not heard.
+            advanceCoil(seconds: seconds)
+        } else if lunge != nil {
+            // FR-SNAKE-270: the head goes where the lunge sends it, and the stick is
+            // not heard until it is over.
+            advanceLunge(seconds: seconds)
         } else {
             snake.advance(direction: held,
                           speed: world.configurations.snake.baseSpeed,
@@ -236,12 +316,12 @@ struct Game {
                 }
             }
         }
-        // Whatever is being eaten stays where it is: it resists by shooting, not by
-        // walking out of the snake's mouth.
+        // Whatever is being eaten, or coiled round to be (FR-SNAKE-280), stays where it
+        // is: it resists by shooting, not by walking out of the snake's mouth.
         Execution.walk(&bots, seconds: seconds, world: world,
                        routeOrder: slots.order(among: bots, snake: body,
                                                configuration: world.configurations.bot),
-                       holding: eating?.prey)
+                       holding: eating?.prey ?? coil?.prey)
 
         // FR-SCORE-150: prey is finite and there are no reinforcements, so the arena
         // running out of living bots is an end of its own. Living, not present: a bot

@@ -545,3 +545,44 @@ Where the ground the snake crawls on has a gap narrower than its body, the syste
 
 **Rationale.** The maintainer, 2026-09-25, after the snake fell from the balcony wherever its head crossed a corner of a cell: the rule that the snake does not go where it does not fit holds for gaps in the floor and joints between cells as much as for gaps between walls, and it holds for every part of the snake, not only its head. Across, not stopped at, by the maintainer's choice: a gap too narrow to fall into is a gap to crawl over. A gap as wide as the body or wider is a ledge, dropped from as FR-SNAKE-220 says; leaping one is Q-410.
 "Its body" is the tuning's body radius (IF-MAP-020).
+
+### FR-SNAKE-270 — The snake lunges at what it would eat
+
+```yaml
+status: implemented
+verification: T
+derives_from: []
+depends_on: [FR-SNAKE-010, FR-SNAKE-090, FR-SNAKE-220, IF-SNAKE-010]
+refines: []
+conflicts_with: []
+code: [Sources/CrawlCall/Snake/Lunge.swift, Sources/CrawlCall/Game.swift, Sources/CrawlCall/Config/Configurations.swift, Sources/CrawlCall/Config/Motion.swift]
+tests: [Tests/CrawlCallTests/LungeTests.swift]
+created: 2026-09-29
+```
+
+When the player asks to eat while a bot is within the lunge reach of the head, the system **shall** hold the head for the wind-up and then move it towards that bot by the snake's movement rules, at the lunge speed on average and slowing to a stop, for no longer than crossing the lunge reach at that speed takes, beginning the coil of FR-SNAKE-280 if the head reaches a living bot, the meal if it reaches a body, and stopping where it is if it reaches neither.
+
+**Rationale.** The maintainer, 2026-09-29: eating begins at some distance from the prey, and the snake throws itself at it, still as a cartoon. A bot runs faster than the snake crawls (INV-SNAKE-020), so a meal that waited for the head to touch its prey was a meal only of the slow and the dead; the concept already counts on a lunge, since the sniper ability is "a precise lunge at distance" (FR-SNAKE-160).
+The maintainer chose the numbers and the rules: a reach of 1.5 m, three cells; a lunge that can miss, when the prey gets away or behind something in the lunge's time; the head going by the snake's movement rules, sliding along what stops it and going off a ledge as it would crawling (FR-SNAKE-010, FR-SNAKE-220); and a wind-up before it.
+Reaching the bot is the head's body plus half a cell, the distance the meal began at before; off a ledge the lunge ends, since nothing is eaten in the air. How it is built is ADR-0052.
+Slowing to a stop since the maintainer's second look on the phone the same day: at a steady speed the head stopped dead, which read as a twitch.
+
+### FR-SNAKE-280 — The snake coils round a living bot before eating it
+
+```yaml
+status: implemented
+verification: T
+derives_from: [FR-SNAKE-270]
+depends_on: [FR-SNAKE-010, FR-SNAKE-020, FR-SNAKE-090, FR-SNAKE-100, IF-SNAKE-010]
+refines: []
+conflicts_with: []
+code: [Sources/CrawlCall/Snake/Coil.swift, Sources/CrawlCall/Game.swift, Sources/CrawlCall/Config/Configurations.swift, Sources/CrawlCall/Config/Motion.swift]
+tests: [Tests/CrawlCallTests/CoilTests.swift, Tests/CrawlCallTests/LungeTests.swift]
+created: 2026-09-29
+```
+
+When the snake's lunge reaches a living bot, the system **shall** move the head once round that bot, by the snake's movement rules, over the coil time the snake configuration sets, holding the bot in place except to shove it, no faster than the shove speed and no further than the shove reach the same configuration sets, to where the body can go round it, and then begin the meal.
+
+**Rationale.** The maintainer, 2026-09-29, on the phone: the lunge alone was not expressive, and the snake should throw itself at its prey, coil round it once and swallow it; a body is simply eaten. Asked, the maintainer chose a coil that is the head's real movement, with the body lying round the bot because it follows the head's path (FR-SNAKE-020), and not a picture over a body that stays where it was; the bot shoved out of a corner where the ring does not fit, "not in one frame, of course"; the coil adding its time to the meal's rather than taking it from it; and the bot shooting back meanwhile as it does while it is eaten (FR-SNAKE-100).
+The ring's radius is two bodies, the head's and the bot's side by side; how the room is found is ADR-0053.
+
