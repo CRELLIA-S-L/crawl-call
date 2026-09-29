@@ -594,8 +594,9 @@ tests: [Tests/CrawlCallTests/IslandMapTests.swift]
 created: 2026-09-25
 ```
 
-Where a map's setting ends its ground in water, the system **shall** draw the water with the opacity the setting sets.
+Where a map's setting ends its ground in water, the system **shall** draw the water with the opacity the setting sets, casting no shadow.
 
 **Rationale.** The maintainer, 2026-09-25, with FR-MAP-270, of which it was the second half until the checker had the two obligations split: the floor under the water is what makes the shallows, and water one cannot see through hides it.
-Judged on the phone, and measured there in frames, because the water now blends with what is under it across most of the frame. How the opacity reaches the water's shader is ADR-0039; the water casts no shadow, since the floor is seen through it, ADR-0050.
+Judged on the phone, and measured there in frames, because the water now blends with what is under it across most of the frame. How the opacity reaches the water's shader is ADR-0039.
+No shadow since 2026-09-29, the maintainer's call on the phone: the floor is seen through the water, and the water's own shadow on it showed through as a toothed edge along the foam and darkened the shallows (ADR-0050).
 The water beyond the island's grid, laid out as slabs, is drawn by its tops alone: a slab's sides show through water one can see through, as a line wherever two slabs meet.
