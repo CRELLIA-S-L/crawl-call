@@ -30,7 +30,7 @@ It is also what keeps a prompt change honest (FR-TOOL-170), so a later part that
 ```yaml
 status: built
 carries: [Sources/CrawlCall/Config, Sources/CrawlCall/Launch.swift, Sources/CrawlCall/CrawlCallApp.swift]
-requirements: [IF-SNAKE-010, IF-MAP-020, IF-VIEW-020, IF-BOT-010, FR-TOOL-200]
+requirements: [IF-SNAKE-010, IF-MAP-020, IF-VIEW-020, IF-BOT-010, IF-SCORE-010, FR-TOOL-200]
 depends_on: []
 interface: a bundle in, one `Configurations` value or one named error out
 ```
@@ -139,7 +139,7 @@ Whether a match is still on belongs here for the same reason: the two ends (FR-S
 ```yaml
 status: built
 carries: [Sources/CrawlCall/Bot]
-requirements: [FR-BOT-010, FR-BOT-020, FR-BOT-030, FR-BOT-050, FR-BOT-060, FR-BOT-080, FR-BOT-090, FR-BOT-118, FR-BOT-150, FR-BOT-160, FR-BOT-165, FR-BOT-200, FR-BOT-210, FR-BOT-140, FR-BOT-320, FR-BOT-330, FR-BOT-340, FR-VIEW-170, INV-BOT-010, INV-BOT-030]
+requirements: [FR-BOT-010, FR-BOT-020, FR-BOT-030, FR-BOT-050, FR-BOT-060, FR-BOT-080, FR-BOT-090, FR-BOT-110, FR-BOT-115, FR-BOT-118, FR-BOT-150, FR-BOT-160, FR-BOT-165, FR-BOT-170, FR-BOT-200, FR-BOT-210, FR-BOT-140, FR-BOT-320, FR-BOT-330, FR-BOT-340, FR-BOT-350, FR-BOT-360, FR-BOT-370, FR-BOT-380, FR-VIEW-170, INV-BOT-010, INV-BOT-020, INV-BOT-030, FR-BOT-120, FR-BOT-180, FR-BOT-190, FR-SCORE-070, FR-SCORE-080, FR-SCORE-090, FR-SCORE-100, FR-SCORE-125, FR-SCORE-130]
 depends_on: [E-020, E-040]
 interface: a world, where the snake is and a frame's time in; squads that see, decide, walk and fire out
 ```

@@ -1,8 +1,9 @@
 // Who thinks, and how often. Deliberation runs on a clock of its own — a fixed step
 // the frame rate cannot speed up or slow down (FR-BOT-150) — and the slots that step
-// hands out go to whoever has waited longest with the most at stake (FR-BOT-160).
+// hands out go to whoever has waited longest with the most at stake (FR-BOT-160),
+// after any bot something has just happened to (FR-BOT-170).
 //
-// implements: FR-BOT-150, FR-BOT-160
+// implements: FR-BOT-150, FR-BOT-160, FR-BOT-170
 import Foundation
 
 struct Slots {
@@ -42,10 +43,15 @@ struct Slots {
     /// Importance is three for a bot that has seen the snake or stands within the
     /// interrupt distance of it, one for the rest — the "at least three times" the
     /// requirement asks for, taken at its word rather than stretched.
+    ///
+    /// The bots named `ahead` — interrupted (FR-BOT-170) — come before the queue, by
+    /// id, and the rest follow in its order.
     mutating func next(among bots: [Bot], snake: [SIMD3<Double>],
-                       configuration: BotConfiguration) -> [Int] {
+                       configuration: BotConfiguration, ahead: Set<Int> = []) -> [Int] {
         for bot in bots where waited[bot.id] == nil { waited[bot.id] = Scheduling.firstWait }
-        let chosen = order(among: bots, snake: snake, configuration: configuration)
+        let queue = order(among: bots, snake: snake, configuration: configuration)
+        let first = queue.filter { ahead.contains($0) }.sorted()
+        let chosen = (first + queue.filter { !ahead.contains($0) })
             .prefix(max(.zero, configuration.perFrameSlotMaximum))
         for bot in bots {
             waited[bot.id] = chosen.contains(bot.id)

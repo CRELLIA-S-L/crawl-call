@@ -72,6 +72,23 @@ enum Looking {
     static let ways = 16
 }
 
+/// How a bot places the snake's head on the graph (FR-BOT-115): a share of a floor
+/// by which a head a hair under a floor's level is still on that floor, so that a
+/// rounding in its height does not drop it to the one below.
+enum Placing {
+    static let floorSlack = 1e-6
+}
+
+/// Numbers of a bot with nothing else to do (FR-BOT-360, FR-BOT-370, FR-BOT-380): how
+/// near, in metres, a bot must come to where an enemy was last seen to count it gone —
+/// two cells, standing where the enemy stood; and how much a way round
+/// counts that turns to a threat, against one that only turns away from where the bot
+/// looks now — twice, so that a threat is looked at whenever it is not already.
+enum Idle {
+    static let arrived = 1.0
+    static let threatShare = 2.0
+}
+
 /// Numbers of firing (FR-BOT-060).
 enum Firing {
     /// A shot spends one round of the magazine.

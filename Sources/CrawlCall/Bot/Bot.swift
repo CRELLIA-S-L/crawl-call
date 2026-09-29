@@ -2,7 +2,7 @@
 // personality its archetype gave it. No RealityKit here — this is the part a test
 // can read, the same split as `Snake`.
 //
-// implements: FR-BOT-030, FR-BOT-050, FR-BOT-060, FR-BOT-280, FR-BOT-290, FR-BOT-320, FR-BOT-340
+// implements: FR-BOT-030, FR-BOT-050, FR-BOT-060, FR-BOT-280, FR-BOT-290, FR-BOT-320, FR-BOT-340, FR-BOT-380
 import Foundation
 
 /// The two sides. Which one the player is nearer to is never a property of a squad:
@@ -45,6 +45,9 @@ struct Bot: Equatable {
     var knowledge = Knowledge()
     /// When it last looked over the map round it, in seconds of the match (FR-BOT-230).
     var lastLook = -Double.infinity
+    /// When it last fired, in seconds of the match: a slot given ahead of the queue
+    /// (FR-BOT-170) lets it decide, not fire faster than once a deliberation period.
+    var lastShot = -Double.infinity
     /// Whether any part of the snake is in what it knows (FR-BOT-050).
     var knowsSnake: Bool { knowledge.knowsSnake }
     /// What it decided to do at its last slot, and what is left of the way there.
@@ -59,6 +62,9 @@ struct Bot: Equatable {
     /// Which way it looks while it stands, once it has chosen: away from the wall in
     /// front of it (FR-BOT-340). Nil while it walks, and until it stops.
     var lookout: Double?
+    /// When it last turned to look round, standing with nothing to do (FR-BOT-380), in
+    /// seconds of the match.
+    var lastLookRound = -Double.infinity
 
     /// Whether it is alive: a bot with no health left is a body, which does nothing
     /// (FR-BOT-320).

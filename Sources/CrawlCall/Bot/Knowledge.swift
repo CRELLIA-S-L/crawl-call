@@ -3,7 +3,7 @@
 // A bot acts on this and on nothing else (FR-BOT-220): the truth is the world's, the
 // record is the bot's.
 //
-// implements: FR-BOT-050, FR-BOT-220, FR-BOT-230, FR-BOT-240, FR-BOT-250, FR-BOT-260, FR-BOT-310, FR-BOT-320, FR-BOT-330
+// implements: FR-BOT-050, FR-BOT-360, FR-BOT-220, FR-BOT-230, FR-BOT-240, FR-BOT-250, FR-BOT-260, FR-BOT-310, FR-BOT-320, FR-BOT-330
 import Foundation
 
 struct Knowledge: Equatable {
@@ -42,6 +42,10 @@ struct Knowledge: Equatable {
     var outline: Set<NavigationGraph.Node> = []
     var ways: Set<NavigationGraph.Node> = []
     var enemyStart: Area?
+    /// The enemy bots it went to find where they were last seen and did not, and
+    /// when (FR-BOT-360): a sighting of one no later than that is not believed again,
+    /// its own or its squad's.
+    var cleared: [Int: Double] = [:]
 
     /// Whether any part of the snake is in the record.
     var knowsSnake: Bool { !snake.isEmpty }
@@ -68,6 +72,13 @@ struct Knowledge: Equatable {
     /// Where the enemy bots were last seen, as far as the record goes.
     var enemyPoints: [SIMD3<Double>] {
         enemies.keys.sorted().compactMap { enemies[$0]?.point }
+    }
+
+    /// Records that an enemy was not where it was last seen, found out at `time`
+    /// (FR-BOT-360).
+    mutating func notFound(enemy id: Int, at time: Double) {
+        cleared[id] = time
+        enemies[id] = nil
     }
 
     /// Records an enemy seen dead at `time`: it leaves the enemies the bot fights.
@@ -108,5 +119,7 @@ struct Knowledge: Equatable {
         // of it standing is heard no more.
         for (id, time) in other.fallen where time <= before { saw(fallen: id, at: time) }
         for id in fallen.keys { enemies[id] = nil }
+        // Nor is a sighting it has already gone to and found empty (FR-BOT-360).
+        for (id, time) in cleared where (enemies[id]?.time ?? .infinity) <= time { enemies[id] = nil }
     }
 }

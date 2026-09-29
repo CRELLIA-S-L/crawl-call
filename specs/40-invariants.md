@@ -68,14 +68,14 @@ In every frame, the system **shall** update aim, movement, animation and collisi
 ### INV-BOT-020 — Squads never remove bodies
 
 ```yaml
-status: deferred
+status: implemented
 verification: T
 derives_from: []
 depends_on: [FR-SCORE-110]
 refines: []
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Bot/Execution.swift]
+tests: [Tests/CrawlCallTests/AwarenessTests.swift]
 created: 2026-09-21
 ```
 

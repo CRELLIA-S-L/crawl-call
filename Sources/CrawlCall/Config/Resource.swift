@@ -26,7 +26,7 @@ enum Resource {
 
     /// The configuration files the game reads at start, by the names their files have.
     enum Configuration: String {
-        case snake, tuning, view, bot, match
+        case snake, tuning, view, bot, match, scoring
     }
 
     /// The surface shader that cuts a hole in a module, by its function's name in the

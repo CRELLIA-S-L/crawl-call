@@ -5,7 +5,7 @@
 // or a key: the schemes produce intents (FR-VIEW-050), the logic consumes them, and
 // neither knows about the other.
 //
-// implements: FR-SNAKE-270, FR-SNAKE-280, FR-VIEW-160, FR-BOT-060, FR-BOT-320, FR-BOT-050, FR-BOT-220, FR-BOT-230, FR-BOT-240, FR-BOT-260, FR-BOT-310, FR-VIEW-030, FR-VIEW-170, FR-VIEW-190, FR-SNAKE-010, FR-SNAKE-030, FR-BOT-020, FR-BOT-150, FR-SNAKE-060, FR-SNAKE-070, FR-SNAKE-090, FR-SCORE-140, FR-SCORE-150, INV-BOT-010, FR-VIEW-230, FR-TOOL-230, FR-MAP-150, FR-MAP-180, FR-MAP-170, FR-SNAKE-220
+// implements: FR-SNAKE-270, FR-SNAKE-280, FR-VIEW-160, FR-BOT-060, FR-BOT-320, FR-BOT-050, FR-BOT-220, FR-BOT-230, FR-BOT-240, FR-BOT-260, FR-BOT-310, FR-VIEW-030, FR-VIEW-170, FR-VIEW-190, FR-SNAKE-010, FR-SNAKE-030, FR-BOT-020, FR-BOT-150, FR-BOT-170, FR-BOT-380, FR-SCORE-130, FR-SCORE-070, FR-BOT-180, FR-SNAKE-060, FR-SNAKE-070, FR-SNAKE-090, FR-SCORE-140, FR-SCORE-150, INV-BOT-010, FR-VIEW-230, FR-TOOL-230, FR-MAP-150, FR-MAP-180, FR-MAP-170, FR-SNAKE-220
 import Foundation
 
 struct Game {
@@ -41,6 +41,13 @@ struct Game {
     }
     /// The bots' own clock, which the frame rate does not set (FR-BOT-150).
     private var slots = Slots()
+    /// What happened to the bots that will not wait for their turn (FR-BOT-170), and
+    /// the bots waiting for the slot it gives them.
+    private var interrupts = Interrupts()
+    private(set) var interrupted: [Int: Interrupt] = [:]
+    /// What each squad knows of the snake, and what is on its way to raising it
+    /// (FR-SCORE-130).
+    private(set) var stealth = Stealth()
     /// Seconds of the match played: when a sighting was made (ADR-0032).
     private(set) var elapsed: Double = .zero
     /// When the squads last passed on what they had seen (FR-BOT-310).
@@ -258,6 +265,7 @@ struct Game {
         // A match that is over stays where it stopped: the arena is still drawn, and
         // nothing in it moves again until a new one is started (FR-VIEW-190).
         guard !isPaused, outcome == nil else { return report }
+        let before = Interrupts.glance(bots)
         if eating != nil {
             // FR-SNAKE-090: the head stays where it is until the meal is over, which
             // is what makes eating a choice with a price. Live prey is chewed through
@@ -296,11 +304,24 @@ struct Game {
         }
         let steps = slots.steps(after: seconds, period: world.configurations.bot.deliberationPeriod)
         let clock = ContinuousClock()
-        for _ in Int.zero..<steps {
+        // A bot something happened to thinks in this frame, whether or not the clock
+        // gives one a step (FR-BOT-170): a step of its own when the clock gives none,
+        // the front of the queue when it does.
+        let alone = steps == .zero && !interrupted.isEmpty
+        for _ in Int.zero..<(alone ? 1 : steps) {
             // Only the living are given a turn to think (FR-BOT-320).
-            let holders = slots.next(among: bots.filter(\.isAlive), snake: body, configuration: world.configurations.bot)
+            let living = bots.filter(\.isAlive)
+            let ahead = Set(interrupted.keys)
+            let holders = alone
+                ? slots.next(among: living.filter { ahead.contains($0.id) }, snake: body,
+                             configuration: world.configurations.bot)
+                : slots.next(among: living, snake: body, configuration: world.configurations.bot, ahead: ahead)
+            let served = ahead.intersection(holders)
+            for id in served { interrupted[id] = nil }
             let deciding = clock.now
-            let volley = Execution.deliberate(&bots, slots: holders, world: world, now: elapsed)
+            let known = stealth
+            let volley = Execution.deliberate(&bots, slots: holders, world: world, now: elapsed, interrupted: served,
+                                              awareness: { known.of($0) })
             report.deliberationTime += clock.now - deciding
             report.deliberations += holders.count
             shots += volley.shots
@@ -321,7 +342,17 @@ struct Game {
         Execution.walk(&bots, seconds: seconds, world: world,
                        routeOrder: slots.order(among: bots, snake: body,
                                                configuration: world.configurations.bot),
-                       holding: eating?.prey ?? coil?.prey)
+                       holding: eating?.prey ?? coil?.prey, now: elapsed)
+        // Found after the frame's shots and meals, and served in the next frame.
+        for (id, reason) in interrupts.find(before: before, after: bots, meal: eating?.prey ?? coil?.prey,
+                                            plan: world.plan, configuration: world.configurations.bot, now: elapsed)
+        where interrupted[id] == nil {
+            interrupted[id] = reason
+        }
+        stealth.step(before: before, after: bots, prey: eating?.prey ?? coil?.prey, plan: world.plan,
+                     bot: world.configurations.bot, scoring: world.configurations.scoring, now: elapsed)
+        // A bot that died or was eaten before its slot came has nothing left to decide.
+        interrupted = interrupted.filter { entry in bots.contains { $0.id == entry.key && $0.isAlive } }
 
         // FR-SCORE-150: prey is finite and there are no reinforcements, so the arena
         // running out of living bots is an end of its own. Living, not present: a bot

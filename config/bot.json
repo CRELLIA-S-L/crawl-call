@@ -187,7 +187,7 @@
       "magazine": 30
     }
   },
-  "overrideDistance": 6.0,
+  "overrideDistance": 5.0,
   "interruptDistance": 8.0,
   "groupingDistance": 5.0,
   "hysteresisMargin": 0.1,
@@ -201,12 +201,16 @@
     "wounded": 1.0,
     "obedience": 1.0,
     "mercy": 1.0,
-    "empty": 1.2
+    "empty": 1.2,
+    "height": 1.0,
+    "snakePath": 1.0,
+    "together": 1.0
   },
   "figureHeight": 1.12,
   "eyeHeight": 0.875,
   "turnSpeed": 540,
   "fieldOfView": 140,
+  "lookRoundInterval": 2.0,
   "acceleration": 16,
   "snakeForgottenAfter": 0,
   "enemyForgottenAfter": 0,

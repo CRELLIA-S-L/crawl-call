@@ -203,7 +203,9 @@ final class ExecutionTests: XCTestCase {
         var bots = [try bot(0, at: here, in: world)]
         let target = SIMD3(Double(here.x) * cell + cell, 0, Double(here.z) * cell)
         XCTAssertEqual(Execution.deliberate(&bots, slots: [0], snake: [target], world: world).damage, 0)
-        XCTAssertNil(try element(0, of: bots).action)
+        // With nothing it knows of to fire at, whatever it does is not firing; left idle, it
+        // goes to look round (FR-BOT-370).
+        if case .fire = try element(0, of: bots).action { XCTFail("fired at a snake it has not seen") }
     }
 
     func testAnEmptyMagazineIsReloadedRatherThanFired() throws {

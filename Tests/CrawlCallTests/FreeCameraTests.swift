@@ -202,7 +202,8 @@ final class FreeCameraTests: XCTestCase {
             let view = try Configurations.decode(ViewConfiguration.self, named: "view", schema: ViewConfiguration.schema,
                                                  from: JSONSerialization.data(withJSONObject: json))
             configurations = Configurations(snake: configurations.snake, tuning: configurations.tuning, view: view,
-                                            bot: configurations.bot, match: configurations.match)
+                                            bot: configurations.bot, match: configurations.match,
+                                            scoring: configurations.scoring)
         }
         let world = World(configurations: configurations, kit: base.kit, map: base.map, setting: base.setting, graph: base.graph, plan: base.plan)
         let built = SceneBuilder.scene(for: world.plan, view: world.configurations.view)

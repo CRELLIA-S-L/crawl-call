@@ -124,50 +124,52 @@ When the consumed bot held the commander role or was a heavy or a medic, the sys
 ### FR-SCORE-070 — A witness is a bot with line of sight during the window
 
 ```yaml
-status: deferred
+status: implemented
 verification: T
 derives_from: []
 depends_on: [FR-SNAKE-090]
 refines: []
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Bot/Awareness.swift, Sources/CrawlCall/Game.swift]
+tests: [Tests/CrawlCallTests/AwarenessTests.swift]
 created: 2026-09-21
 ```
 
 When an eating is in progress, the system **shall** record as its witness every living bot that has line of sight to the eating point at any moment from the start of eating until the witness window of the scoring configuration — between 2 and 3 seconds — after it ends.
 
 **Rationale.** Concept §6.1: stealth is about who saw the eating, not whether the victim knew; the window makes dragging prey into shadow count, otherwise strictly instant eating is optimal.
+Seeing the eating point is seeing it as a bot sees anything, and a meal is seen from the coil on (ADR-0060).
 
 ### FR-SCORE-080 — Arriving right after counts as witnessing
 
 ```yaml
-status: deferred
+status: implemented
 verification: T
 derives_from: [FR-SCORE-070]
 depends_on: []
 refines: [FR-SCORE-070]
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Bot/Awareness.swift]
+tests: [Tests/CrawlCallTests/AwarenessTests.swift]
 created: 2026-09-21
 ```
 
 When a living bot gains line of sight to the eating point within the late-arrival window of the scoring configuration after the eating ends, the system **shall** record it as a witness.
 
 **Rationale.** Concept §6.1: one who reached the spot a second later has effectively understood everything.
+Followed together with FR-SCORE-070 over the longer of the two windows (ADR-0060).
 
 ### FR-SCORE-090 — A witness reports after a delay
 
 ```yaml
-status: deferred
+status: implemented
 verification: T
 derives_from: [FR-SCORE-070]
 depends_on: [FR-SCORE-130]
 refines: []
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Bot/Awareness.swift]
+tests: [Tests/CrawlCallTests/AwarenessTests.swift]
 created: 2026-09-21
 ```
 
@@ -179,20 +181,21 @@ The delay is what creates the task of silencing the only witness before the repo
 ### FR-SCORE-100 — A consumed witness never reports
 
 ```yaml
-status: deferred
+status: implemented
 verification: T
 derives_from: [FR-SCORE-090]
 depends_on: []
 refines: [FR-SCORE-090]
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Bot/Awareness.swift]
+tests: [Tests/CrawlCallTests/AwarenessTests.swift]
 created: 2026-09-21
 ```
 
 If a witness is consumed before its report delay elapses, the system **shall not** raise its squad's awareness on its account.
 
 **Rationale.** Concept §6.1: the one case where the snake profits from eating fast and dirty.
+A witness killed before it reports says nothing either: a body does nothing (FR-BOT-320, ADR-0060).
 
 ## Bodies
 
@@ -236,14 +239,14 @@ A body seen from beyond the inspection distance changes nothing, and no requirem
 ### FR-SCORE-125 — A vanished body raises the alarm
 
 ```yaml
-status: deferred
+status: implemented
 verification: T
 derives_from: []
 depends_on: [FR-SCORE-130, INV-BOT-020]
 refines: []
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Bot/Awareness.swift]
+tests: [Tests/CrawlCallTests/AwarenessTests.swift]
 created: 2026-09-21
 ```
 
@@ -251,20 +254,21 @@ When a bot reaches the last known position of a dead squadmate and no body is wi
 
 **Rationale.** Concept §6.2, §6.3: the squad learns of the snake from bodies disappearing, not from anyone seeing it — a kill leaves a corpse, a disappearance has no explanation, and that frightens more than contact.
 Numbered between 120 and 130 because it belongs beside the body rules and the awareness scale was already numbered.
+Where the squad last knew a squadmate to be is where it stood when it fell or vanished (ADR-0060).
 
 ## Awareness
 
 ### FR-SCORE-130 — Each squad has an awareness state
 
 ```yaml
-status: deferred
+status: implemented
 verification: T
 derives_from: []
 depends_on: [FR-BOT-020]
 refines: []
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Bot/Awareness.swift, Sources/CrawlCall/Game.swift]
+tests: [Tests/CrawlCallTests/AwarenessTests.swift]
 created: 2026-09-21
 ```
 

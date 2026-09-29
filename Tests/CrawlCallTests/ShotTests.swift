@@ -79,7 +79,7 @@ final class ShotTests: XCTestCase {
                           "the shipped eye height is half a metre already, so this proves nothing")
         let world = World(configurations: Configurations(snake: base.configurations.snake, tuning: base.configurations.tuning,
                                                          view: base.configurations.view, bot: configuration,
-                                                         match: base.configurations.match),
+                                                         match: base.configurations.match, scoring: base.configurations.scoring),
                           kit: base.kit, map: base.map, setting: base.setting, graph: base.graph, plan: base.plan)
         let here = try element(0, of: cells(in: world))
         let cell = world.configurations.tuning.navigationGraphCellSize

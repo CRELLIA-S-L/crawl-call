@@ -14,6 +14,7 @@ Q-210 — whether the game targets iPadOS — was settled on 2026-09-24 by the m
 Q-270 — the world around the arena, agreed and then built — was closed on 2026-09-25, when the maintainer judged the island, its sky and its birds on the phone and found them good; the sky showed grey-blue there rather than the configured blue, which the maintainer left as it is for now, and Q-350 holds why and what could change it.
 Q-400 — the corners of every drawn primitive are sharp — was opened and settled on 2026-09-25: the maintainer had every drawn box rounded as a trial, looked at it on the phone, and kept it, grooves between neighbouring modules included; it became FR-VIEW-240, and ADR-0037 holds what it cost and why RealityKit's own rounded box was not used. The bots' figures went on to Q-420.
 Q-420 and Q-450 — the bots' figures and the shrubs drawn with RealityKit's own rounded box and sphere, tens of thousands of triangles each — were settled on 2026-09-29 by ADR-0046, when the frame rate on the phone fell and the figures were found to be four fifths of the scene's triangles: both are drawn with the game's own shapes, the figures at their own radii.
+Q-320 — a bot with nothing happening around it stands still — was settled on 2026-09-29 by the maintainer: an idle bot advances on the enemy, goes to see what it has not seen, and looks round towards where a threat may be; it became FR-BOT-360, FR-BOT-370 and FR-BOT-380, and ADR-0059 holds how they are chosen between.
 What remains is what a decision inside the repository cannot close.
 
 ### Q-120 — The name is chosen; the search that clears it is not done
@@ -74,12 +75,6 @@ What remains is what a decision inside the repository cannot close.
 - **What diverged:** nothing yet. The concept and the specification give a bot a weapon with a magazine and nothing else; grenades appear in neither. FR-BOT-080 names what a bot has to fight with as an input, and today that is its rounds alone.
 - **Still needed:** a decision on the equipment a bot carries — grenades, and what else — what each does in the arena, to the snake, to cover (FR-MAP-030) and to the other squad, and how much of it a bot has; then its requirements, its numbers in the bot configuration (IF-BOT-010) and its actions beside those of FR-BOT-200.
 
-### Q-320 — A bot with nothing happening around it stands still
-
-- **Found:** the maintainer on 2026-09-25, while settling what a bot weighs in choosing an action (ADR-0032).
-- **What diverged:** nothing in the specification: with no enemy, no snake, no order and no danger in what it knows, no action that moves a bot scores anything — reloading and healing a squadmate still can — and a bot stays where it is. The maintainer wants motives that keep an idle bot alive to the player — idle curiosity, for one — so that bots do not simply stand in place when nothing is going on.
-- **Still needed:** what those motives are and what a bot does under them — wandering, looking round, drifting towards something it has not seen — with how they rank against the rest of FR-BOT-080's inputs, since a motive for the quiet must never outweigh a threat; then a requirement for each. The knowledge a bot keeps (ADR-0032) gives curiosity something to read: the cells it has not yet seen.
-
 ### Q-330 — A way straight up for towers and lookouts waits for destruction
 
 - **Found:** the maintainer on 2026-09-25, replacing the stair that went straight up in one cell with a flight of steps (ADR-0033).
@@ -101,7 +96,7 @@ What remains is what a decision inside the repository cannot close.
 ### Q-360 — Where the squads are born is not the map's to say yet
 
 - **Found:** the maintainer on 2026-09-25, while settling that the map names the snake's spawn points (FR-MAP-180).
-- **What diverged:** nothing: the squads are placed by computation — the red squad as far from the snake as the graph reaches, the blue squad as far from both as the grouping distance keeps them (`Squads.spawn`). The maintainer wants the map to name the area each squad is born in, later.
+- **What diverged:** nothing: the squads are placed by computation — at the island's two ends (FR-BOT-350, ADR-0056), the red squad at the end farther from the snake (`Squads.spawn`). The maintainer wants the map to name the area each squad is born in, later.
 - **Still needed:** how a map names a squad's area — cells, a rectangle, a named zone — and whether the computed placement stays as the fallback for a map that names none; then its requirement beside FR-MAP-180 and the header line in IF-MAP-010.
 
 ### Q-370 — Should the text maps be turned into Reality Composer Pro 3 scenes when the app is built?
@@ -145,3 +140,9 @@ What remains is what a decision inside the repository cannot close.
 - **What diverged:** the first frame of a match came 0.48–0.58 s after launch in six runs before the water had a shader, 0.97–1.46 s in four with the waves (FR-GREENHOLM-070), and 1.0–1.57 s in three with the floor under the water as well (FR-MAP-270, FR-MAP-280) — so the floor is not clearly a part of it; once running, the match holds 60 frames a second. No requirement bounds the time from launch to a match on screen.
 - **The question:** what the time goes to — compiling the two surface shaders when their materials are first made, building the floor's height field and the distance field under it, or the transparent water's first draw — and whether it matters.
 - **Still needed:** a cold launch measured with the shaders and without, and with the floor and without, each run straight after the other on a cool phone that nobody touches; whether a second launch, with the shaders compiled once, is faster; and whether a bound on the time to a match belongs with NFR-PERF-010.
+
+### Q-460 — Deliberation takes several milliseconds a frame in play
+
+- **Found:** on the phone on 2026-09-29, in two one-minute recordings of the maintainer playing, once the squads came to know the snake (FR-SCORE-130) and to go about with nothing to do (FR-BOT-360, FR-BOT-370): deliberation reached 6.5 ms and then 11.8 ms in a frame, its 99th percentile 2.6 and 1.9 ms, where a minute recorded before squads had a state had shown 1.1 ms at most.
+- **What diverged:** NFR-PERF-020 asks for at most 0.5 ms a frame; it is `deferred`, and nothing holds the time to it yet. Frames were late no more often than before (67 and 94 of about 3,500), so the frame rate held; the cost is the budget's. On the simulator the choice of where an idle bot goes took under a tenth of a millisecond once it weighed every cell instead of walking to them, and the walk from the snake's head over the graph is a quarter of one; which part dominates in play was not measured, and the two recordings were of different matches.
+- **Still needed:** a recording of the same match with and without the player, the parts of deliberation timed in the worst frames, and NFR-PERF-020 built — the budget that defers slots to later frames — once it is known what fills it. The maintainer put it off on 2026-09-29.

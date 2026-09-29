@@ -202,7 +202,7 @@ final class MatchRecordTests: XCTestCase {
         let match = try Configurations.decode(MatchConfiguration.self, named: "match", schema: MatchConfiguration.schema,
                                               from: JSONSerialization.data(withJSONObject: json))
         let c = base.configurations
-        return World(configurations: Configurations(snake: c.snake, tuning: c.tuning, view: c.view, bot: c.bot, match: match),
+        return World(configurations: Configurations(snake: c.snake, tuning: c.tuning, view: c.view, bot: c.bot, match: match, scoring: c.scoring),
                      kit: base.kit, map: base.map, setting: base.setting, graph: base.graph, plan: base.plan)
     }
 

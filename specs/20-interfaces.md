@@ -49,20 +49,21 @@ When the game starts, the system **shall** read from the tuning configuration �
 ### IF-SCORE-010 — Scoring configuration
 
 ```yaml
-status: deferred
+status: partial
 verification: T
 derives_from: []
 depends_on: []
 refines: []
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Config/Configurations.swift, Sources/CrawlCall/Config/Configurations+Load.swift]
+tests: [Tests/CrawlCallTests/AwarenessTests.swift]
 created: 2026-09-21
 ```
 
 When the game starts, the system **shall** read from the scoring configuration — the JSON file `config/scoring.json` (ADR-0012) — the body and live-prey base values; the stealth multipliers for open, hidden and perfect; the balance multiplier; the target-value multipliers for commander, heavy and medic; the witness window, the late-arrival window, the report delay and the inspection distance.
 
 **Rationale.** Concept §6: the axes are the design; their weights are tuning.
+`partial` because only the witness window, the late-arrival window, the report delay and the inspection distance are read: the values and multipliers wait for the scoring they set (FR-SCORE-010).
 
 ### IF-BOT-010 — Bot and match configuration
 
@@ -78,7 +79,7 @@ tests: [Tests/CrawlCallTests/ConfigurationTests.swift, Tests/CrawlCallTests/Laun
 created: 2026-09-21
 ```
 
-When the game starts, the system **shall** read from the bot configuration — `config/bot.json` (ADR-0012) — per archetype its base personality weights, their allowed ranges, run speed, weapon damage, maximum health, magazine size and detection range; the override, interrupt and grouping distances; the hysteresis margin; the deliberation period and per-frame slot maximum; the collapse panic increment; the fear of an unhurt bot; the weight of each term in an action's score (FR-BOT-080); the height a bot's figure is drawn at and the height of its eyes; the speed a bot turns at (FR-BOT-280), its acceleration (FR-BOT-290) and the angle of its field of view (FR-BOT-050); the times after which a bot forgets a sighting of the snake and one of an enemy (FR-BOT-260), and each squad's share delay (FR-BOT-310); and from the match configuration — `config/match.json` — the squad size, the archetypes eligible for the commander role, the commander interval, the truce switch and truce-break threshold, the state token budget and the maximum response tokens, and the thermal degradation threshold and factor — the threshold `serious` by default.
+When the game starts, the system **shall** read from the bot configuration — `config/bot.json` (ADR-0012) — per archetype its base personality weights, their allowed ranges, run speed, weapon damage, maximum health, magazine size and detection range; the override, interrupt and grouping distances; the hysteresis margin; the deliberation period and per-frame slot maximum; the collapse panic increment; the fear of an unhurt bot; the weight of each term in an action's score (FR-BOT-080); the height a bot's figure is drawn at and the height of its eyes; the speed a bot turns at (FR-BOT-280), its acceleration (FR-BOT-290) and the angle of its field of view (FR-BOT-050); how often a bot with nothing to do looks round (FR-BOT-380); the times after which a bot forgets a sighting of the snake and one of an enemy (FR-BOT-260), and each squad's share delay (FR-BOT-310); and from the match configuration — `config/match.json` — the squad size, the archetypes eligible for the commander role, the commander interval, the truce switch and truce-break threshold, the state token budget and the maximum response tokens, and the thermal degradation threshold and factor — the threshold `serious` by default.
 
 **Rationale.** Concept §8 (base weights), §9.2 (thresholds, scheduling), §14 (squad size), §15 (degradation).
 The degradation threshold defaults to `serious` on the spike's measurement (ADR-0001): a twenty-minute run on the iPhone 16 Pro reached `fair` at fourteen minutes and never `serious`, holding 60 fps and a 2.7 s mean commander latency throughout — so `fair` as the threshold would stretch the intervals of a session that was losing nothing, while `serious` is the first state the spike never reached and therefore the first whose cost is unmeasured.

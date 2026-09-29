@@ -9,7 +9,7 @@
 // rather than an accident: no requirement gives a weapon a rate of fire, and
 // inventing one would put a number in this file that no interface carries.
 //
-// implements: FR-BOT-060, FR-VIEW-170, INV-BOT-010, FR-BOT-165, FR-MAP-150, FR-BOT-270, FR-BOT-280, FR-BOT-290, FR-BOT-300, FR-BOT-220, FR-BOT-310, FR-BOT-320, FR-BOT-330, FR-BOT-340
+// implements: FR-BOT-060, FR-BOT-110, FR-BOT-115, FR-BOT-170, FR-BOT-360, FR-BOT-370, FR-BOT-380, FR-BOT-180, FR-BOT-190, INV-BOT-020, FR-VIEW-170, INV-BOT-010, FR-BOT-165, FR-MAP-150, FR-BOT-270, FR-BOT-280, FR-BOT-290, FR-BOT-300, FR-BOT-220, FR-BOT-310, FR-BOT-320, FR-BOT-330, FR-BOT-340
 import Foundation
 
 enum Execution {
@@ -26,8 +26,22 @@ enum Execution {
     /// is to fire fires once. The damage to the snake is returned rather than applied,
     /// because the snake is not the bots' to change; the damage to an enemy bot is
     /// applied here, since the bots are (FR-BOT-060).
-    static func deliberate(_ bots: inout [Bot], slots: [Int], world: World, now: Double = .zero) -> Volley {
+    ///
+    /// A bot in `interrupted` holds a slot given ahead of the queue (FR-BOT-170): it
+    /// chooses as any other, but fires only where a deliberation period has passed
+    /// since its last shot, so that being hit is a reason to decide and not a faster
+    /// trigger finger (ADR-0057).
+    ///
+    /// `awareness` is what each squad knows of the snake (FR-SCORE-130); left out, the
+    /// snake is taken as known.
+    static func deliberate(_ bots: inout [Bot], slots: [Int], world: World, now: Double = .zero,
+                           interrupted: Set<Int> = [],
+                           awareness: (Squad) -> Awareness = { _ in .confirmed }) -> Volley {
         var volley = Volley()
+        // The snake's paths from where each bot takes its head to be, walked once a
+        // step for every bot that takes it to be in the same cell (FR-BOT-115).
+        var paths: [NavigationGraph.Node: [NavigationGraph.Node: Int]] = [:]
+        let cellSize = world.configurations.tuning.navigationGraphCellSize
         for id in slots {
             // A body decides nothing (FR-BOT-320).
             guard let index = bots.firstIndex(where: { $0.id == id }), bots[index].isAlive else { continue }
@@ -36,6 +50,17 @@ enum Execution {
                                                    graph: world.graph,
                                                    configuration: world.configurations.bot,
                                                    cellSize: world.configurations.tuning.navigationGraphCellSize)
+            // Come to where it last saw an enemy, or into the enemy's starting area, and
+            // found nobody there, it knows that much more (FR-BOT-360).
+            let seenNow = Set(bots[index].knowledge.enemies(seenAt: now).map(\.id))
+            for (enemy, sighting) in bots[index].knowledge.enemies
+            where !seenNow.contains(enemy) && Perception.metres(bots[index].position, sighting.point) <= Idle.arrived {
+                bots[index].knowledge.notFound(enemy: enemy, at: now)
+            }
+            if let area = bots[index].knowledge.enemyStart,
+               Perception.metres(bots[index].position, area.centre) <= area.radius {
+                bots[index].knowledge.enemyStart = nil
+            }
             // A bot acts on what it knows and on nothing else (FR-BOT-220): the snake
             // where it last saw it, and fires only at what it sees now; the cells it
             // may hide or run to are the cells it knows.
@@ -46,6 +71,34 @@ enum Execution {
             situation.enemies = knowledge.enemyPoints
             situation.enemiesInView = knowledge.enemies(seenAt: now)
             situation.allies = bots.filter { $0.squad == bots[index].squad && $0.isAlive }
+            situation.awareness = awareness(bots[index].squad)
+            // For a calm squad the snake does not exist beyond the override distance: not
+            // as something to fire at, nor as something to hide or run from (FR-BOT-180,
+            // FR-BOT-120).
+            if situation.awareness == .calm {
+                let position = bots[index].position
+                let close = { (point: SIMD3<Double>) in
+                    Perception.metres(position, point) <= world.configurations.bot.overrideDistance
+                }
+                situation.snake = situation.snake.filter(close)
+                situation.inView = situation.inView.filter(close)
+            }
+            // Where it believes the enemy to be: the latest sighting, or where they began
+            // (FR-BOT-360); ties go to the lower id, so that a match is the same twice over.
+            situation.enemyBelief = knowledge.enemies.keys.sorted()
+                .compactMap { id in knowledge.enemies[id] }
+                .reduce(nil as Knowledge.Sighting?) { best, next in next.time > (best?.time ?? -.infinity) ? next : best }?
+                .point ?? knowledge.enemyStart?.centre
+            // Where it takes the snake's head to be: the part nearest the head it has
+            // seen, as its knowledge numbers them from the head (FR-BOT-110, FR-BOT-115).
+            if let head = situation.snake.first {
+                situation.snakeHead = head
+                if let node = Deliberation.cell(of: head, graph: world.graph, cellSize: cellSize,
+                                                floorHeight: world.kit.floorHeight) {
+                    if paths[node] == nil { paths[node] = Squads.distances(in: world.graph, from: node) }
+                    situation.fromHead = paths[node] ?? [:]
+                }
+            }
 
             let chosen = Deliberation.choose(for: bots[index], in: situation)
             bots[index].action = chosen
@@ -62,8 +115,11 @@ enum Execution {
                     struck = other
                 }
                 guard bots[index].ammunition > .zero,
+                      !interrupted.contains(id)
+                        || now - bots[index].lastShot >= world.configurations.bot.deliberationPeriod,
                       Sight.isClear(from: bots[index].eye, to: aim, through: world.plan) else { break }
                 bots[index].ammunition -= Firing.roundsPerShot
+                bots[index].lastShot = now
                 if let struck {
                     // A bot with no health left is a body (FR-BOT-320).
                     bots[struck].health = max(.zero, bots[struck].health - entry.weaponDamage)
@@ -79,7 +135,7 @@ enum Execution {
                                          left: world.configurations.bot.deliberationPeriod))
             case .reload:
                 bots[index].ammunition = entry.magazine
-            case .takeCover, .flee, .moveToOrderedZone:
+            case .takeCover, .flee, .moveToOrderedZone, .advance, .explore:
                 // The route is the frame's business, and only one is computed per
                 // frame (FR-BOT-165).
                 bots[index].path = []
@@ -105,7 +161,7 @@ enum Execution {
     /// (FR-BOT-165). Given no order, the bots' own is used, which is what a test
     /// exercising movement alone wants.
     static func walk(_ bots: inout [Bot], seconds: Double, world: World,
-                     routeOrder: [Int] = [], holding held: Int? = nil) {
+                     routeOrder: [Int] = [], holding held: Int? = nil, now: Double = .zero) {
         let cell = world.configurations.tuning.navigationGraphCellSize
         let before = bots.map(\.position)
         defer {
@@ -113,7 +169,7 @@ enum Execution {
             // went (FR-BOT-280).
             separate(&bots, holding: held, over: world.graph, cellSize: cell, floorHeight: world.kit.floorHeight,
                      radius: world.configurations.tuning.bodyRadius)
-            turn(&bots, from: before, seconds: seconds, holding: held, world: world)
+            turn(&bots, from: before, seconds: seconds, holding: held, world: world, now: now)
         }
         var routed = false
         let queue = routeOrder.isEmpty
@@ -156,7 +212,8 @@ enum Execution {
     /// Where a chosen action sends a bot, if it sends it anywhere.
     static func destination(of action: Action?) -> NavigationGraph.Node? {
         switch action {
-        case .takeCover(let node), .moveToOrderedZone(let node), .flee(let node): return node
+        case .takeCover(let node), .moveToOrderedZone(let node), .flee(let node),
+             .advance(let node), .explore(let node): return node
         case .fire, .reload, .heal, .none: return nil
         }
     }
@@ -257,9 +314,12 @@ enum Execution {
 
     /// Turns every bot, but one in the snake's mouth, towards what it fires at, or the
     /// way it walked this frame, no faster than the turn speed (FR-BOT-280); a bot
-    /// that neither fires nor moved keeps facing as it did.
+    /// that neither fires nor moved turns to where it looks as it stands.
+    ///
+    /// A bot standing with nothing to do looks round (FR-BOT-380): once every look-round
+    /// interval it turns to a new way, the ways its knowledge puts a threat in first.
     static func turn(_ bots: inout [Bot], from before: [SIMD3<Double>], seconds: Double, holding held: Int?,
-                     world: World) {
+                     world: World, now: Double = .zero) {
         let configuration = world.configurations.bot
         let most = configuration.turnSpeed * .pi / Geometry.halfTurnDegrees * max(seconds, .zero)
         // A body turns no more (FR-BOT-320).
@@ -278,8 +338,16 @@ enum Execution {
                 bots[index].lookout = nil
             } else {
                 // Standing: looking where there is something to see, not at a wall a
-                // step away (FR-BOT-340). Chosen once as it stops, and kept.
-                if bots[index].lookout == nil { bots[index].lookout = lookout(for: bot, world: world) }
+                // step away (FR-BOT-340), chosen as it stops. With nothing to do it looks
+                // round from an interval after that on (FR-BOT-380).
+                if bots[index].lookout == nil {
+                    bots[index].lookout = lookout(for: bot, world: world)
+                    bots[index].lastLookRound = now
+                }
+                if bot.action == nil, now - bots[index].lastLookRound >= configuration.lookRoundInterval {
+                    bots[index].lookout = lookRound(for: bot, world: world)
+                    bots[index].lastLookRound = now
+                }
                 wanted = bots[index].lookout
             }
             guard let wanted else { continue }
@@ -294,23 +362,7 @@ enum Execution {
     /// outside the building's outline, or where the bot has seen it and nobody can
     /// stand in it; a cell it has not seen is open until it has (ADR-0032).
     static func lookout(for bot: Bot, world: World) -> Double {
-        let cell = world.configurations.tuning.navigationGraphCellSize
-        let range = world.configurations.bot.archetypes[bot.archetype.rawValue]?.detectionRange ?? .zero
-        func open(_ angle: Double) -> Double {
-            let along = SIMD2(sin(angle), cos(angle))
-            let step = cell * Walking.lookStep
-            var metres = step
-            while metres <= range {
-                let point = SIMD2(bot.position.x, bot.position.z) + along * metres
-                let node = NavigationGraph.Node(floor: bot.floor, x: Int((point.x / cell).rounded()),
-                                                z: Int((point.y / cell).rounded()))
-                let blocked = !bot.knowledge.outline.contains(node)
-                    || (bot.knowledge.knows(node) && !world.graph.isWalkable(node))
-                if blocked { return metres - step }
-                metres += step
-            }
-            return range
-        }
+        func open(_ angle: Double) -> Double { openGround(for: bot, towards: angle, world: world) }
         guard open(bot.facing) < Looking.openEnough else { return bot.facing }
         var best = (angle: bot.facing, open: open(bot.facing), turn: Double.zero)
         for way in 0..<Looking.ways {
@@ -323,6 +375,52 @@ enum Execution {
             }
         }
         return best.angle
+    }
+
+    /// How much open ground lies before a bot the given way, in metres, up to its
+    /// detection range: open as the bot knows it (FR-BOT-340).
+    static func openGround(for bot: Bot, towards angle: Double, world: World) -> Double {
+        let cell = world.configurations.tuning.navigationGraphCellSize
+        let range = world.configurations.bot.archetypes[bot.archetype.rawValue]?.detectionRange ?? .zero
+        let along = SIMD2(sin(angle), cos(angle))
+        let step = cell * Walking.lookStep
+        var metres = step
+        while metres <= range {
+            let point = SIMD2(bot.position.x, bot.position.z) + along * metres
+            let node = NavigationGraph.Node(floor: bot.floor, x: Int((point.x / cell).rounded()),
+                                            z: Int((point.y / cell).rounded()))
+            let blocked = !bot.knowledge.outline.contains(node)
+                || (bot.knowledge.knows(node) && !world.graph.isWalkable(node))
+            if blocked { return metres - step }
+            metres += step
+        }
+        return range
+    }
+
+    /// Which way a bot standing with nothing to do turns to next (FR-BOT-380): of the
+    /// ways round it with as much open ground before it as `Looking.openEnough` — or,
+    /// where none has, of them all — one outside the half of its field of view it looks
+    /// over now, the way nearest a threat its knowledge holds counting `Idle.threatShare`
+    /// times as much as how far round from where it looks the way is. Where it looks is
+    /// where it last turned to look, which it may not have finished turning to. A threat
+    /// is where it last saw or was told of the snake or an enemy bot, and the enemy's
+    /// starting area while it has not been there (ADR-0059).
+    static func lookRound(for bot: Bot, world: World) -> Double {
+        let knowledge = bot.knowledge
+        let threats = (knowledge.snakePoints + knowledge.enemyPoints + [knowledge.enemyStart?.centre].compactMap { $0 })
+            .compactMap { Turning.angle(from: bot.position, to: $0) }
+        let half = world.configurations.bot.fieldOfView * Geometry.half * .pi / Geometry.halfTurnDegrees
+        let looking = bot.lookout ?? bot.facing
+        func off(_ a: Double, _ b: Double) -> Double { abs(atan2(sin(a - b), cos(a - b))) }
+        let ways = (0..<Looking.ways).map { Double($0) / Double(Looking.ways) * .pi * Geometry.bothSides }
+        let open = ways.filter { openGround(for: bot, towards: $0, world: world) >= Looking.openEnough }
+        var best: (angle: Double, worth: Double)?
+        for angle in (open.isEmpty ? ways : open) where off(angle, looking) > half {
+            let towardThreat = threats.map { cos(off(angle, $0)) }.max() ?? .zero
+            let worth = Idle.threatShare * towardThreat + off(angle, looking) / .pi
+            if best == nil || worth > best!.worth + Geometry.samePosition { best = (angle, worth) }
+        }
+        return best?.angle ?? looking
     }
 
     /// Drops the next point of a bot's route while the one after it can be walked to

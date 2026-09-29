@@ -44,6 +44,28 @@ When a match starts, the system **shall** spawn two squads hostile to each other
 **Rationale.** Concept §1: two warring squads are the strategic layer; §14: start with 4v4 because of thermal budget and readability.
 Four per squad is the size of the vertical slice and there are no reinforcements (ADR-0010).
 
+### FR-BOT-350 — The squads start at opposite ends of the island
+
+```yaml
+status: implemented
+verification: T
+derives_from: [FR-BOT-020]
+depends_on: [IF-BOT-010]
+refines: [FR-BOT-020]
+conflicts_with: []
+code: [Sources/CrawlCall/Bot/Squads.swift]
+tests: [Tests/CrawlCallTests/BotTests.swift]
+created: 2026-09-29
+```
+
+When a match starts, the system **shall** place the two squads, one at each, around the two walkable cells that lie farthest apart across the ground among those the snake's start reaches outside its interrupt distance.
+
+**Rationale.** The maintainer's wish of 2026-09-29: a match opens with the two squads apart, so the war begins with a crossing rather than with both squads in one corner.
+Measured across the ground, since the ends of an island are where it is widest, not where the walk is longest.
+Cells within the interrupt distance are excluded so that no squad begins the match alarmed.
+Where a map will name each squad's area (Q-360), that area replaces this.
+Which squad takes which end, and how each fills round it, is ADR-0056.
+
 ### FR-BOT-030 — Archetype sets base personality weights
 
 ```yaml
@@ -246,14 +268,14 @@ When scoring the action of taking a cover position, the system **shall** lower t
 ### FR-BOT-110 — Height advantage enters position scoring
 
 ```yaml
-status: deferred
+status: implemented
 verification: T
 derives_from: [FR-BOT-080]
 depends_on: []
 refines: [FR-BOT-080]
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Bot/Deliberation.swift, Sources/CrawlCall/Bot/Execution.swift]
+tests: [Tests/CrawlCallTests/PositionTests.swift]
 created: 2026-09-21
 ```
 
@@ -261,24 +283,26 @@ When scoring a position, the system **shall** raise the score with the position'
 
 **Rationale.** Concept §13 stage 2: bots use height — fire from above, retreat to floors the snake takes long to reach.
 Without this term the verticality of a map is decoration, which is what H-020 measures.
+How the height is counted, and why it decides where a bot goes rather than how much it wants to, is ADR-0058.
 
 ### FR-BOT-115 — Distance along the snake's path enters position scoring
 
 ```yaml
-status: deferred
+status: implemented
 verification: T
 derives_from: [FR-BOT-080]
 depends_on: [FR-SNAKE-010]
 refines: [FR-BOT-080]
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Bot/Deliberation.swift, Sources/CrawlCall/Bot/Execution.swift]
+tests: [Tests/CrawlCallTests/PositionTests.swift]
 created: 2026-09-21
 ```
 
 When scoring a position, the system **shall** raise the score with the length of the shortest navigation-graph path from the snake's head to it.
 
 **Rationale.** Concept §13 stage 2: bots retreat to floors the snake takes long to reach — a different thing from being above it, since a balcony over the snake may be one ramp away.
+How the path is counted, from where the bot last saw the snake, is ADR-0058.
 
 ### FR-BOT-118 — A bot flees to somewhere it can get to
 
@@ -303,20 +327,21 @@ This is not FR-BOT-167, which says what to do when a target turns out to be unre
 ### FR-BOT-120 — Nearby snake overrides the commander's priority
 
 ```yaml
-status: deferred
+status: partial
 verification: T
 derives_from: [FR-BOT-080]
 depends_on: [FR-CMD-030]
 refines: [FR-BOT-080]
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Bot/Deliberation.swift]
+tests: [Tests/CrawlCallTests/SquadStateTests.swift]
 created: 2026-09-21
 ```
 
 When the snake's head is within the override distance of the bot configuration from a bot, the system **shall** rank the snake as that bot's top threat regardless of the commander's threat priority.
 
 **Rationale.** Concept §9.2: the commander sets the priority, the utility layer corrects it locally — a snake five metres away overrides any order.
+`partial` because there is no commander yet (FR-CMD-030): the snake within the override distance is ranked above everything the bot itself would fire at, which is what overriding the priority will mean once there is one (ADR-0060).
 
 ### FR-BOT-130 — Discipline decides how far an order is kept
 
@@ -441,14 +466,14 @@ The budget is met by spreading the requests, not by a faster search; eight frame
 ### FR-BOT-170 — Interrupts grant a slot at once
 
 ```yaml
-status: deferred
+status: partial
 verification: T
 derives_from: [FR-BOT-160]
 depends_on: [FR-BOT-050]
 refines: []
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Bot/Interrupts.swift, Sources/CrawlCall/Bot/Slots.swift, Sources/CrawlCall/Bot/Execution.swift, Sources/CrawlCall/Game.swift]
+tests: [Tests/CrawlCallTests/InterruptTests.swift]
 created: 2026-09-21
 ```
 
@@ -456,38 +481,41 @@ When a bot takes damage, sees the snake within the interrupt distance of the bot
 
 **Rationale.** Concept §9.2 lists these seven events; without them the snake eats a bot that keeps shooting the other way for another 100 ms.
 One act over an enumerated set of triggers, as the standard's exit-code example: splitting would destroy the claim that these are all of them.
+How each event is found, and why a slot ahead of the queue does not make a bot fire faster, is ADR-0057.
+`partial` because three of the events have nothing to be found in yet: cover is not destroyed (FR-MAP-030), no body is marked by the snake (FR-SCORE-120) and nobody gives orders (FR-CMD-040).
 
 ## Reaction to the snake
 
 ### FR-BOT-180 — Calm squads do not hunt the snake
 
 ```yaml
-status: deferred
+status: implemented
 verification: T
 derives_from: [FR-BOT-080]
 depends_on: [FR-SCORE-130, FR-BOT-120]
 refines: [FR-BOT-080]
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Bot/Deliberation.swift, Sources/CrawlCall/Bot/Execution.swift, Sources/CrawlCall/Game.swift]
+tests: [Tests/CrawlCallTests/SquadStateTests.swift]
 created: 2026-09-21
 ```
 
-While a squad's awareness is *calm*, the system **shall** exclude the snake from its bots' target choice except where FR-BOT-120 applies.
+While a squad's awareness is *calm*, the system **shall** leave the snake out of its bots' choice of action — what to fire at, what to hide or run from — except where FR-BOT-120 applies.
 
 **Rationale.** Concept §6.3: on *calm* the snake does not exist for the commander; a bot still reacts to a snake in its face.
+Leaving it out of the target alone had calm bots run from a snake they would not fire at, so that it could neither be hunted by them nor get near them (the maintainer, 2026-09-29, after trying both on the phone; ADR-0060).
 
 ### FR-BOT-190 — Alarmed squads keep together
 
 ```yaml
-status: deferred
+status: implemented
 verification: T
 derives_from: [FR-BOT-080]
 depends_on: [FR-SCORE-130]
 refines: [FR-BOT-080]
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Bot/Deliberation.swift, Sources/CrawlCall/Bot/Execution.swift]
+tests: [Tests/CrawlCallTests/SquadStateTests.swift]
 created: 2026-09-21
 ```
 
@@ -495,6 +523,7 @@ While a squad's awareness is *alarm*, the system **shall** raise the utility of 
 
 **Rationale.** Concept §6.3: on *alarm* the squad keeps together and checks corners.
 Corner-checking is left to the commander's orders; keeping together is the observable behaviour a test can measure by distances.
+The positions are those a bot hides or runs to, and being near a squadmate decides which, as height and the snake's path do (ADR-0058, ADR-0060).
 
 ### FR-BOT-210 — A whole bot is still afraid of the snake
 
@@ -562,7 +591,7 @@ When scoring actions for a bot, the system **shall** read the snake, the enemy a
 **Rationale.** The maintainer's rule of 2026-09-25: a bot's movement must not rest on what the snake sees, since a bot is not the snake and cannot know it, nor on where anything truly is beyond what the bot has perceived (ADR-0032).
 A test holds it by moving the snake or an enemy where the bot has not seen it and nobody has told it, and finding the choice unchanged.
 The snake a bot flees from and hides from is where it last saw each part; it fires only at a part it sees now, since what it remembers is somewhere to be afraid of and not a target; the cells it may run or hide to are the cells it knows (ADR-0043).
-`partial` because two readings of the map are still the truth's: the route to a chosen cell is found over the whole map, and whether a cell is cover is tested against the obstacles as they stand, seen or not. ADR-0032 replaces both — floods over the map as the squad knows it, and a lines-of-fire table — each to be written as its own requirement and put to the maintainer.
+`partial` because three readings of the map are still the truth's: the route to a chosen cell is found over the whole map, whether a cell is cover is tested against the obstacles as they stand, seen or not, and so is the snake's path to a position (FR-BOT-115, ADR-0058). ADR-0032 replaces the first two — floods over the map as the squad knows it, and a lines-of-fire table — each to be written as its own requirement and put to the maintainer.
 The enemy is recorded (FR-BOT-240) and read by no action yet, since none of FR-BOT-200 is aimed at an enemy bot. The order in which bots are given slots still reads how near the snake truly is (FR-BOT-160): that is when a bot thinks, not what it chooses.
 
 ### FR-BOT-230 — A bot remembers the map it has seen
@@ -799,3 +828,62 @@ When a bot stops with less than 1.5 m of open ground before it, as far as it kno
 
 **Rationale.** The maintainer, 2026-09-26: bots are not to stand looking at a wall. A bot that faces where it last walked (FR-BOT-280) arrives at cover facing the wall it hides behind, and a bot sees only within its field of view (FR-BOT-050), so it would stand blind.
 As far as it knows: open ground ends at the building's outline (FR-BOT-250) and at a cell it has seen that nobody can stand in (FR-BOT-230); a cell it has not seen is open, and is what is worth looking at (ADR-0044). Three cells, 1.5 m, is more than a wall at arm's length and less than a corridor's length.
+
+## With nothing to do
+
+### FR-BOT-360 — An idle bot advances on the enemy
+
+```yaml
+status: implemented
+verification: T
+derives_from: [FR-BOT-080]
+depends_on: [FR-BOT-240, FR-BOT-250]
+refines: []
+conflicts_with: []
+code: [Sources/CrawlCall/Bot/Deliberation.swift, Sources/CrawlCall/Bot/Execution.swift, Sources/CrawlCall/Bot/Knowledge.swift, Sources/CrawlCall/Bot/Action.swift]
+tests: [Tests/CrawlCallTests/IdleTests.swift]
+created: 2026-09-29
+```
+
+While every other action available to a bot scores nothing, the system **shall** send the bot towards where it believes the enemy squad to be: the latest place it saw or was told of an enemy bot, or, where it knows of none, the enemy's starting area (FR-BOT-250).
+
+**Rationale.** The maintainer on 2026-09-29: with the squads starting at opposite ends of the island (FR-BOT-350), squads that stand still never meet, and the war the concept is built on does not happen without the snake. Q-320.
+Nothing else scoring is what keeps a motive for the quiet from ever outweighing a threat, which Q-320 asked for; how an advance and a look (FR-BOT-370) are chosen between, and what a bot does on finding a place empty, is ADR-0059.
+
+### FR-BOT-370 — An idle bot goes to see what it has not seen
+
+```yaml
+status: implemented
+verification: T
+derives_from: [FR-BOT-080]
+depends_on: [FR-BOT-230]
+refines: []
+conflicts_with: []
+code: [Sources/CrawlCall/Bot/Deliberation.swift, Sources/CrawlCall/Bot/Execution.swift, Sources/CrawlCall/Bot/Action.swift]
+tests: [Tests/CrawlCallTests/IdleTests.swift]
+created: 2026-09-29
+```
+
+While every other action available to a bot scores nothing, the system **shall** send the bot to the nearest cell it can reach that is not in its knowledge of the map (FR-BOT-230).
+
+**Rationale.** Q-320 names idle curiosity; the cells a bot has not seen are what its knowledge gives curiosity to read (ADR-0032).
+
+### FR-BOT-380 — A bot standing idle looks round
+
+```yaml
+status: implemented
+verification: T
+derives_from: [FR-BOT-080]
+depends_on: [FR-BOT-050, FR-BOT-340, IF-BOT-010]
+refines: []
+conflicts_with: []
+code: [Sources/CrawlCall/Bot/Execution.swift, Sources/CrawlCall/Bot/Bot.swift, Sources/CrawlCall/Game.swift]
+tests: [Tests/CrawlCallTests/IdleTests.swift]
+created: 2026-09-29
+```
+
+While a bot stands with every other action scoring nothing, the system **shall** turn it to face a new direction once every look-round interval of the bot configuration, favouring the directions in which its knowledge places a possible threat: where it last saw or was told of the snake or an enemy bot, and the enemy's starting area.
+
+**Rationale.** Q-320: a bot that stands still should not look like a statue; turning changes what its field of view takes in (FR-BOT-050), so looking round is also how a standing bot notices.
+The maintainer added on 2026-09-29 that a bot looking round gives its attention to where, by what it knows, a threat may come from.
+It keeps to the ways with open ground before it, as FR-BOT-340 has a standing bot do (ADR-0059).

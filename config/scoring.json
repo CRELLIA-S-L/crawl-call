@@ -1,0 +1,6 @@
+{
+  "witnessWindow": 2.5,
+  "lateArrivalWindow": 1.0,
+  "reportDelay": 3.0,
+  "inspectionDistance": 1.5
+}

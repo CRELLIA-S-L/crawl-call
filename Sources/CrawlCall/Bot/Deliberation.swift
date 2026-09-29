@@ -11,7 +11,7 @@
 // configuration (IF-BOT-010), as is how much an unhurt bot fears the snake
 // (FR-BOT-210). What shapes each term — a share, a whole — is in `Utility`.
 //
-// implements: FR-BOT-080, FR-BOT-090, FR-BOT-118, FR-BOT-200, FR-BOT-210, FR-MAP-150, FR-BOT-220, FR-BOT-060, FR-BOT-140, FR-BOT-330
+// implements: FR-BOT-080, FR-BOT-090, FR-BOT-110, FR-BOT-115, FR-BOT-118, FR-BOT-360, FR-BOT-370, FR-BOT-120, FR-BOT-180, FR-BOT-190, FR-BOT-200, FR-BOT-210, FR-MAP-150, FR-BOT-220, FR-BOT-060, FR-BOT-140, FR-BOT-330
 import Foundation
 
 enum Deliberation {
@@ -37,6 +37,21 @@ enum Deliberation {
         var enemiesInView: [(id: Int, point: SIMD3<Double>)] = []
         var allies: [Bot] = []
         var orderedZone: NavigationGraph.Node?
+        /// Where the bot takes the snake's head to be: the part nearest the head it
+        /// has seen, where it saw it (FR-BOT-220). Nil where it has seen none, and a
+        /// position is then worth what it was without the snake (FR-BOT-110, FR-BOT-115).
+        var snakeHead: SIMD3<Double>?
+        /// Steps over the graph from the cell of `snakeHead` to every cell the snake
+        /// can reach from it (FR-BOT-115).
+        var fromHead: [NavigationGraph.Node: Int] = [:]
+        /// Where the bot believes the enemy squad to be, if anywhere it has not already
+        /// been: the latest place it saw or was told of an enemy bot, or else the
+        /// enemy's starting area (FR-BOT-360).
+        var enemyBelief: SIMD3<Double>?
+        /// What the bot's squad knows of the snake (FR-SCORE-130). A situation built
+        /// without it takes the snake as known, which is how every bot behaved before
+        /// squads had a state.
+        var awareness: Awareness = .confirmed
         let plan: ScenePlan
         let graph: NavigationGraph
         let configuration: BotConfiguration
@@ -141,7 +156,13 @@ enum Deliberation {
             .map { (point: $0, metres: Perception.metres(bot.position, $0)) }
             .min { $0.metres < $1.metres }
         if let snake, Sight.isClear(from: bot.eye, to: snake.point, through: situation.plan) {
-            candidates.append((.snake(at: snake.point), worth(snake.metres)))
+            // Within the override distance the snake is the top threat, whatever else
+            // there is and whatever the bot was firing at (FR-BOT-120); beyond it, a calm
+            // squad does not hunt it (FR-BOT-180).
+            if snake.metres <= situation.configuration.overrideDistance {
+                return (.snake(at: snake.point), worth(snake.metres))
+            }
+            if situation.awareness != .calm { candidates.append((.snake(at: snake.point), worth(snake.metres))) }
         }
         for enemy in situation.enemiesInView {
             let eye = enemy.point + SIMD3(0, bot.eyeHeight, 0)
@@ -170,22 +191,130 @@ enum Deliberation {
 
     /// The action with the highest score, or nothing when a bot has nothing to do.
     /// Ties go to the action scored first, which keeps a match repeatable.
+    ///
+    /// Where every action on the list scores nothing — or there is none — the bot has
+    /// nothing to do, and goes on towards the enemy or to see what it has not seen
+    /// (FR-BOT-360, FR-BOT-370): a motive for the quiet is never weighed against
+    /// anything that scores, so it can never outweigh a threat (ADR-0059).
     static func choose(for bot: Bot, in situation: Situation) -> Action? {
         var best: (action: Action, utility: Double)?
         for candidate in scores(for: bot, in: situation) where candidate.utility > (best?.utility ?? -.infinity) {
             best = candidate
         }
-        return best?.action
+        guard let best, best.utility > .zero else { return quiet(for: bot, in: situation) ?? best?.action }
+        return best.action
     }
 
-    /// The nearest reachable cell the snake cannot see into, if there is one within
-    /// the search distance.
+    /// What a bot with nothing else to do goes and does: on towards the enemy, or to
+    /// the nearest cell it has not seen, the one its aggression weighs more — the
+    /// advance by its aggression, the look by what is left of it; the advance where the
+    /// two are equal. Nil where it has neither anywhere to advance to nor anything
+    /// unseen it can reach.
+    static func quiet(for bot: Bot, in situation: Situation) -> Action? {
+        let here = NavigationGraph.Node(floor: bot.floor,
+                                        x: Int((bot.position.x / situation.cellSize).rounded()),
+                                        z: Int((bot.position.z / situation.cellSize).rounded()))
+        guard situation.graph.isWalkable(here) else { return nil }
+        let advance = situation.enemyBelief.flatMap { nearestCell(to: $0, from: here, in: situation) }
+        let explore = unseen(from: here, in: situation)
+        let aggression = bot.weights.aggression
+        switch (advance, explore) {
+        case (let target?, let look?):
+            return aggression >= Fraction.whole - aggression ? .advance(to: target) : .explore(to: look)
+        case (let target?, nil): return .advance(to: target)
+        case (nil, let look?): return .explore(to: look)
+        case (nil, nil): return nil
+        }
+    }
+
+    /// The nearest cell, along the walk from where the bot stands and other than the
+    /// one it stands in, that it does not know (FR-BOT-370), on any floor the graph
+    /// joins.
+    static func unseen(from here: NavigationGraph.Node, in situation: Situation) -> NavigationGraph.Node? {
+        var seen: Set<NavigationGraph.Node> = [here]
+        var queue = [here]
+        var index = queue.startIndex
+        while index < queue.endIndex {
+            let node = queue[index]
+            queue.formIndex(after: &index)
+            if node != here, !situation.knows(node) { return node }
+            for next in situation.graph.neighbours(of: node).sorted(by: order) where seen.insert(next).inserted {
+                queue.append(next)
+            }
+        }
+        return nil
+    }
+
+    /// The walkable cell that lies nearest a point across the room, and is not the one
+    /// the bot stands in: where it goes to be at the point. Every cell of the graph is
+    /// weighed rather than walked to, which took a tenth of the time on the simulator
+    /// (Q-460); a cell the bot cannot get to is spent at routing, as any is
+    /// (FR-BOT-167).
+    static func nearestCell(to point: SIMD3<Double>, from here: NavigationGraph.Node,
+                            in situation: Situation) -> NavigationGraph.Node? {
+        var best: (node: NavigationGraph.Node, metres: Double)?
+        for node in situation.graph.nodes where node != here {
+            let metres = Perception.metres(centre(of: node, in: situation), point)
+            if best == nil || metres < best!.metres || (metres == best!.metres && order(node, best!.node)) {
+                best = (node, metres)
+            }
+        }
+        return best?.node
+    }
+
+    /// What a position is worth: one, raised by its height above the snake's head up to
+    /// a floor (FR-BOT-110), by the length of the snake's shortest path to it up to the
+    /// bot's detection range (FR-BOT-115) — a cell the snake cannot reach at all being as
+    /// far as a path can count — and, while the bot's squad is alarmed, by lying within
+    /// the grouping distance of a squadmate (FR-BOT-190). One where the bot knows no
+    /// snake and its squad is not alarmed.
     ///
-    /// Walked outwards from the bot rather than scanned over the map, and stopped at
-    /// the first cell that is hidden: cells come out in order of how far they are, so
-    /// the first hidden one is the nearest, and every sight test after it would be
-    /// asked about a worse answer. On the blockout that is a handful of tests where
-    /// the scan was three hundred (NFR-PERF-020).
+    /// It decides where a bot hides or runs to, not how much it wants to: multiplied into
+    /// the wish itself, it made hiding and running up to three times what firing is
+    /// worth, and the squads all but stopped shooting (ADR-0058).
+    static func worth(of node: NavigationGraph.Node, for bot: Bot, in situation: Situation) -> Double {
+        let term = situation.configuration.utilityTermWeights
+        // An alarmed squad keeps together (FR-BOT-190): a position within the grouping
+        // distance of a squadmate is worth more.
+        let together = situation.awareness == .alarm && situation.allies.contains { ally in
+            ally.id != bot.id && ally.squad == bot.squad && ally.isAlive
+                && Perception.metres(ally.position, centre(of: node, in: situation))
+                    <= situation.configuration.groupingDistance
+        } ? term.together : .zero
+        guard let head = situation.snakeHead,
+              let range = situation.configuration.archetypes[bot.archetype.rawValue]?.detectionRange,
+              range > .zero else { return Fraction.whole + together }
+        let floor = situation.plan.floorHeight
+        let above = floor > .zero ? (centre(of: node, in: situation).y - head.y) / floor : .zero
+        let path = situation.fromHead[node].map {
+            Double($0) / Double(MapGrid.stepsPerNeighbour) * situation.cellSize / range
+        } ?? Fraction.whole
+        return Fraction.whole + term.height * clamped(above) + term.snakePath * clamped(path) + together
+    }
+
+    /// Between nothing and one.
+    private static func clamped(_ share: Double) -> Double { min(Fraction.whole, max(.zero, share)) }
+
+    /// The cell a point stands in, for the snake's head on the graph (FR-BOT-115): the
+    /// floor its height is on, or, where that cell is not walkable, the nearest floor
+    /// below on which it is. Nil where there is none.
+    static func cell(of point: SIMD3<Double>, graph: NavigationGraph, cellSize: Double,
+                     floorHeight: Double) -> NavigationGraph.Node? {
+        let x = Int((point.x / cellSize).rounded()), z = Int((point.z / cellSize).rounded())
+        let top = floorHeight > .zero ? Int((point.y / floorHeight + Placing.floorSlack).rounded(.down)) : .zero
+        for floor in stride(from: top, through: .zero, by: -1) {
+            let node = NavigationGraph.Node(floor: floor, x: x, z: z)
+            if graph.isWalkable(node) { return node }
+        }
+        return nil
+    }
+
+    /// The best-placed reachable cell the snake cannot see into, if there is one
+    /// within the search distance: the nearest, raised by what the position is worth
+    /// (FR-BOT-110, FR-BOT-115, FR-BOT-190).
+    ///
+    /// The cells are those the bot can walk to within reach, on any floor (`walk`),
+    /// ranked before sight is asked about, and asked about best first (ADR-0058).
     ///
     /// A cell is watched by a part of the snake that has a line to its ground, and by
     /// an enemy whose eyes have a line to where the bot's would be, standing in it: an
@@ -208,31 +337,58 @@ enum Deliberation {
         // part sees it does not change whether one does (ADR-0028).
         let byNearness = snake.sorted { Perception.metres(bot.position, $0) < Perception.metres(bot.position, $1) }
 
+        // Every cell it knows within reach, ranked by what hiding there would be worth
+        // before anything is asked about sight — nearness raised by the position's
+        // worth — and asked about in that order: the first that nothing watches is the
+        // best, and every sight test after it would be asked about a worse answer
+        // (NFR-PERF-020).
+        let ranked = walk(from: here, within: reach, for: bot, in: situation)
+            .filter { $0.metres > .zero && situation.knows($0.node) }
+            .map { cell in
+                (cell: cell, rank: nearness(cell.metres, within: reach) * worth(of: cell.node, for: bot, in: situation))
+            }
+            .enumerated()
+            .sorted { $0.element.rank != $1.element.rank ? $0.element.rank > $1.element.rank : $0.offset < $1.offset }
+            .map(\.element.cell)
+        for cell in ranked {
+            let there = centre(of: cell.node, in: situation)
+            let watched = byNearness.contains { Sight.isClear(from: $0, to: there, through: situation.plan) }
+                || shooters.contains { Sight.isClear(from: $0, to: there + rise, through: situation.plan) }
+            if !watched { return (node: cell.node, metres: cell.metres) }
+        }
+        return nil
+    }
+
+    /// The cells a bot can walk to without leaving the search distance, on any floor
+    /// the graph joins (FR-BOT-110), nearest along the walk first, each with how far
+    /// it is from the bot across the room.
+    ///
+    /// Walked outwards over the graph rather than scanned over the map, so that every
+    /// cell given is one the bot can get to (FR-BOT-118); out of reach is also as far
+    /// as the walk goes, since what lies beyond is only approached through cells the
+    /// bot would have to cross to get there.
+    static func walk(from here: NavigationGraph.Node, within reach: Double, for bot: Bot,
+                     in situation: Situation) -> [(node: NavigationGraph.Node, metres: Double)] {
+        var cells: [(node: NavigationGraph.Node, metres: Double)] = []
         var seen: Set<NavigationGraph.Node> = [here]
         var queue = [here]
         var index = queue.startIndex
         while index < queue.endIndex {
             let node = queue[index]
             queue.formIndex(after: &index)
-            let there = centre(of: node, in: situation)
-            let metres = Perception.metres(bot.position, there)
+            let metres = Perception.metres(bot.position, centre(of: node, in: situation))
             guard metres <= reach else { continue }
-            // Only a cell the bot knows is somewhere it would think of hiding (FR-BOT-220).
-            if metres > .zero, situation.knows(node) {
-                let watched = byNearness.contains { Sight.isClear(from: $0, to: there, through: situation.plan) }
-                    || shooters.contains { Sight.isClear(from: $0, to: there + rise, through: situation.plan) }
-                if !watched { return (node: node, metres: metres) }
-            }
-            for next in situation.graph.neighbours(of: node).sorted(by: order)
-            where next.floor == bot.floor && seen.insert(next).inserted {
+            cells.append((node: node, metres: metres))
+            for next in situation.graph.neighbours(of: node).sorted(by: order) where seen.insert(next).inserted {
                 queue.append(next)
             }
         }
-        return nil
+        return cells
     }
 
     /// The cell within the search distance that puts the most ground between the bot
-    /// and what it is running from, out of those it can actually get to.
+    /// and what it is running from, raised by what the position is worth against the
+    /// snake (FR-BOT-110, FR-BOT-115), out of those it can actually get to.
     ///
     /// Walked outwards over the graph, as cover is (FR-BOT-118): a spot picked by how
     /// far away it lies can be on the other side of a wall, and a bot that sets off
@@ -247,28 +403,17 @@ enum Deliberation {
                                         z: Int((bot.position.z / situation.cellSize).rounded()))
         guard situation.graph.isWalkable(here) else { return nil }
 
-        var seen: Set<NavigationGraph.Node> = [here]
-        var queue = [here]
-        var index = queue.startIndex
-        var best: (NavigationGraph.Node, Double)?
-        while index < queue.endIndex {
-            let node = queue[index]
-            queue.formIndex(after: &index)
-            let there = centre(of: node, in: situation)
-            // Out of reach is also as far as the walk goes: what lies beyond is only
-            // approached through cells the bot would have to cross to get there.
-            guard Perception.metres(bot.position, there) <= reach else { continue }
-            let gained = Perception.metres(there, danger)
-            // Only a cell the bot knows is somewhere it would think of running to
-            // (FR-BOT-220).
-            if situation.knows(node), best == nil || gained > best!.1 { best = (node, gained) }
-            for next in situation.graph.neighbours(of: node).sorted(by: order)
-            where next.floor == bot.floor && seen.insert(next).inserted {
-                queue.append(next)
-            }
+        // Ground gained, raised by what the position is worth against the snake
+        // (FR-BOT-110, FR-BOT-115). Only a cell the bot knows is somewhere it would think
+        // of running to (FR-BOT-220).
+        var best: (node: NavigationGraph.Node, gained: Double, value: Double)?
+        for cell in walk(from: here, within: reach, for: bot, in: situation) where situation.knows(cell.node) {
+            let gained = Perception.metres(centre(of: cell.node, in: situation), danger)
+            let value = gained * worth(of: cell.node, for: bot, in: situation)
+            if best == nil || value > best!.value { best = (cell.node, gained, value) }
         }
-        guard let best, best.1 > Perception.metres(bot.position, danger) else { return nil }
-        return best.0
+        guard let best, best.gained > Perception.metres(bot.position, danger) else { return nil }
+        return best.node
     }
 
     /// One order over cells, so that a walk outwards is the same walk every time.

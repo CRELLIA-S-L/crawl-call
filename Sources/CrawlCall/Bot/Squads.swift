@@ -1,27 +1,22 @@
 // Who is on the map when a match begins: two squads, hostile to each other, of the
-// size the match configuration sets (FR-BOT-020).
+// size the match configuration sets (FR-BOT-020), one at each end of the island
+// (FR-BOT-350).
 //
-// Where they begin is not something any requirement says — a map declares no spawn
-// zone, the same gap the snake's own start runs into — so they are placed by the two
-// things a map does say: which cells are walkable, and how far one cell is from
-// another over the graph the bots path on. Said out loud rather than passed off as a
-// rule: when a map gains spawn zones, this is what they replace.
+// A map declares no area for either squad yet (Q-360), so the ends are found from what
+// a map does say: which cells are walkable, where they lie, and which of them the
+// snake's start reaches. When a map gains squad areas, they replace the ends.
 //
-// implements: FR-BOT-020, INV-BOT-030, FR-MAP-150, FR-BOT-280, FR-BOT-250
+// implements: FR-BOT-020, FR-BOT-350, INV-BOT-030, FR-MAP-150, FR-BOT-280, FR-BOT-250
 import Foundation
 
 enum Squads {
-    /// Both squads, placed away from the snake and away from each other.
+    /// Both squads, one at each end of the island (FR-BOT-350).
     ///
-    /// One squad anchors at the walkable cell farthest from the snake. The other
-    /// anchors at the farthest cell from the snake that is not within grouping
-    /// distance of the first — both squads want to be away from the player, and only
-    /// the second also has to be somewhere else than the first. "Farthest from the
-    /// first squad" would send it back into the snake's corner, and "farthest from
-    /// both" lands it in the middle of the room, which on the blockout put four bots
-    /// inside the snake's interrupt distance at the whistle.
-    /// Each squad then fills the free cells nearest its anchor, and ties are broken
-    /// by floor, then z, then x, so the same map always produces the same match.
+    /// The ends are the two cells that lie farthest apart across the ground among
+    /// those the snake's start reaches and that are not within its interrupt distance.
+    /// The red squad takes the end farther from the snake, and each squad then fills
+    /// the free cells nearest its end; ties are broken by floor, then z, then x, so the
+    /// same map always produces the same match (ADR-0056).
     static func spawn(in world: World, snakeStart: NavigationGraph.Node) -> [Bot] {
         let size = world.configurations.match.squadSize
         guard size > .zero else { return [] }
@@ -40,19 +35,16 @@ enum Squads {
         })
         let clear = reach.filter { !near.contains($0.key) }
         let fromSnake = clear.isEmpty ? reach : clear
-        guard let redAnchor = farthest(in: fromSnake) else { return [] }
-        // Two squads closer together than the distance at which they keep together
-        // (IF-BOT-010) would read as one group rather than two sides. The distance is
-        // measured across the room and not along the walk: the configuration's number
-        // is in metres, and a balcony makes two cells a long walk apart while they
-        // are four metres from one another — which is how both squads first ended up
-        // on the same balcony.
+        guard let ends = ends(of: Array(fromSnake.keys), in: world.graph, cellSize: cell, floorHeight: height)
+        else { return [] }
+        let redAnchor = ground(ends.one.centre, snake) >= ground(ends.two.centre, snake) ? ends.one.node : ends.two.node
+        let blueAnchor = redAnchor == ends.one.node ? ends.two.node : ends.one.node
         let redCentre = centre(of: redAnchor, in: world.graph, cellSize: cell, floorHeight: height)
+        // Two squads closer together than the distance at which they keep together
+        // (IF-BOT-010) would read as one group rather than two sides — which on a
+        // small map two ends can still be. Measured across the room and not along the
+        // walk: the configuration's number is in metres.
         let apart = world.configurations.bot.groupingDistance
-        let elsewhere = fromSnake.filter {
-            Perception.metres(centre(of: $0.key, in: world.graph, cellSize: cell, floorHeight: height), redCentre) >= apart
-        }
-        guard let blueAnchor = farthest(in: elsewhere.isEmpty ? fromSnake : elsewhere) else { return [] }
 
         var taken: Set<NavigationGraph.Node> = clear.isEmpty ? [] : near
         let red = nearest(size, to: redAnchor, in: world.graph, avoiding: &taken)
@@ -114,7 +106,9 @@ enum Squads {
         while index < queue.endIndex {
             let here = queue[index]
             queue.formIndex(after: &index)
-            for next in graph.neighbours(of: here).sorted(by: before) where seen[next] == nil {
+            // In any order: a breadth-first walk gives every cell the same count of steps
+            // whichever neighbour it takes first.
+            for next in graph.neighbours(of: here) where seen[next] == nil {
                 seen[next] = seen[here]! + MapGrid.stepsPerNeighbour
                 queue.append(next)
             }
@@ -122,12 +116,30 @@ enum Squads {
         return seen
     }
 
-    /// The cell the walk reached last, ties broken by position so that the same map
-    /// gives the same answer every time.
-    private static func farthest(in distances: [NavigationGraph.Node: Int]) -> NavigationGraph.Node? {
-        distances.max { a, b in
-            a.value != b.value ? a.value < b.value : before(b.key, a.key)
-        }?.key
+    /// The two cells that lie farthest apart across the ground: the island's ends
+    /// (FR-BOT-350). Where several pairs are as far apart, the first in the cells'
+    /// order; a single cell is both ends.
+    static func ends(of cells: [NavigationGraph.Node], in graph: NavigationGraph,
+                     cellSize: Double, floorHeight: Double)
+        -> (one: (node: NavigationGraph.Node, centre: SIMD3<Double>),
+            two: (node: NavigationGraph.Node, centre: SIMD3<Double>))? {
+        let ordered = cells.sorted(by: before)
+            .map { (node: $0, centre: centre(of: $0, in: graph, cellSize: cellSize, floorHeight: floorHeight)) }
+        guard let first = ordered.first else { return nil }
+        var best = (one: first, two: first, metres: -Double.infinity)
+        for i in ordered.indices {
+            for j in ordered.indices where j > i {
+                let metres = ground(ordered[i].centre, ordered[j].centre)
+                if metres > best.metres { best = (ordered[i], ordered[j], metres) }
+            }
+        }
+        return (best.one, best.two)
+    }
+
+    /// How far apart two points lie across the ground, whatever floor each is on.
+    static func ground(_ a: SIMD3<Double>, _ b: SIMD3<Double>) -> Double {
+        let d = SIMD2(a.x - b.x, a.z - b.z)
+        return (d * d).sum().squareRoot()
     }
 
     /// The `count` reachable cells nearest an anchor that nobody has taken yet, and

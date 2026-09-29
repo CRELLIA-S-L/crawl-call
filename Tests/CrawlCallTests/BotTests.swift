@@ -1,8 +1,8 @@
 // Who is on the map when a match begins, and what each of them starts as: the set of
-// archetypes (FR-BOT-010), the two squads and their placement (FR-BOT-020), and the
-// personality an archetype hands its bot (FR-BOT-030).
+// archetypes (FR-BOT-010), the two squads (FR-BOT-020) at the island's two ends
+// (FR-BOT-350), and the personality an archetype hands its bot (FR-BOT-030).
 //
-// verifies: FR-BOT-010, FR-BOT-020, FR-BOT-030, INV-BOT-030
+// verifies: FR-BOT-010, FR-BOT-020, FR-BOT-350, FR-BOT-030, INV-BOT-030
 import XCTest
 @testable import CrawlCall
 
@@ -87,6 +87,56 @@ final class SquadSpawnTests: XCTestCase {
                                             "bot \(red.id) and bot \(blue.id) start \(apart) m apart")
             }
         }
+    }
+
+    func testTheSquadsStartAtTheTwoEndsOfTheIslandTheRedOneFartherFromTheSnake() throws {
+        // Worked out here over every pair rather than asked of `Squads`: the ends are
+        // the two cells farthest apart across the ground among those the snake's start
+        // reaches outside its interrupt distance.
+        let (world, start, bots) = try match()
+        let cell = world.configurations.tuning.navigationGraphCellSize
+        let height = world.kit.floorHeight
+        func at(_ node: NavigationGraph.Node) -> SIMD3<Double> { world.graph.centre(of: node, cellSize: cell, floorHeight: height) }
+        func across(_ a: SIMD3<Double>, _ b: SIMD3<Double>) -> Double { ((a.x - b.x) * (a.x - b.x) + (a.z - b.z) * (a.z - b.z)).squareRoot() }
+        let snake = at(start)
+        let cells = Squads.distances(in: world.graph, from: start).keys
+            .filter { Perception.metres(at($0), snake) > world.configurations.bot.interruptDistance }
+        var widest = 0.0
+        for a in cells { for b in cells { widest = max(widest, across(at(a), at(b))) } }
+        func node(of bot: Bot) -> NavigationGraph.Node {
+            NavigationGraph.Node(floor: bot.floor, x: Int((bot.position.x / cell).rounded()), z: Int((bot.position.z / cell).rounded()))
+        }
+        let red = bots.filter { $0.squad == .red }
+        let blue = bots.filter { $0.squad == .blue }
+        // Each squad stands round its end: the two squads' own ends are the widest pair.
+        var found = false
+        for r in red { for b in blue where abs(across(at(node(of: r)), at(node(of: b))) - widest) < 1e-9 { found = true } }
+        XCTAssertTrue(found, "no bot of either squad stands at an end of the island, \(widest) m apart")
+        let middle = { (squad: [Bot]) in squad.map(\.position).reduce(.zero, +) / Double(squad.count) }
+        XCTAssertGreaterThan(across(middle(red), snake), across(middle(blue), snake), "the red squad is not the farther one")
+    }
+
+    func testOnAStripWithTheSnakeOffCentreTheSquadsTakeBothEnds() throws {
+        // The case the old placement got wrong: both squads went as far from the snake
+        // as they could, and so to the same side of it.
+        let shipped = try Launch.world().get()
+        let rows = Array(repeating: String(repeating: ".", count: 80), count: 3)
+        let map = try MapParser.parse("kit blockout\nsetting greenholm\nfloor 0\n" + rows.joined(separator: "\n") + "\n",
+                                      kit: shipped.kit)
+        let cell = shipped.configurations.tuning.navigationGraphCellSize
+        let world = World(configurations: shipped.configurations, kit: shipped.kit, map: map, setting: shipped.setting,
+                          graph: NavigationGraph.derive(from: map, stepHeight: shipped.configurations.tuning.stepHeight),
+                          plan: ScenePlan.make(map: map, kit: shipped.kit, cellSize: cell))
+        let bots = Squads.spawn(in: world, snakeStart: NavigationGraph.Node(floor: 0, x: 30, z: 1))
+        let snakeX = 30 * cell
+        let red = bots.filter { $0.squad == .red }
+        let blue = bots.filter { $0.squad == .blue }
+        XCTAssertFalse(red.isEmpty)
+        XCTAssertFalse(blue.isEmpty)
+        for bot in red { XCTAssertGreaterThan(bot.position.x, snakeX, "red bot \(bot.id) is not at the far end") }
+        for bot in blue { XCTAssertLessThan(bot.position.x, snakeX, "blue bot \(bot.id) is on the red squad's side") }
+        XCTAssertEqual(red.map(\.position.x).max() ?? 0, 79 * cell, accuracy: 1e-9)
+        XCTAssertEqual(blue.map(\.position.x).min() ?? 0, 0, accuracy: 1e-9)
     }
 
     func testTheSameMapAlwaysGivesTheSameMatch() throws {

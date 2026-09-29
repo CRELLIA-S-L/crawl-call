@@ -3,7 +3,7 @@
 // a file with an unknown key is rejected at load rather than silently defaulted,
 // which is what `Schema` is for.
 //
-// implements: IF-SNAKE-010, IF-MAP-020, IF-VIEW-020, IF-BOT-010, FR-SNAKE-220, FR-BOT-280, FR-BOT-050, FR-BOT-290, FR-BOT-260, FR-BOT-310, FR-SNAKE-270, FR-SNAKE-280
+// implements: IF-SNAKE-010, IF-MAP-020, IF-VIEW-020, IF-BOT-010, IF-SCORE-010, FR-SNAKE-220, FR-BOT-280, FR-BOT-050, FR-BOT-290, FR-BOT-260, FR-BOT-310, FR-SNAKE-270, FR-SNAKE-280
 import Foundation
 
 // MARK: - Snake (IF-SNAKE-010)
@@ -216,6 +216,14 @@ struct BotConfiguration: Decodable, Equatable {
         let obedience: Double
         let mercy: Double
         let empty: Double
+        /// A position's height above the snake's head, up to a floor (FR-BOT-110).
+        let height: Double
+        /// The length of the snake's shortest path to a position, up to the bot's
+        /// detection range (FR-BOT-115).
+        let snakePath: Double
+        /// A position within the grouping distance of a squadmate, while the squad is
+        /// alarmed (FR-BOT-190).
+        let together: Double
     }
     let utilityTermWeights: UtilityTermWeights
     /// How tall a bot's figure is drawn, in metres, at its tallest (FR-VIEW-070).
@@ -231,6 +239,9 @@ struct BotConfiguration: Decodable, Equatable {
     /// Degrees across a bot's field of view, level, centred on the way it faces: it
     /// sees nothing outside it (FR-BOT-050).
     let fieldOfView: Double
+    /// Seconds between the turns of a bot standing with nothing else worth doing
+    /// (FR-BOT-380).
+    let lookRoundInterval: Double
     /// Metres a second squared a bot gathers speed and slows at (FR-BOT-290).
     let acceleration: Double
     /// Seconds after which a bot forgets a sighting of the snake, and of an enemy;
@@ -266,11 +277,13 @@ struct BotConfiguration: Decodable, Equatable {
         "utilityTermWeights": .object([
             "attack": .value, "threat": .value, "wounded": .value,
             "obedience": .value, "mercy": .value, "empty": .value,
+            "height": .value, "snakePath": .value, "together": .value,
         ]),
         "figureHeight": .value,
         "eyeHeight": .value,
         "turnSpeed": .value,
         "fieldOfView": .value,
+        "lookRoundInterval": .value,
         "acceleration": .value,
         "snakeForgottenAfter": .value,
         "enemyForgottenAfter": .value,
@@ -301,5 +314,32 @@ struct MatchConfiguration: Decodable, Equatable {
         "maximumResponseTokens": .value,
         "thermalDegradationThreshold": .value,
         "thermalDegradationFactor": .value,
+    ])
+}
+
+// MARK: - Scoring (IF-SCORE-010)
+
+/// What decides whether a meal was seen and a loss found out: the windows in which a
+/// bot that sees the eating is its witness (FR-SCORE-070, FR-SCORE-080), how long a
+/// witness takes to report (FR-SCORE-090), and how near a bot must come to where a
+/// squadmate fell to find its body gone (FR-SCORE-125). The points and multipliers the
+/// interface also names are read once scoring is built.
+struct ScoringConfiguration: Decodable, Equatable {
+    /// Seconds after a meal ends during which a bot that sees where it happened is its
+    /// witness (FR-SCORE-070).
+    let witnessWindow: Double
+    /// Seconds after a meal ends during which a bot that comes to see where it happened
+    /// is its witness (FR-SCORE-080).
+    let lateArrivalWindow: Double
+    /// Seconds from becoming a witness to the squad knowing (FR-SCORE-090).
+    let reportDelay: Double
+    /// Metres (FR-SCORE-125).
+    let inspectionDistance: Double
+
+    static let schema = Schema.object([
+        "witnessWindow": .value,
+        "lateArrivalWindow": .value,
+        "reportDelay": .value,
+        "inspectionDistance": .value,
     ])
 }
