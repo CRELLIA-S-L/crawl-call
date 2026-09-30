@@ -46,6 +46,13 @@ final class SlitherTests: XCTestCase {
         XCTAssertGreaterThan(slither.wavelength, 0)
     }
 
+    func testTheShippedSwayIsTheMaintainers() {
+        // 5 cm on a 1.2 m wave at first; on 2026-09-30 the sway narrowed and its wave
+        // stretched, each by 30 %.
+        XCTAssertEqual(slither.amplitude, 0.035, accuracy: 1e-9)
+        XCTAssertEqual(slither.wavelength, 1.56, accuracy: 1e-9)
+    }
+
     func testTheBodySwaysToEitherSideByTheAmplitudeAndNoMore() throws {
         let snake = try crawled(2)
         let line = SnakeBody.centreLine(head: snake.head, tail: snake.tail, sway: sway(snake))

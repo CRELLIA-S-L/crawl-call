@@ -3,7 +3,7 @@
 // a file with an unknown key is rejected at load rather than silently defaulted,
 // which is what `Schema` is for.
 //
-// implements: IF-SNAKE-010, IF-MAP-020, IF-VIEW-020, IF-BOT-010, IF-SCORE-010, FR-SNAKE-220, FR-BOT-280, FR-BOT-050, FR-BOT-290, FR-BOT-260, FR-BOT-310, FR-SNAKE-270, FR-SNAKE-280, FR-SNAKE-290, FR-VIEW-330
+// implements: IF-SNAKE-010, IF-MAP-020, IF-VIEW-020, IF-BOT-010, IF-SCORE-010, FR-SNAKE-220, FR-BOT-280, FR-BOT-050, FR-BOT-290, FR-BOT-260, FR-BOT-310, FR-SNAKE-270, FR-SNAKE-280, FR-SNAKE-290, FR-VIEW-330, FR-BOT-405, FR-BOT-430, FR-SNAKE-055, FR-SNAKE-016
 import Foundation
 
 // MARK: - Snake (IF-SNAKE-010)
@@ -36,7 +36,12 @@ struct SnakeConfiguration: Decodable, Equatable {
     /// The snake's lunge at what it would eat (FR-SNAKE-270): how far from the head a
     /// bot may be, in metres; how long the head is held back first, in seconds; and how
     /// fast it then goes, in metres a second.
-    struct Lunge: Decodable, Equatable { let reach: Double; let windUp: Double; let speed: Double }
+    struct Lunge: Decodable, Equatable {
+        let reach: Double; let windUp: Double; let speed: Double
+        /// Degrees to either side of the way the head is going within which a bot can
+        /// be lunged at, and must stay for the lunge to go on (FR-SNAKE-270).
+        let angle: Double
+    }
     let lunge: Lunge
     /// The coil round a living bot the lunge has reached (FR-SNAKE-280): how long the
     /// head takes to go once round it, in seconds; how far from where it stands the bot
@@ -47,6 +52,12 @@ struct SnakeConfiguration: Decodable, Equatable {
     /// The tightest arc, in metres at the body's centre line, the head turns on while
     /// the player steers it (FR-SNAKE-290).
     let turningRadius: Double
+    /// How many segments behind the head are its neck, which the head does not climb as
+    /// it turns; past them, it crawls over its own body (FR-SNAKE-055).
+    let neckSegments: Int
+    /// Metres ahead of the head within which it feels what it cannot pass, and starts to
+    /// go round it the way the stick leads past it (FR-SNAKE-016).
+    let feelDistance: Double
     let abilities: Abilities
 
     // The sapper ability takes no parameter — FR-SNAKE-140 sets a partition to its
@@ -59,9 +70,11 @@ struct SnakeConfiguration: Decodable, Equatable {
         "damagePerSegment": .value,
         "bodyEatingDuration": .value,
         "eatingDamagePerSecond": .value,
-        "lunge": .object(["reach": .value, "windUp": .value, "speed": .value]),
+        "lunge": .object(["reach": .value, "windUp": .value, "speed": .value, "angle": .value]),
         "coil": .object(["seconds": .value, "shoveReach": .value, "shoveSpeed": .value]),
         "turningRadius": .value,
+        "neckSegments": .value,
+        "feelDistance": .value,
         "abilities": .object([
             "assault": .object(["dashSpeed": .value, "dashDuration": .value]),
             "scout": .object(["duration": .value]),
@@ -251,6 +264,14 @@ struct BotConfiguration: Decodable, Equatable {
     /// Seconds between the turns of a bot standing with nothing else worth doing
     /// (FR-BOT-380).
     let lookRoundInterval: Double
+    /// Metres a second a round flies at, and metres it flies before it is spent
+    /// (FR-BOT-060, FR-BOT-405).
+    let roundSpeed: Double
+    let roundRange: Double
+    /// Metres a second a bot with no cell beside cover moves across its line of fire
+    /// at while it fires, and seconds before it turns back (FR-BOT-430).
+    let strafingSpeed: Double
+    let strafingInterval: Double
     /// Metres a second squared a bot gathers speed and slows at (FR-BOT-290).
     let acceleration: Double
     /// Seconds after which a bot forgets a sighting of the snake, and of an enemy;
@@ -293,6 +314,10 @@ struct BotConfiguration: Decodable, Equatable {
         "turnSpeed": .value,
         "fieldOfView": .value,
         "lookRoundInterval": .value,
+        "roundSpeed": .value,
+        "roundRange": .value,
+        "strafingSpeed": .value,
+        "strafingInterval": .value,
         "acceleration": .value,
         "snakeForgottenAfter": .value,
         "enemyForgottenAfter": .value,

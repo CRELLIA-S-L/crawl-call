@@ -11,7 +11,7 @@
 // configuration (IF-BOT-010), as is how much an unhurt bot fears the snake
 // (FR-BOT-210). What shapes each term — a share, a whole — is in `Utility`.
 //
-// implements: FR-BOT-080, FR-BOT-090, FR-BOT-110, FR-BOT-115, FR-BOT-118, FR-BOT-360, FR-BOT-370, FR-BOT-120, FR-BOT-180, FR-BOT-190, FR-BOT-200, FR-BOT-210, FR-MAP-150, FR-BOT-220, FR-BOT-060, FR-BOT-140, FR-BOT-330
+// implements: FR-BOT-080, FR-BOT-090, FR-BOT-110, FR-BOT-115, FR-BOT-118, FR-BOT-360, FR-BOT-370, FR-BOT-120, FR-BOT-180, FR-BOT-190, FR-BOT-200, FR-BOT-210, FR-MAP-150, FR-BOT-220, FR-BOT-060, FR-BOT-140, FR-BOT-330, FR-BOT-410, FR-BOT-420, FR-BOT-425
 import Foundation
 
 enum Deliberation {
@@ -52,6 +52,9 @@ enum Deliberation {
         /// without it takes the snake as known, which is how every bot behaved before
         /// squads had a state.
         var awareness: Awareness = .confirmed
+        /// The radius of a bot's body (the tuning's): how near a line of fire a
+        /// squadmate stands in it (FR-BOT-410).
+        var bodyRadius: Double = .zero
         let plan: ScenePlan
         let graph: NavigationGraph
         let configuration: BotConfiguration
@@ -81,6 +84,18 @@ enum Deliberation {
                term.attack * nearness(metres, within: entry.detectionRange) * ammunition * bot.weights.aggression
            }) {
             scored.append((.fire(at: target.target), target.utility))
+        } else if bot.ammunition > .zero, bot.post != nil, let kept = bot.postTarget,
+                  let known = remembered(kept, by: bot, in: situation),
+                  !Perception.sees(aim(at: known.target, from: bot, in: situation) ?? known.point, from: bot,
+                                   within: entry.detectionRange, plan: situation.plan,
+                                   configuration: situation.configuration) {
+            // Behind the cover it fired from beside, out of sight of what it was firing
+            // at: it comes out again to fire from where it did, at what it knows of it
+            // (FR-BOT-420, ADR-0063). It fires only once it sees it (FR-BOT-060). Where
+            // it sees the place and nothing there, what it knows is no target.
+            let worth = term.attack * nearness(Perception.metres(bot.position, known.point), within: entry.detectionRange)
+                * ammunition * bot.weights.aggression
+            scored.append((.fire(at: known.target), worth))
         }
 
         // Cover: worth more the nearer it is, the nearer the danger is — the snake or
@@ -152,6 +167,7 @@ enum Deliberation {
     static func target(for bot: Bot, in situation: Situation,
                        worth: (Double) -> Double) -> (target: Target, utility: Double)? {
         var candidates: [(target: Target, utility: Double)] = []
+        var snakeOverride = false
         let snake = situation.inView
             .map { (point: $0, metres: Perception.metres(bot.position, $0)) }
             .min { $0.metres < $1.metres }
@@ -160,14 +176,33 @@ enum Deliberation {
             // there is and whatever the bot was firing at (FR-BOT-120); beyond it, a calm
             // squad does not hunt it (FR-BOT-180).
             if snake.metres <= situation.configuration.overrideDistance {
-                return (.snake(at: snake.point), worth(snake.metres))
+                snakeOverride = true
+                candidates.append((.snake(at: snake.point), worth(snake.metres)))
+            } else if situation.awareness != .calm {
+                candidates.append((.snake(at: snake.point), worth(snake.metres)))
             }
-            if situation.awareness != .calm { candidates.append((.snake(at: snake.point), worth(snake.metres))) }
         }
         for enemy in situation.enemiesInView {
             let eye = enemy.point + SIMD3(0, bot.eyeHeight, 0)
             guard Sight.isClear(from: bot.eye, to: eye, through: situation.plan) else { continue }
             candidates.append((.bot(id: enemy.id), worth(Perception.metres(bot.position, enemy.point))))
+        }
+        // Not through a squadmate it sees (FR-BOT-410): a round strikes whoever is in
+        // its way (FR-BOT-400).
+        let range = situation.configuration.archetypes[bot.archetype.rawValue]?.detectionRange ?? .zero
+        let mates = situation.allies.filter { mate in
+            mate.id != bot.id && mate.squad == bot.squad && mate.isAlive
+                && Perception.sees(mate.eye, from: bot, within: range, plan: situation.plan,
+                                   configuration: situation.configuration)
+        }
+        if !mates.isEmpty {
+            candidates = candidates.filter { candidate in
+                guard let aim = aim(at: candidate.target, from: bot, in: situation) else { return true }
+                return !mates.contains { stands($0, across: bot.eye, to: aim, in: situation) }
+            }
+        }
+        if snakeOverride, let snake = candidates.first(where: { if case .snake = $0.target { true } else { false } }) {
+            return snake
         }
         // The first of the best, so that a tie goes the same way every time.
         var best: (target: Target, utility: Double)?
@@ -177,6 +212,45 @@ enum Deliberation {
               let kept = candidates.first(where: { same($0.target, current) }),
               best.utility - kept.utility < situation.configuration.hysteresisMargin else { return best }
         return kept
+    }
+
+    /// What a bot knows of a target it is not seeing now: the part of the snake nearest
+    /// it that it remembers, or where it last saw the enemy bot. Nil where it knows of
+    /// none.
+    static func remembered(_ target: Target, by bot: Bot,
+                           in situation: Situation) -> (target: Target, point: SIMD3<Double>)? {
+        switch target {
+        case .snake:
+            return situation.snake.min { Perception.metres(bot.position, $0) < Perception.metres(bot.position, $1) }
+                .map { (target: .snake(at: $0), point: $0) }
+        case .bot(let id):
+            return bot.knowledge.enemies[id].map { (target: target, point: $0.point) }
+        }
+    }
+
+    /// Where a round fired at a target is sent (FR-BOT-060): the middle of the snake's
+    /// body over the part aimed at, which lies on the ground under it, raised by the
+    /// body's radius; an enemy's eyes, where it was seen now, or else where it was last
+    /// seen. Nil for an enemy it knows nothing of.
+    static func aim(at target: Target, from bot: Bot, in situation: Situation) -> SIMD3<Double>? {
+        switch target {
+        case .snake(let point):
+            return point + SIMD3(.zero, situation.bodyRadius, .zero)
+        case .bot(let id):
+            let point = situation.enemiesInView.first { $0.id == id }?.point ?? bot.knowledge.enemies[id]?.point
+            return point.map { $0 + SIMD3(.zero, bot.eyeHeight, .zero) }
+        }
+    }
+
+    /// Whether a bot stands in the way of a line: its body — the figure's height and
+    /// the body radius round the ground it stands on — comes within reach of the line
+    /// (FR-BOT-410), as a round's would strike it (FR-BOT-400).
+    static func stands(_ mate: Bot, across from: SIMD3<Double>, to aim: SIMD3<Double>,
+                       in situation: Situation) -> Bool {
+        let radius = situation.bodyRadius
+        let top = max(radius, situation.configuration.figureHeight - radius)
+        return Flight.contact(from: from, to: aim, axis: mate.position + SIMD3(.zero, radius, .zero),
+                              mate.position + SIMD3(.zero, top, .zero), radius: radius) != nil
     }
 
     /// Whether two targets are one: both the snake, wherever it was aimed at, or both
@@ -357,6 +431,55 @@ enum Deliberation {
             if !watched { return (node: cell.node, metres: cell.metres) }
         }
         return nil
+    }
+
+    /// Where a bot fires from beside cover (FR-BOT-420): of the cells it knows within
+    /// the cover search distance, nearest first, the first from which its eyes have a
+    /// line of fire to `aim` and which has a cell next to it that no enemy and no part
+    /// of the snake it knows of watches; with that cell, where it steps back to
+    /// (FR-BOT-425). Neither is a cell a squadmate has taken for either. Nil where
+    /// there is none.
+    ///
+    /// Whether a cell is watched is asked once whatever number of cells it lies next
+    /// to, and only of a cell next to one with a line of fire (NFR-PERF-020).
+    static func post(for bot: Bot, aim: SIMD3<Double>,
+                     in situation: Situation) -> (post: NavigationGraph.Node, refuge: NavigationGraph.Node)? {
+        let here = NavigationGraph.Node(floor: bot.floor,
+                                        x: Int((bot.position.x / situation.cellSize).rounded()),
+                                        z: Int((bot.position.z / situation.cellSize).rounded()))
+        guard situation.graph.isWalkable(here) else { return nil }
+        let rise = SIMD3(.zero, bot.eyeHeight, .zero)
+        var watched: [NavigationGraph.Node: Bool] = [:]
+        // A squadmate's cells are its own: two bots making for one cell push each other
+        // off it for as long as both want it.
+        let claimed = Set(situation.allies
+            .filter { $0.id != bot.id && $0.squad == bot.squad && $0.isAlive }
+            .flatMap { [$0.post, $0.refuge].compactMap { $0 } })
+        let cells = walk(from: here, within: coverSearch(situation.configuration), for: bot, in: situation)
+            .filter { situation.knows($0.node) && !claimed.contains($0.node) }
+            .enumerated()
+            .sorted { $0.element.metres != $1.element.metres ? $0.element.metres < $1.element.metres : $0.offset < $1.offset }
+            .map(\.element.node)
+        for cell in cells {
+            guard Sight.isClear(from: centre(of: cell, in: situation) + rise, to: aim, through: situation.plan)
+            else { continue }
+            for next in situation.graph.neighbours(of: cell).sorted(by: order)
+            where situation.knows(next) && !claimed.contains(next) {
+                if watched[next] == nil { watched[next] = isWatched(next, for: bot, in: situation) }
+                if watched[next] == false { return (post: cell, refuge: next) }
+            }
+        }
+        return nil
+    }
+
+    /// Whether a bot standing in a cell is watched by what it knows of: a part of the
+    /// snake with a line to the cell's ground, or an enemy whose eyes, where it was last
+    /// seen, have a line to where the bot's eyes would be (FR-BOT-330).
+    static func isWatched(_ node: NavigationGraph.Node, for bot: Bot, in situation: Situation) -> Bool {
+        let rise = SIMD3(.zero, bot.eyeHeight, .zero)
+        let there = centre(of: node, in: situation)
+        return situation.enemies.contains { Sight.isClear(from: $0 + rise, to: there + rise, through: situation.plan) }
+            || situation.snake.contains { Sight.isClear(from: $0, to: there, through: situation.plan) }
     }
 
     /// The cells a bot can walk to without leaving the search distance, on any floor

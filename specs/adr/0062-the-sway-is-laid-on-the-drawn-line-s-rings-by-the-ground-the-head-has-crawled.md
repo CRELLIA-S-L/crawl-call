@@ -25,7 +25,7 @@ Option 1. Six rings a wave draw it, and the body keeps the triangles FR-VIEW-250
 - A point of the drawn line a length back from the head is shifted level and square to the line by the amplitude times the sine of 2π times what the head has crawled less that length, over the wavelength: the same ground has the same shift whenever the body lies over it.
 - The rings are built round the shifted line; the lengths along the body, for its taper and its skin, are the unshifted ones.
 - The head is shifted as the line's end is, and turned by how the shift changes going forward, so that it points along the body's end. It is turned only where its way was read afresh — from the tail or a lunge's aim — and not where it keeps the way it faced the frame before, which was turned then: turned again every frame, the head of a snake that had not yet moved spun where it stood, found on the phone on 2026-09-30.
-- The amplitude and the wavelength are the view configuration's (IF-VIEW-020): 5 cm and 1.2 m.
+- The amplitude and the wavelength are the view configuration's (IF-VIEW-020): 5 cm and 1.2 m when this was built, 3.5 cm and 1.56 m since 2026-09-30 (FR-VIEW-330).
 
 ### Consequences
 

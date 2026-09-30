@@ -37,5 +37,5 @@ Option 4 gives up the balconies the game is about.
 
 RealityKit's `NavigationMeshResource`, `NavigationComponent` and `NavigationController` are not used; `LowLevelMesh`, ECS, rendering and Foundation Models remain, so ADR-0001 stands with its first check redefined.
 Grid resolution is a tuning number in the tuning configuration (IF-MAP-020); paths are smoothed by string-pulling over cell corners so that bots do not walk in staircases.
-The snake's own head is kept out of its tail by collision shapes on the segments, not by the graph.
+The snake's own head is kept out of its tail by collision shapes on the segments, not by the graph. (Since 2026-09-30 the head crawls over its tail instead of being kept out of it, and does so by geometry too: ADR-0067.)
 Tail continuity for the tube (FR-MAP-090) and the maximum drop (FR-SNAKE-220) are properties of the geometry and the controller's fall, not of any mesh.

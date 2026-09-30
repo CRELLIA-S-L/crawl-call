@@ -241,8 +241,8 @@ final class GameSession {
                                                 wavelength: game.world.configurations.view.slither.wavelength,
                                                 crawled: game.snake.crawled))
         BotEntity.update(botEntities, from: game.bots, gaits: gaits, eaten: game.eating?.prey)
-        // Every shot still alive is drawn where it went (FR-VIEW-170).
-        ShotEntity.update(shotEntities, from: game.shots)
+        // Every round in flight is drawn where it is (FR-VIEW-170).
+        ShotEntity.update(shotEntities, from: game.rounds)
         // A meal under way is drawn going in (FR-VIEW-100). What is left of the prey
         // is measured by whatever ends that meal: live prey by the health it has
         // left, a body by the time it has left. Live prey is cut away at the mouth of the

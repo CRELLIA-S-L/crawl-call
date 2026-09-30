@@ -38,18 +38,39 @@ depends_on: []
 refines: [FR-SNAKE-010, FR-SNAKE-030]
 conflicts_with: []
 code: [Sources/CrawlCall/Snake/Snake.swift, Sources/CrawlCall/Config/Motion.swift]
-tests: [Tests/CrawlCallTests/SnakeTests.swift]
+tests: [Tests/CrawlCallTests/SnakeTests.swift, Tests/CrawlCallTests/OwnBodyTests.swift]
 created: 2026-09-23
 ```
 
-When the direction the player holds would take the head into what it cannot pass, the system **shall** move the head along that obstacle at the head's base speed taken in the part of the held direction that runs along it.
+When the way the head is going would take it into what it cannot pass, the system **shall** move the head along that obstacle at the head's base speed, to the side the held direction leans to, or, where it leans to neither, on along the obstacle the way the head is already going along it, or, at rest against it, to the side with more room.
 
 **Rationale.** The camera's yaw never changes (FR-VIEW-010) and the stick gives a direction in the frame's axes rather than the corridor's (FR-VIEW-050), so a thumb cannot be laid exactly along a wall; a head that stops dead on contact makes the control punish the precision it does not give.
 The snake is steered rather than pathfound (ADR-0016), and a direction taken along the surface is what steering over one means.
 What the head cannot pass is both of the refusals it already knows — a wall, and ground too far below to be dropped to (FR-SNAKE-220) — so the head slides along the lip of a hole exactly as it slides along a wall.
 Nothing is said here of corners or of a direction pressed squarely into a wall, because nothing needs to be: a part that is zero is standing still, and a corner is this same rule applied to the second obstacle as well as the first.
 FR-SNAKE-030 is narrowed by this and not broken: the base speed is still the one the configuration gives, and what a slide takes of it is the part the obstacle leaves. A head that slid at the whole of it from a square push would turn every wall into a rail.
+**The way the head is going**, since 2026-09-30. Once the head turned on an arc (FR-SNAKE-290) the way it goes and the way held are two, and the slide was taken in the first (Q-470): a head going north along a wall, held into the wall and south, went on north. The maintainer, finding the snake running into things more often, chose the side and the speed of the held direction; where the stick is held away from the obstacle, the head turns away along it as the way it is going leads (ADR-0066).
+**At the whole of its speed**, since later the same day, 2026-09-30: the snake still ran its nose into things, trees included, and the maintainer asked for something taken from real snakes, which do not push against what they meet but follow its outline. The head now goes along what it meets at its whole speed, and pushed squarely in it goes round to the side with more room; with the feel of FR-SNAKE-016 it starts round before it touches. Only where neither way along is open does it stand (ADR-0069). A head already going along what it meets keeps to that way when the stick leans to neither side, rather than weighing the room again — the maintainer agreed on 2026-09-30 — so that it does not turn back halfway along. The speed taken in the part along the obstacle, which the paragraphs above explain, is gone with that.
 
+
+### FR-SNAKE-016 — The head feels its way round what is ahead
+
+```yaml
+status: implemented
+verification: T
+derives_from: [FR-SNAKE-015]
+depends_on: [FR-SNAKE-015, FR-SNAKE-290, IF-SNAKE-010]
+refines: []
+conflicts_with: []
+code: [Sources/CrawlCall/Snake/Snake.swift, Sources/CrawlCall/Game.swift, Sources/CrawlCall/Config/Configurations.swift, Sources/CrawlCall/Config/Motion.swift, Sources/CrawlCall/Snake/Surfaces.swift]
+tests: [Tests/CrawlCallTests/OwnBodyTests.swift, Tests/CrawlCallTests/FlightTests.swift]
+created: 2026-09-30
+```
+
+While the way the head is going leads into what it cannot pass within the feel distance of the snake configuration, and the held direction leads past it, the system **shall** turn the head towards the side it would pass it on, no tighter than the turning radius.
+
+**Rationale.** The maintainer, 2026-09-30, choosing, with the head going round at its whole speed (FR-SNAKE-015), a snake that feels what is ahead, as a snake does with its tongue: the head starts round an obstacle before it touches it. Half a metre ahead, the maintainer's number.
+The held direction leads past what is ahead where it is not held back behind the head; the side is the one it leans to along the obstacle, or, leaning to neither, the side the way the head is going glances off to (ADR-0069). Measured on the day, a head aimed at a point just past a crate got past it one to five frames sooner. What is felt is what stands on the ground, not the floors and steps it is walked on: the steps of a flight two ahead rise more than a step, and were at first felt as a wall, which made a flight hard to go up.
 ### FR-SNAKE-020 — Tail follows the head's path
 
 ```yaml
@@ -113,23 +134,63 @@ On the grid this is a per-cell mark that follows the segments (ADR-0016).
 ### FR-SNAKE-050 — Tail blocks the snake's own head
 
 ```yaml
-status: deferred
+status: superseded
+superseded_by: FR-SNAKE-055
 verification: T
 derives_from: [FR-SNAKE-020]
-depends_on: []
+depends_on: [FR-SNAKE-015, IF-SNAKE-010]
 refines: []
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Snake/Snake.swift, Sources/CrawlCall/Snake/Lunge.swift, Sources/CrawlCall/Game.swift, Sources/CrawlCall/Config/Configurations.swift]
+tests: [Tests/CrawlCallTests/OwnBodyTests.swift]
 created: 2026-09-21
 ```
 
-While a tail segment lies in the head's way, the system **shall** stop the head at the segment as at a wall.
+While a tail segment beyond the neck lies in the head's way, the system **shall** stop the head at that segment as at a wall, except while the head coils round a bot.
 
 **Rationale.** Concept §4: the snake can lock itself in.
 Split from FR-SNAKE-040 because blocking bots and blocking oneself can each be built and observed without the other, and the second is the one that makes narrow corridors a risk rather than only an advantage.
 For the head this is collision, not the graph (ADR-0016): the head is steered, and what it runs into is geometry.
+Built on 2026-09-30, when the maintainer found the snake folding in two as it was pulled back out of a corner: a slide along a wall turns the head at once, and the turning radius then brings it back beside its own body (ADR-0066). The neck — two segments behind the head by the snake configuration — is not in the way, since a head turning on its arc passes within a body's width of it; nor is the body while the head coils round a bot, since the ring lies against it (FR-SNAKE-280).
+**Superseded** the same day, 2026-09-30: played on the phone, a snake that could not get past itself felt strange, "even if it is the snake canon", and the maintainer asked for it to crawl over itself as over an obstacle, over the top (FR-SNAKE-055, ADR-0067). The snake can no longer lock itself in, which leaves FR-MAP-080 standing on this requirement (Q-510).
 
+### FR-SNAKE-055 — The head crawls over its own body
+
+```yaml
+status: implemented
+verification: T
+derives_from: [FR-SNAKE-020]
+depends_on: [FR-SNAKE-020, IF-SNAKE-010]
+refines: []
+conflicts_with: []
+code: [Sources/CrawlCall/Snake/Snake.swift, Sources/CrawlCall/Snake/Lunge.swift, Sources/CrawlCall/Game.swift, Sources/CrawlCall/View/SnakeEntity.swift, Sources/CrawlCall/Config/Configurations.swift, Sources/CrawlCall/Config/Motion.swift]
+tests: [Tests/CrawlCallTests/OwnBodyTests.swift]
+created: 2026-09-30
+```
+
+When the head's way crosses a tail segment beyond the neck, the system **shall** carry the head up and over that segment, its body resting on the segment's where the two cross, so that the body the head draws after it lies over its own.
+
+**Rationale.** The maintainer, 2026-09-30, on the phone, after the tail had been made to stop the head (FR-SNAKE-050): a snake that cannot get past itself feels strange; it should crawl over itself as over an obstacle, over the top. It also ends the fold that started it all: a head pulled back out of a corner no longer lies down through its own body, and goes over it instead.
+The neck — the segments the snake configuration names, two — is not climbed, since a head turning on its arc (FR-SNAKE-290) passes within a body's width of it; nor is the body while the head coils round a bot, since the ring lies against it (FR-SNAKE-280). How high and how smoothly is ADR-0067.
+
+
+### FR-SNAKE-056 — What of the body lies on nothing comes down
+
+```yaml
+status: implemented
+verification: T
+derives_from: [FR-SNAKE-055]
+depends_on: [FR-SNAKE-055, FR-SNAKE-220]
+refines: []
+conflicts_with: []
+code: [Sources/CrawlCall/Snake/Snake.swift, Sources/CrawlCall/Game.swift]
+tests: [Tests/CrawlCallTests/OwnBodyTests.swift]
+created: 2026-09-30
+```
+
+While a part of the snake's body lies higher than the body under it, or than the ground where there is no body under it, the system **shall** bring that part down under the drop gravity of the tuning configuration until it rests on what is under it.
+
+**Rationale.** The maintainer, 2026-09-30, on the phone: three layers of snake on itself are fine, but the snake could climb its own layers and then hang in the air once the layers under it had crawled away — "physics is needed". A part laid on the body keeps the height it was laid at; when the body under it goes on along its path, or is shot off the end of the tail, nothing held it up. It falls as the head falls off a ledge (FR-SNAKE-220), under the same gravity; it never rises by this. How is ADR-0068.
 ## Growth and damage
 
 ### FR-SNAKE-060 — Eating extends the tail
@@ -481,7 +542,7 @@ created: 2026-09-22
 When the snake finishes biting off a segment, the system **shall** remove the segment at the end of the tail.
 
 **Rationale.** A choice the game can already price without a new system: FR-BOT-050 counts the snake as noticed when *any* segment enters a bot's view, so length is already exposure — a long tail shows around the corner the head is hiding behind. Going short buys quiet.
-What it costs is equally already written: the segment takes its ability with it (FR-SNAKE-080), so the player trades concrete options for concealment, and a shorter snake also blocks itself less (FR-SNAKE-050), which is a second, opposite reason to do it.
+What it costs is equally already written: the segment takes its ability with it (FR-SNAKE-080), so the player trades concrete options for concealment. A second, opposite reason to do it — that a shorter snake blocked itself less (FR-SNAKE-050) — went on 2026-09-30, when the snake came to crawl over itself instead (FR-SNAKE-055).
 One segment per act, taken from the end, for symmetry with damage (FR-SNAKE-070) and because a segment is the unit an ability hangs on; a player who wants to be shorter repeats the act and pays each time.
 The act itself — what starts it, what refuses it and how long it holds the snake — is FR-SNAKE-240; this requirement speaks of finishing so that the two cannot disagree about when the segment is gone, the same split as eating, where FR-SNAKE-060 appends on finishing and FR-SNAKE-090 holds the head from beginning.
 Nothing in the concept proposes this — it is the maintainer's idea of 2026-09-22, which is why it is `draft` and why the mechanic it belongs to is the verticality-and-cover layer, not stage 1.
@@ -560,11 +621,12 @@ tests: [Tests/CrawlCallTests/LungeTests.swift]
 created: 2026-09-29
 ```
 
-When the player asks to eat while a bot is within the lunge reach of the head, the system **shall** hold the head for the wind-up and then move it towards that bot by the snake's movement rules, at the lunge speed on average and slowing to a stop, for no longer than crossing the lunge reach at that speed takes, beginning the coil of FR-SNAKE-280 if the head reaches a living bot, the meal if it reaches a body, and stopping where it is if it reaches neither.
+When the player asks to eat while a bot is within the lunge reach of the head and within the lunge angle of the way the head is going, the system **shall** hold the head for the wind-up and then move it towards that bot by the snake's movement rules, at the lunge speed on average and slowing to a stop, for no longer than crossing the lunge reach at that speed takes, beginning the coil of FR-SNAKE-280 if the head reaches a living bot, the meal if it reaches a body, and stopping where it is if it reaches neither or the bot goes outside the lunge angle of the way the head is going.
 
 **Rationale.** The maintainer, 2026-09-29: eating begins at some distance from the prey, and the snake throws itself at it, still as a cartoon. A bot runs faster than the snake crawls (INV-SNAKE-020), so a meal that waited for the head to touch its prey was a meal only of the slow and the dead; the concept already counts on a lunge, since the sniper ability is "a precise lunge at distance" (FR-SNAKE-160).
 The maintainer chose the numbers and the rules: a reach of 1.5 m, three cells; a lunge that can miss, when the prey gets away or behind something in the lunge's time; the head going by the snake's movement rules, sliding along what stops it and going off a ledge as it would crawling (FR-SNAKE-010, FR-SNAKE-220); and a wind-up before it.
 Reaching the bot is the head's body plus half a cell, the distance the meal began at before; off a ledge the lunge ends, since nothing is eaten in the air. How it is built is ADR-0052.
+**Ahead only**, since 2026-09-30: a lunge at a bot behind the head sent the head back through the neck and folded the snake in two, which the turning radius (FR-SNAKE-290) had stopped the stick from doing. The maintainer chose a lunge only at what is ahead, over a lunge that curves round, first within 90° to either side of the way the head is going and then, the same day, within 60°; a bot that gets out from ahead during the lunge is missed (ADR-0065).
 Slowing to a stop since the maintainer's second look on the phone the same day: at a steady speed the head stopped dead, which read as a twitch.
 
 ### FR-SNAKE-280 — The snake coils round a living bot before eating it
@@ -586,6 +648,25 @@ When the snake's lunge reaches a living bot, the system **shall** move the head 
 **Rationale.** The maintainer, 2026-09-29, on the phone: the lunge alone was not expressive, and the snake should throw itself at its prey, coil round it once and swallow it; a body is simply eaten. Asked, the maintainer chose a coil that is the head's real movement, with the body lying round the bot because it follows the head's path (FR-SNAKE-020), and not a picture over a body that stays where it was; the bot shoved out of a corner where the ring does not fit, "not in one frame, of course"; the coil adding its time to the meal's rather than taking it from it; and the bot shooting back meanwhile as it does while it is eaten (FR-SNAKE-100).
 The ring's radius is two bodies, the head's and the bot's side by side; how the room is found is ADR-0053.
 
+
+### FR-SNAKE-285 — A coil that goes off a ledge takes the bot down with it
+
+```yaml
+status: implemented
+verification: T
+derives_from: [FR-SNAKE-280]
+depends_on: [FR-SNAKE-280, FR-SNAKE-220, FR-SNAKE-090]
+refines: [FR-SNAKE-280]
+conflicts_with: []
+code: [Sources/CrawlCall/Game.swift, Sources/CrawlCall/Snake/Coil.swift]
+tests: [Tests/CrawlCallTests/CoilTests.swift]
+created: 2026-09-30
+```
+
+When the head goes off a ledge while it coils round a bot, the system **shall** carry the bot down with the head and begin the meal where the head lands.
+
+**Rationale.** The maintainer, 2026-09-30, on the phone: a bot on a stair could not be eaten. The ring round a bot is two bodies wide, and a flight is one cell: the head going round went off the flight's side, fell, and no meal begins in the air (FR-SNAKE-220). Asked, the maintainer chose the snake coiling round the bot and falling with it, swallowing it, over skipping the coil or a ring over the void.
+
 ### FR-SNAKE-290 — The head turns on an arc
 
 ```yaml
@@ -603,4 +684,4 @@ created: 2026-09-29
 While the head moves, the system **shall** turn it towards the direction the player holds no tighter than an arc of the turning radius of the snake configuration.
 
 **Rationale.** The maintainer, 2026-09-29: a head that takes any direction at once folds the snake in two, which does not look like a snake. A lunge and a coil steer the head themselves and are not held to it (FR-SNAKE-270, FR-SNAKE-280).
-The radius, 0.5 m at the body's centre line, is the maintainer's; turning round takes a way 1.6 m wide, so the snake does not turn round in a doorway. How the turn is taken is ADR-0061.
+The radius at the body's centre line is the maintainer's: 0.5 m at first, and 0.35 m since 2026-09-30, when the snake turned too wide on the phone. Turning round takes a way 1.3 m wide, twice the radius and the body's 0.6 m, so the snake still does not turn round in a one-metre doorway. How the turn is taken is ADR-0061.

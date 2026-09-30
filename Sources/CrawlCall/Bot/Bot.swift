@@ -2,7 +2,7 @@
 // personality its archetype gave it. No RealityKit here — this is the part a test
 // can read, the same split as `Snake`.
 //
-// implements: FR-BOT-030, FR-BOT-050, FR-BOT-060, FR-BOT-280, FR-BOT-290, FR-BOT-320, FR-BOT-340, FR-BOT-380
+// implements: FR-BOT-030, FR-BOT-050, FR-BOT-060, FR-BOT-280, FR-BOT-290, FR-BOT-320, FR-BOT-340, FR-BOT-380, FR-BOT-420, FR-BOT-425, FR-BOT-430
 import Foundation
 
 /// The two sides. Which one the player is nearer to is never a property of a squad:
@@ -65,6 +65,22 @@ struct Bot: Equatable {
     /// When it last turned to look round, standing with nothing to do (FR-BOT-380), in
     /// seconds of the match.
     var lastLookRound = -Double.infinity
+    /// Where it fires from beside cover, and the hidden cell next to it it reloads in
+    /// (FR-BOT-420, FR-BOT-425). Nil while it fires with none, and once it does
+    /// anything but fire and reload.
+    var post: NavigationGraph.Node?
+    var refuge: NavigationGraph.Node?
+    /// What it fires at from there: what it comes out again to fire at once it has
+    /// reloaded behind the cover (ADR-0063).
+    var postTarget: Target?
+    /// When it last looked for somewhere to fire from beside cover, in seconds of the
+    /// match: one that found none is not asked again until the strafing interval has
+    /// passed (FR-BOT-430).
+    var lastPostSearch = -Double.infinity
+    /// Which way across its line of fire it moves while it fires with no cell beside
+    /// cover, as a sign, and since when, in seconds of the match (FR-BOT-430).
+    var strafe = Skirmish.rightward
+    var strafeSince = -Double.infinity
 
     /// Whether it is alive: a bot with no health left is a body, which does nothing
     /// (FR-BOT-320).

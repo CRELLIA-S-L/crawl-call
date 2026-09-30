@@ -9,7 +9,7 @@
 //
 // Its skin is green and spotted (FR-VIEW-270), painted by `SnakeSkin.metal`.
 //
-// implements: FR-SNAKE-010, FR-SNAKE-020, FR-VIEW-250, FR-VIEW-260, FR-VIEW-270, FR-VIEW-280, FR-VIEW-310, FR-VIEW-320, FR-VIEW-330
+// implements: FR-SNAKE-010, FR-SNAKE-020, FR-VIEW-250, FR-VIEW-260, FR-VIEW-270, FR-VIEW-280, FR-VIEW-310, FR-VIEW-320, FR-VIEW-330, FR-SNAKE-055
 import Foundation
 import Metal
 import RealityKit
@@ -50,7 +50,7 @@ enum SnakeEntity {
         guard let head = entity.children.first(where: { $0.name == EntityName.head }) else { return }
         // Reared over a living bot it is swallowing, or where the match has it
         // (FR-VIEW-320).
-        let drawn = swallow.head(from: snake.head)
+        let drawn = swallow.head(from: snake.drawnHead)
         // What lights the head lights its eyes: the app lights the snake's own parts, and
         // the eyes hang on the head (FR-VIEW-130).
         if let light = head.components[ImageBasedLightReceiverComponent.self] {
@@ -102,7 +102,7 @@ enum SnakeEntity {
             let bend = (back * cos(swallow.tip) + SIMD3(.zero, Fraction.whole, .zero) * sin(swallow.tip))
                 * Swallowing.neckBend * swallow.eased
             if simd_length(bend) > SnakeShape.samePoint { neck.append(drawn + bend) }
-            neck.append(snake.head)
+            neck.append(snake.drawnHead)
         }
         // Swaying, the head goes to the side with the body's end and points along it
         // (FR-VIEW-330): shifted as the line is at the head, and turned by how the shift

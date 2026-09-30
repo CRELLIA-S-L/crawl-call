@@ -30,5 +30,5 @@ Option 3 reads a direction a body length behind the head, which lags every turn.
 
 ### Consequences
 
-Turning round takes a way twice the radius plus the body's 0.6 m, 1.6 m: the snake does not turn round in a one-metre doorway, and must go through.
-Against a wall, the head slides along it, the heading becomes the wall's, and it turns back towards the held direction from there. While the head is still turning, the slide of FR-SNAKE-015 is taken in the way it has turned to rather than in the held direction the requirement names; once it has turned the two are one (Q-470).
+Turning round takes a way twice the radius plus the body's 0.6 m, 1.6 m at the first radius and 1.3 m at the 0.35 m of 2026-09-30 (FR-SNAKE-290): the snake does not turn round in a one-metre doorway, and must go through.
+Against a wall, the head slides along it, the heading becomes the wall's, and it turns back towards the held direction from there. As built, while the head was still turning, the slide of FR-SNAKE-015 was taken in the way it had turned to rather than in the held direction the requirement named; once it had turned the two were one (Q-470). Since 2026-09-30 the slide goes to the side the held direction leans to (ADR-0066).

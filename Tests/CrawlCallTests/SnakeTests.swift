@@ -89,7 +89,7 @@ final class SnakeTests: XCTestCase {
     /// A wall running along z, with floor beside it, long enough for a second of
     /// sliding not to run off its end.
     private func wallAlongZ() throws -> Surfaces {
-        try surfaces("kit blockout\nsetting greenholm\nfloor 0\n.#\n.#\n.#\n.#\n.#\n.#\n")
+        try surfaces("kit blockout\nsetting greenholm\nfloor 0\n" + String(repeating: ".#\n", count: 12))
     }
 
     /// Where a head beside the wall of `wallAlongZ` stands with its body touching the
@@ -97,41 +97,47 @@ final class SnakeTests: XCTestCase {
     /// radius wide (ADR-0021).
     private var touching: Double { 0.25 - tuning.bodyRadius }
 
-    func testAHeadHeldIntoAWallAtAnAngleSlidesAlongIt() throws {
-        // The requirement's own arithmetic: the head covers the part of the base
-        // speed that the held direction lays along the wall, which at 45 degrees is
-        // the speed over the square root of two.
+    func testAHeadHeldIntoAWallAtAnAngleGoesAlongItAtTheBaseSpeed() throws {
+        // Since 2026-09-30 the head goes round what it meets at the whole of its speed,
+        // as a snake does, not at the part of it the stick lays along the wall (ADR-0069).
         let s = try wallAlongZ()
         var snake = self.snake(at: touching, 0)
         let before = snake.head
         snake.advance(direction: SIMD2(1, 1), speed: 3, seconds: 1, over: s)
         XCTAssertEqual(snake.head.x, before.x, accuracy: 1e-9, "the head went into the wall")
-        XCTAssertEqual(snake.head.z - before.z, 3 / 2.0.squareRoot(), accuracy: 1e-9)
+        XCTAssertEqual(snake.head.z - before.z, 3, accuracy: 1e-9)
     }
 
-    func testTheShallowerTheAngleTheMoreOfTheSpeedSurvives() throws {
-        // Two holds against the same wall, one leaning along it and one into it: the
-        // distance covered is the part along the wall in both, so the shallower hold
-        // covers more. A rule that simply kept the base speed would cover the same.
+    func testAtAnyAngleIntoAWallTheHeadKeepsItsSpeedAndTheSideTheStickLeansTo() throws {
+        // Two holds against the same wall, one nearly along it and one nearly into it:
+        // both go the whole of the base speed, the way along the wall the stick leans.
         let s = try wallAlongZ()
         var shallow = snake(at: touching, 0)
         var steep = snake(at: touching, 0)
         shallow.advance(direction: SIMD2(0.2, 1), speed: 3, seconds: 0.5, over: s)
         steep.advance(direction: SIMD2(1, 0.2), speed: 3, seconds: 0.5, over: s)
-        let along = { (d: SIMD2<Double>) in abs(d.y) / (d.x * d.x + d.y * d.y).squareRoot() }
-        XCTAssertEqual(shallow.head.z, 1.5 * along(SIMD2(0.2, 1)), accuracy: 1e-9)
-        XCTAssertEqual(steep.head.z, 1.5 * along(SIMD2(1, 0.2)), accuracy: 1e-9)
-        XCTAssertGreaterThan(shallow.head.z, steep.head.z)
+        XCTAssertEqual(shallow.head.z, 1.5, accuracy: 1e-9)
+        XCTAssertEqual(steep.head.z, 1.5, accuracy: 1e-9)
     }
 
-    func testAHeadHeldSquarelyIntoAWallStandsStill() throws {
-        // The part along the wall is zero, and zero speed is standing still — the
-        // statement needs no separate clause for it and neither does the code.
+    func testAHeadHeldSquarelyIntoAWallNearItsSouthEndGoesRoundNorth() throws {
+        // The mirror of the test below: a cell from the wall's south end, the roomier side
+        // is the north.
         let s = try wallAlongZ()
-        var snake = self.snake(at: touching, 0)
-        snake.advance(direction: SIMD2(1, 0), speed: 3, seconds: 1, over: s)
-        XCTAssertEqual(snake.head.x, touching, accuracy: 1e-9)
-        XCTAssertEqual(snake.head.z, 0, accuracy: 1e-9)
+        var snake = self.snake(at: touching, 5.5)
+        snake.advance(direction: SIMD2(1, 0), speed: 3, seconds: 0.5, over: s)
+        XCTAssertEqual(snake.head.x, touching, accuracy: 1e-9, "the head went into the wall")
+        XCTAssertEqual(snake.head.z, 5.5 - 1.5, accuracy: 1e-9, "the head did not go round at its speed to the roomier side")
+    }
+
+    func testAHeadHeldSquarelyIntoAWallGoesRoundToTheSideWithMoreRoom() throws {
+        // Leaning to neither side, it takes the side with more room: here, starting a
+        // cell from the wall's north end, the south.
+        let s = try wallAlongZ()
+        var snake = self.snake(at: touching, 0.5)
+        snake.advance(direction: SIMD2(1, 0), speed: 3, seconds: 0.5, over: s)
+        XCTAssertEqual(snake.head.x, touching, accuracy: 1e-9, "the head went into the wall")
+        XCTAssertEqual(snake.head.z, 0.5 + 1.5, accuracy: 1e-9, "the head did not go round at its speed to the roomier side")
     }
 
     func testACornerStopsTheHeadBecauseNeitherWayIsOpen() throws {
@@ -147,11 +153,11 @@ final class SnakeTests: XCTestCase {
         // A cell with no module and nothing under it is refused by the same code path
         // a wall is (FR-SNAKE-220), so the requirement's "what it cannot pass" covers
         // both without naming them apart.
-        let s = try surfaces("kit blockout\nsetting greenholm\nfloor 0\n. \n. \n. \n. \n. \n. \n")
+        let s = try surfaces("kit blockout\nsetting greenholm\nfloor 0\n" + String(repeating: ". \n", count: 12))
         var snake = self.snake(at: 0.24, 0)
         snake.advance(direction: SIMD2(1, 1), speed: 3, seconds: 1, over: s)
         XCTAssertEqual(snake.head.x, 0.24, accuracy: 1e-9, "the head walked out over the hole")
-        XCTAssertEqual(snake.head.z, 3 / 2.0.squareRoot(), accuracy: 1e-9)
+        XCTAssertEqual(snake.head.z, 3, accuracy: 1e-9)
         XCTAssertEqual(snake.floor, 0)
     }
 
@@ -178,7 +184,9 @@ final class SnakeTests: XCTestCase {
         var snake = self.snake(at: 0, 0)
         snake.advance(direction: SIMD2(1, 0), speed: 3, seconds: 1, over: s)
         XCTAssertEqual(snake.head.x, 1.25 - tuning.bodyRadius, accuracy: 1e-6)
-        XCTAssertEqual(snake.head.z, 0, accuracy: 1e-12)
+        // Going round it, the head gets no further than its one row of ground allows.
+        XCTAssertLessThanOrEqual(abs(snake.head.z), 0.25 + 1e-9)
+        XCTAssertTrue(s.fits(snake.head, floor: 0), "the body is in the wall")
     }
 
     func testAThinPartitionStopsTheBodyAtItsOwnFaceNotAtItsCell() throws {
@@ -238,8 +246,8 @@ final class SnakeTests: XCTestCase {
         var snake = self.snake(at: start.x, start.y)
         let held = SIMD2(0.11, 0.99)
         snake.advance(direction: held, speed: 3, seconds: 0.2, over: s)
-        let along = held.y / (held.x * held.x + held.y * held.y).squareRoot()
-        XCTAssertEqual(snake.head.z, start.y + 0.6 * along, accuracy: 1e-6, "the head froze in the corner")
+        // At the whole of the base speed along the side wall (ADR-0069).
+        XCTAssertEqual(snake.head.z, start.y + 0.6, accuracy: 1e-6, "the head froze in the corner")
         XCTAssertEqual(snake.head.x, start.x, accuracy: 1e-6)
     }
 
@@ -707,7 +715,9 @@ final class SnakeClimbTests: XCTestCase {
     func testTheTrailCarriesBothHeightsSoTheTailClimbsToo() throws {
         let surfaces = try stairs()
         var body = snake(at: 0)
-        for _ in 0..<120 {
+        // Up to the moment the head is at the top: once there, it goes on along the
+        // balcony and draws the tail up after it.
+        for _ in 0..<120 where body.head.y < kit.floorHeight - 1e-9 {
             body.advance(direction: SIMD2(1, 0), speed: 3.0, seconds: 1.0 / 60, over: surfaces)
         }
         // What the path is for is the tail, so that is what is asked: with the head
@@ -818,14 +828,22 @@ final class SnakeClimbTests: XCTestCase {
         XCTAssertTrue(world.graph.isWalkable(NavigationGraph.Node(floor: 0, x: 18, z: 18)),
                       "the map changed: there is no floor under that wall")
 
-        var body = Snake(head: SIMD3(Double(beside.x) * size, world.kit.floorHeight,
+        // Clear of the wall to begin with: at the cell's centre the body, 0.6 m wide, is
+        // already 5 cm into it, and a body is kept from going deeper than it starts, not
+        // put out.
+        let clear = size / 2 + world.configurations.tuning.bodyRadius
+        var body = Snake(head: SIMD3(Double(wall.x) * size + clear + 0.01, world.kit.floorHeight,
                                      Double(beside.z) * size),
                          floor: 1, segments: 4, segmentSpacing: 0.6)
+        XCTAssertTrue(surfaces.fits(body.head, floor: 1), "the body begins in the wall, so this proves nothing")
+        // Held squarely into it, the head goes round it (FR-SNAKE-015), round its end and
+        // on, or off the balcony's open side; through it it never goes: up on the balcony
+        // its body never comes into the wall's cell.
         for _ in 0..<60 {
             body.advance(direction: SIMD2(-1, 0), speed: 3.0, seconds: 1.0 / 60, over: surfaces)
+            guard body.floor == 1, body.drop == nil else { continue }
+            XCTAssertTrue(surfaces.fits(body.head, floor: 1), "the head went into the balcony's wall")
         }
-        XCTAssertEqual(body.floor, 1, "the head went through the balcony's wall and fell")
-        XCTAssertEqual(body.head.y, world.kit.floorHeight, accuracy: 1e-9)
 
         // And the way down is the flight it came up: this balcony is walled on the two
         // sides that face the room and ends at the map's edge on the others, so with

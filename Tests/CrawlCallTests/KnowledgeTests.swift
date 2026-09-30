@@ -264,10 +264,10 @@ final class KnowledgeTests: XCTestCase {
         remembering.knowledge.snake = [0: .init(point: at(6, 0), time: 1)]
         var bots = [remembering]
         let quiet = Execution.deliberate(&bots, slots: [bot.id], world: floor, now: 2)
-        XCTAssertTrue(quiet.shots.isEmpty, "the bot fired at where it remembered the snake")
+        XCTAssertTrue(quiet.rounds.isEmpty, "the bot fired at where it remembered the snake")
         bots = [remembering]
         let volley = Execution.deliberate(&bots, slots: [bot.id], world: floor, now: 1)
-        XCTAssertFalse(volley.shots.isEmpty, "the bot did not fire at a snake it sees, so the test proves nothing")
+        XCTAssertFalse(volley.rounds.isEmpty, "the bot did not fire at a snake it sees, so the test proves nothing")
     }
 
     func testABotRunsAndHidesOnlyInCellsItKnows() throws {

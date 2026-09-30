@@ -103,6 +103,19 @@ final class ExecutionTests: XCTestCase {
         world.graph.nodes.filter { $0.floor == 0 }.sorted { ($0.z, $0.x) < ($1.z, $1.x) }
     }
 
+    func testABotSentWhereItAlreadyStandsHasSpentItsAction() throws {
+        // Going somewhere is over once the bot is there, and there is where it stands:
+        // it is left with nothing to do, as a bot with no route is, and chooses again.
+        let world = try world()
+        let here = try element(0, of: cells(in: world))
+        var standing = try bot(at: here, in: world)
+        standing.action = .takeCover(at: here)
+        var bots = [standing]
+        Execution.walk(&bots, seconds: 1.0 / 60, world: world)
+        XCTAssertNil(try element(0, of: bots).action, "the bot is still going where it stands")
+        XCTAssertEqual(try element(0, of: bots).speed, 0)
+    }
+
     func testEveryBotWalksEveryFrame() throws {
         // INV-BOT-010: movement is not what the deliberation budget rations.
         let world = try world()
@@ -192,7 +205,8 @@ final class ExecutionTests: XCTestCase {
         let volley = Execution.deliberate(&bots, slots: [0], snake: [target], world: world)
         let entry = try XCTUnwrap(world.configurations.bot.archetypes[Archetype.assault.rawValue])
         XCTAssertEqual(try element(0, of: bots).action, .fire(at: .snake(at: target)))
-        XCTAssertEqual(volley.damage, entry.weaponDamage)
+        let struck = Flight.land(volley.rounds, bots: &bots, snake: [target], world: world)
+        XCTAssertEqual(struck.damage, entry.weaponDamage)
         XCTAssertEqual(try element(0, of: bots).ammunition, before - 1)
     }
 
@@ -202,7 +216,7 @@ final class ExecutionTests: XCTestCase {
         let cell = world.configurations.tuning.navigationGraphCellSize
         var bots = [try bot(0, at: here, in: world)]
         let target = SIMD3(Double(here.x) * cell + cell, 0, Double(here.z) * cell)
-        XCTAssertEqual(Execution.deliberate(&bots, slots: [0], snake: [target], world: world).damage, 0)
+        XCTAssertTrue(Execution.deliberate(&bots, slots: [0], snake: [target], world: world).rounds.isEmpty)
         // With nothing it knows of to fire at, whatever it does is not firing; left idle, it
         // goes to look round (FR-BOT-370).
         if case .fire = try element(0, of: bots).action { XCTFail("fired at a snake it has not seen") }
@@ -216,7 +230,7 @@ final class ExecutionTests: XCTestCase {
         bots[try checkedIndex(0, of: bots)].knowledge.snake = [0: .init(point: .zero, time: 0)]
         bots[try checkedIndex(0, of: bots)].ammunition = 0
         let target = SIMD3(Double(here.x) * cell + cell, 0, Double(here.z) * cell)
-        XCTAssertEqual(Execution.deliberate(&bots, slots: [0], snake: [target], world: world).damage, 0)
+        XCTAssertTrue(Execution.deliberate(&bots, slots: [0], snake: [target], world: world).rounds.isEmpty)
         XCTAssertEqual(try element(0, of: bots).action, .reload)
         XCTAssertEqual(try element(0, of: bots).ammunition,
                        try XCTUnwrap(world.configurations.bot.archetypes[Archetype.assault.rawValue]).magazine)

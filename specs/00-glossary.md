@@ -45,7 +45,7 @@ The convention of this project:
 | **deliberation slot** | One turn of the utility-AI layer for one bot. Handed out on a fixed step, by priority, within a per-frame budget; an interrupt grants one at once. |
 | **baseline device** | The iPhone 15 Pro — the oldest iPhone that runs the system language model, and the device every performance number is measured on (ADR-0015). |
 | **configuration** | A file read at start that carries tuning numbers: the *snake*, *bot*, *match*, *scoring*, *tuning* (destruction and maps), *speech* and *view* configurations, each an `IF-*` requirement, and each setting's own, such as Greenholm's (IF-GREENHOLM-010). JSON, one file per interface under `config/`, a setting's under `config/setting/` (ADR-0012, ADR-0031). |
-| **trap width / trap length** | The corridor width, and the snake length, at which a snake locks itself in (FR-MAP-080); both in the tuning configuration. |
+| **trap width / trap length** | The corridor width, and the snake length, at which a snake locks itself in (FR-MAP-080); both in the tuning configuration. Since 2026-09-30 the snake crawls over itself and cannot lock itself in, and the notion waits on Q-510. |
 | **inspection distance** | How close a bot must come to a body to read its cause of death (FR-SCORE-120); in the scoring configuration. |
 | **override distance** | How close the snake's head must be for a bot to treat it as the top threat regardless of orders (FR-BOT-120); in the bot configuration. |
 | **module / kit** | A module is one placeable piece of map geometry with a declared type; a kit is the licensed set of modules a map is assembled from (FR-MAP-100). |
@@ -57,6 +57,7 @@ The convention of this project:
 | **attribution file** | The repository file listing every third-party asset with its source and licence (CON-PUB-030). |
 | **speech event** | An occurrence the speech configuration names as worth a line — witnessing an eating, a squadmate vanishing, a truce proposed or broken, a body found (FR-CMD-140). |
 | **cover** | Map geometry that blocks line of sight and fire — for and against everyone, snake included. |
+| **round** | What a bot fires: it flies from the shooter's eyes at where the target was as it fired, at the round speed, and strikes the first living bot in its way, enemy or squadmate, or the snake, or stops at a wall or at its range (FR-BOT-060, FR-BOT-400, FR-BOT-405). Drawn in flight as a streak (FR-VIEW-170). |
 | **pre-destructed cover** | Destruction as mesh states — intact → damaged → debris — switched by damage threshold, never simulated. Keeps the graph update to a cell and destruction predictable for the AI. |
 | **load-bearing geometry** | Walls, stairs and floors that never break, because breaking them would break the navigation graph and with it the verticality. |
 | **map specification** | The text file a map is authored in — an ASCII grid per floor — from which the tooling assembles modules, derives the navigation graph and runs the validator. |

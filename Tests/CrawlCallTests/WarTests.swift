@@ -4,7 +4,7 @@
 // hides from the enemy as from the snake (FR-BOT-330); and a bot that stands looks
 // where there is something to see, not at a wall (FR-BOT-340).
 //
-// verifies: FR-BOT-060, FR-BOT-140, FR-BOT-320, FR-BOT-330, FR-BOT-340, FR-VIEW-300
+// verifies: FR-BOT-060, FR-BOT-140, FR-BOT-320, FR-BOT-330, FR-BOT-340, FR-VIEW-300, FR-BOT-400
 import RealityKit
 import XCTest
 @testable import CrawlCall
@@ -55,17 +55,19 @@ final class WarTests: XCTestCase {
         var bots = [shooter, enemy]
         let volley = Execution.deliberate(&bots, slots: [0], world: floor, now: 2)
         XCTAssertEqual(try element(0, of: bots).action, .fire(at: .bot(id: 1)))
+        XCTAssertEqual(volley.rounds.count, 1, "no round was sent")
+        let struck = Flight.land(volley.rounds, bots: &bots, world: floor)
         XCTAssertEqual(try element(1, of: bots).health, enemy.health - damage, accuracy: 1e-9)
         XCTAssertEqual(try element(0, of: bots).ammunition, shooter.ammunition - 1)
-        XCTAssertEqual(volley.damage, 0, "a shot at a bot struck the snake")
-        XCTAssertEqual(volley.hits, 0)
-        XCTAssertEqual(volley.shots.count, 1, "the shot is not drawn")
+        XCTAssertEqual(struck.damage, 0, "a shot at a bot struck the snake")
+        XCTAssertEqual(struck.hits, 0)
 
         // An enemy remembered and not in view now is not fired at.
         var remembering = shooter
         remembering.knowledge.enemies = [1: .init(point: at(8, 0), time: 1)]
         bots = [remembering, enemy]
-        _ = Execution.deliberate(&bots, slots: [0], world: floor, now: 2)
+        let none = Execution.deliberate(&bots, slots: [0], world: floor, now: 2)
+        _ = Flight.land(none.rounds, bots: &bots, world: floor)
         XCTAssertEqual(try element(1, of: bots).health, enemy.health, "the bot fired at an enemy it does not see")
     }
 
@@ -73,7 +75,8 @@ final class WarTests: XCTestCase {
         let floor = try world(String(repeating: ".", count: 16))
         var bots = [try bot(0, .red, at: 1, 0), try bot(1, .red, at: 8, 0)]
         Perception.noticeEnemies(&bots, plan: floor.plan, configuration: configuration, now: 1)
-        _ = Execution.deliberate(&bots, slots: [0], world: floor, now: 1)
+        let volley = Execution.deliberate(&bots, slots: [0], world: floor, now: 1)
+        _ = Flight.land(volley.rounds, bots: &bots, world: floor)
         let full = try bot(1, .red, at: 8, 0).health
         XCTAssertTrue(try element(0, of: bots).knowledge.enemies.isEmpty, "a mate was taken for an enemy")
         XCTAssertEqual(try element(1, of: bots).health, full, "the bot fired at its own squad")
@@ -114,7 +117,8 @@ final class WarTests: XCTestCase {
         enemy.action = .flee(to: node(14, 0))
         enemy.path = [node(9, 0), node(10, 0)]
         var bots = [shooter, enemy]
-        _ = Execution.deliberate(&bots, slots: [0], world: floor, now: 2)
+        let fired = Execution.deliberate(&bots, slots: [0], world: floor, now: 2)
+        _ = Flight.land(fired.rounds, bots: &bots, world: floor)
         let body = try element(1, of: bots)
         XCTAssertEqual(body.health, 0)
         XCTAssertFalse(body.isAlive)
@@ -130,7 +134,7 @@ final class WarTests: XCTestCase {
         living.position.x += 0.1
         bots = [still, living]
         let volley = Execution.deliberate(&bots, slots: [1, 2], world: floor, now: 3)
-        XCTAssertTrue(volley.shots.isEmpty, "somebody fired: the body, or the living at nothing")
+        XCTAssertTrue(volley.rounds.isEmpty, "somebody fired: the body, or the living at nothing")
         XCTAssertEqual(try element(0, of: bots).action, still.action, "the body chose")
         for _ in 0..<30 { Execution.walk(&bots, seconds: 1.0 / 60, world: floor) }
         XCTAssertEqual(try element(0, of: bots).position, still.position, "the body moved")

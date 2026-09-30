@@ -2,7 +2,7 @@
 // above (FR-MAP-150), refused when too steep (FR-MAP-160), joined into the graph by
 // the step height (FR-MAP-020), built as blocks, and climbed by the snake and the bots.
 //
-// verifies: IF-MAP-010, FR-MAP-020, FR-MAP-150, FR-MAP-160, FR-MAP-025
+// verifies: IF-MAP-010, FR-MAP-020, FR-MAP-150, FR-MAP-160, FR-MAP-025, FR-SNAKE-016
 import XCTest
 @testable import CrawlCall
 
@@ -191,6 +191,35 @@ final class FlightTests: XCTestCase {
                         kit: kit, tuning: tuning, map: map)
     }
 
+    func testFeelingAheadTheHeadGoesUpAFlightItComesAtOnTheSlant() throws {
+        // Found on the phone on 2026-09-30: with the head feeling half a metre ahead, it was
+        // hard to go up a flight — the steps two ahead rise more than a step, were felt as a
+        // wall, and the head was turned along them and off the flight. What is walked on is
+        // not felt (FR-SNAKE-016). A flight three cells wide, the head steered at a point on
+        // the landing from off to one side: it gets up as soon as a head that feels nothing.
+        let row = "...." + String(repeating: ">", count: 8) + ".."
+        let above = String(repeating: " ", count: 12) + ".."
+        let s = try surfaces("kit blockout\nsetting greenholm\nfloor 0\n\(row)\n\(row)\n\(row)\nfloor 1\n\(above)\n\(above)\n\(above)\n")
+        let snake = try Launch.world().get().configurations.snake
+        func climb(feel: Double?, from z: Double) -> Int? {
+            var body = Snake(head: SIMD3(0, 0, z), floor: 0, segments: 4, segmentSpacing: cell)
+            let target = SIMD2(12.5 * cell, 1.0 * cell)
+            for frame in 0..<300 {
+                let to = target - SIMD2(body.head.x, body.head.z)
+                let length = (to * to).sum().squareRoot()
+                body.advance(direction: to / length, speed: 3, seconds: 1.0 / 60, over: s,
+                             turningRadius: snake.turningRadius, neck: snake.neckSegments, feel: feel)
+                if body.floor == 1 { return frame }
+            }
+            return nil
+        }
+        for z in [0.0, 0.1, 0.2, 0.8, 0.9, 1.0] {
+            let blind = try XCTUnwrap(climb(feel: nil, from: z), "from z \(z) the flight does not go up, so this proves nothing")
+            let feeling = try XCTUnwrap(climb(feel: snake.feelDistance, from: z), "from z \(z) feeling ahead kept the head off the flight")
+            XCTAssertLessThanOrEqual(feeling, blind, "from z \(z) feeling ahead held the head up on the flight")
+        }
+    }
+
     func testTheSnakeWalksUpAFlightOntoTheFloorAbove() throws {
         let s = try surfaces(text(steps: 8))
         var body = Snake(head: SIMD3(0, 0, 0), floor: 0, segments: 4, segmentSpacing: cell)
@@ -219,12 +248,17 @@ final class FlightTests: XCTestCase {
         let high = SIMD3(8 * cell, 0, 2 * cell)
         XCTAssertNotNil(s.clearance(at: SIMD3(8 * cell, 0, cell), feet: 0), "the tall step is not in the body's way")
         var body = Snake(head: high, floor: 0, segments: 4, segmentSpacing: cell)
+        // Held into the flight's side, the head goes round along it (FR-SNAKE-015), and may
+        // come to where the steps are low enough to go up; beside the tall steps it stays
+        // on the ground, out of them.
         for _ in 0..<60 {
             body.advance(direction: SIMD2(0, -1), speed: 3, seconds: 1.0 / 60, over: s)
+            if body.head.x >= 7.5 * cell {
+                XCTAssertEqual(body.head.y, 0, accuracy: 1e-9, "the head climbed onto a step taller than a step")
+                XCTAssertGreaterThanOrEqual(try XCTUnwrap(s.clearance(at: body.head, feet: 0)).metres, -1e-9,
+                                            "the body is inside the step")
+            }
         }
-        XCTAssertEqual(body.head.y, 0, accuracy: 1e-9, "the head climbed onto a step taller than a step")
-        XCTAssertGreaterThanOrEqual(try XCTUnwrap(s.clearance(at: body.head, feet: 0)).metres, -1e-9,
-                                    "the body is inside the step")
     }
 
     func testTheSnakeDropsOffTheSideOfAHighStep() throws {

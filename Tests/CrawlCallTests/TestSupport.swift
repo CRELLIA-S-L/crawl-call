@@ -54,6 +54,46 @@ extension Execution {
     }
 }
 
+/// Which way to steer the snake to reach a bot where the bot is now, not where it was:
+/// along the route over the graph from the head's cell to the bot's, towards the cell
+/// two steps on, or straight at the bot where it is that near. A bot under fire does not
+/// stand still (FR-BOT-420, FR-BOT-430), so a walk at where it stood at the start
+/// arrives where it no longer is. Nil where the bot is gone.
+func steering(_ game: Game, at prey: Int) -> SIMD2<Double>? {
+    guard let bot = game.bots.first(where: { $0.id == prey }) else { return nil }
+    let cell = game.world.configurations.tuning.navigationGraphCellSize
+    let head = game.snake.head
+    func node(_ point: SIMD3<Double>, floor: Int) -> NavigationGraph.Node {
+        NavigationGraph.Node(floor: floor, x: Int((point.x / cell).rounded()), z: Int((point.z / cell).rounded()))
+    }
+    let route = Route.between(node(head, floor: game.snake.floor), node(bot.position, floor: bot.floor),
+                              in: game.world.graph)
+    let ahead = 2
+    let there = route.count > ahead
+        ? game.world.graph.centre(of: route[ahead - 1], cellSize: cell, floorHeight: game.world.kit.floorHeight)
+        : bot.position
+    let toward = SIMD2(there.x - head.x, there.z - head.z)
+    let length = (toward * toward).sum().squareRoot()
+    return length > 0 ? toward / length : .zero
+}
+
+extension Flight {
+    /// Flies rounds a sixtieth of a second at a time until every one is spent, with
+    /// nothing moving meanwhile: what a deliberation's rounds come to where the test
+    /// asks about what they struck and not about when (FR-BOT-400, FR-BOT-405).
+    static func land(_ rounds: [Round], bots: inout [Bot], snake: [SIMD3<Double>] = [], world: World) -> Struck {
+        var flying = rounds
+        var struck = Struck()
+        while !flying.isEmpty {
+            let frame = fly(&flying, seconds: 1.0 / 60, bots: &bots, snake: snake, plan: world.plan,
+                            configuration: world.configurations.bot, bodyRadius: world.configurations.tuning.bodyRadius)
+            struck.damage += frame.damage
+            struck.hits += frame.hits
+        }
+        return struck
+    }
+}
+
 /// How many triangles a mesh draws, over all its models and parts.
 @MainActor
 func triangles(of mesh: MeshResource) -> Int {

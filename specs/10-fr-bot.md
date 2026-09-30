@@ -140,19 +140,79 @@ derives_from: []
 depends_on: [FR-BOT-080]
 refines: []
 conflicts_with: []
-code: [Sources/CrawlCall/Bot/Execution.swift, Sources/CrawlCall/Bot/Deliberation.swift, Sources/CrawlCall/Bot/Bot.swift, Sources/CrawlCall/Config/Utility.swift, Sources/CrawlCall/Game.swift]
-tests: [Tests/CrawlCallTests/ExecutionTests.swift, Tests/CrawlCallTests/ShotTests.swift, Tests/CrawlCallTests/WarTests.swift]
+code: [Sources/CrawlCall/Bot/Execution.swift, Sources/CrawlCall/Bot/Deliberation.swift, Sources/CrawlCall/Bot/Bot.swift, Sources/CrawlCall/Bot/Round.swift, Sources/CrawlCall/Config/Utility.swift, Sources/CrawlCall/Game.swift]
+tests: [Tests/CrawlCallTests/ExecutionTests.swift, Tests/CrawlCallTests/ShotTests.swift, Tests/CrawlCallTests/WarTests.swift, Tests/CrawlCallTests/RoundTests.swift]
 created: 2026-09-21
 ```
 
-While a bot's chosen action is to fire and it has a line of fire to its target, the system **shall** deal the target the damage per shot of the bot's weapon in the bot configuration.
+While a bot's chosen action is to fire and it has a line of fire to its target, the system **shall** send a round from the bot's eyes towards the point where the target is at that moment, at the round speed of the bot configuration.
 
 **Rationale.** Concept §1: bots are fast, armed and organised.
 A target may be an enemy bot or any segment of the snake — shooting at the tail is a meaningful action because of FR-SNAKE-070.
 A line of fire leaves from the bot's eyes, the height it looks from (FR-BOT-050): what a bot can see over, it can shoot over, and a line of sight it could not fire along would be a bot that watches the snake and cannot touch it (ADR-0022).
 
-**Fire at an enemy bot**, since 2026-09-26, when the maintainer asked for the squads to fight: a bot fires at an enemy it sees now, its line of fire running to the enemy's eyes, and the enemy is dealt the damage at once (ADR-0044). Until then only the snake was fired at, the vertical slice asking for the snake and the hunt alone (concept §13 stage 1).
+**Fire at an enemy bot**, since 2026-09-26, when the maintainer asked for the squads to fight: a bot fires at an enemy it sees now, its line of fire running to the enemy's eyes (ADR-0044). Until then only the snake was fired at, the vertical slice asking for the snake and the hunt alone (concept §13 stage 1).
 A shot goes off once per deliberation step rather than once per frame, so that the damage a second does not depend on the frame rate. No requirement gives a weapon a rate of fire; when one does, the cadence moves out of the deliberation period and into the bot configuration.
+
+**A round flies**, since 2026-09-30. Until then a shot struck in the step it was fired, and a bot that moved was hit as surely as one that stood, so two bots stood face to face and fired until one fell. The maintainer asked for bots that avoid danger — fire from cover, or at least keep moving — and chose a round with a speed over a chance to hit: a round sent at where the target is now misses a target that has moved on, with nothing left to chance (ADR-0063). What the round strikes is FR-BOT-400's; where it stops, FR-BOT-405's.
+At the shipped 25 m/s a round crosses the six metres most bots see in a quarter of a second, in which a bot moving across the line at the strafing speed (FR-BOT-430) is half a metre aside, more than the body radius from its middle to its side; nearer than 3.75 m it is struck moving or not.
+
+### FR-BOT-400 — A round strikes the first body in its way
+
+```yaml
+status: implemented
+verification: T
+derives_from: [FR-BOT-060]
+depends_on: [FR-BOT-060, FR-BOT-320]
+refines: []
+conflicts_with: []
+code: [Sources/CrawlCall/Bot/Flight.swift, Sources/CrawlCall/Bot/Round.swift, Sources/CrawlCall/Game.swift, Sources/CrawlCall/Config/Utility.swift]
+tests: [Tests/CrawlCallTests/RoundTests.swift, Tests/CrawlCallTests/WarTests.swift]
+created: 2026-09-30
+```
+
+While a round is in flight, the system **shall** deal the damage per shot of the weapon that fired it to the first living bot of either squad, other than the one that fired it, or segment of the snake that its path crosses, and end its flight there.
+
+**Rationale.** The maintainer, 2026-09-30, choosing what a miss does: it flies on and strikes whoever is in its way, the enemy, a squadmate or the snake. A round that could not strike a squadmate would make standing in a squadmate's line of fire free; FR-BOT-410 is the other side of it.
+A bot is struck within the body radius of the tuning round the ground it stands on, up to its figure's height; the snake within the body radius round the line through its head and tail points (ADR-0063). A body — a bot with no health left (FR-BOT-320) — is not struck: it lies flat, below a round sent at a standing bot's eyes, and the flight leaves it out altogether (ADR-0063). The maintainer agreed on 2026-09-30 that the statement say "living".
+
+### FR-BOT-405 — A round stops at what it meets
+
+```yaml
+status: implemented
+verification: T
+derives_from: [FR-BOT-060]
+depends_on: [FR-BOT-060, FR-MAP-220]
+refines: []
+conflicts_with: []
+code: [Sources/CrawlCall/Bot/Flight.swift, Sources/CrawlCall/Map/Sight.swift, Sources/CrawlCall/Config/Configurations.swift]
+tests: [Tests/CrawlCallTests/RoundTests.swift]
+created: 2026-09-30
+```
+
+When a round's path meets map geometry, or the round has flown the round range of the bot configuration, the system **shall** end its flight without damage.
+
+**Rationale.** A round that flew on for ever would strike a bot across the island that never saw the fight. Map geometry is what stops a line of sight (FR-MAP-220), because a line of fire is one (ADR-0022): what a bot sees over, a round flies over.
+The range, 20 m at the shipped numbers, is over three times the six metres most bots see and over twice the sniper's nine, so a miss is still a danger to whoever stands behind the target, and short enough that a round is spent in under a second.
+
+### FR-BOT-410 — A bot does not fire through a squadmate
+
+```yaml
+status: implemented
+verification: T
+derives_from: [FR-BOT-400]
+depends_on: [FR-BOT-400, FR-BOT-050]
+refines: []
+conflicts_with: []
+code: [Sources/CrawlCall/Bot/Deliberation.swift]
+tests: [Tests/CrawlCallTests/RoundTests.swift]
+created: 2026-09-30
+```
+
+While a squadmate the bot sees stands within the body radius of its line of fire to its target, the system **shall** not have the bot fire.
+
+**Rationale.** Once a round strikes whoever is in its way (FR-BOT-400), a squad in file would shoot itself to pieces. A squadmate it sees, because a bot acts on what it knows (FR-BOT-220): one it does not see is one it cannot know to be in the way.
+A target with a squadmate in the way is no target: the bot fires at another, or does something else. The snake within the override distance is taken whatever else there is (FR-BOT-120), except that it is not fired at through a squadmate.
 
 ### FR-BOT-070 — Heavy and sapper weapons destroy cover
 
@@ -704,7 +764,7 @@ depends_on: [FR-BOT-270, FR-BOT-060, IF-BOT-010]
 refines: []
 conflicts_with: []
 code: [Sources/CrawlCall/Bot/Bot.swift, Sources/CrawlCall/Bot/Execution.swift, Sources/CrawlCall/Bot/Squads.swift, Sources/CrawlCall/View/BotEntity.swift, Sources/CrawlCall/Config/Utility.swift, Sources/CrawlCall/Config/Configurations.swift, config/bot.json]
-tests: [Tests/CrawlCallTests/BotFacingTests.swift]
+tests: [Tests/CrawlCallTests/BotFacingTests.swift, Tests/CrawlCallTests/BotMotionTests.swift]
 created: 2026-09-25
 ```
 
@@ -713,6 +773,7 @@ While a match is running, the system **shall** turn each bot, no faster than the
 **Rationale.** The maintainer, 2026-09-25: the second step of the bots' movement. A figure that never turns slides sideways and backwards, and a character that faces where it goes reads as going there.
 A facing of the model's and not only the drawing's, because what a bot can see is to depend on it: its field of view (FR-BOT-050) is measured from where it faces.
 No faster than a turn speed, so that a bot swings round rather than snapping; facing the other squad at the start, because the two are at war (FR-BOT-020) and the enemy is what a soldier watches for.
+The way it is walking is the way its route goes beyond the cell it is in, not the way a frame moved it: a squadmate's push turned that this way and that, and a bot walking in a group twitched (ADR-0064).
 
 ### FR-BOT-290 — A bot gathers speed and slows to a stop
 
@@ -751,6 +812,7 @@ While a match is running, the system **shall** keep any two bots on the same flo
 
 **Rationale.** The maintainer, 2026-09-25: part of the fifth step of the bots' movement. Two figures standing inside each other read as a mistake, and a squad that walks through itself is not a squad of bodies.
 Two body radii, the radius FR-MAP-025 makes common to the snake and the bots. Each bot of a pair that has come too close gives way by half of what they overlap, where it can stand; a bot the snake is eating does not move (FR-SNAKE-090), and the other gives way by all of it.
+Two bots that both want to stand where the other is would push each other back and forth for ever; seen on the phone on 2026-09-30, bots twitching on the spot in a fight. A bot passes a point of its route once it is over it, and stops against a bot standing on the cell it is making for (ADR-0064).
 
 ### FR-BOT-310 — A squad hears what its bots have seen after a delay
 
@@ -828,6 +890,65 @@ When a bot stops with less than 1.5 m of open ground before it, as far as it kno
 
 **Rationale.** The maintainer, 2026-09-26: bots are not to stand looking at a wall. A bot that faces where it last walked (FR-BOT-280) arrives at cover facing the wall it hides behind, and a bot sees only within its field of view (FR-BOT-050), so it would stand blind.
 As far as it knows: open ground ends at the building's outline (FR-BOT-250) and at a cell it has seen that nobody can stand in (FR-BOT-230); a cell it has not seen is open, and is what is worth looking at (ADR-0044). Three cells, 1.5 m, is more than a wall at arm's length and less than a corridor's length.
+
+## Under fire
+
+What a bot does about the rounds coming its way: fire from beside cover where there is some, and keep moving where there is none (ADR-0063).
+
+### FR-BOT-420 — A bot fires from beside cover
+
+```yaml
+status: implemented
+verification: T
+derives_from: []
+depends_on: [FR-BOT-060, FR-BOT-330, FR-BOT-220]
+refines: []
+conflicts_with: []
+code: [Sources/CrawlCall/Bot/Deliberation.swift, Sources/CrawlCall/Bot/Execution.swift, Sources/CrawlCall/Bot/Bot.swift]
+tests: [Tests/CrawlCallTests/SkirmishTests.swift]
+created: 2026-09-30
+```
+
+When a bot chooses to fire and, within the cover search distance, there is a cell from which it has a line of fire to its target and next to which a cell is hidden from every enemy and the snake it knows of, the system **shall** have it fire from the nearest such cell.
+
+**Rationale.** The maintainer, 2026-09-30: bots stood before one another and fired point-blank, where anybody sensible avoids the danger and fires from cover. Hidden is FR-BOT-330's watched turned round, so that the cell a bot fires from is one step from the cell it would hide in; the search distance is cover's, the grouping distance, because cover further off is somebody else's.
+A bot that stepped behind the cover to reload (FR-BOT-425) comes out again to fire from where it did, at what it was firing at as it last knew it, and fires once it sees it (ADR-0063).
+
+### FR-BOT-425 — A bot reloads behind cover
+
+```yaml
+status: implemented
+verification: T
+derives_from: [FR-BOT-420]
+depends_on: [FR-BOT-420]
+refines: []
+conflicts_with: []
+code: [Sources/CrawlCall/Bot/Execution.swift, Sources/CrawlCall/Bot/Bot.swift, Sources/CrawlCall/Bot/Deliberation.swift]
+tests: [Tests/CrawlCallTests/SkirmishTests.swift]
+created: 2026-09-30
+```
+
+When a bot firing from beside cover reloads, the system **shall** move it into the hidden cell next to where it fired from.
+
+**Rationale.** The maintainer, 2026-09-30, choosing cover, and movement where there is none: a bot fires from the edge of the cover and ducks behind it to reload. The magazine is full once the bot is in the hidden cell; a reload takes no time of its own, and one done before the step behind would leave nothing to step behind for (ADR-0063).
+
+### FR-BOT-430 — A bot with no cover beside it fires on the move
+
+```yaml
+status: implemented
+verification: T
+derives_from: []
+depends_on: [FR-BOT-420, FR-BOT-290]
+refines: []
+conflicts_with: []
+code: [Sources/CrawlCall/Bot/Execution.swift, Sources/CrawlCall/Bot/Bot.swift, Sources/CrawlCall/Config/Configurations.swift, Sources/CrawlCall/Config/Utility.swift]
+tests: [Tests/CrawlCallTests/SkirmishTests.swift, Tests/CrawlCallTests/BotFacingTests.swift]
+created: 2026-09-30
+```
+
+While a bot fires and FR-BOT-420 finds it no cell, the system **shall** move it across its line of fire at the strafing speed of the bot configuration, turning back after the strafing interval of the bot configuration or where it cannot go on.
+
+**Rationale.** The maintainer, 2026-09-30: with no cover, a bot should at least move. Across the line, because a round flies at where its target was (FR-BOT-060): 2 m/s takes a bot half a metre aside in the quarter second a round crosses six metres. Turning back every second keeps it near where it chose to fight, and makes where it will be less plain to whoever fires at it.
 
 ## With nothing to do
 

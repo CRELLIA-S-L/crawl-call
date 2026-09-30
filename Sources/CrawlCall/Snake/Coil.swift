@@ -5,7 +5,7 @@
 // to fit, the snake shoves it out to where one does, over time and not in a frame
 // (ADR-0053).
 //
-// implements: FR-SNAKE-280
+// implements: FR-SNAKE-280, FR-SNAKE-285
 import Foundation
 
 struct Coil: Equatable {
@@ -22,6 +22,9 @@ struct Coil: Equatable {
     private(set) var left: Double
     /// The angle round the bot the head starts at, from +x towards +z.
     let start: Double
+    /// Whether the head has gone off a ledge as it went round, taking the bot down with
+    /// it (FR-SNAKE-285).
+    var falling = false
 
     init(prey: Int, at position: SIMD3<Double>, head: SIMD3<Double>, radius: Double, room: SIMD3<Double>,
          configuration: SnakeConfiguration.Coil) {

@@ -122,6 +122,85 @@ final class LungeTests: XCTestCase {
         XCTAssertEqual(Double(heads.count) * frame, lunge.windUp + lunge.reach / lunge.speed, accuracy: frame * 1.5)
     }
 
+    // MARK: ahead only
+
+    /// A snake that has crawled east a little, over open floor: the head going +x.
+    private func crawledEast(over floor: Surfaces) -> Snake {
+        var snake = self.snake(at: 2.0, 1.0)
+        for _ in 0..<30 {
+            snake.advance(direction: SIMD2(1, 0), speed: shipped.configurations.snake.baseSpeed, seconds: frame,
+                          over: floor, turningRadius: shipped.configurations.snake.turningRadius)
+        }
+        return snake
+    }
+
+    func testOnlyABotAheadOfTheHeadIsLungedAt() throws {
+        // Found on the phone on 2026-09-30: a lunge at a bot behind the head sent the head
+        // back through the neck and folded the snake in two.
+        let floor = try surfaces(String(repeating: ".", count: 24), String(repeating: ".", count: 24),
+                                 String(repeating: ".", count: 24), String(repeating: ".", count: 24))
+        let snake = crawledEast(over: floor)
+        let head = snake.head
+        func at(degrees: Double) -> SIMD3<Double> {
+            let angle = degrees * .pi / 180
+            return head + SIMD3(cos(angle), 0, sin(angle))
+        }
+        XCTAssertTrue(Lunge.isAhead(at(degrees: 0), of: snake, within: lunge.angle))
+        XCTAssertTrue(Lunge.isAhead(at(degrees: lunge.angle - 1), of: snake, within: lunge.angle))
+        XCTAssertTrue(Lunge.isAhead(at(degrees: -(lunge.angle - 1)), of: snake, within: lunge.angle))
+        XCTAssertFalse(Lunge.isAhead(at(degrees: lunge.angle + 1), of: snake, within: lunge.angle))
+        XCTAssertFalse(Lunge.isAhead(at(degrees: 180), of: snake, within: lunge.angle), "a bot behind the head is ahead")
+
+        // Of a bot behind, nearer, and one ahead, further, the one ahead is lunged at.
+        func bot(_ id: Int, _ point: SIMD3<Double>) throws -> Bot {
+            try XCTUnwrap(Bot(id: id, squad: .red, archetype: .assault, at: point, floor: 0,
+                              configuration: shipped.configurations.bot))
+        }
+        let behind = try bot(1, head + SIMD3(-lunge.reach * 0.4, 0, 0))
+        let ahead = try bot(2, head + SIMD3(lunge.reach * 0.8, 0, 0))
+        XCTAssertEqual(Game.prey(ahead: snake, among: [behind, ahead], lunge: lunge), ahead.id)
+        XCTAssertNil(Game.prey(ahead: snake, among: [behind], lunge: lunge), "the eat button lights for a bot behind")
+    }
+
+    func testABotThatGetsOutFromAheadIsMissedAndTheHeadDoesNotTurnAfterIt() throws {
+        let floor = try surfaces(String(repeating: ".", count: 24), String(repeating: ".", count: 24),
+                                 String(repeating: ".", count: 24), String(repeating: ".", count: 24))
+        var snake = crawledEast(over: floor)
+        let start = snake.head
+        // Ahead at first, then round behind the head before the wind-up is over.
+        var current = Lunge(prey: 1, configuration: lunge)
+        var prey = start + SIMD3(lunge.reach * 0.5, 0, 0)
+        XCTAssertEqual(Lunge.step(&current, snake: &snake, prey: prey, seconds: frame, bite: Game.biteReach(tuning),
+                                  over: floor), .going)
+        prey = start + SIMD3(-lunge.reach * 0.5, 0, 0)
+        XCTAssertEqual(Lunge.step(&current, snake: &snake, prey: prey, seconds: frame, bite: Game.biteReach(tuning),
+                                  over: floor), .missed)
+        XCTAssertEqual(Perception.metres(snake.head, start), 0, accuracy: 1e-9, "the head went after a bot behind it")
+    }
+
+    func testABotWithinTheBiteIsReachedEvenBesideTheHead() throws {
+        // The head has come up to the bot, and the bot has stepped round beside it: it is
+        // within the bite, and the lunge ends in the meal, not in a miss.
+        let floor = try surfaces(String(repeating: ".", count: 24), String(repeating: ".", count: 24),
+                                 String(repeating: ".", count: 24), String(repeating: ".", count: 24))
+        var snake = crawledEast(over: floor)
+        var current = Lunge(prey: 1, configuration: lunge)
+        let ahead = snake.head + SIMD3(lunge.reach * 0.9, 0, 0)
+        for _ in 0..<Int((lunge.windUp / frame).rounded(.up)) + 1 {
+            _ = Lunge.step(&current, snake: &snake, prey: ahead, seconds: frame, bite: Game.biteReach(tuning), over: floor)
+        }
+        XCTAssertFalse(current.isWindingUp)
+        let beside = snake.head + SIMD3(-Game.biteReach(tuning) * 0.5, 0, 0)
+        XCTAssertFalse(Lunge.isAhead(beside, of: snake, within: lunge.angle), "the bot is ahead, so this proves nothing")
+        XCTAssertEqual(Lunge.step(&current, snake: &snake, prey: beside, seconds: frame, bite: Game.biteReach(tuning),
+                                  over: floor), .reached)
+    }
+
+    func testTheShippedLungeAngleIsTheMaintainers() {
+        XCTAssertEqual(lunge.angle, 60, accuracy: 1e-9)
+        XCTAssertEqual(shipped.configurations.snake.turningRadius, 0.35, accuracy: 1e-9)
+    }
+
     func testAWallBetweenStopsTheHeadAndTheLungeMisses() throws {
         // A wall across the whole room between the head and the prey: the head goes by
         // the snake's own rules, so it stops at the wall (FR-SNAKE-010).
@@ -202,20 +281,9 @@ final class LungeTests: XCTestCase {
     /// Steers the head along the graph to the first bot on floor 0 until one is within
     /// the lunge's reach.
     private func walk(_ game: inout Game, toLungeRangeIn world: World, from start: NavigationGraph.Node) throws {
-        let cell = world.configurations.tuning.navigationGraphCellSize
         let prey = try XCTUnwrap(game.bots.filter { $0.floor == 0 }.first)
-        var route = Route.between(start,
-                                  NavigationGraph.Node(floor: 0, x: Int((prey.position.x / cell).rounded()),
-                                                       z: Int((prey.position.z / cell).rounded())),
-                                  in: world.graph)
         for _ in 0..<1800 where !game.canLunge {
-            if let next = route.first {
-                let head = game.snake.head
-                let toward = SIMD2(Double(next.x) * cell - head.x, Double(next.z) * cell - head.z)
-                let length = (toward * toward).sum().squareRoot()
-                if length < 0.1 { route.removeFirst() }
-                game.apply(.move(direction: length > 0 ? toward / length : .zero))
-            }
+            if let way = steering(game, at: prey.id) { game.apply(.move(direction: way)) }
             game.advance(seconds: frame)
         }
     }

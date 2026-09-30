@@ -3,7 +3,7 @@
 // fits, at no more than the shove speed. Geometry is compared within a tolerance, never
 // for equality (`specs/50-verification.md`).
 //
-// verifies: FR-SNAKE-280
+// verifies: FR-SNAKE-280, FR-SNAKE-285
 import XCTest
 @testable import CrawlCall
 
@@ -114,5 +114,50 @@ final class CoilTests: XCTestCase {
         }
         XCTAssertLessThan(level(prey, SIMD3(0.5, 0, 1.0)), level(place, SIMD3(0.5, 0, 1.0)) + 1e-9)
         XCTAssertGreaterThan(level(prey, SIMD3(0.5, 0, 1.0)), 0, "the bot was never shoved")
+    }
+
+    // MARK: off a ledge (FR-SNAKE-285)
+
+    func testACoilThatGoesOffAFlightTakesTheBotDownAndEndsWhereTheHeadLands() throws {
+        // Found on the phone on 2026-09-30: a bot on a stair could not be eaten. A flight
+        // one cell wide with the ground either side of it, the bot halfway up: the head
+        // goes round it off the flight's side, and falls.
+        let text = "kit blockout\nsetting greenholm\nfloor 0\n.............\n....>>>>>>>>.\n.............\n"
+            + "floor 1\n             \n            .\n             \n"
+        let map = try MapParser.parse(text, kit: shipped.kit)
+        let over = Surfaces(graph: NavigationGraph.derive(from: map, stepHeight: tuning.stepHeight),
+                            kit: shipped.kit, tuning: tuning, map: map)
+        let cell = tuning.navigationGraphCellSize
+        func onFlight(_ x: Int) -> SIMD3<Double> {
+            let node = over.cell(of: SIMD3(Double(x) * cell, 0, cell), floor: 0)
+            return SIMD3(Double(x) * cell, over.height(of: node), cell)
+        }
+        let stairTop = onFlight(9)
+        XCTAssertGreaterThan(stairTop.y, 0.5, "the bot is not up the flight, so this proves nothing")
+        var prey = try XCTUnwrap(Bot(id: 1, squad: .red, archetype: .assault, at: stairTop, floor: 0,
+                                     configuration: shipped.configurations.bot))
+        var snake = Snake(head: onFlight(7), floor: 0, segments: 4, segmentSpacing: radius)
+        var current = Coil(prey: prey.id, at: prey.position, head: snake.head, radius: radius,
+                           room: Coil.room(around: prey.position, floor: 0, radius: radius, reach: coil.shoveReach,
+                                           over: over),
+                           configuration: coil)
+        var fell = false, done = false
+        for _ in 0..<600 {
+            done = Game.coil(&current, snake: &snake, prey: &prey, seconds: frame,
+                              configuration: shipped.configurations.snake, over: over)
+            fell = fell || snake.drop != nil
+            if snake.drop != nil {
+                XCTAssertEqual(Perception.metres(prey.position, snake.head), 0, accuracy: 1e-9,
+                               "the bot was left behind as the head fell")
+            }
+            if done { break }
+        }
+        XCTAssertTrue(fell, "the head did not go off the flight, so this proves nothing")
+        XCTAssertGreaterThan(snake.drops, 0, "a drop was not counted")
+        XCTAssertTrue(done, "the coil never ended")
+        XCTAssertNil(snake.drop, "the coil ended in the air, where no meal begins")
+        XCTAssertEqual(Perception.metres(prey.position, snake.head), 0, accuracy: 1e-9, "the bot is not where the head landed")
+        XCTAssertEqual(prey.floor, snake.floor)
+        XCTAssertLessThan(snake.head.y, stairTop.y - 0.25, "the head did not come down")
     }
 }

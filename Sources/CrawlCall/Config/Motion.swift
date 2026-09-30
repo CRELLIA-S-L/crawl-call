@@ -2,10 +2,26 @@
 // tuning (ART-070): how small a movement is no movement, how many times a step is
 // retried along what stopped it, how precisely a contact is found.
 //
-// implements: FR-SNAKE-010, FR-SNAKE-015, FR-SNAKE-020, FR-SNAKE-030, FR-SNAKE-220, FR-SNAKE-270, FR-SNAKE-280
+// implements: FR-SNAKE-010, FR-SNAKE-015, FR-SNAKE-020, FR-SNAKE-030, FR-SNAKE-220, FR-SNAKE-270, FR-SNAKE-280, FR-SNAKE-055, FR-SNAKE-016
 import Foundation
 
 enum Motion {
+    /// Metres the head may rise onto its own body, or come down off it, for each metre it
+    /// covers on the ground (FR-SNAKE-055, ADR-0067): steep enough to rest on a body it
+    /// crosses squarely by the time it is over it, not so steep that it jumps.
+    static let liftSlope = 2.0
+    /// Metres the head may rise onto its own body for each metre it covers: steeper than
+    /// it comes down, so that a head going round an obstacle straight onto its body at the
+    /// whole of its speed (FR-SNAKE-015) is up on it before it is into it.
+    static let liftRise = 4.0
+    /// The share of the held direction that must run along an obstacle for the stick to
+    /// lean to a side of it: five degrees off square (sin 5°). Less, and it leans to
+    /// neither, so that a stick held at a point just past an obstacle does not swing the
+    /// head from one side of it to the other (FR-SNAKE-015, FR-SNAKE-016, ADR-0069).
+    static let leanShare = 0.0872
+    /// Metres along each way round an obstacle a head pushed squarely into it looks for
+    /// room, to go round by the roomier (FR-SNAKE-015, ADR-0069): two body widths.
+    static let roomProbe = 1.2
     /// Metres below which what is left of a frame's distance, or what a step covered,
     /// is no movement at all.
     static let negligibleDistance = 1e-12

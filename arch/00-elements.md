@@ -108,7 +108,7 @@ It depends on the map layer for the arena's plan and on start-up for the view co
 ```yaml
 status: built
 carries: [Sources/CrawlCall/Snake]
-requirements: [FR-SNAKE-010, FR-SNAKE-015, FR-SNAKE-020, FR-SNAKE-030, FR-SNAKE-060, FR-SNAKE-070, FR-SNAKE-090, FR-SNAKE-100, FR-SNAKE-210, FR-SNAKE-220, FR-SNAKE-260, FR-SNAKE-270, FR-SNAKE-280, FR-SNAKE-290, FR-MAP-025]
+requirements: [FR-SNAKE-010, FR-SNAKE-015, FR-SNAKE-016, FR-SNAKE-020, FR-SNAKE-030, FR-SNAKE-060, FR-SNAKE-070, FR-SNAKE-090, FR-SNAKE-100, FR-SNAKE-210, FR-SNAKE-220, FR-SNAKE-260, FR-SNAKE-270, FR-SNAKE-055, FR-SNAKE-056, FR-SNAKE-280, FR-SNAKE-285, FR-SNAKE-290, FR-MAP-025]
 depends_on: [E-040]
 interface: a held direction and a frame's time in; a head, a floor and a trail out
 ```
@@ -139,7 +139,7 @@ Whether a match is still on belongs here for the same reason: the two ends (FR-S
 ```yaml
 status: built
 carries: [Sources/CrawlCall/Bot]
-requirements: [FR-BOT-010, FR-BOT-020, FR-BOT-030, FR-BOT-050, FR-BOT-060, FR-BOT-080, FR-BOT-090, FR-BOT-110, FR-BOT-115, FR-BOT-118, FR-BOT-150, FR-BOT-160, FR-BOT-165, FR-BOT-170, FR-BOT-200, FR-BOT-210, FR-BOT-140, FR-BOT-320, FR-BOT-330, FR-BOT-340, FR-BOT-350, FR-BOT-360, FR-BOT-370, FR-BOT-380, FR-VIEW-170, INV-BOT-010, INV-BOT-020, INV-BOT-030, FR-BOT-120, FR-BOT-180, FR-BOT-190, FR-SCORE-070, FR-SCORE-080, FR-SCORE-090, FR-SCORE-100, FR-SCORE-125, FR-SCORE-130]
+requirements: [FR-BOT-010, FR-BOT-020, FR-BOT-030, FR-BOT-050, FR-BOT-060, FR-BOT-080, FR-BOT-090, FR-BOT-110, FR-BOT-115, FR-BOT-118, FR-BOT-150, FR-BOT-160, FR-BOT-165, FR-BOT-170, FR-BOT-200, FR-BOT-210, FR-BOT-140, FR-BOT-320, FR-BOT-330, FR-BOT-340, FR-BOT-350, FR-BOT-360, FR-BOT-370, FR-BOT-380, FR-BOT-400, FR-BOT-405, FR-BOT-410, FR-BOT-420, FR-BOT-425, FR-BOT-430, FR-VIEW-170, INV-BOT-010, INV-BOT-020, INV-BOT-030, FR-BOT-120, FR-BOT-180, FR-BOT-190, FR-SCORE-070, FR-SCORE-080, FR-SCORE-090, FR-SCORE-100, FR-SCORE-125, FR-SCORE-130]
 depends_on: [E-020, E-040]
 interface: a world, where the snake is and a frame's time in; squads that see, decide, walk and fire out
 ```
@@ -147,7 +147,7 @@ interface: a world, where the snake is and a frame's time in; squads that see, d
 Everything a bot is: the kinds there are, who is on the map at the whistle, what each of them knows, what it decides and what it then does.
 
 **Rationale.** One part rather than a perception part, a decision part and a movement part, because the three are one loop and the seams between them would be crossed every frame: what a bot knows is what it decides on, and what it decided is what it walks. Splitting them would mean three files agreeing about the same bot every step.
-It is separate from the match (E-070) for the opposite reason: the match owns the snake, the clock and the order of a frame, and a squad that reached into those would decide when the world moves. What crosses the boundary is a world, the snake's whereabouts and a frame's time in; squads, their decisions and the damage they dealt out.
+It is separate from the match (E-070) for the opposite reason: the match owns the snake, the clock and the order of a frame, and a squad that reached into those would decide when the world moves. What crosses the boundary is a world, the snake's whereabouts and a frame's time in; squads, their decisions, the rounds they sent and what those struck of the snake out.
 It leans on start-up for the numbers an archetype is made of (IF-BOT-010) and on the map layer for the graph it walks and the geometry it sees through; it knows nothing about what any of it looks like.
 
 ### E-080 — The runners

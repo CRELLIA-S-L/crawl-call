@@ -142,15 +142,15 @@ final class InterruptTests: XCTestCase {
         var bots = [shooter, enemy]
         let held = Execution.deliberate(&bots, slots: [shooter.id], world: world, now: now, interrupted: [shooter.id])
         XCTAssertEqual(bots.first?.action, .fire(at: .bot(id: enemy.id)), "the interrupted bot did not decide")
-        XCTAssertTrue(held.shots.isEmpty, "fired again half a period after its last shot")
+        XCTAssertTrue(held.rounds.isEmpty, "fired again half a period after its last shot")
         XCTAssertEqual(bots.first?.ammunition, shooter.ammunition)
         // In its own turn, or more than a period on, it fires.
         bots = [shooter, enemy]
-        XCTAssertEqual(Execution.deliberate(&bots, slots: [shooter.id], world: world, now: now).shots.count, 1)
+        XCTAssertEqual(Execution.deliberate(&bots, slots: [shooter.id], world: world, now: now).rounds.count, 1)
         shooter.lastShot = now - period * 1.5
         bots = [shooter, enemy]
         XCTAssertEqual(Execution.deliberate(&bots, slots: [shooter.id], world: world, now: now,
-                                            interrupted: [shooter.id]).shots.count, 1)
+                                            interrupted: [shooter.id]).rounds.count, 1)
         XCTAssertEqual(bots.first?.lastShot ?? .nan, now, accuracy: 1e-12)
     }
 

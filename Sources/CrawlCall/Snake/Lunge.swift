@@ -6,9 +6,11 @@
 // lunge read as one and gives the prey its moment to run. Then the head goes for the
 // prey at the lunge speed, by the snake's own movement rules, for as long as crossing
 // the lunge reach at that speed takes, and no longer: a prey that got away in that
-// time, or got something between itself and the head, is missed (ADR-0052).
+// time, or got something between itself and the head, is missed (ADR-0052). Only a
+// bot ahead of the head is lunged at, and one that gets out from ahead of it is
+// missed: a head sent round behind itself folds the snake in two (ADR-0065).
 //
-// implements: FR-SNAKE-270
+// implements: FR-SNAKE-270, FR-SNAKE-055
 import Foundation
 
 struct Lunge: Equatable {
@@ -22,6 +24,8 @@ struct Lunge: Equatable {
     let travel: Double
     /// Metres the travel covers where nothing stops it.
     let reach: Double
+    /// Degrees to either side of the way the head is going that the prey must keep to.
+    let angle: Double
 
     init(prey: Int, configuration: SnakeConfiguration.Lunge) {
         self.prey = prey
@@ -29,6 +33,7 @@ struct Lunge: Equatable {
         self.reach = max(configuration.reach, .zero)
         self.travel = configuration.speed > .zero ? reach / configuration.speed : .zero
         self.travelLeft = travel
+        self.angle = configuration.angle
     }
 
     /// One frame of it: the wind-up is spent first, and what of `seconds` is left after
@@ -68,18 +73,36 @@ struct Lunge: Equatable {
 
     /// One frame of a lunge at a prey standing at `prey`: the head held through the
     /// wind-up, then sent at the prey where it is now, easing out as `advance` says, by
-    /// the snake's own movement rules. It has reached the prey within `bite` metres of it.
+    /// the snake's own movement rules, its body past `neck` segments crawled over
+    /// (FR-SNAKE-055). It has reached the prey within `bite` metres of it.
     static func step(_ lunge: inout Lunge, snake: inout Snake, prey: SIMD3<Double>, seconds: Double,
-                     bite: Double, over surfaces: Surfaces) -> Result {
+                     bite: Double, over surfaces: Surfaces, neck: Int? = nil) -> Result {
+        // Within the bite already, wherever it is round the head, it is reached; out of
+        // the angle ahead and not there, it is missed: the head turning after it would
+        // fold the snake in two (FR-SNAKE-270).
+        if !lunge.isWindingUp, snake.drop == nil, Perception.metres(snake.head, prey) <= bite { return .reached }
+        guard isAhead(prey, of: snake, within: lunge.angle) else { return .missed }
         let moving = lunge.advance(seconds: seconds)
         if moving.seconds > .zero {
             snake.advance(direction: direction(from: snake.head, to: prey), speed: moving.metres / moving.seconds,
-                          seconds: moving.seconds, over: surfaces)
+                          seconds: moving.seconds, over: surfaces, neck: neck)
         }
         guard !lunge.isWindingUp else { return .going }
         if snake.drop != nil { return .missed }
         if Perception.metres(snake.head, prey) <= bite { return .reached }
         return lunge.isSpent ? .missed : .going
+    }
+
+    /// Whether a point lies within `degrees` to either side of the way the head is
+    /// going: the way it last moved, or, before it has moved, the way from its neck to
+    /// it. With neither — no move and no tail — every way is ahead.
+    static func isAhead(_ point: SIMD3<Double>, of snake: Snake, within degrees: Double) -> Bool {
+        let going = snake.heading ?? snake.tail.first.map { direction(from: $0, to: snake.head) }
+        guard let going, going != .zero else { return true }
+        let towards = direction(from: snake.head, to: point)
+        guard towards != .zero else { return true }
+        let cosine = min(Fraction.whole, max(-Fraction.whole, (going * towards).sum()))
+        return acos(cosine) <= degrees * .pi / Geometry.halfTurnDegrees + Geometry.samePosition
     }
 
     /// The way from the head to the prey, level and of unit length; none where the

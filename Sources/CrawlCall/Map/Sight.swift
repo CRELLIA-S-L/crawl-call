@@ -7,7 +7,7 @@
 // is, and when debris stops blocking sight (FR-MAP-040) this is the one place that
 // learns about it.
 //
-// implements: FR-VIEW-150, FR-BOT-050, FR-MAP-220
+// implements: FR-VIEW-150, FR-BOT-050, FR-MAP-220, FR-BOT-405
 import Foundation
 
 enum Sight {
@@ -141,6 +141,35 @@ enum Sight {
         // A quadratic read at its own vertex can come out a hair below zero where the
         // true answer is zero, and a negative square of a distance is not a thing.
         return max(best, .zero)
+    }
+
+    /// How far along the straight line from `start` to `end`, as a share of it, the
+    /// first module that stops sight stands in the way; nil where none does.
+    ///
+    /// What a round in flight stops at (FR-BOT-405): a line of fire is a line of sight
+    /// (ADR-0022), so what a bot cannot see through it cannot fire through, and what it
+    /// sees over a round flies over.
+    static func firstStop(from start: SIMD3<Double>, to end: SIMD3<Double>, through plan: ScenePlan) -> Double? {
+        let way = end - start
+        let length = (way * way).sum().squareRoot()
+        guard length > .zero else { return nil }
+        let low = SIMD3(min(start.x, end.x), min(start.y, end.y), min(start.z, end.z))
+        let high = SIMD3(max(start.x, end.x), max(start.y, end.y), max(start.z, end.z))
+        var first: Double?
+        for candidate in plan.index.candidates(low: low, high: high) {
+            let piece = plan.pieces[candidate]
+            guard piece.stopsSight, piece.size.min() > .zero else { continue }
+            let half = piece.size * Geometry.half
+            if piece.centre.x + half.x < low.x || piece.centre.x - half.x > high.x { continue }
+            if piece.centre.y + half.y < low.y || piece.centre.y - half.y > high.y { continue }
+            if piece.centre.z + half.z < low.z || piece.centre.z - half.z > high.z { continue }
+            guard let stretch = crossing(centre: piece.centre, size: piece.size, from: start, to: end,
+                                         margin: .zero) else { continue }
+            let entered = stretch.0 - start
+            let share = (entered * entered).sum().squareRoot() / length
+            if share < (first ?? .infinity) { first = share }
+        }
+        return first
     }
 
     /// Whether nothing the plan placed stands between the two points.

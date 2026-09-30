@@ -2,7 +2,7 @@
 // tuning (ART-070); the weight of each term against the others is tuning, and is in
 // the bot configuration (IF-BOT-010).
 //
-// implements: FR-BOT-340, FR-BOT-080, FR-BOT-090, FR-BOT-210, FR-BOT-150, FR-BOT-160, FR-BOT-060, FR-BOT-270, FR-BOT-280, FR-BOT-050, FR-BOT-230
+// implements: FR-BOT-340, FR-BOT-080, FR-BOT-090, FR-BOT-210, FR-BOT-150, FR-BOT-160, FR-BOT-060, FR-BOT-270, FR-BOT-280, FR-BOT-050, FR-BOT-230, FR-BOT-400, FR-BOT-430
 import Foundation
 
 enum Utility {
@@ -31,6 +31,9 @@ enum Walking {
     /// How far apart, as a share of a cell, the points are that a straight walk is
     /// tested at (FR-BOT-270): a quarter, so that no cell a line crosses is missed.
     static let lookStep = 0.25
+    /// Metres beyond two body radii at which a bot is still up against another: the
+    /// room the push apart leaves between two bodies, and a little over (FR-BOT-300).
+    static let touching = 0.05
 }
 
 /// How a facing is worked out and turned (FR-BOT-280).
@@ -93,4 +96,24 @@ enum Idle {
 enum Firing {
     /// A shot spends one round of the magazine.
     static let roundsPerShot = 1
+}
+
+/// How a round in flight is followed (FR-BOT-060, FR-BOT-400).
+enum Flying {
+    /// Metres between where a round leaves and where it is sent below which it has no
+    /// way to fly.
+    static let noWay = 1e-6
+    /// Halvings of a frame's flight spent finding where a round first touches a body:
+    /// fifty leave less than a nanometre of a metre's flight.
+    static let searchSteps = 50
+    /// A third of the way in, and two thirds: the two points each narrowing of the
+    /// search for the closest approach compares.
+    static let lowerThird = 1.0 / 3
+    static let upperThird = 2.0 / 3
+}
+
+/// How a bot fires from beside cover or on the move (FR-BOT-420, FR-BOT-425, FR-BOT-430).
+enum Skirmish {
+    /// The two ways across the line of fire, as a sign.
+    static let rightward = 1.0
 }

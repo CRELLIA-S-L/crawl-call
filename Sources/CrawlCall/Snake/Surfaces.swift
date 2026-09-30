@@ -6,7 +6,7 @@
 // Heights are the graph's: a cell's surface is its node's, which on a flight of stairs
 // is not its floor's (FR-MAP-020, FR-MAP-150, ADR-0033).
 //
-// implements: FR-MAP-025, FR-SNAKE-010, FR-SNAKE-020, FR-SNAKE-220, FR-MAP-150, FR-MAP-020, FR-MAP-220, FR-SNAKE-260
+// implements: FR-MAP-025, FR-SNAKE-010, FR-SNAKE-020, FR-SNAKE-220, FR-MAP-150, FR-MAP-020, FR-MAP-220, FR-SNAKE-260, FR-SNAKE-016
 import Foundation
 
 struct Surfaces {
@@ -290,12 +290,12 @@ struct Surfaces {
     /// step up, which it stood a step below — is not in the way of its landing either,
     /// though the body lands half beside them and walks clear of them after (FR-SNAKE-220).
     func clearance(at position: SIMD3<Double>, feet bottom: Double,
-                   leaving ledge: Double = -.infinity) -> (metres: Double, away: SIMD2<Double>)? {
+                   leaving ledge: Double = -.infinity, standing: Bool = false) -> (metres: Double, away: SIMD2<Double>)? {
         let top = bottom + Motion.heightInRadii * bodyRadius
         let groundInTheWay = max(bottom, ledge) + stepHeight + Geometry.samePosition
         var nearest: (metres: Double, away: SIMD2<Double>)?
         for box in obstacles where box.lowest.y < top && box.highest.y > bottom
-            && (!box.ground || box.highest.y > groundInTheWay) {
+            && (!box.ground || (!standing && box.highest.y > groundInTheWay)) {
             let offset = SIMD2(position.x - (box.lowest.x + box.highest.x) * Geometry.half,
                                position.z - (box.lowest.z + box.highest.z) * Geometry.half)
             let half = SIMD2((box.highest.x - box.lowest.x) * Geometry.half,
@@ -336,14 +336,18 @@ struct Surfaces {
     /// than that once the body's width is added on each side of it — a partition of
     /// 0.1 m is 0.7 m to a body of 0.3 m — so no step can pass from one side of a
     /// module to the other.
+    ///
+    /// `standing` leaves out what is walked on — floors and the steps of a flight — for a
+    /// look ahead that asks only about what stands on the ground: a flight's steps rise
+    /// more than a step within a few of them, and are still the way up (FR-SNAKE-016).
     func room(from position: SIMD3<Double>, feet: Double, along unit: SIMD2<Double>,
-              upTo distance: Double) -> (metres: Double, against: SIMD2<Double>?) {
-        let deepest = min(.zero, clearance(at: position, feet: feet)?.metres ?? .zero)
+              upTo distance: Double, standing: Bool = false) -> (metres: Double, against: SIMD2<Double>?) {
+        let deepest = min(.zero, clearance(at: position, feet: feet, standing: standing)?.metres ?? .zero)
         func at(_ metres: Double) -> SIMD3<Double> {
             SIMD3(position.x + unit.x * metres, position.y, position.z + unit.y * metres)
         }
         func fits(_ metres: Double) -> Bool {
-            guard let there = clearance(at: at(metres), feet: feet) else { return true }
+            guard let there = clearance(at: at(metres), feet: feet, standing: standing) else { return true }
             return there.metres >= deepest - Motion.depthSlack
         }
         if fits(distance) { return (distance, nil) }
@@ -356,7 +360,7 @@ struct Surfaces {
         // What stopped the body is what it would be inside of just past the contact —
         // not what is nearest at the contact, where a body in a corner touches two
         // things at once and the one it is not pressing into may be named.
-        return (low, clearance(at: at(high), feet: feet)?.away)
+        return (low, clearance(at: at(high), feet: feet, standing: standing)?.away)
     }
 
     /// Whether the body can stand at a position without being inside anything.

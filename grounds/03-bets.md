@@ -46,7 +46,7 @@ FR-SNAKE-040 — Tail blocks bots — is worth building only if H-020 holds.
 ### B-040 — FR-SNAKE-050 stands on verticality mattering
 
 ```yaml
-status: active
+status: retired
 requirement: FR-SNAKE-050
 all_of: [H-020]
 ```
@@ -54,6 +54,7 @@ all_of: [H-020]
 FR-SNAKE-050 — Tail blocks the snake's own head — is worth building only if H-020 holds.
 
 **Rationale.** Concept §16.2 H2: a refutation removes verticality, the spline on the navmesh and part of the map requirements.
+Retired on 2026-09-30: FR-SNAKE-050 was superseded by FR-SNAKE-055, the head crawling over its own body. Whether that rests on H-020 is not settled here; no bet names it yet.
 
 ### B-050 — FR-BOT-110 stands on verticality mattering
 

@@ -1,7 +1,7 @@
 // A bot gathers speed and slows to a stop (FR-BOT-290), and bots do not pass through
 // one another (FR-BOT-300): walked frame by frame over the shipped map.
 //
-// verifies: FR-BOT-290, FR-BOT-300
+// verifies: FR-BOT-290, FR-BOT-300, FR-BOT-280
 import XCTest
 @testable import CrawlCall
 
@@ -109,5 +109,79 @@ final class BotMotionTests: XCTestCase {
         XCTAssertEqual(try element(0, of: bots).position, still, "the bot being eaten was pushed")
         XCTAssertEqual(Perception.metres(try element(0, of: bots).position, try element(1, of: bots).position),
                        2 * radius, accuracy: 1e-9)
+    }
+
+    // MARK: not pushing each other back and forth (FR-BOT-300)
+
+    func testABotMakingForACellAnotherStandsOnStopsAgainstIt() throws {
+        // Found on the phone on 2026-09-30: bots stood twitching on the spot. One making
+        // for a cell another stood on walked into it and was pushed back, every frame, for
+        // as long as it wanted the cell.
+        let goal = NavigationGraph.Node(floor: 0, x: 12, z: 6)
+        // The one on the cell keeps to it: it fires from there (FR-BOT-420), and walks back
+        // onto it when it is pushed off. One with nothing to do would give way.
+        var standing = try bot(1, at: goal)
+        standing.action = .fire(at: .bot(id: 99))
+        standing.post = goal
+        var bots = [sent(try bot(at: NavigationGraph.Node(floor: 0, x: 6, z: 6)), to: goal), standing]
+        for _ in 0..<120 { Execution.walk(&bots, seconds: frame, world: world) }
+        var reversals = 0
+        var lastStep: SIMD3<Double>?
+        for _ in 0..<60 {
+            let before = try element(0, of: bots).position
+            Execution.walk(&bots, seconds: frame, world: world)
+            let step = try element(0, of: bots).position - before
+            if let lastStep, (step * lastStep).sum() < 0 { reversals += 1 }
+            if (step * step).sum() > 0 { lastStep = step }
+        }
+        let walker = try element(0, of: bots)
+        XCTAssertEqual(reversals, 0, "the bot is pushed back and forth against the one on its cell")
+        XCTAssertNil(walker.action, "the bot still means to get onto a cell it cannot")
+        XCTAssertEqual(walker.speed, 0)
+        XCTAssertEqual(Perception.metres(walker.position, try element(1, of: bots).position), radius * 2, accuracy: 0.05,
+                       "the bot stopped somewhere other than up against the one on its cell")
+    }
+
+    func testInAMatchNoBotIsPushedBackAndForth() throws {
+        // Found on the phone on 2026-09-30 and caught on the simulator from this start: two
+        // bots of a squad making for one point of their routes, a corner, pushed each other
+        // round it every frame, twenty-eight times a second. Each start the map names, the
+        // first ten seconds, where the squads set off together and meet.
+        for spawn in world.map.spawns {
+            var game = Game(world: world, start: NavigationGraph.Node(floor: spawn.floor, x: spawn.x, z: spawn.z))
+            var last: [Int: SIMD3<Double>] = [:], lastStep: [Int: SIMD3<Double>] = [:], reversals: [Int: Int] = [:]
+            for frame in 1...600 {
+                game.advance(seconds: self.frame)
+                for bot in game.bots where bot.isAlive {
+                    if let before = last[bot.id] {
+                        let step = bot.position - before
+                        if let previous = lastStep[bot.id], (step * previous).sum() < -1e-8 { reversals[bot.id, default: 0] += 1 }
+                        if (step * step).sum() > 1e-12 { lastStep[bot.id] = step }
+                    }
+                    last[bot.id] = bot.position
+                }
+                guard frame % 60 == 0 else { continue }
+                // A bot on the move across its line of fire turns back once a second
+                // (FR-BOT-430); ten a second is somebody being shoved.
+                for (id, count) in reversals {
+                    XCTAssertLessThan(count, 10, "bot \(id) went back and forth \(count) times a second, from \(spawn)")
+                }
+                reversals = [:]
+            }
+        }
+    }
+
+    func testAWalkingBotFacesTheWayItsRouteGoesAndNotAPointAtItsFeet() throws {
+        let start = NavigationGraph.Node(floor: 0, x: 6, z: 6)
+        var walker = try bot(at: start)
+        // A point a step aside, and the route going on east beyond it.
+        walker.path = [NavigationGraph.Node(floor: 0, x: 6, z: 7), NavigationGraph.Node(floor: 0, x: 14, z: 7)]
+        let far = SIMD3(14 * cell, 0, 7 * cell)
+        let heading = try XCTUnwrap(Execution.heading(of: walker, world: world))
+        XCTAssertEqual(heading, try XCTUnwrap(Turning.angle(from: walker.position, to: far)), accuracy: 1e-9,
+                       "the bot faces the point at its feet")
+        // At the end of its route, the last point is the way.
+        walker.path = [NavigationGraph.Node(floor: 0, x: 6, z: 7)]
+        XCTAssertEqual(try XCTUnwrap(Execution.heading(of: walker, world: world)), 0, accuracy: 1e-9)
     }
 }

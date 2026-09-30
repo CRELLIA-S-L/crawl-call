@@ -15,6 +15,7 @@ Q-270 — the world around the arena, agreed and then built — was closed on 20
 Q-400 — the corners of every drawn primitive are sharp — was opened and settled on 2026-09-25: the maintainer had every drawn box rounded as a trial, looked at it on the phone, and kept it, grooves between neighbouring modules included; it became FR-VIEW-240, and ADR-0037 holds what it cost and why RealityKit's own rounded box was not used. The bots' figures went on to Q-420.
 Q-420 and Q-450 — the bots' figures and the shrubs drawn with RealityKit's own rounded box and sphere, tens of thousands of triangles each — were settled on 2026-09-29 by ADR-0046, when the frame rate on the phone fell and the figures were found to be four fifths of the scene's triangles: both are drawn with the game's own shapes, the figures at their own radii.
 Q-320 — a bot with nothing happening around it stands still — was settled on 2026-09-29 by the maintainer: an idle bot advances on the enemy, goes to see what it has not seen, and looks round towards where a threat may be; it became FR-BOT-360, FR-BOT-370 and FR-BOT-380, and ADR-0059 holds how they are chosen between.
+Q-470 — a slide along a wall taken in the way the head had turned to rather than the way held — was settled on 2026-09-30 by the maintainer's choice of a slide to the side the stick leans to, in ADR-0066.
 What remains is what a decision inside the repository cannot close.
 
 ### Q-120 — The name is chosen; the search that clears it is not done
@@ -147,9 +148,32 @@ What remains is what a decision inside the repository cannot close.
 - **What diverged:** NFR-PERF-020 asks for at most 0.5 ms a frame; it is `deferred`, and nothing holds the time to it yet. Frames were late no more often than before (67 and 94 of about 3,500), so the frame rate held; the cost is the budget's. On the simulator the choice of where an idle bot goes took under a tenth of a millisecond once it weighed every cell instead of walking to them, and the walk from the snake's head over the graph is a quarter of one; which part dominates in play was not measured, and the two recordings were of different matches.
 - **Still needed:** a recording of the same match with and without the player, the parts of deliberation timed in the worst frames, and NFR-PERF-020 built — the budget that defers slots to later frames — once it is known what fills it. The maintainer put it off on 2026-09-29.
 
-### Q-470 — A slide along a wall is taken in the way the head has turned to, not the way held
+### Q-480 — Two squads that lose sight of each other stop fighting
 
-- **Found:** in the review of the turning radius on 2026-09-29 (FR-SNAKE-290, ADR-0061).
-- **What diverged:** FR-SNAKE-015 moves a blocked head along the obstacle at the base speed taken in the part of the held direction that runs along it. With the head turning on an arc, what is walked, and slid, is the way the head has turned to so far; while it is still turning towards the held direction the slide's speed along the wall is that way's part, not the held direction's. Once the head has turned, the two are the same.
-- **Still needed:** the maintainer's word on whether FR-SNAKE-015 should name the way the head is going rather than the direction held, or the slide should keep to the held direction while the head turns.
+- **Found:** on the simulator on 2026-09-30, building FR-BOT-420 through FR-BOT-430 (ADR-0063): a match on the shipped map with the snake left where it started, ninety seconds long, measured before the change and after it.
+- **What diverged:** nothing a requirement says; the war stops. Before the change the squads dealt 138 damage in the first twenty seconds and none in the seventy after, every bot ending with nothing to do. After it they dealt 174 in the first sixty seconds, one bot died, and none after, every bot but one ending with nothing to do and that one on its way to cover. Each bot still knew where it had last seen enemies; why none goes to fire at them or to look for them was not traced. A bot that stepped behind cover to reload does come out again (FR-BOT-420); the stall is of bots that stopped firing for any other reason.
+- **Still needed:** the reason traced in the scores of a stalled bot, then the maintainer's word on what a bot does about an enemy it knows of and does not see: going to fire at it from beside cover as a bot that reloaded does, advancing on it (FR-BOT-360) while it is not hurt, or the commander's order (FR-CMD-040) deciding.
+
+### Q-490 — The squads fight where they first see each other
+
+- **Found:** the maintainer on the phone on 2026-09-30, trying rounds that fly and fire from beside cover (ADR-0063): the squads run at each other until they are in sight, six metres, and fire, now and then trying to hide; in the open it is a little better and has some movement. Inside the building there is little room to move.
+- **What diverged:** nothing a requirement says. A bot with nothing to do goes on towards the enemy (FR-BOT-360) until it sees it, and the fight is fought from there, with the cover within the search distance of where that happened (FR-BOT-420). The maintainer put a better tactic off to later.
+- **Still needed:** the maintainer's choice of how a squad should come into a fight — fire from further off, take positions by cover as the enemy draws near and before it is seen, go round the enemy's side, or the commander's orders (FR-CMD-040) — then its requirements; taken up together with Q-480.
+
+### Q-500 — A snake shorter than three segments looks like a bare head
+
+- **Found:** the maintainer on the phone on 2026-09-30: a head with no tail running about the map looks strange.
+- **What diverged:** nothing yet; the snake dies when it is hit with no tail left (FR-SNAKE-210), so it can run about as a head.
+- **Still needed:** the maintainer chose on 2026-09-30 a minimum of three segments, death at it, and all three ways of showing it, and put building it off. The texts put to the maintainer, not yet written as requirements:
+  - FR-SNAKE-210 reworded, *The snake dies when hit at its minimum length*: "When the snake takes damage while its tail has no more segments than the minimum length of the snake configuration, the system **shall** kill the snake."
+  - FR-VIEW-340, proposed, *The segments the snake cannot lose are drawn as a collar*: "While a match runs, the system **shall** draw the part of the snake's body that its minimum length covers, behind the head, in the collar colour of the view configuration."
+  - FR-VIEW-350, proposed, *A snake at its minimum length pulses*: "While the snake's tail has no more segments than the minimum length, the system **shall** tint the snake towards the warning colour of the view configuration and back, at the warning rate of the view configuration."
+  - FR-VIEW-360, proposed, *The tail's length is shown*: "While a match runs, the system **shall** show on screen how many segments the snake's tail has and the minimum length."
+  - The numbers offered: a minimum of 3, a dark green collar, a red pulse twice a second, the count at the top of the screen in the middle.
+
+### Q-510 — Trap corridors stand on a rule the snake no longer has
+
+- **Found:** on 2026-09-30, when the snake came to crawl over its own body (FR-SNAKE-055) and FR-SNAKE-050, the tail stopping the head, was superseded.
+- **What diverged:** FR-MAP-080 asks every map for two corridors narrow enough that a snake of the trap length locks itself in, and depends on FR-SNAKE-050; a snake that crawls over itself cannot lock itself in.
+- **Still needed:** the maintainer's word on FR-MAP-080: withdraw it, keep narrow corridors for what the tail does to the bots (FR-SNAKE-040) and reword it so, or leave it deferred until the maps are designed.
 

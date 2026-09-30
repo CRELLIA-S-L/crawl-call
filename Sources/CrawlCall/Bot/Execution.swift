@@ -9,23 +9,19 @@
 // rather than an accident: no requirement gives a weapon a rate of fire, and
 // inventing one would put a number in this file that no interface carries.
 //
-// implements: FR-BOT-060, FR-BOT-110, FR-BOT-115, FR-BOT-170, FR-BOT-360, FR-BOT-370, FR-BOT-380, FR-BOT-180, FR-BOT-190, INV-BOT-020, FR-VIEW-170, INV-BOT-010, FR-BOT-165, FR-MAP-150, FR-BOT-270, FR-BOT-280, FR-BOT-290, FR-BOT-300, FR-BOT-220, FR-BOT-310, FR-BOT-320, FR-BOT-330, FR-BOT-340
+// implements: FR-BOT-060, FR-BOT-110, FR-BOT-115, FR-BOT-170, FR-BOT-360, FR-BOT-370, FR-BOT-380, FR-BOT-180, FR-BOT-190, INV-BOT-020, INV-BOT-010, FR-BOT-165, FR-MAP-150, FR-BOT-270, FR-BOT-280, FR-BOT-290, FR-BOT-300, FR-BOT-220, FR-BOT-310, FR-BOT-320, FR-BOT-330, FR-BOT-340, FR-BOT-420, FR-BOT-425, FR-BOT-430
 import Foundation
 
 enum Execution {
-    /// What one deliberation step did: the damage the snake takes, and the shots that
-    /// dealt it, to be drawn where they went (FR-VIEW-170).
+    /// What one deliberation step did: the rounds it fired, to fly from the next frame
+    /// on (FR-BOT-060).
     struct Volley: Equatable {
-        var damage: Double = .zero
-        /// How many of the shots struck the snake.
-        var hits = Int.zero
-        var shots: [Shot] = []
+        var rounds: [Round] = []
     }
 
     /// One deliberation step: the bots holding a slot choose, and a bot whose choice
-    /// is to fire fires once. The damage to the snake is returned rather than applied,
-    /// because the snake is not the bots' to change; the damage to an enemy bot is
-    /// applied here, since the bots are (FR-BOT-060).
+    /// is to fire sends one round, which is returned to fly (FR-BOT-060); what it
+    /// strikes is the flight's business (FR-BOT-400).
     ///
     /// A bot in `interrupted` holds a slot given ahead of the queue (FR-BOT-170): it
     /// chooses as any other, but fires only where a deliberation period has passed
@@ -50,6 +46,7 @@ enum Execution {
                                                    graph: world.graph,
                                                    configuration: world.configurations.bot,
                                                    cellSize: world.configurations.tuning.navigationGraphCellSize)
+            situation.bodyRadius = world.configurations.tuning.bodyRadius
             // Come to where it last saw an enemy, or into the enemy's starting area, and
             // found nobody there, it knows that much more (FR-BOT-360).
             let seenNow = Set(bots[index].knowledge.enemies(seenAt: now).map(\.id))
@@ -101,49 +98,107 @@ enum Execution {
             }
 
             let chosen = Deliberation.choose(for: bots[index], in: situation)
+            let before = bots[index].action
             bots[index].action = chosen
             switch chosen {
             case .fire(let target):
-                let aim: SIMD3<Double>
-                var struck: Int?
+                // Where the line of fire is judged from: the ground under the part of the
+                // snake it sees, as it sees it (FR-BOT-050), or the enemy's eyes.
+                // It fires only at what it sees now (FR-BOT-060); a target it knows of and
+                // does not see is one it goes out to fire at from beside cover (ADR-0063).
+                let sighted: SIMD3<Double>
+                let seen: Bool
                 switch target {
                 case .snake(let point):
-                    aim = point
+                    sighted = point
+                    seen = situation.inView.contains(point)
                 case .bot(let enemy):
                     guard let other = bots.firstIndex(where: { $0.id == enemy }), bots[other].isAlive else { continue }
-                    aim = bots[other].eye
-                    struck = other
+                    sighted = bots[other].eye
+                    seen = situation.enemiesInView.contains { $0.id == enemy }
                 }
-                guard bots[index].ammunition > .zero,
+                guard let aim = Deliberation.aim(at: target, from: bots[index], in: situation) else { continue }
+                place(&bots[index], at: target, aim: aim, before: before, in: situation, now: now)
+                guard seen, bots[index].ammunition > .zero,
                       !interrupted.contains(id)
                         || now - bots[index].lastShot >= world.configurations.bot.deliberationPeriod,
-                      Sight.isClear(from: bots[index].eye, to: aim, through: world.plan) else { break }
+                      Sight.isClear(from: bots[index].eye, to: sighted, through: world.plan) else { break }
                 bots[index].ammunition -= Firing.roundsPerShot
                 bots[index].lastShot = now
-                if let struck {
-                    // A bot with no health left is a body (FR-BOT-320).
-                    bots[struck].health = max(.zero, bots[struck].health - entry.weaponDamage)
-                    if !bots[struck].isAlive { fall(&bots[struck]) }
-                } else {
-                    volley.damage += entry.weaponDamage
-                    volley.hits += 1
+                // Sent at the point where the target is now; what it strikes is where
+                // it flies (FR-BOT-060, FR-BOT-400).
+                if let round = Round(shooter: bots[index].id, squad: bots[index].squad, from: bots[index].eye,
+                                     towards: aim, damage: entry.weaponDamage) {
+                    volley.rounds.append(round)
                 }
-                // Drawn for one deliberation period, which is also how long it is
-                // until this bot may fire again (FR-VIEW-170).
-                volley.shots.append(Shot(from: bots[index].eye, to: aim,
-                                         squad: bots[index].squad,
-                                         left: world.configurations.bot.deliberationPeriod))
             case .reload:
-                bots[index].ammunition = entry.magazine
+                // Behind the cover it fired from beside, where it has one: it goes into
+                // the hidden cell and reloads there (FR-BOT-425).
+                if bots[index].post != nil, let refuge = bots[index].refuge {
+                    // Already in it, it reloads there, and keeps where it fires from to
+                    // come out to again (ADR-0063); on the way, it goes on.
+                    if cell(of: bots[index], world: world) == refuge {
+                        bots[index].ammunition = entry.magazine
+                        bots[index].path = []
+                    } else if before != .reload {
+                        bots[index].path = []
+                    }
+                } else {
+                    bots[index].ammunition = entry.magazine
+                    bots[index].post = nil
+                    bots[index].refuge = nil
+                    bots[index].postTarget = nil
+                }
             case .takeCover, .flee, .moveToOrderedZone, .advance, .explore:
                 // The route is the frame's business, and only one is computed per
                 // frame (FR-BOT-165).
                 bots[index].path = []
+                bots[index].post = nil
+                bots[index].refuge = nil
+                bots[index].postTarget = nil
             case .heal, .none:
-                break
+                bots[index].post = nil
+                bots[index].refuge = nil
+                bots[index].postTarget = nil
             }
         }
         return volley
+    }
+
+    /// Where a bot about to fire at `aim` fires from (FR-BOT-420): the cell beside
+    /// cover it already has while it still has a line of fire from there and the cell
+    /// behind it is still hidden, or the nearest there is now. One that finds none
+    /// fires on the move (FR-BOT-430), and looks again once the strafing interval has
+    /// passed since it last looked.
+    static func place(_ bot: inout Bot, at target: Target, aim: SIMD3<Double>, before: Action?,
+                      in situation: Deliberation.Situation, now: Double) {
+        let wasFiring: Bool
+        if case .fire = before { wasFiring = true } else { wasFiring = false }
+        let wasStrafing = wasFiring && bot.post == nil
+        if let post = bot.post, let refuge = bot.refuge,
+           Sight.isClear(from: Deliberation.centre(of: post, in: situation) + SIMD3(.zero, bot.eyeHeight, .zero),
+                         to: aim, through: situation.plan),
+           !Deliberation.isWatched(refuge, for: bot, in: situation) {
+            if !wasFiring { bot.path = [] }
+            bot.postTarget = target
+            return
+        }
+        if bot.post != nil || now - bot.lastPostSearch >= situation.configuration.strafingInterval {
+            let found = Deliberation.post(for: bot, aim: aim, in: situation)
+            bot.lastPostSearch = now
+            if found?.post != bot.post || !wasFiring { bot.path = [] }
+            bot.post = found?.post
+            bot.refuge = found?.refuge
+        }
+        bot.postTarget = bot.post == nil ? nil : target
+        if bot.post == nil, !wasStrafing { bot.strafeSince = now }
+    }
+
+    /// The cell a bot stands in.
+    static func cell(of bot: Bot, world: World) -> NavigationGraph.Node {
+        let size = world.configurations.tuning.navigationGraphCellSize
+        return NavigationGraph.Node(floor: bot.floor, x: Int((bot.position.x / size).rounded()),
+                                    z: Int((bot.position.z / size).rounded()))
     }
 
     /// A bot that has died stops where it is: it has nothing left to do, nowhere to go
@@ -180,7 +235,35 @@ enum Execution {
             // body does not walk at all (FR-BOT-320).
             guard bots[index].id != held, bots[index].isAlive else { bots[index].speed = .zero; continue }
             // A bot with nowhere to walk has nothing to roll along: it stops (FR-BOT-290).
-            guard let goal = destination(of: bots[index].action) else { bots[index].speed = .zero; continue }
+            guard let goal = destination(of: bots[index]) else {
+                // Firing with no cell beside cover, it keeps moving (FR-BOT-430).
+                if case .fire = bots[index].action {
+                    strafe(&bots[index], seconds: seconds, world: world, now: now)
+                } else {
+                    bots[index].speed = .zero
+                }
+                continue
+            }
+            // Already where it fires from, or where it reloads (FR-BOT-420, FR-BOT-425); a
+            // bot already where it was going has spent its action, and the next slot
+            // chooses again (FR-BOT-167).
+            if bots[index].path.isEmpty, Execution.cell(of: bots[index], world: world) == goal {
+                bots[index].speed = .zero
+                if travels(bots[index].action) { bots[index].action = nil }
+                arrive(&bots[index], world: world)
+                continue
+            }
+            // Its way's end taken by another bot, and it up against that bot: it is as near
+            // as it will get, since bots do not pass through one another (FR-BOT-300), and
+            // walking on into it would have the two push each other back and forth for as
+            // long as it wanted the cell.
+            if isCrowdedOut(from: goal, bot: index, among: bots, world: world) {
+                bots[index].path = []
+                bots[index].speed = .zero
+                if travels(bots[index].action) { bots[index].action = nil }
+                arrive(&bots[index], world: world)
+                continue
+            }
             if bots[index].path.isEmpty {
                 guard !routed else { continue }
                 routed = true
@@ -205,16 +288,92 @@ enum Execution {
             bots[index].speed = min(max(wanted, bots[index].speed - change), bots[index].speed + change)
             advance(&bots[index], by: bots[index].speed * seconds, over: world.graph, cellSize: cell,
                     floorHeight: world.kit.floorHeight, radius: world.configurations.tuning.bodyRadius)
-            if bots[index].path.isEmpty { bots[index].speed = .zero }
+            if bots[index].path.isEmpty {
+                bots[index].speed = .zero
+                arrive(&bots[index], world: world)
+            }
         }
     }
 
-    /// Where a chosen action sends a bot, if it sends it anywhere.
-    static func destination(of action: Action?) -> NavigationGraph.Node? {
-        switch action {
+    /// Whether another living bot stands on the cell a bot is making for — within a body
+    /// radius of its centre — and the bot is up against it, no further from it than two
+    /// radii and a touch.
+    static func isCrowdedOut(from goal: NavigationGraph.Node, bot index: Int, among bots: [Bot], world: World) -> Bool {
+        let radius = world.configurations.tuning.bodyRadius
+        let centre = world.graph.centre(of: goal, cellSize: world.configurations.tuning.navigationGraphCellSize,
+                                        floorHeight: world.kit.floorHeight)
+        return bots.indices.contains { other in
+            other != index && bots[other].isAlive && bots[other].floor == goal.floor
+                && Perception.metres(bots[other].position, centre) <= radius
+                && Perception.metres(bots[other].position, bots[index].position)
+                    <= radius * Geometry.bothSides + Walking.touching
+        }
+    }
+
+    /// A bot come to the end of its way: one that went behind cover to reload reloads
+    /// there (FR-BOT-425).
+    private static func arrive(_ bot: inout Bot, world: World) {
+        guard bot.action == .reload,
+              let magazine = world.configurations.bot.archetypes[bot.archetype.rawValue]?.magazine else { return }
+        bot.ammunition = magazine
+        bot.action = nil
+    }
+
+    /// Moves a bot that fires with no cell beside cover across its line of fire, at the
+    /// strafing speed, gathered and shed at the acceleration (FR-BOT-290): the way it
+    /// goes turns back once the strafing interval has passed, and where the ground it
+    /// would move onto does not hold it (FR-BOT-430).
+    static func strafe(_ bot: inout Bot, seconds: Double, world: World, now: Double) {
+        guard case .fire(let target) = bot.action else { return }
+        let towards: SIMD3<Double>?
+        switch target {
+        case .snake(let point): towards = point
+        case .bot(let id): towards = bot.knowledge.enemies[id]?.point
+        }
+        let configuration = world.configurations.bot
+        guard let towards else { bot.speed = .zero; return }
+        let line = SIMD2(towards.x - bot.position.x, towards.z - bot.position.z)
+        let length = (line * line).sum().squareRoot()
+        guard length > Turning.noWay else { bot.speed = .zero; return }
+        if now - bot.strafeSince >= configuration.strafingInterval {
+            bot.strafe = -bot.strafe
+            bot.strafeSince = now
+        }
+        let change = configuration.acceleration * max(seconds, .zero)
+        bot.speed = min(max(configuration.strafingSpeed, bot.speed - change), bot.speed + change)
+        let across = SIMD2(line.y, -line.x) / length * bot.strafe
+        let step = across * bot.speed * seconds
+        let to = bot.position + SIMD3(step.x, .zero, step.y)
+        let cell = world.configurations.tuning.navigationGraphCellSize
+        if isOpen(from: bot.position, to: to, floor: bot.floor, over: world.graph, cellSize: cell,
+                  floorHeight: world.kit.floorHeight, radius: world.configurations.tuning.bodyRadius) {
+            bot.position = to
+        } else {
+            bot.strafe = -bot.strafe
+            bot.strafeSince = now
+            bot.speed = .zero
+        }
+    }
+
+    /// Where a bot's chosen action sends it, if it sends it anywhere: a bot firing
+    /// goes to where it fires from beside cover (FR-BOT-420), one reloading behind it
+    /// to the hidden cell (FR-BOT-425).
+    static func destination(of bot: Bot) -> NavigationGraph.Node? {
+        switch bot.action {
         case .takeCover(let node), .moveToOrderedZone(let node), .flee(let node),
              .advance(let node), .explore(let node): return node
-        case .fire, .reload, .heal, .none: return nil
+        case .fire: return bot.post
+        case .reload: return bot.post == nil ? nil : bot.refuge
+        case .heal, .none: return nil
+        }
+    }
+
+    /// Whether an action is over once the bot has walked its way: going somewhere is,
+    /// firing from somewhere and reloading behind cover are not.
+    static func travels(_ action: Action?) -> Bool {
+        switch action {
+        case .takeCover, .moveToOrderedZone, .flee, .advance, .explore: return true
+        case .fire, .reload, .heal, .none: return false
         }
     }
 
@@ -227,6 +386,14 @@ enum Execution {
             // Straight towards the farthest point of the route the body can walk to
             // over level ground (FR-BOT-270, ADR-0042).
             straighten(&bot, over: graph, cellSize: cellSize, floorHeight: floorHeight, radius: radius)
+            // A point on the way, not its end, is passed once the body is over it: a bot
+            // pushed off it by another (FR-BOT-300) does not turn back to stand on it, and
+            // two making for one such point do not push each other round it.
+            while bot.path.count > Distances.oneMore, let next = bot.path.first, next.floor == bot.floor,
+                  Perception.metres(bot.position, graph.centre(of: next, cellSize: cellSize,
+                                                               floorHeight: floorHeight)) <= radius {
+                bot.path.removeFirst()
+            }
             guard let next = bot.path.first else { break }
             // At the height of the node's surface: up a flight step by step (FR-MAP-150).
             let there = graph.centre(of: next, cellSize: cellSize, floorHeight: floorHeight)
@@ -244,7 +411,7 @@ enum Execution {
                 left = .zero
             }
         }
-        if bot.path.isEmpty, Execution.destination(of: bot.action) != nil { bot.action = nil }
+        if bot.path.isEmpty, Execution.travels(bot.action) { bot.action = nil }
     }
 
     /// What each bot of a squad has seen reaches the rest of it once the squad's delay
@@ -332,6 +499,11 @@ enum Execution {
                 case .bot(let id): wanted = bot.knowledge.enemies[id].flatMap { Turning.angle(from: bot.position, to: $0.point) }
                 }
                 bots[index].lookout = nil
+            } else if bot.speed > .zero, let way = heading(of: bot, world: world) {
+                // Walking a route: the way the route goes, not the way the frame moved it,
+                // which a squadmate's push turns this way and that (FR-BOT-300).
+                wanted = way
+                bots[index].lookout = nil
             } else if bot.speed > .zero, index < before.count,
                       let went = Turning.angle(from: before[index], to: bot.position) {
                 wanted = went
@@ -353,6 +525,18 @@ enum Execution {
             guard let wanted else { continue }
             bots[index].facing = Turning.toward(wanted, from: bot.facing, by: most)
         }
+    }
+
+    /// The way a walking bot's route goes from where it is: towards the first point of
+    /// it more than a cell away, or its last point where none is. A point nearer than
+    /// that swings round the bot at every push it is given, and a bot facing it would
+    /// turn back and forth as it went. Nil with no route, or at its end.
+    static func heading(of bot: Bot, world: World) -> Double? {
+        let cell = world.configurations.tuning.navigationGraphCellSize
+        let points = bot.path.map { world.graph.centre(of: $0, cellSize: cell, floorHeight: world.kit.floorHeight) }
+        guard let last = points.last else { return nil }
+        let ahead = points.first { Perception.metres(bot.position, $0) > cell } ?? last
+        return Turning.angle(from: bot.position, to: ahead)
     }
 
     /// Which way a standing bot looks (FR-BOT-340): the way it faces, while as much

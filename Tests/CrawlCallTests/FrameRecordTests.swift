@@ -261,21 +261,9 @@ final class MatchRecordTests: XCTestCase {
         let world = try world()
         let (session, recorder) = try session(in: world, recording: file)
         let game = session.game
-        let cell = world.configurations.tuning.navigationGraphCellSize
         let prey = try XCTUnwrap(game.bots.filter { $0.floor == 0 }.first)
-        var route = Route.between(game.start,
-                                  NavigationGraph.Node(floor: 0, x: Int((prey.position.x / cell).rounded()),
-                                                       z: Int((prey.position.z / cell).rounded())),
-                                  in: world.graph)
         for _ in 0..<1800 where session.game.bots.count == game.bots.count {
-            if let next = route.first {
-                let there = SIMD3(Double(next.x) * cell, 0, Double(next.z) * cell)
-                let head = session.game.snake.head
-                let toward = SIMD2(there.x - head.x, there.z - head.z)
-                let length = (toward.x * toward.x + toward.y * toward.y).squareRoot()
-                if length < 0.1 { route.removeFirst() }
-                session.apply(.move(direction: length > 0 ? SIMD2(toward.x / length, toward.y / length) : .zero))
-            }
+            if let way = steering(session.game, at: prey.id) { session.apply(.move(direction: way)) }
             if session.canEat { session.apply(.eat) }
             session.step(seconds: 1.0 / 60)
         }

@@ -23,7 +23,7 @@ Option 1: a bot acts on what it knows (FR-BOT-220), and a cell it has not seen i
 
 ### How it works
 
-**Fire at an enemy.** A line of fire runs from the shooter's eyes to the enemy's, at the eye height the two share (ADR-0022): what shows over a wall lower than that height can be fired at, as it can be seen. A bot fires only at an enemy it sees now, as it fires only at a snake it sees now (ADR-0043). The damage is dealt at once to the bot hit; a shot at a bot is drawn as a shot at the snake is, and is not counted a hit on the snake.
+**Fire at an enemy.** A line of fire runs from the shooter's eyes to the enemy's, at the eye height the two share (ADR-0022): what shows over a wall lower than that height can be fired at, as it can be seen. A bot fires only at an enemy it sees now, as it fires only at a snake it sees now (ADR-0043). The damage is dealt at once to the bot hit — until 2026-09-30, since when a round flies and strikes what is in its way (ADR-0063); a shot at a bot is drawn as a shot at the snake is, and is not counted a hit on the snake.
 
 **One target.** Firing at the snake is one target wherever on the snake the bot aims, since the nearest part moves as the snake does; firing at a bot is one target per bot. Of the targets in view the best is taken, except that the one the bot was firing at is kept while nothing else is worth more by the hysteresis margin (FR-BOT-140).
 

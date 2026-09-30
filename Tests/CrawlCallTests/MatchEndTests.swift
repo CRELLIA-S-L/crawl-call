@@ -104,22 +104,10 @@ final class MatchEndTests: XCTestCase {
     /// the corner — and the same map hands out the same bot every time.
     private func walkAtSomebody(_ game: inout Game, frames: Int,
                                 until stop: (Game) -> Bool = { _ in false }) throws {
-        let cell = game.world.configurations.tuning.navigationGraphCellSize
         let prey = try XCTUnwrap(game.bots.filter { $0.floor == 0 }.first)
-        var route = Route.between(game.start,
-                                  NavigationGraph.Node(floor: 0,
-                                                       x: Int((prey.position.x / cell).rounded()),
-                                                       z: Int((prey.position.z / cell).rounded())),
-                                  in: game.world.graph)
         for _ in 0..<frames {
             if stop(game) { return }
-            if let next = route.first {
-                let there = SIMD3(Double(next.x) * cell, 0, Double(next.z) * cell)
-                let toward = SIMD2(there.x - game.snake.head.x, there.z - game.snake.head.z)
-                let length = (toward.x * toward.x + toward.y * toward.y).squareRoot()
-                if length < 0.1 { route.removeFirst() }
-                game.apply(.move(direction: length > 0 ? SIMD2(toward.x / length, toward.y / length) : .zero))
-            }
+            if let way = steering(game, at: prey.id) { game.apply(.move(direction: way)) }
             game.advance(seconds: 1.0 / 60)
         }
     }
@@ -203,7 +191,7 @@ final class MatchEndTests: XCTestCase {
         XCTAssertEqual(next.snake.segments, world.configurations.snake.startingSegmentCount)
         XCTAssertTrue(next.snake.isAlive)
         XCTAssertEqual(next.bots.count, game.world.configurations.match.squadSize * 2)
-        XCTAssertEqual(next.shots.count, 0)
+        XCTAssertEqual(next.rounds.count, 0)
         XCTAssertNil(next.eating)
         XCTAssertEqual(next.start, game.start, "the new match is somewhere else")
         XCTAssertEqual(Perception.metres(next.snake.head, began), 0, accuracy: 1e-12,
@@ -231,22 +219,9 @@ final class RestartOnScreenTests: XCTestCase {
                                   camera: camera, seeThrough: built.seeThrough,
                                   distance: 12, fieldOfView: 50)
 
-        let cell = world.configurations.tuning.navigationGraphCellSize
         let prey = try XCTUnwrap(game.bots.filter { $0.floor == 0 }.first)
-        var route = Route.between(game.start,
-                                  NavigationGraph.Node(floor: 0,
-                                                       x: Int((prey.position.x / cell).rounded()),
-                                                       z: Int((prey.position.z / cell).rounded())),
-                                  in: world.graph)
         for _ in 0..<1800 where session.game.bots.count == game.bots.count {
-            if let next = route.first {
-                let there = SIMD3(Double(next.x) * cell, 0, Double(next.z) * cell)
-                let head = session.game.snake.head
-                let toward = SIMD2(there.x - head.x, there.z - head.z)
-                let length = (toward.x * toward.x + toward.y * toward.y).squareRoot()
-                if length < 0.1 { route.removeFirst() }
-                session.apply(.move(direction: length > 0 ? SIMD2(toward.x / length, toward.y / length) : .zero))
-            }
+            if let way = steering(session.game, at: prey.id) { session.apply(.move(direction: way)) }
             if session.canEat { session.apply(.eat) }
             session.step(seconds: 1.0 / 60)
         }

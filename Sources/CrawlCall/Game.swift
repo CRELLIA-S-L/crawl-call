@@ -5,7 +5,7 @@
 // or a key: the schemes produce intents (FR-VIEW-050), the logic consumes them, and
 // neither knows about the other.
 //
-// implements: FR-SNAKE-270, FR-SNAKE-280, FR-VIEW-160, FR-BOT-060, FR-BOT-320, FR-BOT-050, FR-BOT-220, FR-BOT-230, FR-BOT-240, FR-BOT-260, FR-BOT-310, FR-VIEW-030, FR-VIEW-170, FR-VIEW-190, FR-SNAKE-010, FR-SNAKE-030, FR-SNAKE-290, FR-BOT-020, FR-BOT-150, FR-BOT-170, FR-BOT-380, FR-SCORE-130, FR-SCORE-070, FR-BOT-180, FR-SNAKE-060, FR-SNAKE-070, FR-SNAKE-090, FR-SCORE-140, FR-SCORE-150, INV-BOT-010, FR-VIEW-230, FR-TOOL-230, FR-MAP-150, FR-MAP-180, FR-MAP-170, FR-SNAKE-220
+// implements: FR-SNAKE-270, FR-SNAKE-280, FR-SNAKE-285, FR-SNAKE-055, FR-SNAKE-056, FR-SNAKE-016, FR-VIEW-160, FR-BOT-060, FR-BOT-320, FR-BOT-050, FR-BOT-220, FR-BOT-230, FR-BOT-240, FR-BOT-260, FR-BOT-310, FR-VIEW-030, FR-VIEW-170, FR-VIEW-190, FR-SNAKE-010, FR-SNAKE-030, FR-SNAKE-290, FR-BOT-020, FR-BOT-150, FR-BOT-170, FR-BOT-380, FR-SCORE-130, FR-SCORE-070, FR-BOT-180, FR-SNAKE-060, FR-SNAKE-070, FR-SNAKE-090, FR-SCORE-140, FR-SCORE-150, INV-BOT-010, FR-VIEW-230, FR-TOOL-230, FR-MAP-150, FR-MAP-180, FR-MAP-170, FR-SNAKE-220, FR-BOT-400
 import Foundation
 
 struct Game {
@@ -63,8 +63,8 @@ struct Game {
     /// When the last lunge ended, on its prey or not, in the match's seconds: what the
     /// drawing squashes the head by for a moment after (FR-VIEW-310).
     private(set) var landedAt: Double?
-    /// The shots still being drawn, each with what is left of its time (FR-VIEW-170).
-    private(set) var shots: [Shot] = []
+    /// The rounds in flight (FR-BOT-060), drawn where they are (FR-VIEW-170).
+    private(set) var rounds: [Round] = []
 
     /// How the match ended, or nil while it is still being played.
     private(set) var outcome: Outcome?
@@ -127,14 +127,23 @@ struct Game {
         tuning.bodyRadius + tuning.navigationGraphCellSize * Geometry.half
     }
 
-    /// The nearest bot within `reach` metres of the head: what the eat intent lunges
-    /// at, with the lunge reach (FR-SNAKE-270).
-    static func preyWithinReach(of head: SIMD3<Double>, among bots: [Bot], reach: Double) -> Int? {
+    /// The bot a lunge would go for: the nearest within the lunge reach of the head and
+    /// within the lunge angle of the way it is going (FR-SNAKE-270).
+    static func prey(ahead snake: Snake, among bots: [Bot], lunge: SnakeConfiguration.Lunge) -> Int? {
+        preyWithinReach(of: snake.head, among: bots, reach: lunge.reach) { point in
+            Lunge.isAhead(point, of: snake, within: lunge.angle)
+        }
+    }
+
+    /// The nearest bot within `reach` metres of the head for which `ahead` holds; ties go
+    /// to the lower id.
+    static func preyWithinReach(of head: SIMD3<Double>, among bots: [Bot], reach: Double,
+                                ahead: (SIMD3<Double>) -> Bool = { _ in true }) -> Int? {
         var nearest: Int?
         var best = Double.infinity
         for bot in bots {
             let metres = Perception.metres(head, bot.position)
-            guard metres <= reach else { continue }
+            guard metres <= reach, ahead(bot.position) else { continue }
             // Ties go to the lower id, so that a match is the same twice over.
             if metres < best || (metres == best && bot.id < (nearest ?? .max)) {
                 best = metres
@@ -181,12 +190,13 @@ struct Game {
 
     /// Whether the eat intent would begin a lunge now (FR-SNAKE-270): no meal and no
     /// lunge under way, the snake not in the air off a ledge (FR-SNAKE-220), and a bot
-    /// within the lunge reach. What the eat button shows (FR-VIEW-160).
+    /// within the lunge reach and the lunge angle ahead of the head. What the eat button
+    /// shows (FR-VIEW-160).
     var canLunge: Bool { lungePrey() != nil }
 
     private func lungePrey() -> Int? {
         guard eating == nil, lunge == nil, coil == nil, snake.drop == nil else { return nil }
-        return Game.preyWithinReach(of: snake.head, among: bots, reach: world.configurations.snake.lunge.reach)
+        return Game.prey(ahead: snake, among: bots, lunge: world.configurations.snake.lunge)
     }
 
     private mutating func lungeAtWhatIsWithinReach() {
@@ -204,7 +214,8 @@ struct Game {
             return
         }
         let result = Lunge.step(&current, snake: &snake, prey: prey.position, seconds: seconds,
-                                bite: Game.biteReach(world.configurations.tuning), over: surfaces)
+                                bite: Game.biteReach(world.configurations.tuning), over: surfaces,
+                                neck: world.configurations.snake.neckSegments)
         lunge = current
         switch result {
         case .going: break
@@ -234,13 +245,36 @@ struct Game {
             coil = nil
             return
         }
-        Coil.step(&current, snake: &snake, prey: &bots[index].position, seconds: seconds,
-                  shoveSpeed: world.configurations.snake.coil.shoveSpeed, over: surfaces)
+        let over = Game.coil(&current, snake: &snake, prey: &bots[index], seconds: seconds,
+                             configuration: world.configurations.snake, over: surfaces)
         coil = current
-        if current.isDone {
+        if over {
             coil = nil
             begin(eating: current.prey)
         }
+    }
+
+    /// One frame of a coil (FR-SNAKE-280), and whether it is over and the meal is to
+    /// begin. A head that goes off a ledge as it goes round takes the bot down with it,
+    /// holding it where the head is, and the coil is over where the head lands
+    /// (FR-SNAKE-285).
+    static func coil(_ coil: inout Coil, snake: inout Snake, prey: inout Bot, seconds: Double,
+                     configuration: SnakeConfiguration, over surfaces: Surfaces) -> Bool {
+        if !coil.falling {
+            let before = snake.drops
+            Coil.step(&coil, snake: &snake, prey: &prey.position, seconds: seconds,
+                      shoveSpeed: configuration.coil.shoveSpeed, over: surfaces)
+            // Off a ledge in this frame, whether or not it has landed by its end.
+            coil.falling = snake.drops > before
+        } else {
+            // Down the rest of the drop: the head is not steered in the air (FR-SNAKE-220).
+            snake.advance(direction: .zero, speed: configuration.baseSpeed, seconds: seconds, over: surfaces)
+        }
+        guard coil.falling else { return coil.isDone }
+        prey.position = snake.head
+        guard snake.drop == nil else { return false }
+        prey.floor = snake.floor
+        return true
     }
 
     private mutating func endLunge() {
@@ -249,7 +283,7 @@ struct Game {
     }
 
     /// What one step did that the frame record counts (FR-TOOL-230): how many bots
-    /// deliberated and how long that took, and how many volleys hit the snake.
+    /// deliberated and how long that took, and how many rounds struck the snake.
     struct StepReport: Equatable {
         var deliberations = Int.zero
         var deliberationTime = Duration.zero
@@ -286,23 +320,37 @@ struct Game {
             // not heard until it is over.
             advanceLunge(seconds: seconds)
         } else {
-            // Steered: on an arc no tighter than the turning radius (FR-SNAKE-290).
+            // Steered: on an arc no tighter than the turning radius (FR-SNAKE-290), its own
+            // body past the neck crawled over (FR-SNAKE-055), feeling its way round what is
+            // ahead (FR-SNAKE-016).
             snake.advance(direction: held,
                           speed: world.configurations.snake.baseSpeed,
                           seconds: seconds,
                           over: surfaces,
-                          turningRadius: world.configurations.snake.turningRadius)
+                          turningRadius: world.configurations.snake.turningRadius,
+                          neck: world.configurations.snake.neckSegments,
+                          feel: world.configurations.snake.feelDistance)
         }
 
+        // What of the body lies on nothing any more comes down (FR-SNAKE-056).
+        snake.settle(seconds: seconds, neck: world.configurations.snake.neckSegments,
+                     gravity: world.configurations.tuning.dropGravity)
         elapsed += seconds
         let body = [snake.head] + snake.tail
         learn(snake: body)
-        // Aged before this frame's shots are added, so that a shot fired now is drawn
-        // for its whole period and not for that period less one frame.
-        shots = shots.compactMap { shot in
-            var aged = shot
-            aged.left -= seconds
-            return aged.left > .zero ? aged : nil
+        // The rounds already in flight go on, and strike what is in their way now: the
+        // snake where it has moved to, the bots where they stood (FR-BOT-400, FR-BOT-405).
+        let struck = Flight.fly(&rounds, seconds: seconds, bots: &bots, snake: body, plan: world.plan,
+                                configuration: world.configurations.bot,
+                                bodyRadius: world.configurations.tuning.bodyRadius)
+        if struck.damage > .zero {
+            report.hits += struck.hits
+            snake.take(damage: struck.damage, perSegment: world.configurations.snake.damagePerSegment)
+            // FR-SCORE-140.
+            if !snake.isAlive {
+                outcome = .snakeDied
+                return report
+            }
         }
         let steps = slots.steps(after: seconds, period: world.configurations.bot.deliberationPeriod)
         let clock = ContinuousClock()
@@ -326,18 +374,7 @@ struct Game {
                                               awareness: { known.of($0) })
             report.deliberationTime += clock.now - deciding
             report.deliberations += holders.count
-            shots += volley.shots
-            if volley.damage > .zero {
-                report.hits += volley.hits
-                snake.take(damage: volley.damage, perSegment: world.configurations.snake.damagePerSegment)
-                // FR-SCORE-140. Checked inside the loop rather than after it: the
-                // remaining deliberation steps of a long frame belong to a match that
-                // is already over.
-                if !snake.isAlive {
-                    outcome = .snakeDied
-                    return report
-                }
-            }
+            rounds += volley.rounds
         }
         // Whatever is being eaten, or coiled round to be (FR-SNAKE-280), stays where it
         // is: it resists by shooting, not by walking out of the snake's mouth.

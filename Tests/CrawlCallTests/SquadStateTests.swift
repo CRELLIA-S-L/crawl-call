@@ -121,8 +121,12 @@ final class SquadStateTests: XCTestCase {
             guard Squad.allCases.allSatisfy({ game.stealth.of($0) == .calm }) else { break }
             seen = seen || game.bots.contains { $0.knowsSnake }
             let body = [game.snake.head] + game.snake.tail
-            for shot in game.shots where body.contains(where: { Perception.metres($0, shot.to) < 1e-9 }) {
-                XCTAssertLessThanOrEqual(Perception.metres(shot.from, shot.to),
+            // A round fired this frame, sent at a part of the snake: at its middle, the
+            // body's radius over the ground under it (FR-BOT-060).
+            let raise = SIMD3(0, world.configurations.tuning.bodyRadius, 0)
+            for round in game.rounds where round.flown == 0
+                && body.contains(where: { Perception.metres($0 + raise, round.towards) < 1e-9 }) {
+                XCTAssertLessThanOrEqual(Perception.metres(round.from, round.towards),
                                          override + world.configurations.bot.eyeHeight + 1e-9,
                                          "a calm squad fired at the snake from afar")
             }

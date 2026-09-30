@@ -2,7 +2,7 @@
 // what it fires at, no faster than the turn speed; the two squads start facing each
 // other; and the figure on screen faces as the model does.
 //
-// verifies: FR-BOT-280
+// verifies: FR-BOT-280, FR-BOT-430
 import RealityKit
 import XCTest
 @testable import CrawlCall
@@ -65,7 +65,10 @@ final class BotFacingTests: XCTestCase {
         standing.facing = 1.0
         var bots = [firing, standing]
         for _ in 0..<60 { Execution.walk(&bots, seconds: 1.0 / 60, world: world) }
-        XCTAssertEqual(gap(try element(0, of: bots).facing, .pi), 0, accuracy: 1e-6, "the firing bot does not face its target")
+        // Where it stands now: with no cover beside it, it moves as it fires (FR-BOT-430).
+        let towards = try XCTUnwrap(Turning.angle(from: try element(0, of: bots).position, to: target))
+        XCTAssertEqual(gap(try element(0, of: bots).facing, towards), 0, accuracy: 1e-2,
+                       "the firing bot does not face its target")
         XCTAssertEqual(try element(1, of: bots).facing, 1.0, accuracy: 1e-12, "a bot that neither fired nor moved turned")
     }
 

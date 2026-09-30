@@ -326,7 +326,7 @@ While the snake moves, the system **shall** deform its body — flattening in a 
 Three deformations, one continuous act of drawing the body; a test of "the body deforms" that checked only one would not be this requirement.
 Held over on 2026-09-23 until the game is drawn with something better than the blockout: on a chain of spheres two of the three would be deformations nobody can see, and the third has nothing to read, since the snake keeps one speed until the dash of FR-SNAKE-130 gives it a second.
 
-### FR-VIEW-170 — A shot is drawn where it went
+### FR-VIEW-170 — A round is drawn in flight
 
 ```yaml
 status: implemented
@@ -335,16 +335,15 @@ derives_from: [FR-BOT-060]
 depends_on: [IF-BOT-010, FR-VIEW-060]
 refines: []
 conflicts_with: []
-code: [Sources/CrawlCall/Bot/Shot.swift, Sources/CrawlCall/Bot/Execution.swift, Sources/CrawlCall/Game.swift, Sources/CrawlCall/View/ShotEntity.swift, Sources/CrawlCall/GameSession.swift, Sources/CrawlCall/Config/Drawing.swift, Sources/CrawlCall/Config/EntityName.swift]
+code: [Sources/CrawlCall/Bot/Round.swift, Sources/CrawlCall/Game.swift, Sources/CrawlCall/View/ShotEntity.swift, Sources/CrawlCall/GameSession.swift, Sources/CrawlCall/CrawlCallApp.swift, Sources/CrawlCall/Config/Drawing.swift, Sources/CrawlCall/Config/EntityName.swift]
 tests: [Tests/CrawlCallTests/ShotTests.swift]
 created: 2026-09-23
 ```
 
-When a bot fires, the system **shall** draw a line from it to the point it aimed at, for the deliberation period of the bot configuration.
+While a round is in flight, the system **shall** draw it as a short streak along its path where it is.
 
 **Rationale.** Played on the device on 2026-09-23: bots were firing and the snake was losing segments, and nothing on screen said so — the only sign of being shot at was a tail that had grown shorter, which is a thing a player counts rather than feels. Danger that leaves no trace is danger nobody takes.
-The line is what the model already has: a shot lands in the step it is fired (FR-BOT-060), there is no projectile to follow, and where it came from and where it went is the whole of what happened.
-It lasts the deliberation period because that is the cadence of fire: one line a shot, gone by the time the next is due, so that the number of lines on screen is the number of shots being fired and not a decoration that accumulates.
+Until 2026-09-30 a shot struck in the step it was fired, and it was drawn as a line from the shooter to where it aimed, for a deliberation period. Since then a round flies (FR-BOT-060), and what there is to see is where it is: a streak half a metre long behind it, about what it flies in a frame, is how the eye reads something too quick to follow as a dot, and says which way it is going. A player who sees the rounds coming can move the snake out of their way.
 
 ### FR-VIEW-180 — The tail on screen is as long as the tail
 
@@ -713,4 +712,4 @@ created: 2026-09-29
 While the snake crawls, the system **shall** draw its body swaying from side to side of the path the head travelled, by the slither amplitude and wavelength of the view configuration, each point of the path swaying the same way whenever the body passes over it.
 
 **Rationale.** The maintainer, 2026-09-29: a snake that crawls straight as a pipe does not read as a snake. The wave belongs to the ground, not to the body: the body slides along an S laid on the floor, as a snake does, and stands still in it when the snake stops. Drawing only: the body the match knows stays on the path (FR-SNAKE-020).
-The maintainer chose 5 cm to either side and the head swaying with the body; how the wave is laid on a line drawn through points 0.6 m apart is ADR-0062.
+The maintainer chose 5 cm to either side on a wave of 1.2 m, and the head swaying with the body; played on the phone, it was a little too much, and on 2026-09-30 the maintainer narrowed the sway and stretched its wave, each by 30 %: 3.5 cm to either side on a wave of 1.56 m. How the wave is laid on a line drawn through points 0.6 m apart is ADR-0062.

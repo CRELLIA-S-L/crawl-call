@@ -168,17 +168,30 @@ enum SnakeEyes {
     static let roughness: Float = 0.35
 }
 
-/// The pool of tracer bars the shots are drawn with (FR-VIEW-170).
+/// The pool of tracer bars the rounds are drawn with (FR-VIEW-170).
 enum Tracers {
-    /// A bot fires at most once a deliberation step and a shot lasts exactly one, so
-    /// two bars per bot cover a frame long enough to carry two steps.
-    static let perBot = 2
+    /// How many rounds one bot can have in flight at once: a round flies the round
+    /// range at the round speed, and a bot sends one a deliberation period at most
+    /// (FR-BOT-060), so the rounds of that time, and one more for the frame in which
+    /// one is sent as another is spent.
+    static func perBot(for configuration: BotConfiguration) -> Int {
+        guard configuration.roundSpeed > .zero, configuration.deliberationPeriod > .zero else { return perBot }
+        let flight = configuration.roundRange / configuration.roundSpeed
+        return Int((flight / configuration.deliberationPeriod).rounded(.up)) + oneMore
+    }
+    static let oneMore = 1
+    /// What a pool made without the configuration holds per bot: the shipped one's
+    /// 20 m at 25 m/s is 0.8 s, four periods of 0.2 s, and one more.
+    static let perBot = 5
+    /// Metres of the streak a round is drawn as, behind where it is: about what it
+    /// flies in a frame at sixty frames a second at the shipped speed.
+    static let streak = 0.5
     /// A pool is never empty, so that a match with no bots still has somewhere to put
-    /// a shot.
+    /// a round.
     static let least = 1
-    /// A bar is made one metre deep along +z and scaled to the shot's length.
+    /// A bar is made one metre deep along +z and scaled to the streak's length.
     static let unitLength: Float = 1
     static let lengthAxis = SIMD3<Float>(0, 0, 1)
-    /// Metres below which a shot has no direction to be drawn along.
+    /// Metres below which a streak has no direction to be drawn along.
     static let shortest: Float = 1e-6
 }
