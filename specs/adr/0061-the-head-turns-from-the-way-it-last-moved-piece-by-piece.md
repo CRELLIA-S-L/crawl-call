@@ -23,7 +23,7 @@ Option 3 reads a direction a body length behind the head, which lags every turn.
 
 ### How it works
 
-- Each piece turns the heading towards the held direction by the smaller of the gap and the piece's length over the radius; a half turn has no shorter way and always goes the same way, so the same stick turns the snake the same way.
+- Each piece turns the heading towards the held direction by the smaller of the gap and the piece's length over the radius; a half turn has no shorter way and always goes the same way, so the same stick turns the snake the same way. A turn back that the shorter way would take into a wall goes the other way round (below, 2026-09-30).
 - The piece is then walked the turned way, sliding along what it meets as before.
 - Before the head has moved at all there is no heading, and the first piece goes the way held.
 - A lunge and a coil call the same movement without a radius and go where they aim at once.
@@ -32,3 +32,8 @@ Option 3 reads a direction a body length behind the head, which lags every turn.
 
 Turning round takes a way twice the radius plus the body's 0.6 m, 1.6 m at the first radius and 1.3 m at the 0.35 m of 2026-09-30 (FR-SNAKE-290): the snake does not turn round in a one-metre doorway, and must go through.
 Against a wall, the head slides along it, the heading becomes the wall's, and it turns back towards the held direction from there. As built, while the head was still turning, the slide of FR-SNAKE-015 was taken in the way it had turned to rather than in the held direction the requirement named; once it had turned the two were one (Q-470). Since 2026-09-30 the slide goes to the side the held direction leans to (ADR-0066).
+
+**2026-09-30, turning back beside a wall.** Found on the phone after that change: a head going along a wall, touching it, and steered back the way it came broke the snake. The shorter way round led into the wall; the wall stopped the turn at once, and the slide sent the head back along the wall at the whole of its speed, the held direction leaning that way — a half turn in a frame, back over its own neck, which FR-SNAKE-290 is there to prevent.
+A turn back — the held direction behind the way the head is going by more than the five degrees of lean that count (ADR-0069) — now goes the other way round where the shorter way's next piece would be stopped or refused and the other way's is open: tried on a copy of the snake, the piece walked as it would be. The way round taken is kept until the held direction is no longer behind the head, no direction is held, or a lunge or a coil moves the head (found in review the same day: kept past a lunge, it sent the next turn back the longer way round on open ground); decided afresh each piece, the head went a few degrees away from the wall, found the shorter way open again, turned back into the wall, and went on along it every frame instead of turning round (found on the simulator the same day).
+Where neither way round is open — a corridor narrower than the turn takes — the turn goes the shorter way as before, the slide takes the head back along the wall, and the head crawls over its own body (FR-SNAKE-055): the snake does not turn round there, as the consequence above says.
+A held direction back behind the head and into the wall, such as back and a little into it, comes round the open way and then meets the wall, or its own body lying along it, as it would anywhere.

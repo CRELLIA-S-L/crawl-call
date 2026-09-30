@@ -45,27 +45,37 @@ final class OwnBodyTests: XCTestCase {
         return (snake, floor)
     }
 
+    /// A snake crawling south-east towards the east wall of a room, a frame or two short
+    /// of it: at the wall it is still going south-east, whatever it is steered to after.
+    private func towardsTheEastWall(_ row: String = "..........#", frames: Int = 20) throws -> (Snake, Surfaces) {
+        let floor = try surfaces(Array(repeating: row, count: 24))
+        var snake = Snake(head: SIMD3(3.4, 0, 6), floor: 0, segments: 6, segmentSpacing: tuning.bodyRadius * 2)
+        crawl(&snake, SIMD2(1, 0.3), frames: frames, over: floor)
+        return (snake, floor)
+    }
+
     func testAHeadGoingIntoAWallSlidesToTheSideTheStickLeansTo() throws {
-        var (snake, floor) = try alongTheEastWall()
+        var (snake, floor) = try towardsTheEastWall()
         let start = snake.head
-        // Into the wall and leaning south, while the head still goes north: it slides
-        // south, the way the stick leans, and not on north, the way the head was going.
-        crawl(&snake, SIMD2(1, 0.5), frames: 10, over: floor)
-        XCTAssertGreaterThan(snake.head.z, start.z + 0.05, "the head went on the way it was going, not the way the stick leans")
-        XCTAssertEqual(snake.head.x, start.x, accuracy: 0.02, "the head left the wall")
+        XCTAssertGreaterThan(try XCTUnwrap(snake.heading).x, 0.9, "the head was not going into the wall, so this proves nothing")
+        // Into the wall going south-east, and the stick leaning north-east: at the wall it
+        // slides north, the way the stick leans, and not south, the way the head was going.
+        // A stick leaning back behind the head would be a turn back, which goes round on the
+        // arc (FR-SNAKE-290).
+        crawl(&snake, SIMD2(1, -0.5), frames: 10, over: floor)
+        XCTAssertLessThan(snake.head.z, start.z - 0.05, "the head went on the way it was going, not the way the stick leans")
+        XCTAssertGreaterThan(snake.head.x, start.x + 0.05, "the head never reached the wall, so this proves nothing")
     }
 
     func testAlongTheEdgeOfTheGroundTheHeadSlidesToTheSideTheStickLeansTo() throws {
         // The edge of the ground, with nothing below to drop to, is a side of a cell the
         // graph refuses rather than a face (FR-SNAKE-220): the same rule holds along it.
-        let floor = try surfaces(Array(repeating: "..........     ", count: 24))
-        var snake = Snake(head: SIMD3(4.6, 0, 10), floor: 0, segments: 6, segmentSpacing: tuning.bodyRadius * 2)
-        crawl(&snake, SIMD2(0, -1), frames: 60, over: floor)
-        crawl(&snake, SIMD2(1, -1), frames: 30, over: floor)
+        var (snake, floor) = try towardsTheEastWall("..........     ", frames: 27)
         let start = snake.head
-        XCTAssertLessThan(start.x, 4.76, "the head went off the edge, so this proves nothing")
-        crawl(&snake, SIMD2(1, 0.5), frames: 10, over: floor)
-        XCTAssertGreaterThan(snake.head.z, start.z + 0.05, "the head went on the way it was going, not the way the stick leans")
+        XCTAssertGreaterThan(try XCTUnwrap(snake.heading).x, 0.9, "the head was not going into the edge, so this proves nothing")
+        crawl(&snake, SIMD2(1, -0.5), frames: 10, over: floor)
+        XCTAssertLessThan(snake.head.z, start.z - 0.05, "the head went on the way it was going, not the way the stick leans")
+        XCTAssertGreaterThan(snake.head.x, start.x + 0.05, "the head never reached the edge, so this proves nothing")
         XCTAssertNil(snake.drop, "the head went off the edge")
     }
 

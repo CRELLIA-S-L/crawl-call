@@ -35,6 +35,10 @@ struct Snake {
     /// The way the head last moved across the ground, as a unit on the map plane; nil
     /// until it has moved. What a turn is turned from (FR-SNAKE-290).
     private(set) var heading: SIMD2<Double>?
+    /// The way round a turn back is being taken, clockwise or not, where it is being taken
+    /// the other way round from the shorter (ADR-0061); nil once the held direction is no
+    /// longer behind the head, and while the shorter way is the one.
+    private var roundabout: Bool?
     /// How far the head has come along its path since the match began, in metres: where
     /// on the ground the drawn body's sway is (FR-VIEW-330).
     private(set) var crawled: Double = .zero
@@ -118,7 +122,7 @@ struct Snake {
         }
 
         let length = (direction.x * direction.x + direction.y * direction.y).squareRoot()
-        guard length > .zero else { return }
+        guard length > .zero else { roundabout = nil; return }
         let unit = SIMD2(direction.x / length, direction.y / length)
 
         // The frame's distance is walked in pieces no longer than half a cell. A whole
@@ -130,7 +134,26 @@ struct Snake {
         while budget > Motion.negligibleDistance {
             let step = min(budget, longest)
             let towards = feel.flatMap { feelRound(towards: unit, within: $0, over: surfaces) } ?? unit
-            let way = turningRadius.map { Snake.turn(heading ?? unit, towards: towards, by: step / $0) } ?? unit
+            var way = unit
+            if let radius = turningRadius {
+                let going = heading ?? unit
+                let back = (going * towards).sum() < -Motion.leanShare
+                if !back { roundabout = nil }
+                way = Snake.turn(going, towards: towards, by: step / radius, clockwise: roundabout)
+                // Turning back, where the shorter way round leads straight into what the head
+                // cannot pass: the other way round, where that is open, and on that way until
+                // the turn is no longer back. Taken into the wall, the turn would be stopped
+                // and the slide would send the head back along the wall at once, over its own
+                // neck (ADR-0061).
+                if back, roundabout == nil, !opens(way, for: step, over: surfaces) {
+                    let other = !Snake.clockwise(going, towards: towards)
+                    let otherWay = Snake.turn(going, towards: towards, by: step / radius, clockwise: other)
+                    if opens(otherWay, for: step, over: surfaces) { way = otherWay; roundabout = other }
+                }
+            } else {
+                // A lunge or a coil steers the head itself: a turn back it broke off is over.
+                roundabout = nil
+            }
             guard let spent = slide(unit: way, held: unit, distance: step, over: surfaces) else { return }
             budget -= spent
             // A piece that went off a ledge: the rest of the frame is the drop's, and
@@ -261,6 +284,15 @@ struct Snake {
         }
         let lean = held - against * (held * against).sum()
         return (lean * lean).sum().squareRoot() > Motion.leanShare ? along(held) : along(going)
+    }
+
+    /// Whether a piece of `distance` metres along `way` is open all the way: not refused,
+    /// and not stopped short by anything the body touches. Tried on a copy, which is
+    /// thrown away.
+    private func opens(_ way: SIMD2<Double>, for distance: Double, over surfaces: Surfaces) -> Bool {
+        var trial = self
+        guard let step = trial.stepOnce(unit: way, distance: distance, over: surfaces) else { return false }
+        return step.against == nil
     }
 
     /// Of the two ways along a face that leads away as `against` does, the one with more
@@ -402,15 +434,27 @@ struct Snake {
     }
 
     /// A unit on the map plane turned towards another by at most `angle` radians, the
-    /// shorter way round; a half turn always goes the same way, so that the same held
-    /// stick turns the snake the same way every time.
-    static func turn(_ from: SIMD2<Double>, towards to: SIMD2<Double>, by angle: Double) -> SIMD2<Double> {
+    /// shorter way round, or the way `clockwise` says where it is given; a half turn
+    /// always goes the same way, so that the same held stick turns the snake the same way
+    /// every time.
+    static func turn(_ from: SIMD2<Double>, towards to: SIMD2<Double>, by angle: Double,
+                     clockwise given: Bool? = nil) -> SIMD2<Double> {
+        let shorter = clockwise(from, towards: to)
+        let sense = given ?? shorter
         let gap = atan2(from.x * to.y - from.y * to.x, from.x * to.x + from.y * to.y)
-        guard abs(gap) > angle, angle.isFinite else { return to }
-        // A half turn has no shorter way; atan2 calls it π or −π by the sign of a zero.
-        let clockwise = gap < .zero && abs(gap) < .pi - Geometry.samePosition
-        let turned = atan2(from.y, from.x) + (clockwise ? -angle : angle)
+        // The other way round is the whole turn less the shorter.
+        let whole = sense == shorter ? abs(gap) : Geometry.fullTurn - abs(gap)
+        guard whole > angle, angle.isFinite else { return to }
+        let turned = atan2(from.y, from.x) + (sense ? -angle : angle)
         return SIMD2(cos(turned), sin(turned))
+    }
+
+    /// Whether the shorter way round from one unit to another is clockwise, by the sign
+    /// `turn` reads; a half turn has no shorter way and is always taken the same way.
+    static func clockwise(_ from: SIMD2<Double>, towards to: SIMD2<Double>) -> Bool {
+        let gap = atan2(from.x * to.y - from.y * to.x, from.x * to.x + from.y * to.y)
+        // atan2 calls a half turn π or −π by the sign of a zero.
+        return gap < .zero && abs(gap) < .pi - Geometry.samePosition
     }
 
     private mutating func moveTo(_ position: SIMD3<Double>) {

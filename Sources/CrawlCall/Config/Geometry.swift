@@ -51,6 +51,8 @@ extension Geometry {
     /// by `.pi / halfTurnDegrees`.
     static let halfTurnDegrees = 180.0
     static let fullTurnDegrees = 360.0
+    /// A whole turn, in radians.
+    static let fullTurn = Double.pi * 2
     /// A width measured out to both sides of a centre line is this many times what
     /// lies to one side.
     static let bothSides = 2.0
