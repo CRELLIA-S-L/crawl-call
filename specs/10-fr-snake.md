@@ -20,7 +20,7 @@ tests: [Tests/CrawlCallTests/SnakeTests.swift, Tests/CrawlCallTests/GameTests.sw
 created: 2026-09-21
 ```
 
-While a match is running, the snake's head **shall** move in the direction the player holds, staying on the map's walkable surfaces — over ramps, stairs and drops from ledges — with no part of its body passing into anything the map places that is not walkable.
+While a match is running, the snake's head **shall** move where the player steers it (FR-SNAKE-290), staying on the map's walkable surfaces — over ramps, stairs and drops from ledges — with no part of its body passing into anything the map places that is not walkable.
 
 **Rationale.** The snake lives on the map's surfaces, not in free space: it crawls over geometry, steered rather than pathfound (concept §3, ADR-0016).
 Everything the tail does for free — blocking corridors and stairs, becoming a liability in narrow passages, vertical play in both directions — follows from the head being bound to the surfaces.
@@ -586,3 +586,21 @@ When the snake's lunge reaches a living bot, the system **shall** move the head 
 **Rationale.** The maintainer, 2026-09-29, on the phone: the lunge alone was not expressive, and the snake should throw itself at its prey, coil round it once and swallow it; a body is simply eaten. Asked, the maintainer chose a coil that is the head's real movement, with the body lying round the bot because it follows the head's path (FR-SNAKE-020), and not a picture over a body that stays where it was; the bot shoved out of a corner where the ring does not fit, "not in one frame, of course"; the coil adding its time to the meal's rather than taking it from it; and the bot shooting back meanwhile as it does while it is eaten (FR-SNAKE-100).
 The ring's radius is two bodies, the head's and the bot's side by side; how the room is found is ADR-0053.
 
+### FR-SNAKE-290 — The head turns on an arc
+
+```yaml
+status: implemented
+verification: T
+derives_from: [FR-SNAKE-010]
+depends_on: [IF-SNAKE-010]
+refines: [FR-SNAKE-010]
+conflicts_with: []
+code: [Sources/CrawlCall/Snake/Snake.swift, Sources/CrawlCall/Game.swift, Sources/CrawlCall/Config/Configurations.swift]
+tests: [Tests/CrawlCallTests/TurnTests.swift]
+created: 2026-09-29
+```
+
+While the head moves, the system **shall** turn it towards the direction the player holds no tighter than an arc of the turning radius of the snake configuration.
+
+**Rationale.** The maintainer, 2026-09-29: a head that takes any direction at once folds the snake in two, which does not look like a snake. A lunge and a coil steer the head themselves and are not held to it (FR-SNAKE-270, FR-SNAKE-280).
+The radius, 0.5 m at the body's centre line, is the maintainer's; turning round takes a way 1.6 m wide, so the snake does not turn round in a doorway. How the turn is taken is ADR-0061.

@@ -146,3 +146,10 @@ What remains is what a decision inside the repository cannot close.
 - **Found:** on the phone on 2026-09-29, in two one-minute recordings of the maintainer playing, once the squads came to know the snake (FR-SCORE-130) and to go about with nothing to do (FR-BOT-360, FR-BOT-370): deliberation reached 6.5 ms and then 11.8 ms in a frame, its 99th percentile 2.6 and 1.9 ms, where a minute recorded before squads had a state had shown 1.1 ms at most.
 - **What diverged:** NFR-PERF-020 asks for at most 0.5 ms a frame; it is `deferred`, and nothing holds the time to it yet. Frames were late no more often than before (67 and 94 of about 3,500), so the frame rate held; the cost is the budget's. On the simulator the choice of where an idle bot goes took under a tenth of a millisecond once it weighed every cell instead of walking to them, and the walk from the snake's head over the graph is a quarter of one; which part dominates in play was not measured, and the two recordings were of different matches.
 - **Still needed:** a recording of the same match with and without the player, the parts of deliberation timed in the worst frames, and NFR-PERF-020 built — the budget that defers slots to later frames — once it is known what fills it. The maintainer put it off on 2026-09-29.
+
+### Q-470 — A slide along a wall is taken in the way the head has turned to, not the way held
+
+- **Found:** in the review of the turning radius on 2026-09-29 (FR-SNAKE-290, ADR-0061).
+- **What diverged:** FR-SNAKE-015 moves a blocked head along the obstacle at the base speed taken in the part of the held direction that runs along it. With the head turning on an arc, what is walked, and slid, is the way the head has turned to so far; while it is still turning towards the held direction the slide's speed along the wall is that way's part, not the held direction's. Once the head has turned, the two are the same.
+- **Still needed:** the maintainer's word on whether FR-SNAKE-015 should name the way the head is going rather than the direction held, or the slide should keep to the held direction while the head turns.
+

@@ -9,7 +9,7 @@
 //
 // Its skin is green and spotted (FR-VIEW-270), painted by `SnakeSkin.metal`.
 //
-// implements: FR-SNAKE-010, FR-SNAKE-020, FR-VIEW-250, FR-VIEW-260, FR-VIEW-270, FR-VIEW-280, FR-VIEW-310, FR-VIEW-320
+// implements: FR-SNAKE-010, FR-SNAKE-020, FR-VIEW-250, FR-VIEW-260, FR-VIEW-270, FR-VIEW-280, FR-VIEW-310, FR-VIEW-320, FR-VIEW-330
 import Foundation
 import Metal
 import RealityKit
@@ -45,7 +45,8 @@ enum SnakeEntity {
     /// a snake that has eaten is drawn as long as it is (FR-VIEW-250).
     @MainActor
     static func update(_ entity: Entity, from snake: Snake, radius: Double, lumps: [Digestion.Lump] = [],
-                       lunge: LungePose = LungePose(), swallow: SwallowPose = SwallowPose()) {
+                       lunge: LungePose = LungePose(), swallow: SwallowPose = SwallowPose(),
+                       sway: SnakeBody.Sway = .none) {
         guard let head = entity.children.first(where: { $0.name == EntityName.head }) else { return }
         // Reared over a living bot it is swallowing, or where the match has it
         // (FR-VIEW-320).
@@ -65,15 +66,24 @@ enum SnakeEntity {
         // the head without the tip a meal gives it (FR-VIEW-260).
         let before = head.orientation.act(SIMD3<Float>(0, 0, 1))
         var yaw = atan2(Double(before.x), Double(before.z))
+        // Whether the way was read afresh rather than kept from the frame before, which
+        // already has the sway's turn in it (FR-VIEW-330).
+        var fresh = false
         if let behind = snake.tail.first {
             let way = SIMD2(snake.head.x - behind.x, snake.head.z - behind.z)
-            if simd_length(way) > SnakeShape.samePoint { yaw = atan2(way.x, way.y) }
+            if simd_length(way) > SnakeShape.samePoint {
+                yaw = atan2(way.x, way.y)
+                fresh = true
+            }
         }
         // A lunge turns the head to its prey, and squashes and stretches it along the
         // way it faces (FR-VIEW-310).
         if let aim = lunge.aim {
             let way = SIMD2(aim.x - snake.head.x, aim.z - snake.head.z)
-            if simd_length(way) > SnakeShape.samePoint { yaw = atan2(way.x, way.y) }
+            if simd_length(way) > SnakeShape.samePoint {
+                yaw = atan2(way.x, way.y)
+                fresh = true
+            }
         }
         // Reared over the bot it swallows (FR-VIEW-320), it turns as it rises to face away
         // from its neck, over the bot, and the neck bends over behind it, so that the end
@@ -94,6 +104,18 @@ enum SnakeEntity {
             if simd_length(bend) > SnakeShape.samePoint { neck.append(drawn + bend) }
             neck.append(snake.head)
         }
+        // Swaying, the head goes to the side with the body's end and points along it
+        // (FR-VIEW-330): shifted as the line is at the head, and turned by how the shift
+        // changes going forward — turned only where the way was read afresh, since a way
+        // kept from the frame before was turned then, and turning it again every frame
+        // spun a snake that had not moved yet where it stood.
+        let back = SIMD3(-sin(yaw), .zero, -cos(yaw))
+        let side = SnakeBody.side(of: back)
+        let swayed = drawn + side * sway.shift(behind: .zero)
+        if fresh {
+            let facing = SIMD3(sin(yaw), .zero, cos(yaw)) + side * sway.slopeAtHead
+            yaw = atan2(facing.x, facing.z)
+        }
         let orientation = simd_quatf(angle: Float(yaw), axis: SIMD3(0, 1, 0))
             * simd_quatf(angle: Float(swallow.tip), axis: SIMD3(1, 0, 0))
         head.orientation = orientation
@@ -102,9 +124,9 @@ enum SnakeEntity {
         // drawn round its line lifted by its radius (`SnakeBody.tube`), and the eyes hang
         // that radius up from the entity in its own frame.
         let lift = radius * SnakeShape.headShare
-        let centre = SIMD3<Float>(drawn + SIMD3(.zero, lift, .zero))
+        let centre = SIMD3<Float>(swayed + SIMD3(.zero, lift, .zero))
         head.position = centre - orientation.act(SIMD3(0, Float(lift) * Float(lunge.across), 0))
-        let shape = SnakeBody.tube(head: drawn, tail: neck + snake.tail, radius: radius, lumps: lumps)
+        let shape = SnakeBody.tube(head: drawn, tail: neck + snake.tail, radius: radius, lumps: lumps, sway: sway)
 
         var model = entity.children.first { $0.name == EntityName.body } as? ModelEntity
         if let mesh = model?.model?.mesh.lowLevelMesh,

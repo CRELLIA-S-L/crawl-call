@@ -8,7 +8,7 @@
 // rather than set against the world's up, so that the tube does not twist where the
 // line turns, climbs or drops straight down a ledge.
 //
-// implements: FR-VIEW-250, FR-VIEW-260, FR-VIEW-270, FR-VIEW-280
+// implements: FR-VIEW-250, FR-VIEW-260, FR-VIEW-270, FR-VIEW-280, FR-VIEW-330
 import Foundation
 import simd
 
@@ -23,14 +23,54 @@ struct SnakeBody: Equatable {
 
     var triangles: Int { indices.count / Square.triangle }
 
+    /// How a crawling body sways (FR-VIEW-330): side to side of its line by
+    /// `amplitude`, one wave to every `wavelength` metres of ground, `crawled` being how
+    /// far the head has come. The wave is the ground's: a point of the path sways the
+    /// same way whenever the body passes over it, so the body slides along an S laid on
+    /// the floor, and stands still in it when the snake stops.
+    struct Sway: Equatable {
+        var amplitude = Double.zero
+        var wavelength = Fraction.whole
+        var crawled = Double.zero
+
+        static let none = Sway()
+
+        /// Metres to the side of the point `behind` metres back along the body from the
+        /// head.
+        func shift(behind: Double) -> Double {
+            guard amplitude > .zero, wavelength > .zero else { return .zero }
+            return amplitude * sin(Geometry.bothSides * .pi * (crawled - behind) / wavelength)
+        }
+
+        /// How much the shift changes for each metre forward at the head: which way the
+        /// head points across its line.
+        var slopeAtHead: Double {
+            guard amplitude > .zero, wavelength > .zero else { return .zero }
+            let wave = Geometry.bothSides * .pi / wavelength
+            return amplitude * wave * cos(wave * crawled)
+        }
+    }
+
+    /// The level direction square to a line running `tangent`, to the side a sway
+    /// shifts to; none where the line runs straight up or down.
+    static func side(of tangent: SIMD3<Double>) -> SIMD3<Double> {
+        let across = simd_cross(SIMD3(.zero, Fraction.whole, .zero), tangent)
+        let level = SIMD3(across.x, .zero, across.z)
+        return simd_length(level) > SnakeShape.samePoint ? simd_normalize(level) : .zero
+    }
+
     /// The most triangles a body through a tail of `points` may take (FR-VIEW-250).
     static func ceiling(points: Int) -> Int { SnakeBodyCeiling.perPoint * points + SnakeBodyCeiling.besides }
 
     /// The body round a line through `head` and then `tail`, head first, of `radius`,
     /// swollen where a meal is passing along it (FR-VIEW-280).
+    ///
+    /// Swaying, each point of the line is shifted to the side of it by the sway there
+    /// (FR-VIEW-330), measured along the line it was before; the rings follow the
+    /// shifted line.
     static func tube(head: SIMD3<Double>, tail: [SIMD3<Double>], radius: Double,
-                     lumps: [Digestion.Lump] = []) -> SnakeBody {
-        let spine = line(through: [head] + tail)
+                     lumps: [Digestion.Lump] = [], sway: Sway = .none) -> SnakeBody {
+        let spine = swayed(line(through: [head] + tail), by: sway)
         let tangents = directions(along: spine)
         let length = spine.lengths.last ?? .zero
         let radii = spine.lengths.map { radius * profile(at: $0, of: length) * swelling(at: $0, by: lumps) }
@@ -88,6 +128,26 @@ struct SnakeBody: Equatable {
             line.lengths.append(walked)
         }
         return line
+    }
+
+    /// The line the body is drawn round, head first, and how far along it each point
+    /// lies measured before the sway: what a test reads of the sway (FR-VIEW-330).
+    static func centreLine(head: SIMD3<Double>, tail: [SIMD3<Double>],
+                           sway: Sway = .none) -> (points: [SIMD3<Double>], lengths: [Double]) {
+        let spine = swayed(line(through: [head] + tail), by: sway)
+        return (spine.points, spine.lengths)
+    }
+
+    /// Each point of a line shifted to the side of it by the sway there, the lengths
+    /// kept as they were before.
+    private static func swayed(_ line: Line, by sway: Sway) -> Line {
+        guard sway.amplitude > .zero else { return line }
+        let straight = directions(along: line)
+        var result = line
+        result.points = line.points.indices.map { index in
+            line.points[index] + side(of: straight[index]) * sway.shift(behind: line.lengths[index])
+        }
+        return result
     }
 
     private static func catmullRom(_ p0: SIMD3<Double>, _ p1: SIMD3<Double>, _ p2: SIMD3<Double>,

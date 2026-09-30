@@ -5,7 +5,7 @@
 // measured with — `specs/50-verification.md` says why, and the two are different
 // questions asked of the same number.
 //
-// implements: FR-TOOL-070, FR-VIEW-020, FR-VIEW-030, FR-VIEW-060, FR-VIEW-100, FR-VIEW-140, FR-VIEW-150, FR-VIEW-155, FR-VIEW-160, FR-VIEW-170, FR-VIEW-250, FR-VIEW-190, FR-VIEW-230, FR-VIEW-210, FR-TOOL-230, FR-TOOL-240, FR-GREENHOLM-030, FR-TOOL-260, FR-TOOL-270, FR-SNAKE-220, FR-VIEW-280, FR-VIEW-290, FR-VIEW-310, FR-VIEW-320
+// implements: FR-TOOL-070, FR-VIEW-020, FR-VIEW-030, FR-VIEW-060, FR-VIEW-100, FR-VIEW-140, FR-VIEW-150, FR-VIEW-155, FR-VIEW-160, FR-VIEW-170, FR-VIEW-250, FR-VIEW-190, FR-VIEW-230, FR-VIEW-210, FR-TOOL-230, FR-TOOL-240, FR-GREENHOLM-030, FR-TOOL-260, FR-TOOL-270, FR-SNAKE-220, FR-VIEW-280, FR-VIEW-290, FR-VIEW-310, FR-VIEW-320, FR-VIEW-330
 import Foundation
 import Observation
 import RealityKit
@@ -236,7 +236,10 @@ final class GameSession {
         }
         SnakeEntity.update(snakeEntity, from: game.snake,
                            radius: game.world.configurations.tuning.bodyRadius, lumps: digestion.lumps,
-                           lunge: LungePose.of(game), swallow: swallowPose)
+                           lunge: LungePose.of(game), swallow: swallowPose,
+                           sway: SnakeBody.Sway(amplitude: game.world.configurations.view.slither.amplitude,
+                                                wavelength: game.world.configurations.view.slither.wavelength,
+                                                crawled: game.snake.crawled))
         BotEntity.update(botEntities, from: game.bots, gaits: gaits, eaten: game.eating?.prey)
         // Every shot still alive is drawn where it went (FR-VIEW-170).
         ShotEntity.update(shotEntities, from: game.shots)

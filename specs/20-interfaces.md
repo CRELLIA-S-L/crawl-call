@@ -23,7 +23,7 @@ tests: [Tests/CrawlCallTests/ConfigurationTests.swift, Tests/CrawlCallTests/Laun
 created: 2026-09-21
 ```
 
-When the game starts, the system **shall** read from the snake configuration — the JSON file `config/snake.json` (ADR-0012) — the base speed; the starting segment count; segments gained per archetype consumed; segments regrown by the medic ability; damage per segment; the body eating duration; the eating damage per second; the lunge's reach, wind-up and speed (FR-SNAKE-270); the coil's time, and the shove's reach and speed (FR-SNAKE-280); and per ability its speed, factor, amount or duration as FR-SNAKE-130 to FR-SNAKE-190 name them.
+When the game starts, the system **shall** read from the snake configuration — the JSON file `config/snake.json` (ADR-0012) — the base speed; the starting segment count; segments gained per archetype consumed; segments regrown by the medic ability; damage per segment; the body eating duration; the eating damage per second; the lunge's reach, wind-up and speed (FR-SNAKE-270); the coil's time, and the shove's reach and speed (FR-SNAKE-280); the turning radius (FR-SNAKE-290); and per ability its speed, factor, amount or duration as FR-SNAKE-130 to FR-SNAKE-190 name them.
 
 **Rationale.** Concept §12: the final feel — snake speed, reaction distances, thresholds — stays with the human, and the agent takes corrections as numbers (§11.2).
 One act — reading one file — over an enumerated set of keys.
@@ -234,7 +234,7 @@ tests: [Tests/CrawlCallTests/ConfigurationTests.swift, Tests/CrawlCallTests/Laun
 created: 2026-09-21
 ```
 
-When the game starts, the system **shall** read from the view configuration — the JSON file `config/view.json` (ADR-0012) — the camera pitch within the range FR-VIEW-010 allows; the camera's field of view, and how far back it stands in lengths of the map; the colour and brightness of the ambient light, and the sun's intensity, elevation and azimuth (FR-VIEW-130); the central region the head is kept in, and how long the camera takes to catch up with it (FR-VIEW-020); the see-through margin of FR-VIEW-150; the visibility radius of FR-VIEW-155; the straggler distance; the visible-panic threshold; and how near and how far, and how low and how steep, the free camera of FR-TOOL-070 may be taken.
+When the game starts, the system **shall** read from the view configuration — the JSON file `config/view.json` (ADR-0012) — the camera pitch within the range FR-VIEW-010 allows; the camera's field of view, and how far back it stands in lengths of the map; the colour and brightness of the ambient light, and the sun's intensity, elevation and azimuth (FR-VIEW-130); the central region the head is kept in, and how long the camera takes to catch up with it (FR-VIEW-020); how far to either side the body sways and over how much ground a wave runs (FR-VIEW-330); the see-through margin of FR-VIEW-150; the visibility radius of FR-VIEW-155; the straggler distance; the visible-panic threshold; and how near and how far, and how low and how steep, the free camera of FR-TOOL-070 may be taken.
 
 **Rationale.** Every VIEW requirement that names a number names it here; the camera pitch is a number the maintainer settles by eye (concept §12), inside the range the concept fixes.
 

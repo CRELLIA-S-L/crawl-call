@@ -1,7 +1,7 @@
 // The snake as the game reasons about it: where the head is, where it has been, and
 // where the tail therefore lies. No RealityKit here — this is the part a test can read.
 //
-// implements: FR-MAP-150, FR-SNAKE-010, FR-SNAKE-015, FR-SNAKE-020, FR-SNAKE-030, FR-SNAKE-060, FR-SNAKE-070, FR-SNAKE-210, FR-SNAKE-220
+// implements: FR-MAP-150, FR-SNAKE-010, FR-SNAKE-015, FR-SNAKE-290, FR-VIEW-330, FR-SNAKE-020, FR-SNAKE-030, FR-SNAKE-060, FR-SNAKE-070, FR-SNAKE-210, FR-SNAKE-220
 import Foundation
 
 struct Snake {
@@ -27,6 +27,12 @@ struct Snake {
     private(set) var drop: Drop?
     /// The speed the head last walked at, which it goes on across at off a ledge.
     private var pace: Double = .zero
+    /// The way the head last moved across the ground, as a unit on the map plane; nil
+    /// until it has moved. What a turn is turned from (FR-SNAKE-290).
+    private(set) var heading: SIMD2<Double>?
+    /// How far the head has come along its path since the match began, in metres: where
+    /// on the ground the drawn body's sway is (FR-VIEW-330).
+    private(set) var crawled: Double = .zero
 
     struct Drop: Equatable {
         let from: SIMD3<Double>
@@ -56,14 +62,20 @@ struct Snake {
         self.trail = [head]
     }
 
-    /// Moves the head for one frame in the direction the player holds.
+    /// Moves the head for one frame towards the direction the player holds.
     ///
     /// The direction is on the map plane; the head keeps to walkable surfaces and its
     /// body out of what stands on them, takes a drop where the tuning allows one, and
     /// slides along what it cannot pass rather than stopping against it (FR-SNAKE-010,
     /// FR-SNAKE-015, FR-SNAKE-220, ADR-0021). Speed is the configuration's
     /// (FR-SNAKE-030).
-    mutating func advance(direction: SIMD2<Double>, speed: Double, seconds: Double, over surfaces: Surfaces) {
+    ///
+    /// Given a turning radius, the head turns from the way it last moved towards the one
+    /// held no tighter than an arc of that radius, piece by piece as it goes
+    /// (FR-SNAKE-290); without one — a lunge, a coil — it goes the way it is given at
+    /// once.
+    mutating func advance(direction: SIMD2<Double>, speed: Double, seconds: Double, over surfaces: Surfaces,
+                          turningRadius: Double? = nil) {
         guard speed > .zero, seconds > .zero else { return }
         pace = speed
         // A drop under way is come down first, whether or not a direction is held;
@@ -97,7 +109,8 @@ struct Snake {
         let longest = max(surfaces.cellSize * Geometry.half, Motion.shortestPiece)
         while budget > Motion.negligibleDistance {
             let step = min(budget, longest)
-            guard let spent = slide(unit: unit, distance: step, over: surfaces) else { return }
+            let way = turningRadius.map { Snake.turn(heading ?? unit, towards: unit, by: step / $0) } ?? unit
+            guard let spent = slide(unit: way, distance: step, over: surfaces) else { return }
             budget -= spent
             // A piece that went off a ledge: the rest of the frame is the drop's, and
             // what the drop leaves of it is walked on from where the head landed.
@@ -249,7 +262,23 @@ struct Snake {
         return nil
     }
 
+    /// A unit on the map plane turned towards another by at most `angle` radians, the
+    /// shorter way round; a half turn always goes the same way, so that the same held
+    /// stick turns the snake the same way every time.
+    static func turn(_ from: SIMD2<Double>, towards to: SIMD2<Double>, by angle: Double) -> SIMD2<Double> {
+        let gap = atan2(from.x * to.y - from.y * to.x, from.x * to.x + from.y * to.y)
+        guard abs(gap) > angle, angle.isFinite else { return to }
+        // A half turn has no shorter way; atan2 calls it π or −π by the sign of a zero.
+        let clockwise = gap < .zero && abs(gap) < .pi - Geometry.samePosition
+        let turned = atan2(from.y, from.x) + (clockwise ? -angle : angle)
+        return SIMD2(cos(turned), sin(turned))
+    }
+
     private mutating func moveTo(_ position: SIMD3<Double>) {
+        let across = SIMD2(position.x - head.x, position.z - head.z)
+        let length = (across * across).sum().squareRoot()
+        if length > Geometry.samePosition { heading = across / length }
+        crawled += distance(head, position)
         head = position
         trail.insert(position, at: trail.startIndex)
         trim()

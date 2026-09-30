@@ -695,3 +695,22 @@ While the snake eats a living bot, the system **shall** draw its head reared ove
 
 **Rationale.** The maintainer, 2026-09-29: after the coil (FR-SNAKE-280) the snake swallows its prey from the top down; a body is simply eaten, as it was. It is the "boots protruding from the mouth" FR-VIEW-100 asked for from the start, for living prey.
 Only the drawing: the head stays where the coil left it in the match (FR-SNAKE-090), and the body is drawn from the reared head down to that point, as a neck. The head comes down over the bot and not the bot up into the head, the maintainer's correction of the first build on the phone the same day. What is inside the head is not drawn: the figure stands where it stood, as big as it was, cut away above the mouth. First drawn squashed down to what was still outside, it read on the phone as the bot pressed into the ground rather than into the snake. Tipped short of straight down, so that the eyes still show. Judged on the phone.
+
+### FR-VIEW-330 — The snake slithers
+
+```yaml
+status: implemented
+verification: T
+derives_from: [FR-VIEW-250]
+depends_on: [FR-SNAKE-020, IF-VIEW-020]
+refines: [FR-VIEW-250]
+conflicts_with: []
+code: [Sources/CrawlCall/View/SnakeBody.swift, Sources/CrawlCall/View/SnakeEntity.swift, Sources/CrawlCall/Snake/Snake.swift, Sources/CrawlCall/GameSession.swift, Sources/CrawlCall/Config/Configurations.swift]
+tests: [Tests/CrawlCallTests/SlitherTests.swift]
+created: 2026-09-29
+```
+
+While the snake crawls, the system **shall** draw its body swaying from side to side of the path the head travelled, by the slither amplitude and wavelength of the view configuration, each point of the path swaying the same way whenever the body passes over it.
+
+**Rationale.** The maintainer, 2026-09-29: a snake that crawls straight as a pipe does not read as a snake. The wave belongs to the ground, not to the body: the body slides along an S laid on the floor, as a snake does, and stands still in it when the snake stops. Drawing only: the body the match knows stays on the path (FR-SNAKE-020).
+The maintainer chose 5 cm to either side and the head swaying with the body; how the wave is laid on a line drawn through points 0.6 m apart is ADR-0062.

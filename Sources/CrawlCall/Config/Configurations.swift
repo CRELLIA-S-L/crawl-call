@@ -3,7 +3,7 @@
 // a file with an unknown key is rejected at load rather than silently defaulted,
 // which is what `Schema` is for.
 //
-// implements: IF-SNAKE-010, IF-MAP-020, IF-VIEW-020, IF-BOT-010, IF-SCORE-010, FR-SNAKE-220, FR-BOT-280, FR-BOT-050, FR-BOT-290, FR-BOT-260, FR-BOT-310, FR-SNAKE-270, FR-SNAKE-280
+// implements: IF-SNAKE-010, IF-MAP-020, IF-VIEW-020, IF-BOT-010, IF-SCORE-010, FR-SNAKE-220, FR-BOT-280, FR-BOT-050, FR-BOT-290, FR-BOT-260, FR-BOT-310, FR-SNAKE-270, FR-SNAKE-280, FR-SNAKE-290, FR-VIEW-330
 import Foundation
 
 // MARK: - Snake (IF-SNAKE-010)
@@ -44,6 +44,9 @@ struct SnakeConfiguration: Decodable, Equatable {
     /// second.
     struct Coil: Decodable, Equatable { let seconds: Double; let shoveReach: Double; let shoveSpeed: Double }
     let coil: Coil
+    /// The tightest arc, in metres at the body's centre line, the head turns on while
+    /// the player steers it (FR-SNAKE-290).
+    let turningRadius: Double
     let abilities: Abilities
 
     // The sapper ability takes no parameter — FR-SNAKE-140 sets a partition to its
@@ -58,6 +61,7 @@ struct SnakeConfiguration: Decodable, Equatable {
         "eatingDamagePerSecond": .value,
         "lunge": .object(["reach": .value, "windUp": .value, "speed": .value]),
         "coil": .object(["seconds": .value, "shoveReach": .value, "shoveSpeed": .value]),
+        "turningRadius": .value,
         "abilities": .object([
             "assault": .object(["dashSpeed": .value, "dashDuration": .value]),
             "scout": .object(["duration": .value]),
@@ -110,6 +114,9 @@ struct TuningConfiguration: Decodable, Equatable {
 
 struct ViewConfiguration: Decodable, Equatable {
     struct CentralRegion: Decodable, Equatable { let width: Double; let height: Double }
+    /// How the drawn body sways as the snake crawls (FR-VIEW-330): metres to either
+    /// side of its path, and metres of ground to one wave.
+    struct Slither: Decodable, Equatable { let amplitude: Double; let wavelength: Double }
 
     let cameraPitch: Double
     /// The camera's vertical field of view, in degrees (FR-VIEW-010).
@@ -133,6 +140,7 @@ struct ViewConfiguration: Decodable, Equatable {
     /// damped spring, so that a quick movement of the head is not a jolt of the frame
     /// (FR-VIEW-020).
     let cameraFollowLag: Double
+    let slither: Slither
     /// Metres beyond the body itself at which a module stops hiding the snake and
     /// starts being drawn through (FR-VIEW-150).
     let seeThroughMargin: Double
@@ -162,6 +170,7 @@ struct ViewConfiguration: Decodable, Equatable {
         "sunAzimuth": .value,
         "centralRegion": .object(["width": .value, "height": .value]),
         "cameraFollowLag": .value,
+        "slither": .object(["amplitude": .value, "wavelength": .value]),
         "seeThroughMargin": .value,
         "visibilityRadius": .value,
         "stragglerDistance": .value,

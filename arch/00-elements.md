@@ -78,7 +78,7 @@ It depends on start-up because the cell size it measures in is tuning (IF-MAP-02
 ```yaml
 status: built
 carries: [Sources/CrawlCall/View]
-requirements: [FR-VIEW-010, FR-VIEW-130, FR-VIEW-020, FR-VIEW-060, FR-VIEW-070, FR-TOOL-070, FR-VIEW-100, FR-VIEW-120, FR-VIEW-140, FR-VIEW-150, FR-VIEW-155, FR-VIEW-160, FR-VIEW-170, FR-VIEW-180, FR-VIEW-190, FR-VIEW-200, IF-VIEW-030, FR-VIEW-210, FR-VIEW-220, FR-VIEW-230, FR-TOOL-260, FR-TOOL-270, FR-VIEW-300, FR-VIEW-310, FR-VIEW-320]
+requirements: [FR-VIEW-010, FR-VIEW-130, FR-VIEW-020, FR-VIEW-060, FR-VIEW-070, FR-TOOL-070, FR-VIEW-100, FR-VIEW-120, FR-VIEW-140, FR-VIEW-150, FR-VIEW-155, FR-VIEW-160, FR-VIEW-170, FR-VIEW-180, FR-VIEW-190, FR-VIEW-200, IF-VIEW-030, FR-VIEW-210, FR-VIEW-220, FR-VIEW-230, FR-TOOL-260, FR-TOOL-270, FR-VIEW-300, FR-VIEW-310, FR-VIEW-320, FR-VIEW-330]
 depends_on: [E-040]
 interface: a scene plan in; the camera it is seen through and the light it is read by, out
 ```
@@ -108,7 +108,7 @@ It depends on the map layer for the arena's plan and on start-up for the view co
 ```yaml
 status: built
 carries: [Sources/CrawlCall/Snake]
-requirements: [FR-SNAKE-010, FR-SNAKE-015, FR-SNAKE-020, FR-SNAKE-030, FR-SNAKE-060, FR-SNAKE-070, FR-SNAKE-090, FR-SNAKE-100, FR-SNAKE-210, FR-SNAKE-220, FR-SNAKE-260, FR-SNAKE-270, FR-SNAKE-280, FR-MAP-025]
+requirements: [FR-SNAKE-010, FR-SNAKE-015, FR-SNAKE-020, FR-SNAKE-030, FR-SNAKE-060, FR-SNAKE-070, FR-SNAKE-090, FR-SNAKE-100, FR-SNAKE-210, FR-SNAKE-220, FR-SNAKE-260, FR-SNAKE-270, FR-SNAKE-280, FR-SNAKE-290, FR-MAP-025]
 depends_on: [E-040]
 interface: a held direction and a frame's time in; a head, a floor and a trail out
 ```
