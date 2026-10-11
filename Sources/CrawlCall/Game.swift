@@ -78,11 +78,12 @@ struct Game {
     /// that a frame record can mark where an inference began and ended (FR-TOOL-250).
     private(set) var commanderCalls = 0
     private(set) var commanderAnswers = 0
+    private(set) var commanderMisses = 0
 
     /// Reads the two counts and clears them: a frame marks what happened in it once.
-    mutating func takeCommanderTraffic() -> (calls: Int, answers: Int) {
-        defer { commanderCalls = 0; commanderAnswers = 0 }
-        return (commanderCalls, commanderAnswers)
+    mutating func takeCommanderTraffic() -> (calls: Int, answers: Int, misses: Int) {
+        defer { commanderCalls = 0; commanderAnswers = 0; commanderMisses = 0 }
+        return (commanderCalls, commanderAnswers, commanderMisses)
     }
 
     /// A match, and the commander its squads answer to.
@@ -441,8 +442,12 @@ struct Game {
     private mutating func callCommanders() {
         guard let desk else { return }
         for (squad, answer) in desk.take() {
-            commanderAnswers += 1
-            if case .failure(let why) = answer { commanderFailures.append((squad, why)) }
+            if case .failure(let why) = answer {
+                commanderFailures.append((squad, why))
+                commanderMisses += 1
+            } else {
+                commanderAnswers += 1
+            }
         }
         let now = elapsed
         for (squad, state) in dueCalls() {

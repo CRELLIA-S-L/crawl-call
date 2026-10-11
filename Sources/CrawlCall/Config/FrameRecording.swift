@@ -62,4 +62,9 @@ enum FrameEvent: String, CaseIterable {
     /// whether an inference was running when they happened.
     case commanderCalled = "commander_called"
     case commanderAnswered = "commander_answered"
+    /// A call that came back with no decision (CON-CMD-020). Counted apart from an
+    /// answer because the two are indistinguishable in a record otherwise, and a run
+    /// where every call failed fast looks exactly like a run where every call was
+    /// quick — which is how a priority change nearly passed for a fix on 2026-10-11.
+    case commanderFailed = "commander_failed"
 }
