@@ -17,7 +17,7 @@
   {
     "from": "Sources/CrawlCall/CrawlCallApp.swift",
     "to": "Sources/CrawlCall/Input/TouchScheme.swift",
-    "via": "TouchScheme:208 — one witness of 2 reference(s) from 1 file(s)"
+    "via": "TouchScheme:215 — one witness of 2 reference(s) from 1 file(s)"
   },
   {
     "from": "Sources/CrawlCall/CrawlCallApp.swift",
@@ -47,17 +47,17 @@
   {
     "from": "Sources/CrawlCall/Game.swift",
     "to": "Sources/CrawlCall/Bot/Bot.swift",
-    "via": "Bot:27 — one witness of 21 reference(s) from 1 file(s)"
+    "via": "Bot:27 — one witness of 24 reference(s) from 1 file(s)"
   },
   {
     "from": "Sources/CrawlCall/Game.swift",
     "to": "Sources/CrawlCall/Config/Motion.swift",
-    "via": "Motion:85 — one witness of 49 reference(s) from 4 file(s)"
+    "via": "Motion:110 — one witness of 49 reference(s) from 4 file(s)"
   },
   {
     "from": "Sources/CrawlCall/Game.swift",
     "to": "Sources/CrawlCall/Input/Intent.swift",
-    "via": "Intent:90 — one witness of 2 reference(s) from 2 file(s)"
+    "via": "Intent:115 — one witness of 2 reference(s) from 2 file(s)"
   },
   {
     "from": "Sources/CrawlCall/Game.swift",

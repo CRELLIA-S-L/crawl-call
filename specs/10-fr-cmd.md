@@ -10,14 +10,14 @@ That the LLM never drives per-frame execution is ADR-0003, not a requirement.
 ### FR-CMD-010 — One commander per squad
 
 ```yaml
-status: deferred
+status: implemented
 verification: T
 derives_from: []
 depends_on: [FR-BOT-020]
 refines: []
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Commander/CommanderDesk.swift, Sources/CrawlCall/Game.swift, Sources/CrawlCall/CrawlCallApp.swift]
+tests: [Tests/CrawlCallTests/CommanderCallTests.swift]
 created: 2026-09-21
 ```
 
@@ -29,14 +29,14 @@ Independence is what lets one commander wrongly blame the enemy while the other 
 ### FR-CMD-020 — The commander is called on an interval
 
 ```yaml
-status: deferred
+status: implemented
 verification: T
 derives_from: [FR-CMD-010]
 depends_on: [IF-CMD-010, IF-BOT-010]
 refines: []
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Commander/CommanderDesk.swift, Sources/CrawlCall/Game.swift, Sources/CrawlCall/Commander/SquadView.swift]
+tests: [Tests/CrawlCallTests/CommanderCallTests.swift]
 created: 2026-09-21
 ```
 
@@ -48,14 +48,14 @@ The interval stretches under thermal load (NFR-PERF-060), which is why it is con
 ### FR-CMD-025 — Each commander call is its own session
 
 ```yaml
-status: deferred
+status: implemented
 verification: T
 derives_from: [FR-CMD-020, CON-CMD-010, CON-CMD-020]
 depends_on: [IF-CMD-010]
 refines: [FR-CMD-020]
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Commander/SystemModelCommander.swift, Sources/CrawlCall/Commander/CommanderDesk.swift]
+tests: [Tests/CrawlCallTests/CommanderCallTests.swift]
 created: 2026-09-22
 ```
 
@@ -65,18 +65,19 @@ When a commander is called, the system **shall** open a session carrying the ins
 The cache a kept session earns does not pay for the transcript it carries.
 A session of one call also cannot carry a refused exchange into the next one, which is what turned a single refusal into eighty-four consecutive failures (CON-CMD-020) — there is nothing to rebuild and nothing to poison.
 Continuity costs about twenty tokens in the state (IF-CMD-010) instead of a transcript.
+Built on 2026-10-11 (ADR-0077). Of the two halves, one is tested and one is not, and the difference is worth saying: that the previous decision reaches the next call *through the state* is what `CommanderCallTests` holds, by reading it back out of the prompt; that each call opens a session of its own is held by the adapter being the only thing that makes a session, and by the bench's measurement of what the alternative costs — a kept session was 1150 input tokens against 402, slower, and carried a poisoned exchange forward. No test can see a session.
 
 ### FR-CMD-027 — Every generation carries a response ceiling
 
 ```yaml
-status: deferred
+status: implemented
 verification: T
 derives_from: [FR-CMD-025]
 depends_on: [IF-BOT-010]
 refines: []
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Commander/SystemModelCommander.swift, Sources/CrawlCall/CrawlCallApp.swift, config/match.json]
+tests: [Tests/CrawlCallTests/CommanderCallTests.swift]
 created: 2026-09-22
 ```
 
@@ -85,7 +86,7 @@ When calling the model, the system **shall** pass the maximum response tokens of
 **Rationale.** A generation without a ceiling ran past 40 seconds in the spike, in both runs, when the schema was left out of the prompt (ADR-0017).
 The ceiling costs nothing when the answer is the usual fifty tokens and bounds the one that is not; NFR-PERF-040 gives the commander one interval to answer, and this is what keeps a single call from spending it.
 The floor is not a formality: measured at a ceiling of 20 the answer was cut off mid-structure and every call failed with a missing field, while at 80 the ceiling was never reached (47–55 tokens).
-
+Built on 2026-10-11. The shipped number is no longer the eighty above: the structure IF-CMD-020 asks for measured 173 to 397 output tokens over twelve bench calls, so `maximumResponseTokens` is 500 — the measured worst and a quarter. That follows this requirement's own second clause and contradicts its first, which is Q-560.
 
 ### FR-CMD-030 — The commander sets the threat priority
 
@@ -166,14 +167,14 @@ Clamping keeps a commander from turning a heavy into a coward outright; the rang
 ### FR-CMD-070 — Awareness gates what the commander is told
 
 ```yaml
-status: deferred
+status: implemented
 verification: T
 derives_from: [FR-CMD-020]
 depends_on: [FR-SCORE-130, IF-CMD-010]
 refines: [FR-CMD-020]
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Commander/SquadView.swift]
+tests: [Tests/CrawlCallTests/CommanderCallTests.swift, Tests/CrawlCallTests/CommanderContractTests.swift]
 created: 2026-09-21
 ```
 
@@ -185,14 +186,14 @@ On *alarm* the input carries the disappearances and not the snake; on *confirmed
 ### FR-CMD-080 — The two commanders run out of phase
 
 ```yaml
-status: deferred
+status: implemented
 verification: T
 derives_from: [FR-CMD-020]
 depends_on: []
 refines: [FR-CMD-020]
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Commander/CommanderDesk.swift]
+tests: [Tests/CrawlCallTests/CommanderCallTests.swift]
 created: 2026-09-21
 ```
 

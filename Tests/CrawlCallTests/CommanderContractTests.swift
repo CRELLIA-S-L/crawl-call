@@ -2,7 +2,7 @@
 // commander is told (IF-CMD-010), what it is allowed to answer (IF-CMD-020), what it
 // is told beforehand (IF-CMD-040), and the seam that lets a test make a call fail.
 //
-// file verifies: IF-CMD-010, IF-CMD-020, IF-CMD-040
+// file verifies: IF-CMD-010, IF-CMD-020, IF-CMD-040, FR-CMD-070
 import XCTest
 @testable import CrawlCall
 

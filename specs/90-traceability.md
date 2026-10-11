@@ -8,9 +8,9 @@ Total requirements: 279.
 | Status | Requirements |
 |---|---|
 | `draft` | 4 |
-| `deferred` | 111 |
-| `partial` | 14 |
-| `implemented` | 144 |
+| `deferred` | 104 |
+| `partial` | 12 |
+| `implemented` | 153 |
 | `superseded` | 6 |
 | `withdrawn` | 0 |
 
@@ -91,16 +91,16 @@ Total requirements: 279.
 | **FR-BOT-500** A bot does not throw where it would catch a squadmate | `deferred` | T | — | — |
 | **FR-BOT-510** A knife strikes what is within its reach | `deferred` | T | — | — |
 | **FR-BOT-520** A thrown knife leaves the bot | `deferred` | T | — | — |
-| **FR-CMD-010** One commander per squad | `deferred` | T | — | — |
-| **FR-CMD-020** The commander is called on an interval | `deferred` | T | — | — |
-| **FR-CMD-025** Each commander call is its own session | `deferred` | T | — | — |
-| **FR-CMD-027** Every generation carries a response ceiling | `deferred` | T | — | — |
+| **FR-CMD-010** One commander per squad | `implemented` | T | `Sources/CrawlCall/Commander/CommanderDesk.swift`<br>`Sources/CrawlCall/Game.swift`<br>`Sources/CrawlCall/CrawlCallApp.swift` | `Tests/CrawlCallTests/CommanderCallTests.swift` |
+| **FR-CMD-020** The commander is called on an interval | `implemented` | T | `Sources/CrawlCall/Commander/CommanderDesk.swift`<br>`Sources/CrawlCall/Game.swift`<br>`Sources/CrawlCall/Commander/SquadView.swift` | `Tests/CrawlCallTests/CommanderCallTests.swift` |
+| **FR-CMD-025** Each commander call is its own session | `implemented` | T | `Sources/CrawlCall/Commander/SystemModelCommander.swift`<br>`Sources/CrawlCall/Commander/CommanderDesk.swift` | `Tests/CrawlCallTests/CommanderCallTests.swift` |
+| **FR-CMD-027** Every generation carries a response ceiling | `implemented` | T | `Sources/CrawlCall/Commander/SystemModelCommander.swift`<br>`Sources/CrawlCall/CrawlCallApp.swift`<br>`config/match.json` | `Tests/CrawlCallTests/CommanderCallTests.swift` |
 | **FR-CMD-030** The commander sets the threat priority | `deferred` | T | — | — |
 | **FR-CMD-040** The commander issues an order | `deferred` | T | — | — |
 | **FR-CMD-050** The commander assigns roles | `deferred` | T | — | — |
 | **FR-CMD-060** The commander sets personality weights | `deferred` | T | — | — |
-| **FR-CMD-070** Awareness gates what the commander is told | `deferred` | T | — | — |
-| **FR-CMD-080** The two commanders run out of phase | `deferred` | T | — | — |
+| **FR-CMD-070** Awareness gates what the commander is told | `implemented` | T | `Sources/CrawlCall/Commander/SquadView.swift` | `Tests/CrawlCallTests/CommanderCallTests.swift`<br>`Tests/CrawlCallTests/CommanderContractTests.swift` |
+| **FR-CMD-080** The two commanders run out of phase | `implemented` | T | `Sources/CrawlCall/Commander/CommanderDesk.swift` | `Tests/CrawlCallTests/CommanderCallTests.swift` |
 | **FR-CMD-090** A commander may propose a truce | `deferred` | T | — | — |
 | **FR-CMD-100** A truce stops fire between the squads | `deferred` | T | — | — |
 | **FR-CMD-105** A truce turns both squads on the snake | `deferred` | T | — | — |
@@ -264,8 +264,8 @@ Total requirements: 279.
 | **FR-VIEW-330** The snake slithers | `implemented` | T | `Sources/CrawlCall/View/SnakeBody.swift`<br>`Sources/CrawlCall/View/SnakeEntity.swift`<br>`Sources/CrawlCall/Snake/Snake.swift`<br>`Sources/CrawlCall/GameSession.swift`<br>`Sources/CrawlCall/Config/Configurations.swift` | `Tests/CrawlCallTests/SlitherTests.swift` |
 | **FR-VIEW-340** A bot holds the weapon it is using | `deferred` | T | — | — |
 | **IF-BOT-010** Bot and match configuration | `partial` | T | `Sources/CrawlCall/Config/Configurations.swift`<br>`Sources/CrawlCall/Config/Configurations+Load.swift`<br>`Sources/CrawlCall/Config/Schema.swift`<br>`Sources/CrawlCall/Launch.swift`<br>`Sources/CrawlCall/CrawlCallApp.swift`<br>`Sources/CrawlCall/Config/Resource.swift` | `Tests/CrawlCallTests/ConfigurationTests.swift`<br>`Tests/CrawlCallTests/LaunchTests.swift`<br>`Tests/CrawlCallTests/SchemaTests.swift`<br>`Tests/CrawlCallTests/DeliberationTests.swift`<br>`Tests/CrawlCallTests/KnowledgeTests.swift` |
-| **IF-CMD-010** Commander input | `partial` | T | `Sources/CrawlCall/Commander/CommanderInput.swift`<br>`Sources/CrawlCall/Commander/SquadView.swift` | `Tests/CrawlCallTests/CommanderContractTests.swift` |
-| **IF-CMD-020** Commander output | `partial` | T | `Sources/CrawlCall/Commander/CommanderDecision.swift`<br>`Sources/CrawlCall/Commander/SystemModelCommander.swift`<br>`Sources/CrawlCall/Commander/Commander.swift` | `Tests/CrawlCallTests/CommanderContractTests.swift` |
+| **IF-CMD-010** Commander input | `implemented` | T | `Sources/CrawlCall/Commander/CommanderInput.swift`<br>`Sources/CrawlCall/Commander/SquadView.swift` | `Tests/CrawlCallTests/CommanderContractTests.swift` |
+| **IF-CMD-020** Commander output | `implemented` | T | `Sources/CrawlCall/Commander/CommanderDecision.swift`<br>`Sources/CrawlCall/Commander/SystemModelCommander.swift`<br>`Sources/CrawlCall/Commander/Commander.swift` | `Tests/CrawlCallTests/CommanderContractTests.swift` |
 | **IF-CMD-030** Speech configuration | `deferred` | T | — | — |
 | **IF-CMD-040** Instructions for a commander's decision | `implemented` | I | `config/commander.json`<br>`Sources/CrawlCall/Config/Configurations.swift`<br>`Sources/CrawlCall/Config/Configurations+Load.swift` | `Tests/CrawlCallTests/CommanderContractTests.swift` |
 | **IF-CMD-050** Instructions for a bot's line | `deferred` | I | — | — |
@@ -296,7 +296,7 @@ Total requirements: 279.
 | **NFR-PERF-055** Commander latency holds over a long session | `deferred` | A | — | — |
 | **NFR-PERF-060** Under thermal pressure the commander interval stretches | `deferred` | T | — | — |
 | **NFR-PERF-070** Under thermal pressure speech falls back to pre-written lines | `deferred` | T | — | — |
-| **NFR-PERF-080** The language model costs the app no memory or download size | `deferred` | I | — | — |
+| **NFR-PERF-080** The language model costs the app no memory or download size | `implemented` | I | `Sources/CrawlCall/Commander/SystemModelCommander.swift` | — |
 
 ## Incoming links
 
@@ -463,10 +463,11 @@ Verified by means other than testing — or the check has not been set up yet.
 
 - **FR-TOOL-340** (`implemented`, method `I`) — A commit leaves the references as the code has them
 - **FR-VIEW-120** (`partial`, method `I`) — The HUD is drawn in the diorama style
+- **NFR-PERF-080** (`implemented`, method `I`) — The language model costs the app no memory or download size
 
 ## Code files outside the specification
 
-No requirement references them: 4 of 107.
+No requirement references them: 4 of 108.
 
 - `scripts/arch-edges-selftest.sh`
 - `scripts/prompt-bench-selftest.sh`

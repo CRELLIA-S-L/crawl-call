@@ -94,7 +94,7 @@ A weapon's damage, range and magazine left the archetype on 2026-10-11, when a b
 ### IF-CMD-010 — Commander input
 
 ```yaml
-status: partial
+status: implemented
 verification: T
 derives_from: []
 depends_on: [FR-SCORE-130]
@@ -119,7 +119,7 @@ Measured the same day with the shipped instructions: 12 calls on the game's own 
 ### IF-CMD-020 — Commander output
 
 ```yaml
-status: partial
+status: implemented
 verification: T
 derives_from: []
 depends_on: [IF-CMD-010]

@@ -21,9 +21,9 @@
 import Foundation
 
 /// What a squad's commander knows when it is asked to decide (IF-CMD-010).
-struct CommanderInput: Equatable {
+struct CommanderInput: Equatable, Sendable {
     /// One of the squad's own, in the words the commander hears.
-    struct Soldier: Equatable {
+    struct Soldier: Equatable, Sendable {
         /// The figure's name. Both squads field the same archetypes, so both squads
         /// use the same six names — no commander is ever told the other crew's, so
         /// the two never meet in one call.

@@ -7,7 +7,7 @@
 // snake truly was would be a bot acting on the truth, which FR-BOT-220 forbids the
 // bots themselves.
 //
-// file implements: IF-CMD-010
+// file implements: IF-CMD-010, FR-CMD-020, FR-CMD-070
 import Foundation
 
 enum SquadView {
@@ -121,6 +121,31 @@ enum SquadView {
                 : "\(gone.count) of ours vanished with no trace"
         case .confirmed: return "there is a snake and it takes people"
         }
+    }
+
+    /// The whole of what one squad's commander is told (IF-CMD-010), or nil where
+    /// there is nobody to tell: a squad whose role-holder is gone is not called at all
+    /// (FR-CMD-020, FR-CMD-120).
+    ///
+    /// The knowledge read is the role-holder's own, which is the literal reading of
+    /// "from its own point of view": it has been told what its squad saw (FR-BOT-310),
+    /// and nothing here reaches past it into the arena.
+    static func state(of squad: Squad, among bots: [Bot], awareness: Awareness,
+                      in bounds: ScenePlan.Bounds, configuration: BotConfiguration,
+                      lastCall: CommanderDecision?, truce: String?,
+                      events: [String]) -> CommanderInput? {
+        guard let holder = bots.first(where: { $0.squad == squad && $0.isCommander && $0.isAlive })
+        else { return nil }
+        let own = crew(of: squad, among: bots, in: bounds, configuration: configuration)
+        return CommanderInput(
+            crew: own.crew,
+            gone: own.gone,
+            rivals: rivals(known: holder.knowledge, in: bounds),
+            snake: snake(known: holder.knowledge, awareness: awareness, from: holder.eye, in: bounds),
+            awareness: self.awareness(awareness, gone: own.gone),
+            lastCall: lastCall?.order.rawValue ?? "none",
+            truce: truce,
+            events: events)
     }
 
     private static let twoThirds = 2.0 / 3

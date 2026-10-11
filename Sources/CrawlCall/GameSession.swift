@@ -195,6 +195,9 @@ final class GameSession {
         frame.add(.firstHole, times: placed.look.firstHoles)
         frame.add(.lookChanged, times: placed.look.lookChanges)
         let eating = game.eating != nil
+        let traffic = game.takeCommanderTraffic()
+        if traffic.calls > .zero { frame.add(.commanderCalled, times: traffic.calls) }
+        if traffic.answers > .zero { frame.add(.commanderAnswered, times: traffic.answers) }
         if eating && !eatingAtLastFrame { frame.add(.mealBegan) }
         if !eating && eatingAtLastFrame { frame.add(.mealEnded) }
         eatingAtLastFrame = eating

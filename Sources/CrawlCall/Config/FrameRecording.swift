@@ -56,4 +56,10 @@ enum FrameEvent: String, CaseIterable {
     case firstHole = "first_hole"
     /// A module that changed its look — solid, clear or cut open.
     case lookChanged = "look_changed"
+    /// A commander call started on this frame, and one that came back on it
+    /// (FR-CMD-020). Both are here because the question NFR-PERF-030 asks is about
+    /// the frames *between* them: a record that shows only the slow frames cannot say
+    /// whether an inference was running when they happened.
+    case commanderCalled = "commander_called"
+    case commanderAnswered = "commander_answered"
 }

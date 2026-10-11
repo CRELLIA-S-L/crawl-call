@@ -5,7 +5,7 @@
 // or a key: the schemes produce intents (FR-VIEW-050), the logic consumes them, and
 // neither knows about the other.
 //
-// file implements: FR-SNAKE-270, FR-SNAKE-280, FR-SNAKE-285, FR-SNAKE-055, FR-SNAKE-056, FR-SNAKE-016, FR-VIEW-160, FR-BOT-060, FR-BOT-320, FR-BOT-050, FR-BOT-220, FR-BOT-230, FR-BOT-240, FR-BOT-260, FR-BOT-310, FR-VIEW-030, FR-VIEW-170, FR-VIEW-190, FR-SNAKE-010, FR-SNAKE-030, FR-SNAKE-290, FR-BOT-020, FR-BOT-150, FR-BOT-170, FR-BOT-380, FR-SCORE-130, FR-SCORE-070, FR-BOT-180, FR-SNAKE-060, FR-SNAKE-070, FR-SNAKE-090, FR-SCORE-140, FR-SCORE-150, INV-BOT-010, FR-VIEW-230, FR-TOOL-230, FR-MAP-150, FR-MAP-180, FR-MAP-170, FR-SNAKE-220, FR-BOT-400
+// file implements: FR-CMD-010, FR-CMD-020, FR-SNAKE-270, FR-SNAKE-280, FR-SNAKE-285, FR-SNAKE-055, FR-SNAKE-056, FR-SNAKE-016, FR-VIEW-160, FR-BOT-060, FR-BOT-320, FR-BOT-050, FR-BOT-220, FR-BOT-230, FR-BOT-240, FR-BOT-260, FR-BOT-310, FR-VIEW-030, FR-VIEW-170, FR-VIEW-190, FR-SNAKE-010, FR-SNAKE-030, FR-SNAKE-290, FR-BOT-020, FR-BOT-150, FR-BOT-170, FR-BOT-380, FR-SCORE-130, FR-SCORE-070, FR-BOT-180, FR-SNAKE-060, FR-SNAKE-070, FR-SNAKE-090, FR-SCORE-140, FR-SCORE-150, INV-BOT-010, FR-VIEW-230, FR-TOOL-230, FR-MAP-150, FR-MAP-180, FR-MAP-170, FR-SNAKE-220, FR-BOT-400
 import Foundation
 
 struct Game {
@@ -32,6 +32,9 @@ struct Game {
     /// nothing to lose to a change of the window, and is not paused by one (FR-VIEW-230).
     private(set) var hasBeenSteered = false
     private let surfaces: Surfaces
+    /// Who the squads answer to, and when they are next asked (FR-CMD-010). Nil where
+    /// there is no commander at all.
+    let desk: CommanderDesk?
 
     /// The height of the ground the head is on: its cell's surface, which on a flight
     /// is its step's (FR-MAP-150) — not the head's own height, which a climb leaves
@@ -68,10 +71,32 @@ struct Game {
 
     /// How the match ended, or nil while it is still being played.
     private(set) var outcome: Outcome?
+    /// Every call that came back with nothing, in the order the frames found them —
+    /// what a report reads to say how many cycles a match missed (CON-CMD-020).
+    private(set) var commanderFailures: [(squad: Squad, why: CommanderFailure)] = []
+    /// Calls started and answers taken, counted since the last frame read them, so
+    /// that a frame record can mark where an inference began and ended (FR-TOOL-250).
+    private(set) var commanderCalls = 0
+    private(set) var commanderAnswers = 0
 
-    init(world: World, start: NavigationGraph.Node) {
+    /// Reads the two counts and clears them: a frame marks what happened in it once.
+    mutating func takeCommanderTraffic() -> (calls: Int, answers: Int) {
+        defer { commanderCalls = 0; commanderAnswers = 0 }
+        return (commanderCalls, commanderAnswers)
+    }
+
+    /// A match, and the commander its squads answer to.
+    ///
+    /// `commander` is optional and absent is an ordinary state rather than a gap: a
+    /// device with no model has none, and a test that is not about the commander wants
+    /// none. A match without one runs exactly as a match does after both role-holders
+    /// are gone (FR-CMD-120) — no orders, no roles, the bots on their own utility.
+    init(world: World, start: NavigationGraph.Node, commander: Commander? = nil) {
         self.world = world
         self.start = start
+        self.desk = commander.map {
+            CommanderDesk(commander: $0, interval: world.configurations.match.commanderInterval)
+        }
         self.surfaces = Surfaces(graph: world.graph, kit: world.kit, tuning: world.configurations.tuning, map: world.map)
         self.modules = Perception.modules(of: world.map)
         let cell = world.configurations.tuning.navigationGraphCellSize
@@ -390,6 +415,7 @@ struct Game {
         }
         stealth.step(before: before, after: bots, prey: eating?.prey ?? coil?.prey, plan: world.plan,
                      bot: world.configurations.bot, scoring: world.configurations.scoring, now: elapsed)
+        callCommanders()
         // A bot that died or was eaten before its slot came has nothing left to decide.
         interrupted = interrupted.filter { entry in bots.contains { $0.id == entry.key && $0.isAlive } }
 
@@ -405,6 +431,47 @@ struct Game {
     /// The meal is over: the bot is gone from the map — squads do not remove bodies,
     /// the snake does (concept §6.2) — and the tail is longer by what its archetype
     /// is worth (FR-SNAKE-060).
+    /// Starts the calls that are due, and takes what earlier ones came back with
+    /// (FR-CMD-020).
+    ///
+    /// Nothing here waits. A call is started on a task of its own and the frame goes
+    /// on without it, which is how NFR-PERF-030 is kept by construction: there is no
+    /// point in a frame where an inference can be in the way of it. What a call came
+    /// back with is picked up by a later frame, from the desk.
+    private mutating func callCommanders() {
+        guard let desk else { return }
+        for (squad, answer) in desk.take() {
+            commanderAnswers += 1
+            if case .failure(let why) = answer { commanderFailures.append((squad, why)) }
+        }
+        let now = elapsed
+        for (squad, state) in dueCalls() {
+            commanderCalls += 1
+            Task.detached { [desk] in await desk.call(squad, with: state, at: now) }
+        }
+    }
+
+    /// The calls this frame would start, and what each would carry.
+    ///
+    /// Separate from starting them so that a test can read what the match decided
+    /// without a task in the way: what is asked, of whom, and when, is the whole of
+    /// FR-CMD-020, and the task that carries it out adds nothing to check.
+    func dueCalls() -> [(squad: Squad, state: CommanderInput)] {
+        guard let desk else { return [] }
+        return Squad.allCases.compactMap { squad in
+            guard desk.isDue(squad, at: elapsed) else { return nil }
+            // A squad with no living role-holder is not called at all (FR-CMD-020).
+            guard let state = SquadView.state(of: squad, among: bots,
+                                              awareness: stealth.of(squad),
+                                              in: world.plan.bounds,
+                                              configuration: world.configurations.bot,
+                                              lastCall: desk.lastDecision(of: squad),
+                                              truce: nil, events: [])
+            else { return nil }
+            return (squad, state)
+        }
+    }
+
     private mutating func finishEating() {
         guard let meal = eating else { return }
         eating = nil
@@ -417,7 +484,11 @@ struct Game {
     /// spent by a match, so a new one is a new `Game` over the same value
     /// (FR-VIEW-190).
     /// Another match in the same world, from a start chosen again (FR-MAP-180).
-    func restarted() -> Game { Game(world: world, start: Self.start(in: world) ?? start) }
+    /// The commander goes with it: a new match is a new desk over the same answerer,
+    /// so neither squad starts the second match with the first one's orders.
+    func restarted() -> Game {
+        Game(world: world, start: Self.start(in: world) ?? start, commander: desk?.commander)
+    }
 
     /// Where a match starts: one of the spawn points the map names, chosen at random
     /// (FR-MAP-180). A map with none — one read for a test rather than played, since

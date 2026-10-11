@@ -167,13 +167,13 @@ The same pre-written set is the fallback of the content filter (FR-CMD-160), so 
 ### NFR-PERF-080 — The language model costs the app no memory or download size
 
 ```yaml
-status: deferred
+status: implemented
 verification: I
 derives_from: []
 depends_on: [FR-CMD-020]
 refines: []
 conflicts_with: []
-code: []
+code: [Sources/CrawlCall/Commander/SystemModelCommander.swift]
 tests: []
 created: 2026-09-21
 ```

@@ -8,6 +8,7 @@ import XCTest
 @testable import CrawlCall
 
 final class FrameRecordTests: XCTestCase {
+
     private func frame(step: Double = 0, deliberation: Double = 0, seeThrough: Double = 0,
                        draw: Double = 0) -> FrameRecord.Frame {
         var frame = FrameRecord.Frame()
@@ -81,9 +82,17 @@ final class FrameRecordTests: XCTestCase {
     }
 
     func testEveryEventHasACounter() {
-        // The counters are one SIMD lane each; an event past the last lane would have
-        // no counter to land in.
-        XCTAssertLessThanOrEqual(FrameEvent.allCases.count, SIMD8<UInt16>.scalarCount)
+        // The counters are one SIMD lane each; an event past the last lane has no
+        // counter to land in, and writing one is out of bounds. Asserted by counting
+        // every event and reading it back rather than against the vector's name: on
+        // 2026-10-11 two events were added to a vector of eight that already held
+        // eight, and naming the old type in the test would have left it green while
+        // the app died on the phone writing the ninth.
+        var frame = FrameRecord.Frame()
+        for event in FrameEvent.allCases {
+            frame.add(event)
+            XCTAssertEqual(frame.count(of: event), 1, "no counter for \(event.rawValue)")
+        }
         XCTAssertEqual(Set(FrameEvent.allCases.map(\.rawValue)).count, FrameEvent.allCases.count)
     }
 

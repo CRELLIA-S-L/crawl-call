@@ -271,6 +271,7 @@ requirements link to them, plus how many files their `code` field names.
 | FR-VIEW-300 | 0 | 2 | 2 |
 | IF-VIEW-030 | 0 | 2 | 2 |
 | INV-BOT-010 | 0 | 2 | 2 |
+| NFR-PERF-080 | 1 | 1 | 2 |
 | CON-PUB-040 | 1 | 0 | 1 |
 | CON-PUB-050 | 1 | 0 | 1 |
 | FR-BOT-070 | 1 | 0 | 1 |
@@ -292,7 +293,6 @@ requirements link to them, plus how many files their `code` field names.
 | FR-TOOL-280 | 0 | 1 | 1 |
 | INV-MAP-010 | 1 | 0 | 1 |
 | NFR-PERF-020 | 1 | 0 | 1 |
-| NFR-PERF-080 | 1 | 0 | 1 |
 | CON-MAP-010 | 0 | 0 | 0 |
 | CON-PUB-030 | 0 | 0 | 0 |
 | CON-PUB-090 | 0 | 0 | 0 |

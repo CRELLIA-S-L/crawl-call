@@ -200,4 +200,15 @@ What remains is what a decision inside the repository cannot close.
 - **Found:** on 2026-10-11, in the same bench run as Q-560, on the development Mac.
 - **What diverged:** NFR-PERF-040 obliges a commander's response to be applied before the next call to the same commander is due, and `commanderInterval` is 7.0 seconds. Twelve calls with the game's own schema had a **median of 5.6 seconds and a worst of 9.2** — the median inside the interval, the worst outside it. The same schema's input is 762 to 817 tokens against 624 to 679 for the bench's smaller one, and the output is what costs the time: the longest answers were the ones that returned six soldiers.
   This is not yet a failure of the requirement. The spike measured 2.7 seconds average and 3.3 worst on an iPhone 16 Pro, with a five-field schema and no crew array, and the number has never been read on a phone with this schema.
-- **Still needed:** the same measurement on the phone, which is where NFR-PERF-040 is judged. If it holds there, nothing changes. If it does not, the choices are a longer interval — the requirement allows 5 to 10 seconds and the shipped 7 is tuning — a smaller answer, or a second call that asks for the per-bot leans only when they are worth asking for.
+- **Measured on the phone the same day, and it does not hold.** A 45-second match on the iPhone 16 Pro, with the commander wired in and the frame record marking where each call started and where its answer was taken:
+
+  | | Mac, bench | iPhone 16 Pro, in the game |
+  |---|---|---|
+  | calls in the run | 12 of 12 answered | 5 started, 3 answered in 44 s |
+  | latency | 5.6 s median, 9.2 s worst | **20.1, 27.5 and 21.9 seconds** |
+  | frames over 16.6 ms | not measured | 481 of 1998, **24 %** |
+  | an inference in flight | — | essentially always, and two at once for most of it |
+
+  Against a commander interval of 7 seconds and the 5-to-10 the requirement allows, an answer that takes 20 to 27 seconds is late by a factor of three. NFR-PERF-040 fails, and NFR-PERF-030 fails with it: 23 % of the frames drawn while a call was out were over budget, where the spike missed one frame in 182 calls.
+  The spike's 2.7-second average was measured with a five-field answer and no crew array. The difference is the output: 397 tokens against about 40, and output tokens are what the time is spent on.
+- **Still needed:** a decision on the shape of the answer, which is IF-CMD-020's and therefore the maintainer's. Four ways out, and the first is the only one that keeps the interval the requirement names. Drop the per-bot leans and roles from the answer and go back to something near the shape the spike measured. Ask for leans only for the bots the commander wants to move, as a short list rather than the whole crew. Split the call in two, a cheap one on the interval and an expensive one rarely. Or keep the shape and change what the specification asks of the clock, which is NFR-PERF-040 and the interval in IF-BOT-010.

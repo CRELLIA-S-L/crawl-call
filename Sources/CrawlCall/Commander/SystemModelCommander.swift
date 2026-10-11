@@ -19,13 +19,7 @@
 // `SystemLanguageModel.default` and not a permissive one: permissive content
 // transformations do nothing under guided generation, which is what this uses.
 //
-// FR-CMD-025, FR-CMD-027 and NFR-PERF-080 are what this file does — a session of its
-// own per call, the response ceiling from the configuration, a model the system
-// provides — and it claims none of them yet: nothing calls it, and a file that claims
-// a requirement no caller exercises is a `code` field that says more than the build.
-// They are claimed when the interval drives them.
-//
-// file implements: IF-CMD-020
+// file implements: IF-CMD-020, FR-CMD-025, FR-CMD-027, NFR-PERF-080
 import Foundation
 import FoundationModels
 
@@ -65,7 +59,9 @@ struct GeneratedDecision {
 /// game's own decision — or into the reason there is none.
 final class SystemModelCommander: Commander, @unchecked Sendable {
     private let instructions: String
-    private let maximumResponseTokens: Int
+    /// The ceiling of FR-CMD-027, from the match configuration. Readable so a test can
+    /// say the shipped number is what reached the adapter.
+    let maximumResponseTokens: Int
 
     init(instructions: String, maximumResponseTokens: Int) {
         self.instructions = instructions

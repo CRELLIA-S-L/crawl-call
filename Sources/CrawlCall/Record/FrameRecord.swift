@@ -23,7 +23,13 @@ struct FrameRecord {
         /// drawn: what says whether a slow stretch is the device throttling itself.
         var thermal: ProcessInfo.ThermalState = .nominal
         /// How many times each event happened, by its place in `FrameEvent.allCases`.
-        var events = SIMD8<UInt16>.zero
+        ///
+        /// Sixteen slots for ten events. The width has to be at least the number of
+        /// cases, and nothing in the language says so: on 2026-10-11 two events were
+        /// added to a `SIMD8` that already held eight, and the app died writing the
+        /// ninth — on the phone, with the only symptom a run that came back with no
+        /// record at all. `FrameRecordTests` now says it out loud.
+        var events = SIMD16<UInt16>.zero
 
         subscript(phase: FramePhase) -> Double {
             get { phases[phase.rawValue] }
