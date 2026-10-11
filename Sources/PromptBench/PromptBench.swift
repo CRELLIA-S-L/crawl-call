@@ -279,7 +279,8 @@ enum SessionBench {
     enum Pattern: String { case kept, freshWithSchema, freshPrewarmed }
 
     /// Head to head: the three ways to spend the context, measured on tokens, latency and failures.
-    static func compare(variant: PromptVariant, calls: Int, budget: Int, log: @escaping (String) -> Void) async {
+    static func compare(variant: PromptVariant, calls: Int, budget: Int,
+                        schema: SchemaFlavour = .described, log: @escaping (String) -> Void) async {
         for p in [Pattern.kept, .freshWithSchema, .freshPrewarmed] {
             let model = SystemLanguageModel.default
             var session = LanguageModelSession(model: model, instructions: variant.instructions)
@@ -296,14 +297,22 @@ enum SessionBench {
                 let includeSchema = (p == .kept) ? first : (p == .freshWithSchema)
                 let t0 = clock.now
                 do {
-                    let r = try await session.respond(to: "Situation:\n\(state)\nDecide.",
-                                                      generating: BenchOrder.self, includeSchemaInPrompt: includeSchema)
+                    let use: (input: Int, cached: Int, output: Int)
+                    if schema == .game {
+                        let r = try await session.respond(to: "Situation:\n\(state)\nDecide.",
+                                                          generating: BenchOrderGame.self, includeSchemaInPrompt: includeSchema)
+                        use = (r.usage.input.totalTokenCount, r.usage.input.cachedTokenCount, r.usage.output.totalTokenCount)
+                    } else {
+                        let r = try await session.respond(to: "Situation:\n\(state)\nDecide.",
+                                                          generating: BenchOrder.self, includeSchemaInPrompt: includeSchema)
+                        use = (r.usage.input.totalTokenCount, r.usage.input.cachedTokenCount, r.usage.output.totalTokenCount)
+                    }
                     first = false
-                    tokens.append(r.usage.input.totalTokenCount)
-                    cached.append(r.usage.input.cachedTokenCount)
-                    outs.append(r.usage.output.totalTokenCount)
+                    tokens.append(use.input)
+                    cached.append(use.cached)
+                    outs.append(use.output)
                     ms.append(PromptBench.elapsedMs(clock.now - t0))
-                    if p == .kept, r.usage.input.totalTokenCount > budget {
+                    if p == .kept, use.input > budget {
                         session = LanguageModelSession(model: model, instructions: variant.instructions)
                         first = true; rebuilds += 1
                     }
@@ -313,7 +322,7 @@ enum SessionBench {
                 }
             }
             let mean = { (xs: [Int]) in xs.isEmpty ? 0 : xs.reduce(0, +) / xs.count }
-            log("PATTERN \(p.rawValue): \(calls - failures)/\(calls) ok, rebuilds \(rebuilds), tokens \(tokens.min() ?? 0)–\(tokens.max() ?? 0) mean \(mean(tokens)), cached mean \(mean(cached)), output mean \(mean(outs)), latency \(ms.min() ?? 0)–\(ms.max() ?? 0) mean \(mean(ms))ms")
+            log("PATTERN \(p.rawValue) [\(schema.rawValue)]: \(calls - failures)/\(calls) ok, rebuilds \(rebuilds), tokens \(tokens.min() ?? 0)–\(tokens.max() ?? 0) mean \(mean(tokens)), cached mean \(mean(cached)), output mean \(mean(outs)), latency \(ms.min() ?? 0)–\(ms.max() ?? 0) mean \(mean(ms))ms")
         }
     }
 

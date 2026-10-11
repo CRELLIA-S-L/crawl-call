@@ -224,3 +224,21 @@ What remains is what a decision inside the repository cannot close.
   Three priorities on the Mac — utility, background and default — all answered normally (2.4, 1.5 and 0.8 seconds), so it is not the priority as such; it is the priority on this device, for this subsystem.
 - **Why it matters beyond the experiment:** this is a failure mode CON-CMD-020 was written for and nobody had seen — a call that comes back in 48 milliseconds with nothing in it. A run where every call fails fast is indistinguishable, in a frame record, from a run where every call is quick, which is why `commander_failed` is now an event of its own.
 - **Still needed:** nothing, if the quality of service is left alone — the shipped build makes its calls at the default priority and does not hit this. It is written down because the next person to reach for the same lever will find the same trap, and because the error says the guardrail can fail for reasons of its own, which is worth knowing when a refusal is counted.
+
+### Q-590 — A session per call throws away the cache and reloads the model forty times a run
+
+- **Found:** on 2026-10-11, profiling the game on the phone with Instruments' **Foundation Models** template — the instrument WWDC26 session 243 names for this, and the one the project had never used. It asks for consent before recording, because it captures the prompts and responses themselves, and waits on standard input until it gets it; a run started without an answer on that input hangs rather than records.
+- **What it shows.** Ninety seconds of the shipping build, fifteen real inferences:
+
+  | | median | range |
+  |---|---|---|
+  | inference | 9.8 s | 4.5 – 19.0 s |
+  | prompt tokens | 768 | 756 – 778 |
+  | response tokens | 227 | 221 – 500 |
+  | **cached input tokens** | **0** | **0 – 0** |
+
+  And beside it, the model loading table: **41 unloaded → loaded transitions and 42 loaded → unloaded in the same ninety seconds**, 7.6 seconds of loading in all. The model is thrashed in and out of memory about three times per inference.
+- **Why it is this way.** FR-CMD-025 opens a session of its own for every call, so there is no transcript for a key-value cache to live in and nothing to keep the model resident between calls. WWDC26's guidance is the other way round: appending to a session preserves the cache and minimises time to first token, while rewriting history invalidates it. The same bench comparison on the Mac, with the game's own instructions and schema, bears the first half out — a kept session reads 929 of 1329 input tokens from cache where a fresh one reads none.
+  What it does **not** bear out is that this buys speed here: kept, fresh and prewarmed came in at 6.4, 6.7 and 8.2 seconds mean over nine calls each, with single calls ranging 4.2 to 11.2 seconds. At that spread the three are not distinguishable.
+- **Two things worth fixing whatever is decided about the session.** `prewarm(promptPrefix:)` exists in the installed SDK and is what the forty-one reloads are asking for. And two of the fifteen answers came back at exactly 500 response tokens — the ceiling Q-560 raised them to — so some answers are being truncated at the limit rather than finishing.
+- **Still needed:** a decision on FR-CMD-025, which was written on the spike's measurement that one session per call beat a kept one on tokens, latency and robustness. That measurement stands on its own numbers; what is new is that it was taken with a five-field answer and before the framework reported caching at all, and that the cost it does not count is forty model loads a run. Re-measure on the phone with the Foundation Models instrument, prewarmed and kept, before changing the requirement — and raise or remove the response ceiling either way.

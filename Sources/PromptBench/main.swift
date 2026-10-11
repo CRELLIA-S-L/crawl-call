@@ -12,8 +12,15 @@ struct Bench {
         let which = args.count > 1 ? args[1] : "all"
         let repeats = args.count > 2 ? Int(args[2]) ?? 3 : 3
 
+        let schema = SchemaFlavour(rawValue: ProcessInfo.processInfo.environment["BENCH_SCHEMA"] ?? "described") ?? .described
+
         if which == "patterns" {
-            await SessionBench.compare(variant: PromptVariants.v2Soft, calls: repeats, budget: 2000) { print($0) }
+            // The variant and the schema both come from the environment, so the
+            // comparison can be run against what the game actually ships rather than
+            // against the bench's own small answer (FR-TOOL-170).
+            let variant = PromptVariants.named(ProcessInfo.processInfo.environment["BENCH_VARIANT"] ?? "v2-soft").first
+                ?? PromptVariants.v2Soft
+            await SessionBench.compare(variant: variant, calls: repeats, budget: 2000, schema: schema) { print($0) }
             exit(0)
         }
         if which.hasPrefix("session") {
@@ -40,7 +47,6 @@ struct Bench {
             exit(3)
         }
 
-        let schema = SchemaFlavour(rawValue: ProcessInfo.processInfo.environment["BENCH_SCHEMA"] ?? "described") ?? .described
         let includeSchema = ProcessInfo.processInfo.environment["BENCH_NO_SCHEMA_IN_PROMPT"] == nil
         let filter = ProcessInfo.processInfo.environment["BENCH_SCENARIOS"].map { Set($0.split(separator: ",").map(String.init)) }
         let results = await PromptBench.run(variants: variants, repeats: repeats, explainRefusals: true, schema: schema, includeSchema: includeSchema, scenarioFilter: filter, maxOutput: ProcessInfo.processInfo.environment["BENCH_MAX_OUT"].flatMap { Int($0) }) { print($0) }
