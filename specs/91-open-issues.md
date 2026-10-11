@@ -195,20 +195,23 @@ What remains is what a decision inside the repository cannot close.
   The two clauses of the statement now disagree with each other for the only schema the game has. The escape clause is the one that governs, so `maximumResponseTokens` in `config/match.json` goes to 500 — the measured worst plus a quarter — and the sentence "80 by default" is left describing a structure the game does not ask for.
 - **Still needed:** the maintainer's word on the sentence. Either the number in FR-CMD-027 becomes the measured one and the rationale says what structure it was measured against, or the number is dropped from the statement and left to the configuration it already names, or the schema is cut down until eighty is enough — which means giving up either the per-bot weights or the per-bot roles IF-CMD-020 asks for.
 
-### Q-570 — A full answer takes longer than the interval it is due in
+### Q-570 — A full answer costs a fifth of the frame rate and answers three times late
 
-- **Found:** on 2026-10-11, in the same bench run as Q-560, on the development Mac.
-- **What diverged:** NFR-PERF-040 obliges a commander's response to be applied before the next call to the same commander is due, and `commanderInterval` is 7.0 seconds. Twelve calls with the game's own schema had a **median of 5.6 seconds and a worst of 9.2** — the median inside the interval, the worst outside it. The same schema's input is 762 to 817 tokens against 624 to 679 for the bench's smaller one, and the output is what costs the time: the longest answers were the ones that returned six soldiers.
-  This is not yet a failure of the requirement. The spike measured 2.7 seconds average and 3.3 worst on an iPhone 16 Pro, with a five-field schema and no crew array, and the number has never been read on a phone with this schema.
-- **Measured on the phone the same day, and it does not hold.** A 45-second match on the iPhone 16 Pro, with the commander wired in and the frame record marking where each call started and where its answer was taken:
+- **Found:** on 2026-10-11, measuring the commander on the phone for the first time.
+- **What the runs show.** Four 45-second runs on the iPhone 16 Pro, the same build each time but for the commander, the frame record marking where each call started and where its answer was taken. Thermal `nominal` throughout all four, so none of it is throttling.
 
-  | | Mac, bench | iPhone 16 Pro, in the game |
-  |---|---|---|
-  | calls in the run | 12 of 12 answered | 5 started, 3 answered in 44 s |
-  | latency | 5.6 s median, 9.2 s worst | **20.1, 27.5 and 21.9 seconds** |
-  | frames over 16.6 ms | not measured | 481 of 1998, **24 %** |
-  | an inference in flight | — | essentially always, and two at once for most of it |
+  | run | frames | over 25 ms | frames a second | median interval | the app's own work, median / p95 |
+  |---|---|---|---|---|---|
+  | Release, no commander | 2599 | 46 (1.8 %) | 58.4 | 16.7 ms | 0.99 / 1.68 ms |
+  | Release, commander | 2037 | 422 (20.7 %) | 45.7 | 16.9 ms | 1.73 / 3.06 ms |
+  | Debug, no commander | 2577 | 62 (2.4 %) | 58.0 | 16.7 ms | 1.04 / 1.80 ms |
+  | Debug, commander | 1986 | 495 (24.9 %) | 44.6 | 17.0 ms | 1.50 / 2.70 ms |
 
-  Against a commander interval of 7 seconds and the 5-to-10 the requirement allows, an answer that takes 20 to 27 seconds is late by a factor of three. NFR-PERF-040 fails, and NFR-PERF-030 fails with it: 23 % of the frames drawn while a call was out were over budget, where the spike missed one frame in 182 calls.
-  The spike's 2.7-second average was measured with a five-field answer and no crew array. The difference is the output: 397 tokens against about 40, and output tokens are what the time is spent on.
-- **Still needed:** a decision on the shape of the answer, which is IF-CMD-020's and therefore the maintainer's. Four ways out, and the first is the only one that keeps the interval the requirement names. Drop the per-bot leans and roles from the answer and go back to something near the shape the spike measured. Ask for leans only for the bots the commander wants to move, as a short list rather than the whole crew. Split the call in two, a cheap one on the interval and an expensive one rarely. Or keep the shape and change what the specification asks of the clock, which is NFR-PERF-040 and the interval in IF-BOT-010.
+  Three things are worth reading off it. **The median frame is unchanged** — 16.7 against 16.9 ms — so the frame rate falls because a fifth of the frames are long, not because every frame got slower. **The commander's own work inside a frame is sub-millisecond**: building the state and taking an answer moves the median from 0.99 to 1.73 ms, which cannot make a 25-millisecond frame. The time goes somewhere the app is not running, which is the device doing the inference. And **Release changes almost nothing**, so none of it is the build.
+
+  On latency, the same runs: a call answered in 19.2 and 13.1 seconds in Release, 12 to 27 in Debug, against a commander interval of 7 seconds and the 5 to 10 the requirement allows.
+- **What these runs cannot say.** They are not measurements in this project's sense. `specs/50-verification.md` gives method `A` an unattended run along a fixed route, on this phone with a 20 % margin — a frame under 13.3 ms where the requirement says 16.6 — with Instruments' Game Performance Overview as the instrument. The game has no autopilot to drive such a route; the spike's instrument cannot run without the spike's app. **So no verdict on NFR-PERF-030, NFR-PERF-040 or NFR-PERF-010 is available from them**, including the control, which sits at 58 frames a second rather than 60 in an app nobody is steering. What they are is a price comparison between two builds measured the same way, which is what that document says a change is priced by.
+- **What points at the answer's size.** The bench, on the Mac, with the same instructions and the same states and only the schema changed: 1.8 seconds median with its own five-field answer, 5.6 with the game's. The per-bot roles and weights IF-CMD-020 asks for are 397 output tokens against about 40, and output tokens are where the time goes.
+- **One thing was tried and did not pay.** The two commanders were serialised, on the reading that FR-CMD-080's half-interval stagger stops meaning anything once an answer outlasts the interval and that the device was running two inferences at once for most of the run. It changed nothing: 495 frames over budget of 1986 against 481 of 1998. The change was reverted.
+- **Still needed:** the maintainer's word on the shape of the answer, which is IF-CMD-020's. Four ways, and the first is the only one that keeps both the interval and the frame rate the specification asks for. Drop the per-bot roles and weights and go back to something near what the spike measured at 2.7 seconds. Ask for leans only for the bots the commander wants to move. Split into a cheap call on the interval and an expensive one rarely. Or keep the shape and change what the specification asks of the clock and of the frame.
+  And, whichever is chosen, an autopilot — without one no number here can ever become a verdict.

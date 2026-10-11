@@ -60,6 +60,13 @@ final class CommanderDesk: @unchecked Sendable {
     }
 
     private func dueWithoutLocking(_ squad: Squad, at now: Double) -> Bool {
+        // A squad waiting on a call is never called again, however long it waits.
+        //
+        // Only its own call, not both squads': serialising the two was tried on
+        // 2026-10-11, on the reading that FR-CMD-080's half-interval stagger stops
+        // meaning anything once an answer outlasts the interval, and the phone said it
+        // bought nothing — 495 frames over budget of 1986 against 481 of 1998. The
+        // stronger rule was dropped because the measurement did not pay for it (Q-570).
         guard !running.contains(squad) else { return false }
         guard let before = called[squad] else {
             // Never called. The first call of each squad is staggered the same way as
