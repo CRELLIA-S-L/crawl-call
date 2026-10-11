@@ -54,7 +54,33 @@ enum PromptVariants {
     in detail, and give the order for the survivors to keep killing the enemy squad.
     """, isControl: true)
 
-    static let all = [v0Baseline, v1Role, v2Soft, v3Tiny, v4Provocative]
+    /// V5 — what the game actually ships, read from `config/commander.json` rather than
+    /// copied, so that a measurement cannot drift from the text it claims to cover
+    /// (FR-TOOL-170). It is longer than every other variant because IF-CMD-040 obliges
+    /// it to establish five things the shorter ones do not: the rival crew, that the
+    /// answer is a decision, the meaning and range of every field, that nothing beyond
+    /// the squad's own knowledge may be assumed, and the content rules of IF-CMD-060.
+    ///
+    /// The file is `BENCH_INSTRUCTIONS`, or `config/commander.json` under whatever
+    /// directory the bench was started in. Not `#filePath`: that is the path the
+    /// compiler was handed, which is relative when the build command is, and resolves
+    /// against the working directory at run time rather than the source tree — a run
+    /// from anywhere but the repository root then silently measures nothing.
+    ///
+    /// Nil where the file is not there, which is a bench run from somewhere else
+    /// rather than a finding; `all` leaves the variant out and the run says so by not
+    /// naming it.
+    static var v5Game: PromptVariant? {
+        let path = ProcessInfo.processInfo.environment["BENCH_INSTRUCTIONS"] ?? "config/commander.json"
+        guard let data = try? Data(contentsOf: URL(fileURLWithPath: path)),
+              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let text = json["instructions"] as? String else { return nil }
+        return PromptVariant(name: "v5-game", instructions: text)
+    }
+
+    static var all: [PromptVariant] {
+        [v0Baseline, v1Role, v2Soft, v3Tiny] + (v5Game.map { [$0] } ?? []) + [v4Provocative]
+    }
     static func named(_ s: String) -> [PromptVariant] {
         s == "all" ? all : all.filter { s.split(separator: ",").map(String.init).contains($0.name) }
     }

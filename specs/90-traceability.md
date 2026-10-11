@@ -8,9 +8,9 @@ Total requirements: 279.
 | Status | Requirements |
 |---|---|
 | `draft` | 4 |
-| `deferred` | 114 |
-| `partial` | 12 |
-| `implemented` | 143 |
+| `deferred` | 111 |
+| `partial` | 14 |
+| `implemented` | 144 |
 | `superseded` | 6 |
 | `withdrawn` | 0 |
 
@@ -264,10 +264,10 @@ Total requirements: 279.
 | **FR-VIEW-330** The snake slithers | `implemented` | T | `Sources/CrawlCall/View/SnakeBody.swift`<br>`Sources/CrawlCall/View/SnakeEntity.swift`<br>`Sources/CrawlCall/Snake/Snake.swift`<br>`Sources/CrawlCall/GameSession.swift`<br>`Sources/CrawlCall/Config/Configurations.swift` | `Tests/CrawlCallTests/SlitherTests.swift` |
 | **FR-VIEW-340** A bot holds the weapon it is using | `deferred` | T | — | — |
 | **IF-BOT-010** Bot and match configuration | `partial` | T | `Sources/CrawlCall/Config/Configurations.swift`<br>`Sources/CrawlCall/Config/Configurations+Load.swift`<br>`Sources/CrawlCall/Config/Schema.swift`<br>`Sources/CrawlCall/Launch.swift`<br>`Sources/CrawlCall/CrawlCallApp.swift`<br>`Sources/CrawlCall/Config/Resource.swift` | `Tests/CrawlCallTests/ConfigurationTests.swift`<br>`Tests/CrawlCallTests/LaunchTests.swift`<br>`Tests/CrawlCallTests/SchemaTests.swift`<br>`Tests/CrawlCallTests/DeliberationTests.swift`<br>`Tests/CrawlCallTests/KnowledgeTests.swift` |
-| **IF-CMD-010** Commander input | `deferred` | T | — | — |
-| **IF-CMD-020** Commander output | `deferred` | T | — | — |
+| **IF-CMD-010** Commander input | `partial` | T | `Sources/CrawlCall/Commander/CommanderInput.swift`<br>`Sources/CrawlCall/Commander/SquadView.swift` | `Tests/CrawlCallTests/CommanderContractTests.swift` |
+| **IF-CMD-020** Commander output | `partial` | T | `Sources/CrawlCall/Commander/CommanderDecision.swift`<br>`Sources/CrawlCall/Commander/SystemModelCommander.swift`<br>`Sources/CrawlCall/Commander/Commander.swift` | `Tests/CrawlCallTests/CommanderContractTests.swift` |
 | **IF-CMD-030** Speech configuration | `deferred` | T | — | — |
-| **IF-CMD-040** Instructions for a commander's decision | `deferred` | I | — | — |
+| **IF-CMD-040** Instructions for a commander's decision | `implemented` | I | `config/commander.json`<br>`Sources/CrawlCall/Config/Configurations.swift`<br>`Sources/CrawlCall/Config/Configurations+Load.swift` | `Tests/CrawlCallTests/CommanderContractTests.swift` |
 | **IF-CMD-050** Instructions for a bot's line | `deferred` | I | — | — |
 | **IF-CMD-060** What a generated line may and may not contain | `deferred` | T | — | — |
 | **IF-GREENHOLM-010** Greenholm configuration | `implemented` | T | `Sources/CrawlCall/Config/GreenholmConfiguration.swift`<br>`Sources/CrawlCall/Map/Setting.swift`<br>`Sources/CrawlCall/Config/Resource.swift`<br>`Sources/CrawlCall/Launch.swift` | `Tests/CrawlCallTests/SurroundingsTests.swift` |
@@ -466,7 +466,7 @@ Verified by means other than testing — or the check has not been set up yet.
 
 ## Code files outside the specification
 
-No requirement references them: 4 of 102.
+No requirement references them: 4 of 107.
 
 - `scripts/arch-edges-selftest.sh`
 - `scripts/prompt-bench-selftest.sh`

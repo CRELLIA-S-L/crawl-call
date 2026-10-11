@@ -3,7 +3,7 @@
 // a file with an unknown key is rejected at load rather than silently defaulted,
 // which is what `Schema` is for.
 //
-// file implements: IF-SNAKE-010, IF-MAP-020, IF-VIEW-020, IF-BOT-010, IF-SCORE-010, FR-SNAKE-220, FR-BOT-280, FR-BOT-050, FR-BOT-290, FR-BOT-260, FR-BOT-310, FR-SNAKE-270, FR-SNAKE-280, FR-SNAKE-290, FR-VIEW-330, FR-BOT-405, FR-BOT-430, FR-SNAKE-055, FR-SNAKE-016
+// file implements: IF-CMD-040, IF-SNAKE-010, IF-MAP-020, IF-VIEW-020, IF-BOT-010, IF-SCORE-010, FR-SNAKE-220, FR-BOT-280, FR-BOT-050, FR-BOT-290, FR-BOT-260, FR-BOT-310, FR-SNAKE-270, FR-SNAKE-280, FR-SNAKE-290, FR-VIEW-330, FR-BOT-405, FR-BOT-430, FR-SNAKE-055, FR-SNAKE-016
 import Foundation
 
 // MARK: - Snake (IF-SNAKE-010)
@@ -192,6 +192,22 @@ struct ViewConfiguration: Decodable, Equatable {
         "freeCameraFarthest": .value,
         "freeCameraLowestPitch": .value,
         "freeCameraHighestPitch": .value,
+    ])
+}
+
+// MARK: - Commander (IF-CMD-040)
+
+/// What the model is told before it is asked anything (IF-CMD-040).
+///
+/// The instructions live in a file rather than in the code because a change to them is
+/// a change to one of the four things a prompt measurement covers, and the bench has
+/// to be run against the new text before it ships (FR-TOOL-170). A text that needs a
+/// rebuild to try is a text nobody measures.
+struct CommanderConfiguration: Decodable, Equatable {
+    let instructions: String
+
+    static let schema = Schema.object([
+        "instructions": .value,
     ])
 }
 

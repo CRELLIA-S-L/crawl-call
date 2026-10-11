@@ -1,7 +1,7 @@
 // Reading the configuration files. Paths are relative to the application bundle in
 // the game and to the repository root in the tools (ADR-0012); this is the game half.
 //
-// file implements: IF-SNAKE-010, IF-MAP-020, IF-VIEW-020, IF-BOT-010, IF-SCORE-010, FR-TOOL-200
+// file implements: IF-SNAKE-010, IF-MAP-020, IF-VIEW-020, IF-BOT-010, IF-SCORE-010, IF-CMD-040, FR-TOOL-200
 import Foundation
 
 enum ConfigurationError: IdentifiedError {
@@ -38,6 +38,7 @@ struct Configurations {
     let bot: BotConfiguration
     let match: MatchConfiguration
     let scoring: ScoringConfiguration
+    let commander: CommanderConfiguration
 
     static func load(from bundle: Bundle) throws -> Configurations {
         Configurations(
@@ -46,7 +47,9 @@ struct Configurations {
             view:   try read(ViewConfiguration.self,   .view,   ViewConfiguration.schema,   bundle),
             bot:    try read(BotConfiguration.self,    .bot,    BotConfiguration.schema,    bundle),
             match:  try read(MatchConfiguration.self,  .match,  MatchConfiguration.schema,  bundle),
-            scoring: try read(ScoringConfiguration.self, .scoring, ScoringConfiguration.schema, bundle))
+            scoring: try read(ScoringConfiguration.self, .scoring, ScoringConfiguration.schema, bundle),
+            commander: try read(CommanderConfiguration.self, .commander,
+                                CommanderConfiguration.schema, bundle))
     }
 
     private static func read<T: Decodable>(_ type: T.Type, _ file: Resource.Configuration,

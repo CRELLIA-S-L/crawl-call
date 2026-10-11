@@ -94,14 +94,14 @@ A weapon's damage, range and magazine left the archetype on 2026-10-11, when a b
 ### IF-CMD-010 — Commander input
 
 ```yaml
-status: deferred
+status: partial
 verification: T
 derives_from: []
 depends_on: [FR-SCORE-130]
 refines: []
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Commander/CommanderInput.swift, Sources/CrawlCall/Commander/SquadView.swift]
+tests: [Tests/CrawlCallTests/CommanderContractTests.swift]
 created: 2026-09-21
 ```
 
@@ -112,18 +112,21 @@ When calling a commander, the system **shall** pass a structured world state fro
 The token budget follows from CON-CMD-010: eight soldiers, the snake, the awareness state and the previous decision measured 583 tokens with the instructions in the spike.
 The vocabulary is not a matter of taste: the state is the model's input and is checked by the same guardrail as the instructions.
 Measured (ADR-0017): the same situation written as wounds and bodies was blocked in 10 of 10 calls, and in the game's own words in 0 of 10; a line the model did return echoed the state's vocabulary back — "I'm bleeding — also, why is this snake doing interpretive dance?"
+Built on 2026-10-11 (ADR-0077): three bands for what is left of a soldier, two for a pouch, a quarter of the arena for where it stands, and the bench's own six names — every word of it read from the role-holder's knowledge and none from the arena.
+`partial` until there is a call to pass it to (FR-CMD-020).
+Measured the same day with the shipped instructions: 12 calls on the game's own states, none blocked, 624 to 679 input tokens, while the control was blocked 12 times in 12.
 
 ### IF-CMD-020 — Commander output
 
 ```yaml
-status: deferred
+status: partial
 verification: T
 derives_from: []
 depends_on: [IF-CMD-010]
 refines: []
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Commander/CommanderDecision.swift, Sources/CrawlCall/Commander/SystemModelCommander.swift, Sources/CrawlCall/Commander/Commander.swift]
+tests: [Tests/CrawlCallTests/CommanderContractTests.swift]
 created: 2026-09-21
 ```
 
@@ -133,6 +136,9 @@ When a commander responds, the system **shall** accept only a structured respons
 Rejection rather than repair: an unparseable response is a missed cycle, which the squad survives; a repaired one is an order nobody gave.
 The line's shape is part of the contract because the model, asked for one shout, returned six-speaker scenes of up to 235 characters (ADR-0017).
 The ranges are constraints rather than descriptions because the measurement separated the two: dropping the prose saved 72 tokens a call and cost nothing, while dropping the range produced weights of 0.8 to 8.0 for a field documented as 0 to 1.
+Built on 2026-10-11 (ADR-0077) as two types: the generated one, shaped for the generator, and the game's own, with the crossing between them the only place a response is accepted or rejected.
+The crew is an array of one described soldier type rather than a field per soldier, so the schema costs what one soldier costs however many there are.
+`partial` until there is a call to answer (FR-CMD-020).
 
 ### IF-CMD-030 — Speech configuration
 
@@ -270,14 +276,14 @@ Both requirements below are verified by inspecting the instructions in configura
 ### IF-CMD-040 — Instructions for a commander's decision
 
 ```yaml
-status: deferred
+status: implemented
 verification: I
 derives_from: []
 depends_on: [IF-CMD-020, CON-CMD-010]
 refines: []
 conflicts_with: []
-code: []
-tests: []
+code: [config/commander.json, Sources/CrawlCall/Config/Configurations.swift, Sources/CrawlCall/Config/Configurations+Load.swift]
+tests: [Tests/CrawlCallTests/CommanderContractTests.swift]
 created: 2026-09-22
 ```
 
@@ -286,6 +292,9 @@ The commander instructions **shall** establish: that the reader commands one squ
 **Rationale.** ADR-0017: the instructions are specified by what they must establish, not by their words.
 The weights are the commander's only channel into behaviour (FR-CMD-060), so a reader that does not know what they do returns numbers that mean nothing.
 
+Written on 2026-10-11 into `config/commander.json` rather than into the code, because a prompt that needs a rebuild to try is a prompt nobody measures and every change to it voids the bench's reading (FR-TOOL-170, ADR-0077).
+It is about four and a half times the length of `v2-soft`, the variant the project's 0-blocks-in-100 reading belongs to, which establishes two of the five things above; the other three are what the length buys.
+Measured the same day as `v5-game`, which reads this file rather than copying it: 12 calls on the game's own states with none blocked, against a control blocked 12 times in 12.
 ### IF-CMD-050 — Instructions for a bot's line
 
 ```yaml

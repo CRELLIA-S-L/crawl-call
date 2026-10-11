@@ -5,7 +5,7 @@
   "truceSwitch": false,
   "truceBreakThreshold": 0.3,
   "stateTokenBudget": 1000,
-  "maximumResponseTokens": 80,
+  "maximumResponseTokens": 500,
   "thermalDegradationThreshold": "serious",
   "thermalDegradationFactor": 2.0
 }

@@ -32,7 +32,7 @@ final class SquadStateTests: XCTestCase {
                                       kit: shipped.kit)
         let c = shipped.configurations
         return World(configurations: Configurations(snake: c.snake, tuning: c.tuning, view: c.view, bot: bot ?? c.bot,
-                                                    match: c.match, scoring: c.scoring),
+                                                    match: c.match, scoring: c.scoring, commander: c.commander),
                      kit: shipped.kit, map: map, setting: shipped.setting,
                      graph: NavigationGraph.derive(from: map, stepHeight: c.tuning.stepHeight),
                      plan: ScenePlan.make(map: map, kit: shipped.kit, cellSize: cell))

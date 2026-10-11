@@ -61,7 +61,40 @@ struct BenchOrderRanged {
 }
 
 enum SchemaFlavour: String, CaseIterable {
-    case described, lean, minimal, ranged
+    case described, lean, minimal, ranged, game
+}
+
+/// The shape the game actually asks for (IF-CMD-020), kept in step with
+/// `GeneratedDecision` in `Sources/CrawlCall/Commander/SystemModelCommander.swift`.
+/// It is copied rather than shared because the bench must keep building without the
+/// game; the two are compared by the measurement, not by the compiler, and a drift
+/// between them makes the reading cover a schema nobody ships (FR-TOOL-170).
+///
+/// The crew is an array of one described type, which is the whole reason the schema
+/// stays affordable: it costs what one soldier costs however many there are.
+@Generable
+struct BenchOrderGame {
+    @Generable enum Threat: String { case enemy, snake, withdraw }
+    @Generable enum Order: String { case hold, flank, withdrawToZone, disperse, destroyCover }
+    @Generable enum Truce: String { case none, propose, accept, reject }
+
+    @Generable
+    struct Soldier {
+        var name: String
+        var job: String
+        @Guide(.range(0...1)) var panic: Double
+        @Guide(.range(0...1)) var courage: Double
+        @Guide(.range(0...1)) var discipline: Double
+        @Guide(.range(0...1)) var aggression: Double
+        @Guide(.range(0...1)) var selfSacrifice: Double
+    }
+
+    var threat: Threat
+    var order: Order
+    var crew: [Soldier]
+    var truce: Truce
+    var speaker: String
+    var line: String
 }
 
 /// One instruction variant under test.
@@ -92,6 +125,13 @@ enum PromptBench {
         // "grim" fails, the state's wording is what the input guardrail reads, not the events.
         ("grim-soft", "crew: Davis up but wobbly; Pike flat on his back, stuck\nrival crew: 2 up, tipping over our fallen\nsnake: shaking Marsh about\nawareness: figures all over the floor\nyour last call: hold"),
         ("gulped-live", "crew: Davis, Pike up; Beans just went down the snake head-first, boots waving\nrival crew: 3 up, laughing at us\nsnake: chewing, one crate away\nawareness: everyone saw it happen\nyour last call: disperse"),
+        // The states the game itself builds (IF-CMD-010), in the shape `CommanderInput`
+        // renders and in the words `SquadView` chooses. Written out here rather than
+        // produced, as every other scenario is: the bench is a separate instrument and
+        // must keep running without the game (E-150's rationale).
+        ("game-calm", "crew: Davis, Pike, Marsh and Otto up, west side\nrival crew: not seen\nsnake: not seen\nawareness: calm\nyour last call: none"),
+        ("game-pressed", "crew: Davis and Pike up, north-east, upstairs; Marsh up but wobbly, running low, middle; Otto gone missing\nrival crew: 3 seen, east side and middle\nsnake: 4 metres away, middle\nawareness: there is a snake and it takes people\nyour last call: flank\njobs you gave: Davis hold the stair, Pike cover the door\njust happened: Otto went missing by the crates"),
+        ("game-last-stand", "crew: Davis up but wobbly, pouch empty, south-west\nrival crew: not seen\nsnake: 2 metres away, south-west\nawareness: there is a snake and it takes people\nyour last call: withdrawToZone\ntruce: they are shouting at us to stop shooting\njust happened: Pike went missing; Marsh went missing; Kit went missing"),
     ]
 
     typealias Result = BenchResult
@@ -133,6 +173,16 @@ enum PromptBench {
                             ins = r.usage.input.totalTokenCount; outs = r.usage.output.totalTokenCount
                             line = "\(r.content.speaker): \(r.content.line)"
                             threat = r.content.threat.rawValue; order = r.content.order.rawValue; panic = r.content.panic
+                        case .game:
+                            let r = try await session.respond(to: prompt, generating: BenchOrderGame.self, includeSchemaInPrompt: includeSchema, options: opts)
+                            ins = r.usage.input.totalTokenCount; outs = r.usage.output.totalTokenCount
+                            // What the crew came back as is the thing this flavour is
+                            // for: an answer with no soldiers in it is an answer that
+                            // leaves FR-CMD-050 and FR-CMD-060 with nothing to apply.
+                            let jobs = r.content.crew.map { "\($0.name)/\($0.job)/p\(String(format: "%.1f", $0.panic))" }
+                            line = "\(r.content.speaker): \(r.content.line) | crew \(r.content.crew.count): \(jobs.joined(separator: " "))"
+                            threat = r.content.threat.rawValue; order = r.content.order.rawValue
+                            panic = r.content.crew.first?.panic ?? -1
                         case .minimal:
                             let r = try await session.respond(to: prompt, generating: BenchOrderMinimal.self, includeSchemaInPrompt: includeSchema, options: opts)
                             ins = r.usage.input.totalTokenCount; outs = r.usage.output.totalTokenCount

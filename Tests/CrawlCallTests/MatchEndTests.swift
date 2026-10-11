@@ -69,7 +69,8 @@ final class MatchEndTests: XCTestCase {
                 snake: try decode(SnakeConfiguration.self, named: "snake",
                                   schema: SnakeConfiguration.schema, replacing: key, with: value),
                 tuning: configurations.tuning, view: configurations.view,
-                bot: configurations.bot, match: configurations.match, scoring: configurations.scoring)
+                bot: configurations.bot, match: configurations.match, scoring: configurations.scoring,
+                commander: configurations.commander)
         }
         if let squadSize {
             configurations = Configurations(
@@ -78,7 +79,7 @@ final class MatchEndTests: XCTestCase {
                 match: try decode(MatchConfiguration.self, named: "match",
                                   schema: MatchConfiguration.schema,
                                   replacing: "squadSize", with: squadSize),
-                scoring: configurations.scoring)
+                scoring: configurations.scoring, commander: configurations.commander)
         }
         return World(configurations: configurations, kit: base.kit, map: base.map,
                      setting: base.setting, graph: base.graph, plan: base.plan)
