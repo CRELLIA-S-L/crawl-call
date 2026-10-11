@@ -76,6 +76,7 @@ What remains is what a decision inside the repository cannot close.
 
 - **Found:** the maintainer on 2026-09-25, listing what a bot weighs in choosing an action (FR-BOT-080), among it the arms it has — rounds, grenades and the like.
 - **What diverged:** nothing yet. The concept and the specification give a bot a weapon with a magazine and nothing else; grenades appear in neither. FR-BOT-080 names what a bot has to fight with as an input, and today that is its rounds alone.
+  Since 2026-10-11 this is the only one of that requirement's seven inputs the build does not read, and therefore the only thing holding it at `partial` (ADR-0074).
 - **Still needed:** a decision on the equipment a bot carries — grenades, and what else — what each does in the arena, to the snake, to cover (FR-MAP-030) and to the other squad, and how much of it a bot has; then its requirements, its numbers in the bot configuration (IF-BOT-010) and its actions beside those of FR-BOT-200.
 
 ### Q-330 — A way straight up for towers and lookouts waits for destruction

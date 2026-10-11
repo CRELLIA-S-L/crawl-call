@@ -38,7 +38,8 @@ final class IdleTests: XCTestCase {
         var bot = try XCTUnwrap(Bot(id: id, squad: squad, archetype: .assault, at: at(x, z), floor: 0,
                                     configuration: configuration))
         bot.weights = BotConfiguration.Weights(panic: bot.weights.panic, discipline: bot.weights.discipline,
-                                               aggression: aggression, selfSacrifice: bot.weights.selfSacrifice)
+                                               aggression: aggression, selfSacrifice: bot.weights.selfSacrifice,
+                                               courage: bot.weights.courage)
         bot.ammunition = try XCTUnwrap(configuration.archetypes[Archetype.assault.rawValue]).magazine
         return bot
     }

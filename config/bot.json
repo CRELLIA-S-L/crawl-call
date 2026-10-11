@@ -5,7 +5,8 @@
         "panic": 0.5,
         "discipline": 0.5,
         "aggression": 0.7,
-        "selfSacrifice": 0.5
+        "selfSacrifice": 0.5,
+        "courage": 0.7
       },
       "allowedRanges": {
         "panic": {
@@ -21,6 +22,10 @@
           "highest": 1.0
         },
         "selfSacrifice": {
+          "lowest": 0.0,
+          "highest": 1.0
+        },
+        "courage": {
           "lowest": 0.0,
           "highest": 1.0
         }
@@ -36,7 +41,8 @@
         "panic": 0.3,
         "discipline": 0.7,
         "aggression": 0.5,
-        "selfSacrifice": 0.5
+        "selfSacrifice": 0.5,
+        "courage": 0.8
       },
       "allowedRanges": {
         "panic": {
@@ -52,6 +58,10 @@
           "highest": 1.0
         },
         "selfSacrifice": {
+          "lowest": 0.0,
+          "highest": 1.0
+        },
+        "courage": {
           "lowest": 0.0,
           "highest": 1.0
         }
@@ -67,7 +77,8 @@
         "panic": 0.5,
         "discipline": 0.5,
         "aggression": 0.5,
-        "selfSacrifice": 0.5
+        "selfSacrifice": 0.5,
+        "courage": 0.5
       },
       "allowedRanges": {
         "panic": {
@@ -83,6 +94,10 @@
           "highest": 1.0
         },
         "selfSacrifice": {
+          "lowest": 0.0,
+          "highest": 1.0
+        },
+        "courage": {
           "lowest": 0.0,
           "highest": 1.0
         }
@@ -98,7 +113,8 @@
         "panic": 0.7,
         "discipline": 0.5,
         "aggression": 0.5,
-        "selfSacrifice": 0.5
+        "selfSacrifice": 0.5,
+        "courage": 0.3
       },
       "allowedRanges": {
         "panic": {
@@ -114,6 +130,10 @@
           "highest": 1.0
         },
         "selfSacrifice": {
+          "lowest": 0.0,
+          "highest": 1.0
+        },
+        "courage": {
           "lowest": 0.0,
           "highest": 1.0
         }
@@ -129,7 +149,8 @@
         "panic": 0.5,
         "discipline": 0.7,
         "aggression": 0.5,
-        "selfSacrifice": 0.5
+        "selfSacrifice": 0.5,
+        "courage": 0.5
       },
       "allowedRanges": {
         "panic": {
@@ -145,6 +166,10 @@
           "highest": 1.0
         },
         "selfSacrifice": {
+          "lowest": 0.0,
+          "highest": 1.0
+        },
+        "courage": {
           "lowest": 0.0,
           "highest": 1.0
         }
@@ -160,7 +185,8 @@
         "panic": 0.5,
         "discipline": 0.5,
         "aggression": 0.5,
-        "selfSacrifice": 0.7
+        "selfSacrifice": 0.7,
+        "courage": 0.4
       },
       "allowedRanges": {
         "panic": {
@@ -176,6 +202,10 @@
           "highest": 1.0
         },
         "selfSacrifice": {
+          "lowest": 0.0,
+          "highest": 1.0
+        },
+        "courage": {
           "lowest": 0.0,
           "highest": 1.0
         }
@@ -196,7 +226,7 @@
   "collapsePanicIncrement": 0.3,
   "fearWhenUnhurt": 1.2,
   "utilityTermWeights": {
-    "attack": 1.0,
+    "attack": 2.0,
     "threat": 1.0,
     "wounded": 1.0,
     "obedience": 1.0,

@@ -198,8 +198,12 @@ struct ViewConfiguration: Decodable, Equatable {
 // MARK: - Bot (IF-BOT-010)
 
 struct BotConfiguration: Decodable, Equatable {
+    /// The five weights FR-BOT-090 names. Courage is not the other side of panic:
+    /// panic pulls on the fear that sends a bot away, courage on the terms that keep
+    /// it facing the danger, and a bot may carry both high.
     struct Weights: Decodable, Equatable {
         let panic: Double; let discipline: Double; let aggression: Double; let selfSacrifice: Double
+        let courage: Double
     }
     struct Range: Decodable, Equatable { let lowest: Double; let highest: Double }
     struct Archetype: Decodable, Equatable {
@@ -284,6 +288,7 @@ struct BotConfiguration: Decodable, Equatable {
 
     private static let weights = Schema.object([
         "panic": .value, "discipline": .value, "aggression": .value, "selfSacrifice": .value,
+        "courage": .value,
     ])
 
     static let schema = Schema.object([

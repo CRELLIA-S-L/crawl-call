@@ -2,10 +2,12 @@
 // (FR-BOT-080); the score of each is the bot's personality applied to what it can
 // see (FR-BOT-090).
 //
-// The inputs are the ones FR-BOT-080 names — distance to cover, health, the snake's
-// position, line of fire and ammunition — and the terms below are written so that
-// each of them can be varied on its own and the choice watched to move, which is
-// what its rationale asks of a test.
+// The inputs are the ones FR-BOT-080 names — what the bot knows of the snake and of
+// the enemy, the order it was given, the danger it stands in, its health, its five
+// personality weights and the rounds it has left — and the terms below are written so
+// that each of them can be varied on its own and the choice watched to move, which is
+// what its rationale asks of a test. The seventh, what a bot carries beyond its
+// magazine, is undecided (Q-310).
 //
 // The weight of one term against another is tuning, and is read from the bot
 // configuration (IF-BOT-010), as is how much an unhurt bot fears the snake
@@ -81,7 +83,8 @@ enum Deliberation {
         // worth more by the hysteresis margin (FR-BOT-140).
         if bot.ammunition > .zero,
            let target = target(for: bot, in: situation, worth: { metres in
-               term.attack * nearness(metres, within: entry.detectionRange) * ammunition * bot.weights.aggression
+               term.attack * nearness(metres, within: entry.detectionRange) * ammunition
+                   * bot.weights.aggression * bot.weights.courage
            }) {
             scored.append((.fire(at: target.target), target.utility))
         } else if bot.ammunition > .zero, bot.post != nil, let kept = bot.postTarget,
@@ -94,7 +97,7 @@ enum Deliberation {
             // (FR-BOT-420, ADR-0063). It fires only once it sees it (FR-BOT-060). Where
             // it sees the place and nothing there, what it knows is no target.
             let worth = term.attack * nearness(Perception.metres(bot.position, known.point), within: entry.detectionRange)
-                * ammunition * bot.weights.aggression
+                * ammunition * bot.weights.aggression * bot.weights.courage
             scored.append((.fire(at: known.target), worth))
         }
 
@@ -125,8 +128,13 @@ enum Deliberation {
         // there is no order, and the action is simply not on the list.
         if let zone = situation.orderedZone {
             // Obeying does not get better or worse with distance in anything the
-            // specification says; what varies it is how disciplined the bot is.
-            scored.append((.moveToOrderedZone(zone), term.obedience * bot.weights.discipline))
+            // specification says; what varies it is how disciplined the bot is — and,
+            // as the danger closes, how brave: holding ground under it is the second
+            // term courage pulls on (FR-BOT-090). With nothing near, the order is
+            // worth its weight times discipline alone.
+            scored.append((.moveToOrderedZone(zone),
+                           term.obedience * bot.weights.discipline
+                               * holding(against: danger, for: bot, within: entry.detectionRange)))
         }
 
         if bot.ammunition < entry.magazine {
@@ -546,6 +554,16 @@ enum Deliberation {
 
     static func centre(of node: NavigationGraph.Node, in situation: Situation) -> SIMD3<Double> {
         situation.graph.centre(of: node, cellSize: situation.cellSize, floorHeight: situation.plan.floorHeight)
+    }
+
+    /// How much of its ground a bot holds under the danger it knows of: a whole with
+    /// nothing near, its courage with the danger at hand, and between the two as the
+    /// danger closes (FR-BOT-090). A fearless bot holds whatever comes; one with no
+    /// courage at all abandons the position the moment something reaches it.
+    private static func holding(against danger: Double?, for bot: Bot, within limit: Double) -> Double {
+        guard let danger else { return Fraction.whole }
+        let closeness = nearness(danger, within: limit)
+        return Fraction.whole - closeness * (Fraction.whole - bot.weights.courage)
     }
 
     /// One at arm's length, nothing at the edge of the world.

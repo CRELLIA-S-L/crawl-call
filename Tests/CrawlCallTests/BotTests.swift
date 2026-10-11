@@ -169,6 +169,11 @@ final class SquadSpawnTests: XCTestCase {
         XCTAssertGreaterThan(try weights(.heavy).discipline, try weights(.assault).discipline)
         XCTAssertGreaterThan(try weights(.sniper).discipline, try weights(.sapper).discipline)
         XCTAssertGreaterThan(try weights(.medic).selfSacrifice, try weights(.assault).selfSacrifice)
+        // Courage is not in the concept's table — it joined the weights afterwards
+        // (FR-BOT-090) — so the directions are the behaviour column's: the heavy is
+        // guarded and holds, the scout runs; the medic keeps behind the others.
+        XCTAssertGreaterThan(try weights(.heavy).courage, try weights(.scout).courage)
+        XCTAssertGreaterThan(try weights(.assault).courage, try weights(.medic).courage)
     }
 
     func testBothSquadsAreDrawnFromTheOneArchetypeSet() throws {

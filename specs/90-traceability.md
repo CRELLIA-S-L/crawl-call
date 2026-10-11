@@ -9,8 +9,8 @@ Total requirements: 268.
 |---|---|
 | `draft` | 4 |
 | `deferred` | 104 |
-| `partial` | 13 |
-| `implemented` | 141 |
+| `partial` | 11 |
+| `implemented` | 143 |
 | `superseded` | 6 |
 | `withdrawn` | 0 |
 
@@ -35,13 +35,13 @@ Total requirements: 268.
 | **CON-PUB-120** Xcode 27 is the minimum toolchain | `deferred` | I | — | — |
 | **FR-BOT-010** Six archetypes | `implemented` | I | `Sources/CrawlCall/Bot/Archetype.swift` | `Tests/CrawlCallTests/BotTests.swift` |
 | **FR-BOT-020** Two squads at war | `implemented` | T | `Sources/CrawlCall/Bot/Squads.swift`<br>`Sources/CrawlCall/Game.swift` | `Tests/CrawlCallTests/BotTests.swift` |
-| **FR-BOT-030** Archetype sets base personality weights | `partial` | T | `Sources/CrawlCall/Bot/Bot.swift` | `Tests/CrawlCallTests/BotTests.swift` |
+| **FR-BOT-030** Archetype sets base personality weights | `implemented` | T | `Sources/CrawlCall/Bot/Bot.swift`<br>`config/bot.json` | `Tests/CrawlCallTests/BotTests.swift` |
 | **FR-BOT-040** One bot per squad holds the commander role | `deferred` | T | — | — |
 | **FR-BOT-050** A bot notices the snake in view | `implemented` | T | `Sources/CrawlCall/Bot/Perception.swift`<br>`Sources/CrawlCall/Bot/Knowledge.swift`<br>`Sources/CrawlCall/Game.swift`<br>`Sources/CrawlCall/Map/Sight.swift`<br>`Sources/CrawlCall/Bot/Bot.swift`<br>`Sources/CrawlCall/Config/Geometry.swift`<br>`Sources/CrawlCall/Map/PieceIndex.swift`<br>`Sources/CrawlCall/Config/Utility.swift`<br>`Sources/CrawlCall/Config/Configurations.swift`<br>`config/bot.json` | `Tests/CrawlCallTests/PerceptionTests.swift`<br>`Tests/CrawlCallTests/KnowledgeTests.swift`<br>`Tests/CrawlCallTests/PieceIndexTests.swift` |
 | **FR-BOT-060** A bot fires at its target | `implemented` | T | `Sources/CrawlCall/Bot/Execution.swift`<br>`Sources/CrawlCall/Bot/Deliberation.swift`<br>`Sources/CrawlCall/Bot/Bot.swift`<br>`Sources/CrawlCall/Bot/Round.swift`<br>`Sources/CrawlCall/Config/Utility.swift`<br>`Sources/CrawlCall/Game.swift` | `Tests/CrawlCallTests/ExecutionTests.swift`<br>`Tests/CrawlCallTests/ShotTests.swift`<br>`Tests/CrawlCallTests/WarTests.swift`<br>`Tests/CrawlCallTests/RoundTests.swift` |
 | **FR-BOT-070** Heavy and sapper weapons destroy cover | `deferred` | T | — | — |
 | **FR-BOT-080** Action chosen by maximum utility | `partial` | T | `Sources/CrawlCall/Bot/Deliberation.swift`<br>`Sources/CrawlCall/Config/Utility.swift`<br>`Sources/CrawlCall/Config/Geometry.swift` | `Tests/CrawlCallTests/DeliberationTests.swift` |
-| **FR-BOT-090** Personality weights multiply utility | `partial` | T | `Sources/CrawlCall/Bot/Deliberation.swift`<br>`Sources/CrawlCall/Config/Utility.swift` | `Tests/CrawlCallTests/DeliberationTests.swift` |
+| **FR-BOT-090** Personality weights multiply utility | `implemented` | T | `Sources/CrawlCall/Bot/Deliberation.swift`<br>`Sources/CrawlCall/Config/Utility.swift` | `Tests/CrawlCallTests/DeliberationTests.swift` |
 | **FR-BOT-100** Cover is valued by what is left of it | `deferred` | T | — | — |
 | **FR-BOT-105** Cover is worth less against a wrecking weapon | `deferred` | T | — | — |
 | **FR-BOT-110** Height advantage enters position scoring | `implemented` | T | `Sources/CrawlCall/Bot/Deliberation.swift`<br>`Sources/CrawlCall/Bot/Execution.swift` | `Tests/CrawlCallTests/PositionTests.swift` |

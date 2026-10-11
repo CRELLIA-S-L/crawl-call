@@ -69,13 +69,13 @@ Which squad takes which end, and how each fills round it, is ADR-0056.
 ### FR-BOT-030 — Archetype sets base personality weights
 
 ```yaml
-status: partial
+status: implemented
 verification: T
 derives_from: [FR-BOT-010]
 depends_on: [IF-BOT-010]
 refines: []
 conflicts_with: []
-code: [Sources/CrawlCall/Bot/Bot.swift]
+code: [Sources/CrawlCall/Bot/Bot.swift, config/bot.json]
 tests: [Tests/CrawlCallTests/BotTests.swift]
 created: 2026-09-21
 ```
@@ -84,7 +84,7 @@ When a bot is spawned, the system **shall** initialise its personality weights �
 
 **Rationale.** Concept §8 table: assault aggression up; heavy discipline up, panic down; scout panic up; sniper discipline up; medic self-sacrifice up; sapper average.
 The commander later adjusts these (FR-CMD-060); the archetype is where they start.
-Courage joined the weights on 2026-09-25 (FR-BOT-090); the concept's table predates it, so each archetype's base courage is tuning, chosen when it is built. `partial` until the bot configuration carries it.
+Courage joined the weights on 2026-09-25 (FR-BOT-090); the concept's table predates it, so each archetype's base courage is tuning, chosen when it was built on 2026-10-11 from the table's behaviour column instead — the heavy guarded and slow holds at 0.8, the scout that runs stands at 0.3, the medic behind the others at 0.4, the assault that presses at 0.7, the sapper and the sniper average (ADR-0074).
 
 ### FR-BOT-040 — One bot per squad holds the commander role
 
@@ -261,12 +261,14 @@ When a bot receives a deliberation slot, the system **shall** select the action 
 
 **Rationale.** Concept §9.2: every possible action gets a numeric utility; the maximum is chosen.
 The inputs are named so that a test can vary each and observe the choice move; their weighting is tuning.
-The list is the maintainer's, rewritten on 2026-09-25 when they settled what a bot knows (ADR-0032): each input is read from what the bot and its squad have perceived, never from the truth, and courage is a personality weight of its own (FR-BOT-090). `partial` because the build scores the snake alone as an enemy and a danger, knows no courage, and has nothing to fight with but a magazine; equipment beyond it is Q-310.
+The list is the maintainer's, rewritten on 2026-09-25 when they settled what a bot knows (ADR-0032): each input is read from what the bot and its squad have perceived, never from the truth, and courage is a personality weight of its own (FR-BOT-090).
+Six of the seven inputs are read: the enemy since the squads went to war on 2026-09-26, as a target and as a danger to hide from (FR-BOT-060, FR-BOT-330, ADR-0044), and the fifth personality weight since 2026-10-11 (ADR-0074).
+`partial` because the seventh is not: a bot has nothing to fight with but a magazine, and equipment beyond it is Q-310.
 
 ### FR-BOT-090 — Personality weights multiply utility
 
 ```yaml
-status: partial
+status: implemented
 verification: T
 derives_from: [FR-BOT-080]
 depends_on: [FR-BOT-030]
@@ -287,7 +289,8 @@ When computing a bot's utility scores, the system **shall** apply the bot's pers
 
 **Rationale.** Concept §9.2: a bot with panic 0.8 overestimates the threat and runs; with discipline 0.9 it holds even when scared.
 This is the only channel through which the commander's LLM output reaches per-frame behaviour.
-Courage was added by the maintainer on 2026-09-25 as a weight of its own, not as the other side of panic: a bot can be frightened and stand its ground anyway, and the two pull on different terms — panic on the fear that sends it away, courage on the terms that keep it facing the danger. `partial` until courage is in the bot configuration (IF-BOT-010), set at spawn (FR-BOT-030) and read by the utility.
+Courage was added by the maintainer on 2026-09-25 as a weight of its own, not as the other side of panic: a bot can be frightened and stand its ground anyway, and the two pull on different terms — panic on the fear that sends it away, courage on the terms that keep it facing the danger.
+It multiplies firing, every target a bot has being something that can kill it, and the order's term by how near the danger has come — with nothing near, holding a position is obedience and discipline's alone (ADR-0074).
 
 ### FR-BOT-100 — Cover is valued by what is left of it
 
@@ -652,7 +655,7 @@ When scoring actions for a bot, the system **shall** read the snake, the enemy a
 A test holds it by moving the snake or an enemy where the bot has not seen it and nobody has told it, and finding the choice unchanged.
 The snake a bot flees from and hides from is where it last saw each part; it fires only at a part it sees now, since what it remembers is somewhere to be afraid of and not a target; the cells it may run or hide to are the cells it knows (ADR-0043).
 `partial` because three readings of the map are still the truth's: the route to a chosen cell is found over the whole map, whether a cell is cover is tested against the obstacles as they stand, seen or not, and so is the snake's path to a position (FR-BOT-115, ADR-0058). ADR-0032 replaces the first two — floods over the map as the squad knows it, and a lines-of-fire table — each to be written as its own requirement and put to the maintainer.
-The enemy is recorded (FR-BOT-240) and read by no action yet, since none of FR-BOT-200 is aimed at an enemy bot. The order in which bots are given slots still reads how near the snake truly is (FR-BOT-160): that is when a bot thinks, not what it chooses.
+The enemy is recorded (FR-BOT-240) and, since the squads went to war on 2026-09-26, read by three actions — fired at where it is seen now, hidden from where it was last seen (FR-BOT-330), advanced on where it is believed to be (FR-BOT-360) — each from the bot's own knowledge and none from the truth. The order in which bots are given slots still reads how near the snake truly is (FR-BOT-160): that is when a bot thinks, not what it chooses.
 
 ### FR-BOT-230 — A bot remembers the map it has seen
 

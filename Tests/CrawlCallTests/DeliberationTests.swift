@@ -36,9 +36,11 @@ final class DeliberationTests: XCTestCase {
     }
 
     private func weights(panic: Double = 0.5, discipline: Double = 0.5,
-                         aggression: Double = 0.5, selfSacrifice: Double = 0.5) -> BotConfiguration.Weights {
+                         aggression: Double = 0.5, selfSacrifice: Double = 0.5,
+                         courage: Double = 0.5) -> BotConfiguration.Weights {
         BotConfiguration.Weights(panic: panic, discipline: discipline,
-                                 aggression: aggression, selfSacrifice: selfSacrifice)
+                                 aggression: aggression, selfSacrifice: selfSacrifice,
+                                 courage: courage)
     }
 
     private func utility(of match: (Action) -> Bool, for bot: Bot,
@@ -312,6 +314,76 @@ final class DeliberationTests: XCTestCase {
         XCTAssertEqual(Deliberation.choose(for: selfless, in: situation).map(isHeal), true)
     }
 
+    func testCourageScalesFiringAtTheDanger() throws {
+        // The first of the two terms courage pulls on: what it is worth to stand and
+        // shoot at the thing that can kill you.
+        var situation = try arena("..........")
+        situation.snake = [at(5, 0)]
+        situation.inView = situation.snake  // seen now, as these tests pose it (FR-BOT-220)
+        var timid = try bot(.assault, at: 1, 0)
+        timid.weights = weights(courage: 0.1)
+        var brave = timid
+        brave.weights = weights(courage: 0.9)
+
+        XCTAssertGreaterThan(try XCTUnwrap(utility(of: isFire, for: brave, in: situation)),
+                             try XCTUnwrap(utility(of: isFire, for: timid, in: situation)))
+    }
+
+    func testCourageScalesHoldingGroundUnderDanger() throws {
+        // The second term: the order kept while the snake is on top of the bot. Both
+        // bots have the same discipline, so what moves the score is courage alone.
+        // The wall is there for the threat term to have somewhere to send them, so
+        // that the two scores can be compared as well as the order's.
+        var situation = try arena("..........", ".#........")
+        situation.orderedZone = NavigationGraph.Node(floor: 0, x: 8, z: 1)
+        situation.snake = [at(3, 0)]
+        situation.inView = situation.snake
+        var timid = try bot(.assault, at: 1, 0)
+        timid.weights = weights(panic: 0.5, discipline: 0.5, courage: 0.1)
+        var brave = timid
+        brave.weights = weights(panic: 0.5, discipline: 0.5, courage: 0.9)
+
+        XCTAssertGreaterThan(try XCTUnwrap(utility(of: isZone, for: brave, in: situation)),
+                             try XCTUnwrap(utility(of: isZone, for: timid, in: situation)))
+        // Courage and panic pull on different terms, which is why courage is a weight
+        // of its own and not the other side of panic: the two bots fear the snake
+        // exactly alike and differ only in whether they stay where they were sent.
+        XCTAssertEqual(try XCTUnwrap(utility(of: isCover, for: brave, in: situation)),
+                       try XCTUnwrap(utility(of: isCover, for: timid, in: situation)),
+                       accuracy: 1e-12)
+    }
+
+    func testAnEnemyIsADangerToHoldGroundUnderToo() throws {
+        // Not only the snake: an enemy bot it has seen is a danger as well
+        // (FR-BOT-330), so courage answers to it in the same term.
+        var situation = try arena("..........", "..........")
+        situation.orderedZone = NavigationGraph.Node(floor: 0, x: 8, z: 1)
+        situation.enemies = [at(3, 0)]
+        var timid = try bot(.assault, at: 1, 0)
+        timid.weights = weights(discipline: 0.5, courage: 0.1)
+        var brave = timid
+        brave.weights = weights(discipline: 0.5, courage: 0.9)
+
+        XCTAssertGreaterThan(try XCTUnwrap(utility(of: isZone, for: brave, in: situation)),
+                             try XCTUnwrap(utility(of: isZone, for: timid, in: situation)))
+    }
+
+    func testCourageLeavesAnOrderAloneWithNothingNear() throws {
+        // The negation, and what keeps courage from being a second discipline: with
+        // no danger known, holding a position is obedience and courage does not
+        // touch it.
+        var situation = try arena("..........", "..........")
+        situation.orderedZone = NavigationGraph.Node(floor: 0, x: 8, z: 1)
+        var timid = try bot(.assault, at: 1, 0)
+        timid.weights = weights(discipline: 0.5, courage: 0.1)
+        var brave = timid
+        brave.weights = weights(discipline: 0.5, courage: 0.9)
+
+        XCTAssertEqual(try XCTUnwrap(utility(of: isZone, for: brave, in: situation)),
+                       try XCTUnwrap(utility(of: isZone, for: timid, in: situation)),
+                       accuracy: 1e-12)
+    }
+
     func testOnlyAMedicHeals() throws {
         var situation = try arena("..........")
         var hurt = try bot(.assault, at: 2, 0, id: 1)
@@ -335,9 +407,9 @@ final class DeliberationTests: XCTestCase {
     }
 
     func testTheWeightOfATermIsReadFromTheConfiguration() throws {
-        // Obeying is worth the obedience weight times the bot's discipline and
-        // nothing else, so doubling the weight in the file doubles the score — which
-        // it cannot do if the weight is anywhere but in the file.
+        // Obeying is worth the obedience weight times the bot's discipline, and with
+        // no danger near that is all of it, so doubling the weight in the file doubles
+        // the score — which it cannot do if the weight is anywhere but in the file.
         var situation = try arena("..........")
         situation.orderedZone = NavigationGraph.Node(floor: 0, x: 8, z: 0)
         let soldier = try bot(.assault, at: 1, 0)
