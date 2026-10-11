@@ -101,6 +101,26 @@ The two squads **shall** differ only in colour and in their commander, never in 
 
 **Rationale.** Concept §8: the player learns six silhouettes, not twelve; asymmetry, if wanted, comes from the proportions of a squad, not from unique classes.
 
+### INV-BOT-040 — A primary weapon outreaches and outhits the sidearm beside it
+
+```yaml
+status: deferred
+verification: T
+derives_from: []
+depends_on: [FR-BOT-440, FR-BOT-450]
+refines: []
+conflicts_with: []
+code: []
+tests: []
+created: 2026-10-11
+```
+
+Every archetype's primary weapon **shall** stand above the sidearm it carries in both range and damage.
+
+**Rationale.** The maintainer, 2026-10-11: the primary is the better weapon, and the sidearm is what a bot falls back on.
+Written as an invariant rather than folded into FR-BOT-440 because it is a property of the configuration a reader may check without running anything, and because nothing in the code would otherwise notice a shipped table where a scout's pistol outshot its carbine.
+Range and damage only: a sidearm may fire faster and hold more rounds than the primary, which is the trade the maintainer asked for, so neither of those is bounded here.
+
 ### INV-SCORE-010 — Nothing but consumption scores
 
 ```yaml

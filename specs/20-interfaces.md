@@ -68,7 +68,7 @@ When the game starts, the system **shall** read from the scoring configuration �
 ### IF-BOT-010 — Bot and match configuration
 
 ```yaml
-status: implemented
+status: partial
 verification: T
 derives_from: []
 depends_on: []
@@ -79,13 +79,15 @@ tests: [Tests/CrawlCallTests/ConfigurationTests.swift, Tests/CrawlCallTests/Laun
 created: 2026-09-21
 ```
 
-When the game starts, the system **shall** read from the bot configuration — `config/bot.json` (ADR-0012) — per archetype its base personality weights, their allowed ranges, run speed, weapon damage, maximum health, magazine size and detection range; the override, interrupt and grouping distances; the hysteresis margin; the deliberation period and per-frame slot maximum; the collapse panic increment; the fear of an unhurt bot; the weight of each term in an action's score (FR-BOT-080); the height a bot's figure is drawn at and the height of its eyes; the speed a bot turns at (FR-BOT-280), its acceleration (FR-BOT-290) and the angle of its field of view (FR-BOT-050); how often a bot with nothing to do looks round (FR-BOT-380); the speed a round flies at and how far it flies (FR-BOT-060, FR-BOT-405), and the speed a bot firing with no cover beside it moves at and how often it turns back (FR-BOT-430); the times after which a bot forgets a sighting of the snake and one of an enemy (FR-BOT-260), and each squad's share delay (FR-BOT-310); and from the match configuration — `config/match.json` — the squad size, the archetypes eligible for the commander role, the commander interval, the truce switch and truce-break threshold, the state token budget and the maximum response tokens, and the thermal degradation threshold and factor — the threshold `serious` by default.
+When the game starts, the system **shall** read from the bot configuration — `config/bot.json` (ADR-0012) — per archetype its base personality weights, their allowed ranges, run speed, maximum health, detection range and the arms it carries — which primary weapon, which sidearm, which grenade and how many of them, and which knife (FR-BOT-440); from a catalogue of weapons, each firearm's damage, range, time between shots and magazine size (FR-BOT-450), each grenade's throw range, fuse time, blast radius and the share every further part of the snake within that blast adds (FR-BOT-470, FR-BOT-480, FR-BOT-490), and each knife's reach, throw range and damage (FR-BOT-510, FR-BOT-520); the override, interrupt and grouping distances; the hysteresis margin; the deliberation period and per-frame slot maximum; the collapse panic increment; the fear of an unhurt bot; the weight of each term in an action's score (FR-BOT-080); the height a bot's figure is drawn at and the height of its eyes; the speed a bot turns at (FR-BOT-280), its acceleration (FR-BOT-290) and the angle of its field of view (FR-BOT-050); how often a bot with nothing to do looks round (FR-BOT-380); the speed a round flies at and how far it flies (FR-BOT-060, FR-BOT-405), and the speed a bot firing with no cover beside it moves at and how often it turns back (FR-BOT-430); the times after which a bot forgets a sighting of the snake and one of an enemy (FR-BOT-260), and each squad's share delay (FR-BOT-310); and from the match configuration — `config/match.json` — the squad size, the archetypes eligible for the commander role, the commander interval, the truce switch and truce-break threshold, the state token budget and the maximum response tokens, and the thermal degradation threshold and factor — the threshold `serious` by default.
 
 **Rationale.** Concept §8 (base weights), §9.2 (thresholds, scheduling), §14 (squad size), §15 (degradation).
 The degradation threshold defaults to `serious` on the spike's measurement (ADR-0001): a twenty-minute run on the iPhone 16 Pro reached `fair` at fourteen minutes and never `serious`, holding 60 fps and a 2.7 s mean commander latency throughout — so `fair` as the threshold would stretch the intervals of a session that was losing nothing, while `serious` is the first state the spike never reached and therefore the first whose cost is unmeasured.
 The figure's height and the eyes' are two numbers and not one because they answer to different things — how big a bot looks and where it sees from — and the shipped numbers put the second on the eyes the figure is drawn with (ADR-0022).
 The factor has no default yet (Q-180).
 Two files named in one requirement because they are read in the same act at the same moment; splitting the keys across two requirements would give a reader two places to look for one thing.
+A weapon's damage, range and magazine left the archetype on 2026-10-11, when a bot came to carry four weapons and the numbers stopped being the bot's (FR-BOT-450, ADR-0075); what stays on the archetype is what belongs to the body — how fast it runs, how much of it there is and how far it sees.
+`partial` from that day: the build reads every key above but the arms and the catalogue, and a bot still has one unnamed weapon whose damage and magazine are its archetype's.
 
 ## Commander I/O
 

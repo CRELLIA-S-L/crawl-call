@@ -220,7 +220,7 @@ A target with a squadmate in the way is no target: the bot fires at another, or 
 status: deferred
 verification: T
 derives_from: [FR-BOT-060]
-depends_on: [FR-MAP-030, IF-MAP-020]
+depends_on: [FR-MAP-030, IF-MAP-020, FR-BOT-470]
 refines: []
 conflicts_with: []
 code: []
@@ -228,10 +228,198 @@ tests: []
 created: 2026-09-21
 ```
 
-When a heavy's or a sapper's shot hits a destructible module, the system **shall** deal that module the destruction damage the tuning configuration sets for that weapon, while the weapon's destruction ammunition lasts.
+When a heavy's or a sapper's shot hits a destructible module, or a grenade detonates within its blast radius of one, the system **shall** deal that module the destruction damage the tuning configuration sets for that weapon, while the weapon's destruction ammunition lasts.
 
 **Rationale.** Concept §7: without bots that destroy, destruction is one-sided and a squad can dig in behind a wall and wait; the main scenario is squads taking the map apart fighting each other.
 Ammunition is the regulator the concept names against a map that turns into wasteland by mid-match.
+The grenade joined on 2026-10-11, when the maintainer settled what a bot carries (FR-BOT-440): a grenade does not bring a wall down in one throw but weakens it, and enough of them break it.
+That is FR-MAP-030's shape already — a module's damage accumulates and it steps from intact to damaged to debris — so the grenade needs no health of its own for cover, only a share of that accumulated damage.
+Rounds from a primary or a sidearm still leave a module alone: destruction is the heavy's and the sapper's trait in concept §8, and FR-BOT-105, which prices cover by whether the enemy carries a wrecking weapon, stops saying anything if every rifle is one.
+
+## Arms
+
+### FR-BOT-440 — What a bot carries
+
+```yaml
+status: deferred
+verification: T
+derives_from: [FR-BOT-010]
+depends_on: [IF-BOT-010]
+refines: []
+conflicts_with: []
+code: []
+tests: []
+created: 2026-10-11
+```
+
+When a bot is spawned, the system **shall** give it the arms its archetype names in the bot configuration: one primary weapon, one sidearm, that archetype's number of grenades, and one knife.
+
+**Rationale.** The maintainer, 2026-10-11, settling Q-310: until then a bot had a magazine and nothing else, and FR-BOT-080 named what it has to fight with as an input no code could read.
+Four kinds, because each answers a different distance — the primary reaches furthest and hurts most, the sidearm is the lighter weapon beside it, the grenade crosses what a bot cannot shoot through, and the knife works at a touch (ADR-0075).
+Which weapon an archetype carries and how many grenades it starts with is tuning and lives in the bot configuration beside the personality weights, so that two archetypes may carry different sidearms without either being named here.
+One knife and not a number of them, because a thrown knife is gone (FR-BOT-520) and a bot that could throw six would never close with anything.
+
+### FR-BOT-450 — A shot's numbers are the weapon's
+
+```yaml
+status: deferred
+verification: T
+derives_from: [FR-BOT-060]
+depends_on: [FR-BOT-440, IF-BOT-010]
+refines: [FR-BOT-060]
+conflicts_with: []
+code: []
+tests: []
+created: 2026-10-11
+```
+
+When a bot fires, the system **shall** take the damage, the range, the time between shots and the magazine size of that shot from the weapon fired rather than from the bot's archetype.
+
+**Rationale.** Today those numbers are the archetype's and a bot has one weapon, so where they live costs nothing; with two firearms on the same bot it is the whole of it, since a sidearm weaker and shorter-ranged than the primary cannot be described by numbers belonging to the bot.
+The time between shots is on this list because FR-BOT-060's rationale parked it — "no requirement gives a weapon a rate of fire; when one does, the cadence moves out of the deliberation period and into the bot configuration" — and a sidearm that trades damage for rate of fire is what makes it worth moving (the maintainer, 2026-10-11).
+What a bot sees is still the archetype's: how far it looks is about eyes, not about what it holds.
+
+### FR-BOT-460 — Each weapon that reaches is an action of its own
+
+```yaml
+status: deferred
+verification: T
+derives_from: [FR-BOT-080]
+depends_on: [FR-BOT-440]
+refines: [FR-BOT-200]
+conflicts_with: []
+code: []
+tests: []
+created: 2026-10-11
+```
+
+When scoring actions for a bot, the system **shall** score using each weapon it carries that has ammunition left and whose range covers its target as an action of its own.
+
+**Rationale.** FR-BOT-080 chooses by maximum utility, so which weapon to use is not a rule to write down but a set of actions to score: the primary at distance, the sidearm when the primary is empty or the target is close, the grenade at something a wall stands in front of, the knife at a touch.
+A rule — "the primary where it reaches, the sidearm otherwise" — would be a second decision procedure beside the one the whole layer is built on, and the personality weights would stop reaching the choice.
+This widens the floor FR-BOT-200 sets: the set a test can enumerate gains an entry per weapon where it had one for firing.
+
+### FR-BOT-470 — A thrown grenade flies no further than its throw and waits out its fuse
+
+```yaml
+status: deferred
+verification: T
+derives_from: [FR-BOT-440]
+depends_on: [IF-BOT-010]
+refines: []
+conflicts_with: []
+code: []
+tests: []
+created: 2026-10-11
+```
+
+When a bot throws a grenade, the system **shall** send it no further than that grenade's throw range and detonate it when its fuse time has passed.
+
+**Rationale.** The two numbers the maintainer named on 2026-10-11: a grenade goes a short way and goes off after a delay.
+The delay is what makes it answerable — a bot can leave the place, the snake can move on, and a grenade thrown where something stood is not a grenade that hits it.
+The path it takes is not fixed here: that a thrown thing rises and falls is drawing, and what it meets on the way is the round's question already answered (FR-BOT-405).
+
+### FR-BOT-480 — An explosion strikes every body within its blast
+
+```yaml
+status: deferred
+verification: T
+derives_from: [FR-BOT-470]
+depends_on: [FR-BOT-470, IF-BOT-010]
+refines: []
+conflicts_with: []
+code: []
+tests: []
+created: 2026-10-11
+```
+
+When a grenade detonates, the system **shall** deal its damage to every bot and every part of the snake within its blast radius, the thrower and its squadmates among them.
+
+**Rationale.** The maintainer, 2026-10-11: any weapon hits your own.
+For a round that has been true since FR-BOT-400 — it strikes whoever is in its way — and an explosion that made an exception for the squad would be the one weapon a bot could throw without care, which is the opposite of what a grenade is for.
+What the blast does to a destructible module is FR-BOT-070's; what it does to a snake lying across it is FR-BOT-490's; and what keeps a bot from throwing it at its own squad is FR-BOT-500's.
+
+### FR-BOT-490 — An explosion that covers more of the snake hurts it more
+
+```yaml
+status: deferred
+verification: T
+derives_from: [FR-BOT-480]
+depends_on: [FR-BOT-480, FR-SNAKE-070, IF-BOT-010]
+refines: [FR-BOT-480]
+conflicts_with: []
+code: []
+tests: []
+created: 2026-10-11
+```
+
+When a grenade detonates with more than one part of the snake within its blast radius, the system **shall** raise the damage dealt to the snake by the per-part share of the bot configuration for each part beyond the first, and deal the raised amount once.
+
+**Rationale.** The maintainer, 2026-10-11, choosing between two readings that were both on the table.
+Damage once per part makes the grenade the answer to a long snake and takes away the bet the concept is built on, that length is the player's trade (§4); damage once makes a blast laid along the whole body worth no more than one at the tail tip.
+A share for each part beyond the first sits between them: at the 15 to 20 per cent the maintainer named, a blast over five parts is worth about 1.6 to 1.8 blasts and never five.
+Once, because the snake is wounded and not wounded five times: FR-SNAKE-070 takes the tail off by the raised amount in one act.
+The share is tuning and lives in the bot configuration, where the grenade's other numbers are.
+
+### FR-BOT-500 — A bot does not throw where it would catch a squadmate
+
+```yaml
+status: deferred
+verification: T
+derives_from: [FR-BOT-480]
+depends_on: [FR-BOT-480, FR-BOT-220]
+refines: []
+conflicts_with: []
+code: []
+tests: []
+created: 2026-10-11
+```
+
+If a squadmate the bot sees stands within the blast radius of where it would throw, the system **shall not** have the bot throw there.
+
+**Rationale.** The other side of FR-BOT-480: once an explosion hits its own, a squad that fights as a group (FR-BOT-190) would take itself apart in the first firefight.
+The same shape as FR-BOT-410 for a round, and the same reading of what a bot may act on — a squadmate it does not see is one it cannot know to be there (FR-BOT-220).
+The thrower itself needs no rule: a place within its own blast is a place its own score already refuses, since the damage falls on it like anybody else.
+
+### FR-BOT-510 — A knife strikes what is within its reach
+
+```yaml
+status: deferred
+verification: T
+derives_from: [FR-BOT-440]
+depends_on: [FR-BOT-440, IF-BOT-010]
+refines: []
+conflicts_with: []
+code: []
+tests: []
+created: 2026-10-11
+```
+
+While a bot's chosen action is to strike with its knife and its target is within the knife's reach, the system **shall** deal the knife's damage to that target.
+
+**Rationale.** The maintainer, 2026-10-11: the knife works only very close, and hurts well for it.
+It is the one weapon with no flight and no magazine, so it is what a bot has left when everything else is empty and something is already upon it — which is the case the snake makes most often.
+No line of fire is asked for, because at the reach of an arm there is nothing to stand in the way.
+
+### FR-BOT-520 — A thrown knife leaves the bot
+
+```yaml
+status: deferred
+verification: T
+derives_from: [FR-BOT-510]
+depends_on: [FR-BOT-510]
+refines: []
+conflicts_with: []
+code: []
+tests: []
+created: 2026-10-11
+```
+
+When a bot throws its knife, the system **shall** take the knife from what the bot carries, whether the throw struck or not.
+
+**Rationale.** The maintainer, 2026-10-11: a knife reaches a little further thrown, and is spent by the throw.
+That is what makes the throw a decision rather than a free extra range — a bot that threw has nothing for the next thing that closes with it, and the score of throwing has to carry that.
+Nothing picks it up again: there is no gathering in this game, and a thrown knife is gone for the match.
 
 ## Deliberation
 
@@ -263,7 +451,7 @@ When a bot receives a deliberation slot, the system **shall** select the action 
 The inputs are named so that a test can vary each and observe the choice move; their weighting is tuning.
 The list is the maintainer's, rewritten on 2026-09-25 when they settled what a bot knows (ADR-0032): each input is read from what the bot and its squad have perceived, never from the truth, and courage is a personality weight of its own (FR-BOT-090).
 Six of the seven inputs are read: the enemy since the squads went to war on 2026-09-26, as a target and as a danger to hide from (FR-BOT-060, FR-BOT-330, ADR-0044), and the fifth personality weight since 2026-10-11 (ADR-0074).
-`partial` because the seventh is not: a bot has nothing to fight with but a magazine, and equipment beyond it is Q-310.
+`partial` because the seventh is written and not built: on 2026-10-11 the maintainer settled what a bot carries — a primary weapon, a sidearm, grenades and a knife (FR-BOT-440, ADR-0075) — and until a bot carries them it still has nothing to fight with but a magazine.
 
 ### FR-BOT-090 — Personality weights multiply utility
 

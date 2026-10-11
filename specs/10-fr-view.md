@@ -713,3 +713,24 @@ While the snake crawls, the system **shall** draw its body swaying from side to 
 
 **Rationale.** The maintainer, 2026-09-29: a snake that crawls straight as a pipe does not read as a snake. The wave belongs to the ground, not to the body: the body slides along an S laid on the floor, as a snake does, and stands still in it when the snake stops. Drawing only: the body the match knows stays on the path (FR-SNAKE-020).
 The maintainer chose 5 cm to either side on a wave of 1.2 m, and the head swaying with the body; played on the phone, it was a little too much, and on 2026-09-30 the maintainer narrowed the sway and stretched its wave, each by 30 %: 3.5 cm to either side on a wave of 1.56 m. How the wave is laid on a line drawn through points 0.6 m apart is ADR-0062.
+
+### FR-VIEW-340 — A bot holds the weapon it is using
+
+```yaml
+status: deferred
+verification: T
+derives_from: [FR-BOT-440]
+depends_on: [FR-BOT-440, FR-VIEW-070]
+refines: []
+conflicts_with: []
+code: []
+tests: []
+created: 2026-10-11
+```
+
+While a bot is on screen, the system **shall** draw in its hands the weapon it is using and draw each other weapon it carries where that weapon is carried — the primary across its back, the sidearm and the knife at its belt, the grenades at its belt or chest.
+
+**Rationale.** The maintainer, 2026-10-11, when a bot came to carry four weapons instead of one: what is in the hands is what the bot is using, and the rest hang in their places.
+ADR-0022 drew each archetype holding one thing — the scout a pistol, the sapper a sledgehammer — and that table is rewritten by this, since what is in the hands now changes with the action.
+FR-VIEW-070 is not weakened: the archetype stays readable from what is in the hands or across the back, from how big the bot is and from what it wears, and the six silhouettes remain six.
+A test can read the figure's description and say which weapon is in the hands; whether a player can tell the six apart at the camera's distance stays FR-VIEW-070's demonstration.
