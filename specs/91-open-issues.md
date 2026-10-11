@@ -242,4 +242,15 @@ What remains is what a decision inside the repository cannot close.
 - **Why it is this way.** FR-CMD-025 opens a session of its own for every call, so there is no transcript for a key-value cache to live in and nothing to keep the model resident between calls. WWDC26's guidance is the other way round: appending to a session preserves the cache and minimises time to first token, while rewriting history invalidates it. The same bench comparison on the Mac, with the game's own instructions and schema, bears the first half out — a kept session reads 929 of 1329 input tokens from cache where a fresh one reads none.
   What it does **not** bear out is that this buys speed here: kept, fresh and prewarmed came in at 6.4, 6.7 and 8.2 seconds mean over nine calls each, with single calls ranging 4.2 to 11.2 seconds. At that spread the three are not distinguishable.
 - **Two things worth fixing whatever is decided about the session.** `prewarm(promptPrefix:)` exists in the installed SDK and is what the forty-one reloads are asking for. And two of the fifteen answers came back at exactly 500 response tokens — the ceiling Q-560 raised them to — so some answers are being truncated at the limit rather than finishing.
+- **Three of Apple's levers were tried on 2026-10-12, and the phone paid for none of them.**
+
+  | lever | what it bought |
+  |---|---|
+  | `prewarm`, warming the next session as soon as the last answered | 37 model loads against 41, with the loading time and the median call both a little worse — no difference at one run each |
+  | the soldier's field names shortened to words of three or four letters | output 371 tokens against 395, about 6 % |
+  | the same names shortened to single letters | output 369 — nothing beyond the short words |
+
+  The field-name arithmetic had predicted about 30 % and was wrong because tokens are not characters: `selfSacrifice` costs a couple of tokens rather than thirteen characters' worth. The latency column is left out of the table on purpose — 5393, 5173 and 4330 milliseconds of median over twelve calls each, against single calls spanning 4.2 to 11.2 seconds, is not a reading.
+
+  What this leaves is the shape. Apple's levers are all aimed at the time before the first token — the cache, the warm model, the short prompt — and the time here is spent generating 227 tokens, four fifths of which is field names and punctuation that constrained decoding has to emit whatever they are called.
 - **Still needed:** a decision on FR-CMD-025, which was written on the spike's measurement that one session per call beat a kept one on tokens, latency and robustness. That measurement stands on its own numbers; what is new is that it was taken with a five-field answer and before the framework reported caching at all, and that the cost it does not count is forty model loads a run. Re-measure on the phone with the Foundation Models instrument, prewarmed and kept, before changing the requirement — and raise or remove the response ceiling either way.

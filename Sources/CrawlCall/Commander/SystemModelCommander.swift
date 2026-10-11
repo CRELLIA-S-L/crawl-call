@@ -63,12 +63,36 @@ final class SystemModelCommander: Commander, @unchecked Sendable {
     /// say the shipped number is what reached the adapter.
     let maximumResponseTokens: Int
 
+    private let lock = NSLock()
+
+    /// What the last call spent, as the framework counted it — not as anything here
+    /// estimated. `cached` is how much of the input was read from the key-value cache,
+    /// which is the number that says whether a session pattern is working at all.
+    private(set) var lastUsage: (input: Int, cached: Int, output: Int)?
+
     init(instructions: String, maximumResponseTokens: Int) {
         self.instructions = instructions
         self.maximumResponseTokens = maximumResponseTokens
     }
 
     var isAvailable: Bool { SystemLanguageModel.default.isAvailable }
+
+    /// How much the model can hold, as the model says rather than as anybody measured
+    /// once: `contextSize` arrived with iOS 27 and reports 8192 for the on-device
+    /// model (Q-540). Nothing in the game hard-codes a window any more.
+    var contextSize: Int { SystemLanguageModel.default.contextSize }
+
+    /// Exactly how many tokens a state costs, counted by the model rather than
+    /// estimated from its characters (IF-CMD-010). Not on the path of a call — it is a
+    /// round trip of its own — but what a check of the budget should use where the
+    /// model is at hand.
+    func tokenCount(of state: CommanderInput) async -> Int? {
+        try? await SystemLanguageModel.default.tokenCount(for: state.prompt)
+    }
+
+    private func remember(_ usage: (input: Int, cached: Int, output: Int)) {
+        lock.lock(); lastUsage = usage; lock.unlock()
+    }
 
     func decide(from state: CommanderInput) async -> Result<CommanderDecision, CommanderFailure> {
         let model = SystemLanguageModel.default
@@ -77,6 +101,13 @@ final class SystemModelCommander: Commander, @unchecked Sendable {
         }
         // A session of its own for this one call (FR-CMD-025): there is no transcript
         // to grow, to overflow the window with, or for a bad exchange to sit in.
+        //
+        // It is built here and not warmed ahead of time. Warming the next session as
+        // soon as the last had answered was tried on 2026-10-12 against the model
+        // being loaded forty-one times in ninety seconds, and the phone did not pay
+        // for it: 37 loads against 41 over one run each, with the loading time and the
+        // median call both a little worse. `prewarm` is a hint the system is free to
+        // ignore, and here it did (Q-590).
         let session = LanguageModelSession(model: model, instructions: instructions)
         let options = GenerationOptions(maximumResponseTokens: maximumResponseTokens)
         do {
@@ -84,6 +115,9 @@ final class SystemModelCommander: Commander, @unchecked Sendable {
                                                    generating: GeneratedDecision.self,
                                                    includeSchemaInPrompt: true,
                                                    options: options)
+            remember((answer.usage.input.totalTokenCount,
+                      answer.usage.input.cachedTokenCount,
+                      answer.usage.output.totalTokenCount))
             return SystemModelCommander.read(answer.content)
         } catch let error as LanguageModelError {
             switch error {

@@ -61,7 +61,7 @@ struct BenchOrderRanged {
 }
 
 enum SchemaFlavour: String, CaseIterable {
-    case described, lean, minimal, ranged, game
+    case described, lean, minimal, ranged, game, gameShort, gameTiny
 }
 
 /// The shape the game actually asks for (IF-CMD-020), kept in step with
@@ -87,6 +87,64 @@ struct BenchOrderGame {
         @Guide(.range(0...1)) var discipline: Double
         @Guide(.range(0...1)) var aggression: Double
         @Guide(.range(0...1)) var selfSacrifice: Double
+    }
+
+    var threat: Threat
+    var order: Order
+    var crew: [Soldier]
+    var truce: Truce
+    var speaker: String
+    var line: String
+}
+
+/// The game's answer with the soldier's field names shortened to words of three or
+/// four letters. Only the soldier's: the top-level names are written once each, while
+/// a soldier's seven are written once per soldier, and a squad of six pays them six
+/// times. Measured against `game` on 2026-10-12, after a complete answer was found to
+/// be 21 % values and 79 % field names and punctuation.
+@Generable
+struct BenchOrderGameShort {
+    @Generable enum Threat: String { case enemy, snake, withdraw }
+    @Generable enum Order: String { case hold, flank, withdrawToZone, disperse, destroyCover }
+    @Generable enum Truce: String { case none, propose, accept, reject }
+
+    @Generable
+    struct Soldier {
+        var who: String
+        var job: String
+        @Guide(.range(0...1)) var fear: Double
+        @Guide(.range(0...1)) var grit: Double
+        @Guide(.range(0...1)) var duty: Double
+        @Guide(.range(0...1)) var push: Double
+        @Guide(.range(0...1)) var care: Double
+    }
+
+    var threat: Threat
+    var order: Order
+    var crew: [Soldier]
+    var truce: Truce
+    var speaker: String
+    var line: String
+}
+
+/// The same again with single letters, which is the most that can be saved and the
+/// least that can be understood. Measured beside the other two so the trade between
+/// tokens and comprehension is a reading rather than an opinion.
+@Generable
+struct BenchOrderGameTiny {
+    @Generable enum Threat: String { case enemy, snake, withdraw }
+    @Generable enum Order: String { case hold, flank, withdrawToZone, disperse, destroyCover }
+    @Generable enum Truce: String { case none, propose, accept, reject }
+
+    @Generable
+    struct Soldier {
+        var n: String
+        var j: String
+        @Guide(.range(0...1)) var p: Double
+        @Guide(.range(0...1)) var c: Double
+        @Guide(.range(0...1)) var d: Double
+        @Guide(.range(0...1)) var a: Double
+        @Guide(.range(0...1)) var s: Double
     }
 
     var threat: Threat
@@ -173,6 +231,20 @@ enum PromptBench {
                             ins = r.usage.input.totalTokenCount; outs = r.usage.output.totalTokenCount
                             line = "\(r.content.speaker): \(r.content.line)"
                             threat = r.content.threat.rawValue; order = r.content.order.rawValue; panic = r.content.panic
+                        case .gameShort:
+                            let r = try await session.respond(to: prompt, generating: BenchOrderGameShort.self, includeSchemaInPrompt: includeSchema, options: opts)
+                            ins = r.usage.input.totalTokenCount; outs = r.usage.output.totalTokenCount
+                            let jobs = r.content.crew.map { "\($0.who)/\($0.job)/f\(String(format: "%.1f", $0.fear))" }
+                            line = "\(r.content.speaker): \(r.content.line) | crew \(r.content.crew.count): \(jobs.joined(separator: " "))"
+                            threat = r.content.threat.rawValue; order = r.content.order.rawValue
+                            panic = r.content.crew.first?.fear ?? -1
+                        case .gameTiny:
+                            let r = try await session.respond(to: prompt, generating: BenchOrderGameTiny.self, includeSchemaInPrompt: includeSchema, options: opts)
+                            ins = r.usage.input.totalTokenCount; outs = r.usage.output.totalTokenCount
+                            let jobs = r.content.crew.map { "\($0.n)/\($0.j)/p\(String(format: "%.1f", $0.p))" }
+                            line = "\(r.content.speaker): \(r.content.line) | crew \(r.content.crew.count): \(jobs.joined(separator: " "))"
+                            threat = r.content.threat.rawValue; order = r.content.order.rawValue
+                            panic = r.content.crew.first?.p ?? -1
                         case .game:
                             let r = try await session.respond(to: prompt, generating: BenchOrderGame.self, includeSchemaInPrompt: includeSchema, options: opts)
                             ins = r.usage.input.totalTokenCount; outs = r.usage.output.totalTokenCount
