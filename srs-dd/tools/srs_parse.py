@@ -1,65 +1,42 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# SRS-DD-0.20.1 — the framework release this file came from
-"""Reads the physical shape of a record, and nothing about its meaning.
-
-A record is a level-three heading carrying an identifier, a fenced
-`yaml` block of flat keys, and prose until the next heading. More than
-one format uses that shape on purpose, so that a reader who knows one
-recognises the other without learning a second syntax (ADR-0015).
-
-This module finds the boundaries of a record and splits every field it
-carries **without knowing their names or how many there are**. It
-returns the identifier as written — junk included — the title, the
-fields, the body and the line. What a field means, which are required,
-which are retired, and whether an identifier is well-formed belong to
-whoever calls it (ADR-0019).
-
-What an identifier *looks* like is theirs too, and arrives as the
-`heading` pattern: the two formats number their entries differently,
-one in three parts and one in two, and neither grammar is a property
-of the shape. That pattern is meant to be a broad net — anything
-ID-shaped captured, junk included, judged loudly afterwards — because
-a malformed identifier must never be skipped silently.
-
-The errors it reports are the ones no caller can recover from: a
-metadata line with no colon, a duplicate key, a fence that never
-closes, a record with no metadata block at all.
+# SRS-DD-0.24.0 — the framework release this file came from
+# annotation removed on install
+# Copyright (c) 2026 CRELLIA S.L. — part of SRS-DD, distributed under the MIT License
+# annotation removed on install
+"""Reads the physical shape of a record — heading, fenced `yaml` block, body —
+and nothing about its meaning: field names, required keys and well-formed
+identifiers belong to the caller. It reports only what no
+caller can recover from: a metadata line without a colon, a duplicate key, an
+unterminated fence, a record with no metadata block.
 
 Standard library only, compatible with Python 3.9.
 """
 
-# annotation removed on install
+# file annotation removed on install
 
 import re
 
-# The framework's version, and not this module's: one number, stamped
-# by the installer into every file it writes and bumped by
-# tools/srs_release.py. It lives here because this is the one file both
-# checkers must have beside them — each exits 2 without it — and
-# ADR-0019 refuses to let the grounds checker import srs_check, which is
-# where the number used to live. Both re-export it, so everything that
-# read it from there reads it still (ADR-0021).
-__version__ = "0.20.1"
+# The framework's version, not this module's, kept in the one file every checker
+# must have beside it; each re-exports it.
+__version__ = "0.24.0"
 
 # annotation removed on install
-# The one thing every identifier grammar shares is its tail: a number of
-# three digits or more, written without a leading zero beyond the third,
-# so that `0100` is not a number and `100` and `1000` are. It lives here
-# because the three checkers and the viewer all read it, and a number
-# that widens in one grammar and not another would part them at the
-# thousandth (ADR-0028). The same is true of the order: a wider number
-# sorts wrongly as a string, so every tool orders by id_key and not by
-# the identifier itself.
+# What every identifier grammar shares: a tail of three digits or more, no
+# leading zero beyond the third, so `0100` is not a number.
 NUMBER = r"(?:\d{3}|[1-9]\d{3,})"
+# annotation removed on install
+# annotation removed on install
+# An area's name: uppercase words joined by single underscores, never by the
+# hyphen that separates an identifier's segments.
+AREA = r"[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)*"
+# annotation removed on install
 RE_NUMBER_TAIL = re.compile(r"-(\d+)$")
 
 
 def id_key(rid):
-    """The order of identifiers: the prefix as a string, then the number
-    as a number, so that FR-CORE-1000 follows FR-CORE-990 rather than
-    FR-CORE-100. An identifier with no number tail sorts by itself, after
-    nothing in particular."""
+    """Prefix as a string, number as a number, so FR-CORE-1000 follows FR-CORE-990
+    rather than FR-CORE-100."""
     match = RE_NUMBER_TAIL.search(rid)
     if not match:
         return (rid, -1)
@@ -79,17 +56,15 @@ def fence_len(line):
 
 
 def closer_len(line):
-    """Length of a bare closing fence; 0 for anything else. Per
-    CommonMark a closer carries no info string, so ```python can open a
-    block but never close one."""
+    """Length of a bare closing fence; 0 for anything else — per CommonMark a closer
+    carries no info string."""
     match = RE_FENCE_BARE.match(line)
     return len(match.group(1)) if match else 0
 
 
 def skip_fence(lines, index):
-    """`index` points at a fence opener; returns the index just past the
-    matching closing fence (or EOF). Per CommonMark, the closer is a
-    backtick run at least as long as the opener."""
+    """From a fence opener to just past its closer, which per CommonMark is a backtick
+    run at least as long."""
     opener = fence_len(lines[index])
     index += 1
     total = len(lines)
@@ -142,14 +117,11 @@ class Entry(object):
 
 
 def parse_entries(text, path, errors, heading):
-    """Every record in one file already held in memory.
+    """Every record in one file already held in memory; text rather than a path, so a
+    past revision is read the same way.
 
-    `heading` is a compiled pattern matching a record's opening line,
-    capturing two groups: the identifier and the title.
-
-    Works on text rather than a path so that a caller holding a past
-    revision — one read through `git show` — goes through the same
-    reading as a caller holding a file.
+    `heading` captures the identifier and the title, and is meant to be a broad net:
+    anything ID-shaped is captured for the caller to judge loudly.
     """
     lines = text.split("\n")
 
@@ -207,11 +179,8 @@ def parse_entries(text, path, errors, heading):
             entries.append(entry)
             continue
 
-        # Body: everything to the next heading. Fenced blocks are kept
-        # whole and their contents are never read — a `###` line inside
-        # an example block must not end the record, or the outer loop
-        # would resume on it and mint a phantom one. Where the body
-        # divides, and by what marker, is the caller's business.
+        # Body: everything to the next heading, fenced blocks kept whole and unread —
+        # a `###` inside an example would otherwise mint a phantom record.
         body = []
         while index < total:
             if RE_FENCE.match(lines[index]):

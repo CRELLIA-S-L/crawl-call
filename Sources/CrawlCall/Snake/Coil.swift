@@ -5,7 +5,7 @@
 // to fit, the snake shoves it out to where one does, over time and not in a frame
 // (ADR-0053).
 //
-// implements: FR-SNAKE-280, FR-SNAKE-285
+// file implements: FR-SNAKE-280, FR-SNAKE-285
 import Foundation
 
 struct Coil: Equatable {

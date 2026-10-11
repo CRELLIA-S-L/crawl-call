@@ -2,7 +2,7 @@
 // generated sphere is 8064 triangles at any size (Q-450), which is a great deal for an
 // eye a few centimetres across (FR-VIEW-260).
 //
-// implements: FR-VIEW-260
+// file implements: FR-VIEW-260
 import Foundation
 import RealityKit
 

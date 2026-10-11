@@ -187,7 +187,7 @@ derives_from: [FR-GREENHOLM-010]
 depends_on: [FR-MAP-120]
 refines: []
 conflicts_with: []
-code: [Sources/CrawlCall/Config/GreenholmConfiguration.swift, Sources/CrawlCall/Setting/Setting.swift, Sources/CrawlCall/Config/Resource.swift, Sources/CrawlCall/Launch.swift]
+code: [Sources/CrawlCall/Config/GreenholmConfiguration.swift, Sources/CrawlCall/Map/Setting.swift, Sources/CrawlCall/Config/Resource.swift, Sources/CrawlCall/Launch.swift]
 tests: [Tests/CrawlCallTests/SurroundingsTests.swift]
 created: 2026-09-24
 ```

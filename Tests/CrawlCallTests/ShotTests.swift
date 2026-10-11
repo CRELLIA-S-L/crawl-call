@@ -1,7 +1,7 @@
 // A round has to be visible (FR-VIEW-170): the model has to say where each round in
 // flight is, and the view has to put a streak on exactly that.
 //
-// verifies: FR-VIEW-170, FR-BOT-060
+// file verifies: FR-VIEW-170, FR-BOT-060
 import RealityKit
 import XCTest
 @testable import CrawlCall

@@ -1,6 +1,6 @@
 // The frame record's switch, its size and its file's shape (ART-070).
 //
-// implements: FR-TOOL-230, FR-TOOL-240
+// file implements: FR-TOOL-230, FR-TOOL-240
 import Foundation
 
 enum FrameRecording {

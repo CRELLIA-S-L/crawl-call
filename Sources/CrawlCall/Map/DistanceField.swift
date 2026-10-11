@@ -8,7 +8,7 @@
 // transform along every row, then along every column of the result, each in time
 // linear in its length, by the lower envelope of the parabolas rooted at the samples.
 //
-// implements: FR-MAP-200
+// file implements: FR-MAP-200
 import Foundation
 
 /// A grid of samples over the ground: `width` by `height` of them, `step` metres

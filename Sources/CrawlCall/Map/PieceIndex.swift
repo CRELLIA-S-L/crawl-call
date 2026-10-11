@@ -5,7 +5,7 @@
 // The index only narrows the list: a caller still asks each candidate the question it
 // asked before, so an answer through the index is the answer without it.
 //
-// implements: FR-BOT-050, FR-BOT-118
+// file implements: FR-BOT-050, FR-BOT-118
 import Foundation
 
 struct PieceIndex: Equatable {

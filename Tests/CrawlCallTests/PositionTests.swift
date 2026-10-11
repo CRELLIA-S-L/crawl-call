@@ -3,7 +3,7 @@
 // other held equal — and watched to move the worth of a position, then the cover and
 // the flight a bot chooses.
 //
-// verifies: FR-BOT-110, FR-BOT-115
+// file verifies: FR-BOT-110, FR-BOT-115
 import XCTest
 @testable import CrawlCall
 

@@ -3,7 +3,7 @@
 // round towards where a threat may be (FR-BOT-380) — and none of it ever outweighs
 // something that scores.
 //
-// verifies: FR-BOT-360, FR-BOT-370, FR-BOT-380
+// file verifies: FR-BOT-360, FR-BOT-370, FR-BOT-380
 import XCTest
 @testable import CrawlCall
 

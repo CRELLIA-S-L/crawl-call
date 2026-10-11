@@ -2,7 +2,7 @@
 // tuning (ART-070): how small a movement is no movement, how many times a step is
 // retried along what stopped it, how precisely a contact is found.
 //
-// implements: FR-SNAKE-010, FR-SNAKE-015, FR-SNAKE-020, FR-SNAKE-030, FR-SNAKE-220, FR-SNAKE-270, FR-SNAKE-280, FR-SNAKE-055, FR-SNAKE-016
+// file implements: FR-SNAKE-010, FR-SNAKE-015, FR-SNAKE-020, FR-SNAKE-030, FR-SNAKE-220, FR-SNAKE-270, FR-SNAKE-280, FR-SNAKE-055, FR-SNAKE-016
 import Foundation
 
 enum Motion {

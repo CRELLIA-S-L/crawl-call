@@ -12,7 +12,7 @@
 // Nothing here shields the snake: a stationary snake is a visible and damageable
 // one, which is the exposure the concept asks for.
 //
-// implements: FR-SNAKE-090, FR-SNAKE-100
+// file implements: FR-SNAKE-090, FR-SNAKE-100
 import Foundation
 
 struct Eating: Equatable {

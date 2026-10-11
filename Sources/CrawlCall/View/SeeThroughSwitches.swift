@@ -5,7 +5,7 @@
 // Debug mode is the Debug build configuration (ADR-0023): in any other build the
 // modifier passes the view through untouched and the switches are not compiled.
 //
-// implements: FR-TOOL-260, FR-TOOL-270
+// file implements: FR-TOOL-260, FR-TOOL-270
 import SwiftUI
 
 extension View {

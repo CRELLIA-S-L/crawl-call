@@ -1,0 +1,157 @@
+[
+  {
+    "from": "Sources/CrawlCall/Bot/Action.swift",
+    "to": "Sources/CrawlCall/Map/NavigationGraph.swift",
+    "via": "NavigationGraph:18 — one witness of 126 reference(s) from 11 file(s)"
+  },
+  {
+    "from": "Sources/CrawlCall/Bot/Awareness.swift",
+    "to": "Sources/CrawlCall/Config/Configurations.swift",
+    "via": "BotConfiguration:70 — one witness of 101 reference(s) from 10 file(s)"
+  },
+  {
+    "from": "Sources/CrawlCall/CrawlCallApp.swift",
+    "to": "Sources/CrawlCall/Config/Interface.swift",
+    "via": "GameWindow:77 — one witness of 20 reference(s) from 2 file(s)"
+  },
+  {
+    "from": "Sources/CrawlCall/CrawlCallApp.swift",
+    "to": "Sources/CrawlCall/Input/TouchScheme.swift",
+    "via": "TouchScheme:208 — one witness of 2 reference(s) from 1 file(s)"
+  },
+  {
+    "from": "Sources/CrawlCall/CrawlCallApp.swift",
+    "to": "Sources/CrawlCall/Map/World.swift",
+    "via": "World:106 — one witness of 12 reference(s) from 2 file(s)"
+  },
+  {
+    "from": "Sources/CrawlCall/CrawlCallApp.swift",
+    "to": "Sources/CrawlCall/Record/FrameRecorder.swift",
+    "via": "FrameRecorder:61 — one witness of 7 reference(s) from 1 file(s)"
+  },
+  {
+    "from": "Sources/CrawlCall/CrawlCallApp.swift",
+    "to": "Sources/CrawlCall/Setting/SceneryBuilder.swift",
+    "via": "SceneryBuilder:138 — one witness of 4 reference(s) from 2 file(s)"
+  },
+  {
+    "from": "Sources/CrawlCall/CrawlCallApp.swift",
+    "to": "Sources/CrawlCall/View/MatchHost.swift",
+    "via": "MatchHost:61 — one witness of 7 reference(s) from 1 file(s)"
+  },
+  {
+    "from": "Sources/CrawlCall/CrawlCallApp.swift",
+    "to": "Sources/CrawlCall/View/SceneBuilder.swift",
+    "via": "SceneBuilder:134 — one witness of 6 reference(s) from 1 file(s)"
+  },
+  {
+    "from": "Sources/CrawlCall/Game.swift",
+    "to": "Sources/CrawlCall/Bot/Bot.swift",
+    "via": "Bot:27 — one witness of 21 reference(s) from 1 file(s)"
+  },
+  {
+    "from": "Sources/CrawlCall/Game.swift",
+    "to": "Sources/CrawlCall/Config/Motion.swift",
+    "via": "Motion:85 — one witness of 49 reference(s) from 4 file(s)"
+  },
+  {
+    "from": "Sources/CrawlCall/Game.swift",
+    "to": "Sources/CrawlCall/Input/Intent.swift",
+    "via": "Intent:90 — one witness of 2 reference(s) from 2 file(s)"
+  },
+  {
+    "from": "Sources/CrawlCall/Game.swift",
+    "to": "Sources/CrawlCall/Map/World.swift",
+    "via": "World:21 — one witness of 10 reference(s) from 1 file(s)"
+  },
+  {
+    "from": "Sources/CrawlCall/Game.swift",
+    "to": "Sources/CrawlCall/Snake/Snake.swift",
+    "via": "Snake:25 — one witness of 19 reference(s) from 2 file(s)"
+  },
+  {
+    "from": "Sources/CrawlCall/GameSession.swift",
+    "to": "Sources/CrawlCall/View/SeeThrough.swift",
+    "via": "SeeThrough:24 — one witness of 23 reference(s) from 1 file(s)"
+  },
+  {
+    "from": "Sources/CrawlCall/Input/Intent.swift",
+    "to": "Sources/CrawlCall/Config/IntentName.swift",
+    "via": "IntentName:25 — one witness of 10 reference(s) from 2 file(s)"
+  },
+  {
+    "from": "Sources/CrawlCall/Map/DistanceField.swift",
+    "to": "Sources/CrawlCall/Config/Surroundings.swift",
+    "via": "Distances:33 — one witness of 216 reference(s) from 11 file(s)"
+  },
+  {
+    "from": "Sources/CrawlCall/Setting/Birds.swift",
+    "to": "Sources/CrawlCall/Config/Surroundings.swift",
+    "via": "BirdShape:49 — one witness of 112 reference(s) from 5 file(s)"
+  },
+  {
+    "from": "Sources/CrawlCall/Setting/FrameCoverage.swift",
+    "to": "Sources/CrawlCall/Map/ScenePlan.swift",
+    "via": "ScenePlan:33 — one witness of 23 reference(s) from 4 file(s)"
+  },
+  {
+    "from": "Sources/CrawlCall/Setting/FrameCoverage.swift",
+    "to": "Sources/CrawlCall/View/SceneView.swift",
+    "via": "SceneView:36 — one witness of 2 reference(s) from 2 file(s)"
+  },
+  {
+    "from": "Sources/CrawlCall/Snake/Coil.swift",
+    "to": "Sources/CrawlCall/Config/Configurations.swift",
+    "via": "SnakeConfiguration:30 — one witness of 110 reference(s) from 5 file(s)"
+  },
+  {
+    "from": "Sources/CrawlCall/Snake/Eating.swift",
+    "to": "Sources/CrawlCall/Bot/Archetype.swift",
+    "via": "Archetype:25 — one witness of 4 reference(s) from 2 file(s)"
+  },
+  {
+    "from": "Sources/CrawlCall/Snake/Surfaces.swift",
+    "to": "Sources/CrawlCall/Map/NavigationGraph.swift",
+    "via": "NavigationGraph:13 — one witness of 34 reference(s) from 1 file(s)"
+  },
+  {
+    "from": "Sources/CrawlCall/View/BotEntity.swift",
+    "to": "Sources/CrawlCall/Bot/Bot.swift",
+    "via": "Bot:23 — one witness of 19 reference(s) from 3 file(s)"
+  },
+  {
+    "from": "Sources/CrawlCall/View/BotEntity.swift",
+    "to": "Sources/CrawlCall/Config/EntityName.swift",
+    "via": "EntityName:25 — one witness of 275 reference(s) from 14 file(s)"
+  },
+  {
+    "from": "Sources/CrawlCall/View/ChoicePlate.swift",
+    "to": "Sources/CrawlCall/Config/TextKey.swift",
+    "via": "TextKey:12 — one witness of 59 reference(s) from 6 file(s)"
+  },
+  {
+    "from": "Sources/CrawlCall/View/Controls.swift",
+    "to": "Sources/CrawlCall/Input/TouchScheme.swift",
+    "via": "TouchScheme:62 — one witness of 3 reference(s) from 2 file(s)"
+  },
+  {
+    "from": "Sources/CrawlCall/View/FreeCamera.swift",
+    "to": "Sources/CrawlCall/Map/ScenePlan.swift",
+    "via": "ScenePlan:30 — one witness of 12 reference(s) from 4 file(s)"
+  },
+  {
+    "from": "Sources/CrawlCall/View/FreeCameraControls.swift",
+    "to": "Sources/CrawlCall/GameSession.swift",
+    "via": "GameSession:21 — one witness of 9 reference(s) from 4 file(s)"
+  },
+  {
+    "from": "Sources/CrawlCall/View/LungePose.swift",
+    "to": "Sources/CrawlCall/Snake/Lunge.swift",
+    "via": "Lunge:20 — one witness of 2 reference(s) from 2 file(s)"
+  },
+  {
+    "from": "Sources/PromptBench/PromptVariants.swift",
+    "to": "Sources/CrawlCall/Map/Kit.swift",
+    "via": "Kit:16 — one witness of 4 reference(s) from 1 file(s)"
+  }
+]

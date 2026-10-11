@@ -7,7 +7,7 @@
 // is, and when debris stops blocking sight (FR-MAP-040) this is the one place that
 // learns about it.
 //
-// implements: FR-VIEW-150, FR-BOT-050, FR-MAP-220, FR-BOT-405
+// file implements: FR-VIEW-150, FR-BOT-050, FR-MAP-220, FR-BOT-405
 import Foundation
 
 enum Sight {

@@ -4,7 +4,7 @@
 // `config/setting/`, so that a new one is added beside the others and changes none of
 // them (ADR-0031).
 //
-// implements: FR-MAP-120, FR-MAP-130, IF-GREENHOLM-010, FR-TOOL-200, FR-MAP-260
+// file implements: FR-MAP-120, FR-MAP-200, IF-GREENHOLM-010, FR-TOOL-200, FR-MAP-260
 import Foundation
 
 /// A setting the game provides, with what it was configured with.
@@ -38,18 +38,21 @@ enum Setting: Equatable {
 
     /// The setting's edge round a plan's ground floor (FR-MAP-200), as the drawing
     /// makes it; nil where there is no ground floor.
+    ///
+    /// Computed here rather than asked of the setting's scenery: the edge is what play
+    /// reads — the passage check asks it where the ground ends — and the scenery is what
+    /// play may not read at all (FR-MAP-130, ADR-0073).
     func edge(around plan: ScenePlan) -> Outline? {
         switch self {
-        case .greenholm(let configuration): return Greenholm.edge(around: plan, configuration: configuration)
-        }
-    }
-
-    /// The scenery the setting draws around an arena, for a camera that can take any
-    /// of the range given (FR-MAP-140).
-    func scenery(around plan: ScenePlan, camera: CameraRange) throws -> Scenery {
-        switch self {
-        case .greenholm(let configuration):
-            return try Greenholm.scenery(around: plan, camera: camera, configuration: configuration)
+        // Greenholm's edge: the ground floor's cells are the island, and the cells of
+        // floors below it are basements, which the island's ground leaves open to be
+        // seen into.
+        case .greenholm(let c):
+            guard let groundLevel = plan.groundLevel else { return nil }
+            return Outline.around(plan.cells { $0 == groundLevel }, basement: plan.cells { $0 < groundLevel },
+                                  cellSize: plan.cellSize, margin: c.edgeMargin, rounding: c.edgeRounding,
+                                  reach: c.shoreWidth + max(c.foamWidth, .zero) + max(c.floorWidth, .zero)
+                                      + OutlineGrid.pad)
         }
     }
 }

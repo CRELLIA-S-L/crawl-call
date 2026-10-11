@@ -5,11 +5,14 @@
 // and shrubs are the map's modules now, not a ring of scenery (FR-MAP-210, ADR-0034).
 // Laid out here as parts and surfaces; built in `SceneryBuilder`.
 //
-// implements: FR-GREENHOLM-010, FR-GREENHOLM-020, FR-GREENHOLM-030, FR-GREENHOLM-050, FR-GREENHOLM-060, FR-GREENHOLM-070, FR-MAP-130, FR-MAP-140, FR-MAP-170, FR-MAP-200, FR-MAP-260, FR-MAP-270, FR-MAP-280
+// file implements: FR-GREENHOLM-010, FR-GREENHOLM-020, FR-GREENHOLM-030, FR-GREENHOLM-050, FR-GREENHOLM-060, FR-GREENHOLM-070, FR-MAP-130, FR-MAP-140, FR-MAP-170, FR-MAP-200, FR-MAP-260, FR-MAP-270, FR-MAP-280
 import Foundation
 
 enum Greenholm {
-    static func scenery(around plan: ScenePlan, camera: CameraRange,
+    /// The island's scenery, drawn along the edge it is given rather than one it works
+    /// out for itself: where the ground ends is what play reads (FR-MAP-200), so it is
+    /// computed by the part that owns it and handed here (ADR-0073).
+    static func scenery(around plan: ScenePlan, camera: CameraRange, edge outline: Outline?,
                         configuration c: GreenholmConfiguration) throws -> Scenery {
         let arena = plan.bounds
         // The island's ground lies just under the surface of floor 0, the ground
@@ -35,7 +38,7 @@ enum Greenholm {
         var parts: [Scenery.Part] = []
         var surfaces: [Scenery.Surface] = []
         var patch = GroundRect(lowest: covered.lowest, highest: covered.lowest)
-        if let outline = edge(around: plan, configuration: c) {
+        if let outline {
             let grid = outline.grid
             surfaces.append(.init(layer: .ground, colour: c.grassColour.rgb,
                                   mesh: Outline.surface(where: outline.region(atLeast: .zero, sparingBasements: true),
@@ -96,14 +99,21 @@ enum Greenholm {
                                      strength: c.rippleStrength, slope: c.rippleSlope))
     }
 
-    /// The island's edge round a plan (FR-MAP-200): the ground floor's cells are the
-    /// island, and the cells of floors below it are basements, which the island's
-    /// ground leaves open to be seen into. Nil for a plan with no ground floor.
-    static func edge(around plan: ScenePlan, configuration c: GreenholmConfiguration) -> Outline? {
-        guard let groundLevel = plan.groundLevel else { return nil }
-        return Outline.around(plan.cells { $0 == groundLevel }, basement: plan.cells { $0 < groundLevel },
-                              cellSize: plan.cellSize, margin: c.edgeMargin, rounding: c.edgeRounding,
-                              reach: c.shoreWidth + max(c.foamWidth, .zero) + max(c.floorWidth, .zero)
-                                  + OutlineGrid.pad)
+}
+
+extension Setting {
+    /// The scenery the setting draws around an arena, for a camera that can take any
+    /// of the range given (FR-MAP-140).
+    ///
+    /// The dispatch lives with the scenery rather than with the setting's own file,
+    /// because what a setting *is* — its name, its configuration and where its ground
+    /// ends — is read by play, while what it draws is read by nothing below the view
+    /// (FR-MAP-130, ADR-0073).
+    func scenery(around plan: ScenePlan, camera: CameraRange) throws -> Scenery {
+        switch self {
+        case .greenholm(let configuration):
+            return try Greenholm.scenery(around: plan, camera: camera, edge: edge(around: plan),
+                                         configuration: configuration)
+        }
     }
 }

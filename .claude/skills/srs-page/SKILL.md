@@ -2,13 +2,14 @@
 name: srs-page
 description: Render the specification as one self-contained HTML page and open it — for reading rather than grepping, and for handing to somebody who will never clone the repository. Invoke when the user asks to see, show, open, render or share the specification, the requirements or the documentation as a page.
 ---
+<!-- Copyright (c) 2026 CRELLIA S.L. — part of SRS-DD, distributed under the MIT License -->
 
 # Reading the specification as a page
 
 One command renders it and opens it:
 
 ```
-python3 tools/srs_view.py --open
+python3 srs-dd/tools/srs_view.py --open
 ```
 
 It writes `.srs-site/index.html` — the directory ignores itself, so nothing lands in the project's history — and opens it in the reader's browser.
@@ -23,18 +24,28 @@ That is what makes it the answer for a reviewer, a new joiner, or anyone outside
 **Links to code work only if the page knows where the code lives.** Pass the forge address once:
 
 ```
-python3 tools/srs_view.py --html public/index.html \
+python3 srs-dd/tools/srs_view.py --html public/index.html \
     --repo-url https://github.com/<owner>/<repo>/blob/<sha>
 ```
 
 Without it the paths are still shown, they just do not lead anywhere.
 
-**CI may already publish it.** The templates in `ci/` render the same page from the default branch, so a link may exist that is always current — check before mailing a copy that will be stale next week.
+**The layers have pages of their own.** Where the project keeps them, `python3 srs-dd/tools/srs_arch_doc.py --html` prints the architecture — the parts, what each answers for, the dependency diagram drawn as an image — and `python3 srs-dd/tools/srs_grounds.py --html` prints the grounds dashboard. Both print to stdout, so the caller decides where they land, and the published set is `index.html`, `arch.html`, `grounds.html` side by side. Tell each page which others are beside it, or it links none of them:
+
+```
+python3 srs-dd/tools/srs_view.py --html site/index.html --link arch.html,grounds.html
+python3 srs-dd/tools/srs_arch_doc.py --html --link index.html,grounds.html > site/arch.html
+python3 srs-dd/tools/srs_grounds.py --html --link index.html,arch.html > site/grounds.html
+```
+
+A name that is not one of the three, or the page's own, is refused rather than carried: a link exists because somebody said that file will be there.
+
+**CI may already publish it.** The templates in `ci/` render the same pages as a build artifact — the GitLab one from the default branch, the GitHub one on every run, for whichever layers the project keeps — and each says how to switch on publishing them through Pages, so a link may exist that is always current — check before mailing a copy that will be stale next week.
 
 **Baselines need history.** The page compares frozen states by reading the commits behind them; a shallow checkout has none, and the page says so instead of pretending there are none.
 
 ## When it is the wrong tool
 
 For a question about one requirement — what it links to, what breaks if it changes — the terminal answers faster:
-`python3 tools/srs_view.py <ID>`, or `--code <path>` from the other end.
+`python3 srs-dd/tools/srs_view.py <ID>`, or `--code <path>` from the other end.
 The page is for reading a specification, not for interrogating it.

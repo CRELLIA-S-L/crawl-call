@@ -7,7 +7,7 @@
 // configuration (IF-MAP-020) and the kit's floor height, so the graph's cells and the
 // geometry cannot drift apart.
 //
-// implements: FR-TOOL-020, FR-MAP-090, FR-MAP-150, FR-MAP-170, FR-MAP-220
+// file implements: FR-TOOL-020, FR-MAP-090, FR-MAP-150, FR-MAP-170, FR-MAP-220
 import Foundation
 
 struct ScenePlan: Equatable {

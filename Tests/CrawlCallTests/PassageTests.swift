@@ -3,7 +3,7 @@
 // sees with where the snake can be; the cases here are the places that were found
 // before the rule was general, and the places that must stay allowed.
 //
-// verifies: FR-MAP-260
+// file verifies: FR-MAP-260
 import XCTest
 @testable import CrawlCall
 

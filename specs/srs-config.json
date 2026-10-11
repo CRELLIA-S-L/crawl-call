@@ -12,7 +12,8 @@
     "GREENHOLM"
   ],
   "code_roots": [
-    "Sources"
+    "Sources",
+    "scripts"
   ],
   "test_roots": [
     "Tests"
@@ -20,7 +21,8 @@
   "code_extensions": [
     ".swift",
     ".py",
-    ".metal"
+    ".metal",
+    ".sh"
   ],
   "modal_verbs": [
     "shall",

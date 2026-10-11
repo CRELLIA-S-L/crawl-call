@@ -14,7 +14,7 @@
 // dim when nobody is (FR-SNAKE-270). It is where the right thumb rests, and only a
 // sign: the whole half is what answers.
 //
-// implements: FR-VIEW-050, FR-VIEW-120, FR-VIEW-160, FR-VIEW-200
+// file implements: FR-VIEW-050, FR-VIEW-120, FR-VIEW-160, FR-VIEW-200
 import SwiftUI
 
 struct Controls: View {

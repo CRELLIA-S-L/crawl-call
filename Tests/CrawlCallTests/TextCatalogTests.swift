@@ -7,7 +7,7 @@
 // bundle carries. What the game controls is which languages it carries and which one
 // it was developed in — so that is what these tests hold, through the same call.
 //
-// verifies: IF-VIEW-030, FR-VIEW-200
+// file verifies: IF-VIEW-030, FR-VIEW-200
 import XCTest
 @testable import CrawlCall
 

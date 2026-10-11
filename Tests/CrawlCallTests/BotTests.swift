@@ -2,7 +2,7 @@
 // archetypes (FR-BOT-010), the two squads (FR-BOT-020) at the island's two ends
 // (FR-BOT-350), and the personality an archetype hands its bot (FR-BOT-030).
 //
-// verifies: FR-BOT-010, FR-BOT-020, FR-BOT-350, FR-BOT-030, INV-BOT-030
+// file verifies: FR-BOT-010, FR-BOT-020, FR-BOT-350, FR-BOT-030, INV-BOT-030
 import XCTest
 @testable import CrawlCall
 

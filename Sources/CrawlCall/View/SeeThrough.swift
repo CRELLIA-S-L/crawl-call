@@ -12,7 +12,7 @@
 // The looks of a module are made once, when the map is built, and swapped as the
 // rules change their mind: a material is cheap to keep and not cheap to make.
 //
-// implements: FR-VIEW-140, FR-VIEW-150, FR-VIEW-155, FR-TOOL-230, FR-TOOL-260, FR-TOOL-270
+// file implements: FR-VIEW-140, FR-VIEW-150, FR-VIEW-155, FR-TOOL-230, FR-TOOL-260, FR-TOOL-270
 import CoreGraphics
 import Foundation
 import Metal

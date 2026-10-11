@@ -3,7 +3,7 @@
 // fits, at no more than the shove speed. Geometry is compared within a tolerance, never
 // for equality (`specs/50-verification.md`).
 //
-// verifies: FR-SNAKE-280, FR-SNAKE-285
+// file verifies: FR-SNAKE-280, FR-SNAKE-285
 import XCTest
 @testable import CrawlCall
 

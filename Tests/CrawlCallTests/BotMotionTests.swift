@@ -1,7 +1,7 @@
 // A bot gathers speed and slows to a stop (FR-BOT-290), and bots do not pass through
 // one another (FR-BOT-300): walked frame by frame over the shipped map.
 //
-// verifies: FR-BOT-290, FR-BOT-300, FR-BOT-280
+// file verifies: FR-BOT-290, FR-BOT-300, FR-BOT-280
 import XCTest
 @testable import CrawlCall
 

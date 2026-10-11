@@ -16,7 +16,7 @@
 // colour or the entity renders white; custom_parameter() carries a value RealityKit
 // gives no meaning to.
 //
-// implements: FR-VIEW-150, FR-VIEW-155
+// file implements: FR-VIEW-150, FR-VIEW-155
 #include <RealityKit/RealityKit.h>
 
 using namespace metal;

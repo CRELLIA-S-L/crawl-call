@@ -5,7 +5,7 @@
 // they are six different ones and that the figure is built the way that judgement
 // assumes.
 //
-// verifies: FR-VIEW-060, FR-VIEW-070, FR-VIEW-240
+// file verifies: FR-VIEW-060, FR-VIEW-070, FR-VIEW-240
 import RealityKit
 import XCTest
 @testable import CrawlCall

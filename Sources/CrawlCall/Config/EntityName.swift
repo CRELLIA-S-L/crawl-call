@@ -2,7 +2,7 @@
 // part of the scene finds another — the match looks the camera up by it — so it is
 // declared once and not spelled at each end.
 //
-// implements: FR-TOOL-020, FR-VIEW-020, FR-VIEW-100, FR-VIEW-170, FR-MAP-130, FR-GREENHOLM-030, FR-VIEW-260, FR-VIEW-290
+// file implements: FR-TOOL-020, FR-VIEW-020, FR-VIEW-100, FR-VIEW-170, FR-MAP-130, FR-GREENHOLM-030, FR-VIEW-260, FR-VIEW-290
 import Foundation
 
 enum EntityName {

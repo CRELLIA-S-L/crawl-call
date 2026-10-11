@@ -6,7 +6,7 @@
 // Heights are the graph's: a cell's surface is its node's, which on a flight of stairs
 // is not its floor's (FR-MAP-020, FR-MAP-150, ADR-0033).
 //
-// implements: FR-MAP-025, FR-SNAKE-010, FR-SNAKE-020, FR-SNAKE-220, FR-MAP-150, FR-MAP-020, FR-MAP-220, FR-SNAKE-260, FR-SNAKE-016
+// file implements: FR-MAP-025, FR-SNAKE-010, FR-SNAKE-020, FR-SNAKE-220, FR-MAP-150, FR-MAP-020, FR-MAP-220, FR-SNAKE-260, FR-SNAKE-016
 import Foundation
 
 struct Surfaces {

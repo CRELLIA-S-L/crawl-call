@@ -8,7 +8,7 @@
 // colour at depth. The contract is the SDK's own (RealityKitSurfaceShader.h, iOS 27.0
 // SDK), as for the water above it (WaterRipple.metal).
 //
-// implements: FR-MAP-270
+// file implements: FR-MAP-270
 #include <RealityKit/RealityKit.h>
 
 using namespace metal;

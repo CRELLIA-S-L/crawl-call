@@ -67,4 +67,4 @@ The convention of this project:
 | **thermal budget** | The limit set by iPhone throttling after 10–15 minutes of rendering plus on-device inference; the reason for 4v4, staggered commander phases and a degradation path. |
 | **AFM** | Apple Foundation Models — the on-device system language model called through guided generation (`@Generable`). |
 | **RCP** | Reality Composer Pro, the level editor. |
-| **SRS-DD** | The specification framework this repository follows; `specs/README.md` is its standard. |
+| **SRS-DD** | The specification framework this repository follows; `srs-dd/standard.md` is its standard. |

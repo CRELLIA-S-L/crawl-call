@@ -2,7 +2,7 @@
 // as it stops, beats with the ground covered and not with the clock, and poses the
 // figure — lifted, rocking, legs swinging against each other — on screen.
 //
-// verifies: FR-VIEW-290
+// file verifies: FR-VIEW-290
 import RealityKit
 import XCTest
 @testable import CrawlCall

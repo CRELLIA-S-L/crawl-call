@@ -1,6 +1,6 @@
 // The shape check ADR-0012 asks for: an unknown key is an error, not a silent default.
 //
-// verifies: IF-SNAKE-010, IF-MAP-020, IF-VIEW-020, IF-BOT-010
+// file verifies: IF-SNAKE-010, IF-MAP-020, IF-VIEW-020, IF-BOT-010
 import XCTest
 @testable import CrawlCall
 

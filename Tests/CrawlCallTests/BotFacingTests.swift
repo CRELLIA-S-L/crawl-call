@@ -2,7 +2,7 @@
 // what it fires at, no faster than the turn speed; the two squads start facing each
 // other; and the figure on screen faces as the model does.
 //
-// verifies: FR-BOT-280, FR-BOT-430
+// file verifies: FR-BOT-280, FR-BOT-430
 import RealityKit
 import XCTest
 @testable import CrawlCall

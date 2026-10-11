@@ -3,7 +3,7 @@
 // when the lock comes or goes and resumed by one press — and the real scene the suite
 // runs in built that way, not a copy of it.
 //
-// verifies: FR-VIEW-210, FR-VIEW-220, FR-VIEW-230, FR-VIEW-155, FR-TOOL-270
+// file verifies: FR-VIEW-210, FR-VIEW-220, FR-VIEW-230, FR-VIEW-155, FR-TOOL-270
 import RealityKit
 import SwiftUI
 import UIKit

@@ -3,7 +3,7 @@
 // match ends, the app leaves the foreground or it is asked to terminate (FR-TOOL-230,
 // FR-TOOL-240). Exists only when the launch switched the record on.
 //
-// implements: FR-TOOL-230, FR-TOOL-240
+// file implements: FR-TOOL-230, FR-TOOL-240
 import Foundation
 
 @MainActor

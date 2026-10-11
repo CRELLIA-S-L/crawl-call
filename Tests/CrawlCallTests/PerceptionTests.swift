@@ -1,7 +1,7 @@
 // A bot notices the snake when something of it is close enough and nothing stands in
 // the way (FR-BOT-050), over a map built here so that what is in the way is known.
 //
-// verifies: FR-BOT-050
+// file verifies: FR-BOT-050
 import XCTest
 @testable import CrawlCall
 

@@ -6,7 +6,7 @@
 // session says where the camera goes, and this is the arithmetic between, which a test
 // can read.
 //
-// implements: FR-TOOL-070
+// file implements: FR-TOOL-070
 import Foundation
 
 struct FreeCamera: Equatable {

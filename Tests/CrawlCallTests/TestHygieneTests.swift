@@ -3,7 +3,7 @@
 // (specs/50-verification.md, "A test that fails reports a failure, never a crash").
 // Without this the rule would hold only as long as everybody remembered it.
 //
-// verifies: FR-TOOL-280
+// file verifies: FR-TOOL-280
 //
 // The source is read as text: comments and string literals are passed over, and the
 // code inside a string's interpolation is read as code. An implicitly unwrapped

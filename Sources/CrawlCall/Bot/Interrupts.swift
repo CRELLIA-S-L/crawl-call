@@ -7,7 +7,7 @@
 // occupies being destroyed (FR-MAP-030), a snake-marked body (FR-SCORE-120) and an order
 // (FR-CMD-040). They join here when those are built.
 //
-// implements: FR-BOT-170
+// file implements: FR-BOT-170
 import Foundation
 
 /// Why a bot was given a slot ahead of the queue.

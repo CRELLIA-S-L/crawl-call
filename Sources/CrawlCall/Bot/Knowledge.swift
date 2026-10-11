@@ -3,7 +3,7 @@
 // A bot acts on this and on nothing else (FR-BOT-220): the truth is the world's, the
 // record is the bot's.
 //
-// implements: FR-BOT-050, FR-BOT-360, FR-BOT-220, FR-BOT-230, FR-BOT-240, FR-BOT-250, FR-BOT-260, FR-BOT-310, FR-BOT-320, FR-BOT-330
+// file implements: FR-BOT-050, FR-BOT-360, FR-BOT-220, FR-BOT-230, FR-BOT-240, FR-BOT-250, FR-BOT-260, FR-BOT-310, FR-BOT-320, FR-BOT-330
 import Foundation
 
 struct Knowledge: Equatable {

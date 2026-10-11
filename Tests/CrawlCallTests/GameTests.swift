@@ -1,7 +1,7 @@
 // The logic's edge: intents in, a snake moving, and nothing about touches anywhere
 // near it (FR-VIEW-030).
 //
-// verifies: FR-VIEW-030, FR-SNAKE-030
+// file verifies: FR-VIEW-030, FR-SNAKE-030
 import RealityKit
 import XCTest
 @testable import CrawlCall
@@ -230,3 +230,4 @@ final class SnakeEntityTests: XCTestCase {
         XCTAssertEqual(entity.children.filter { $0.name == "body" }.count, 1, "an old body was left behind")
     }
 }
+// srs-end: FR-SNAKE-010

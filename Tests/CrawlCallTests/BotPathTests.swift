@@ -2,7 +2,7 @@
 // for its body, and routes walked on the shipped map — straight across open floor,
 // cell by cell round what is in the way, never over a cell nobody can stand on.
 //
-// verifies: FR-BOT-270
+// file verifies: FR-BOT-270
 import simd
 import XCTest
 @testable import CrawlCall

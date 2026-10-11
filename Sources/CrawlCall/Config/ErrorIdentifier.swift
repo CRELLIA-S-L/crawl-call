@@ -8,7 +8,7 @@
 // the "unique across the game" the requirement asks for, kept by the language instead
 // of by a test.
 //
-// implements: FR-TOOL-200
+// file implements: FR-TOOL-200
 import Foundation
 
 enum ErrorIdentifier: String, CaseIterable {

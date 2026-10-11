@@ -6,7 +6,7 @@
 // otherwise build and throw away a mesh several times a second for every bot in the
 // match.
 //
-// implements: FR-VIEW-170, FR-VIEW-240
+// file implements: FR-VIEW-170, FR-VIEW-240
 import Foundation
 import RealityKit
 

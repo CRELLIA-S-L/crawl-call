@@ -6,7 +6,7 @@
 // a map does say: which cells are walkable, where they lie, and which of them the
 // snake's start reaches. When a map gains squad areas, they replace the ends.
 //
-// implements: FR-BOT-020, FR-BOT-350, INV-BOT-030, FR-MAP-150, FR-BOT-280, FR-BOT-250
+// file implements: FR-BOT-020, FR-BOT-350, INV-BOT-030, FR-MAP-150, FR-BOT-280, FR-BOT-250
 import Foundation
 
 enum Squads {

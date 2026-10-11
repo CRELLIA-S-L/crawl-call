@@ -3,7 +3,7 @@
 // back on the snake by a button (ADR-0023). The gestures themselves are UIKit's and are
 // tried on the phone; what they are turned into is tested here.
 //
-// verifies: FR-TOOL-070
+// file verifies: FR-TOOL-070
 import RealityKit
 import XCTest
 @testable import CrawlCall

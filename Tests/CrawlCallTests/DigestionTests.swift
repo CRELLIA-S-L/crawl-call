@@ -2,7 +2,7 @@
 // head as the prey goes in, then travels down the body and is gone past the tail's
 // end; the body swells round it, and no more triangles are drawn for it.
 //
-// verifies: FR-VIEW-280
+// file verifies: FR-VIEW-280
 import RealityKit
 import simd
 import XCTest

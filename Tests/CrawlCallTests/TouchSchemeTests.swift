@@ -1,6 +1,6 @@
 // Touch to intent (FR-VIEW-050).
 //
-// verifies: FR-VIEW-050, IF-VIEW-010
+// file verifies: FR-VIEW-050, IF-VIEW-010
 import XCTest
 @testable import CrawlCall
 

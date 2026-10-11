@@ -1,7 +1,7 @@
 // The map file as IF-MAP-010 describes it, and FR-TOOL-010's other half: a file that
 // is wrong is rejected naming the line and the reason.
 //
-// verifies: IF-MAP-010, FR-TOOL-010, FR-MAP-100, FR-MAP-120, FR-MAP-150
+// file verifies: IF-MAP-010, FR-TOOL-010, FR-MAP-100, FR-MAP-120, FR-MAP-150
 import XCTest
 @testable import CrawlCall
 
@@ -282,6 +282,7 @@ final class ShippedMapTests: XCTestCase {
         }
     }
 }
+// srs-end: IF-MAP-010
 
 /// `kitName` reads the header on its own, before the legend is in hand, so that the
 /// game knows which kit to load. Two readers of one header can drift apart; these
@@ -330,3 +331,4 @@ final class MapHeaderTests: XCTestCase {
         XCTAssertEqual(try MapParser.kitName(in: windows), "blockout")
     }
 }
+// srs-end: IF-MAP-010

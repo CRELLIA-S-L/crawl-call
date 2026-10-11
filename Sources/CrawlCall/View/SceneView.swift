@@ -2,7 +2,7 @@
 // by. Separate from the map layer because they answer a different question — the map
 // is what the arena is, this is how it reaches the player.
 //
-// implements: FR-VIEW-010, FR-VIEW-020, FR-VIEW-130, FR-TOOL-200, IF-VIEW-020, FR-VIEW-210
+// file implements: FR-VIEW-010, FR-VIEW-020, FR-VIEW-130, FR-TOOL-200, IF-VIEW-020, FR-VIEW-210
 import CoreGraphics
 import Foundation
 import RealityKit

@@ -1,24 +1,23 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# SRS-DD-0.20.1 — the framework release this file came from
+# SRS-DD-0.24.0 — the framework release this file came from
+# annotation removed on install
+# Copyright (c) 2026 CRELLIA S.L. — part of SRS-DD, distributed under the MIT License
+# annotation removed on install
 """Write into each requirement the date its identifier first appeared.
 
-    python3 tools/srs_dates.py             date what is undated
-    python3 tools/srs_dates.py --dry-run   say what would be written
+    python3 srs-dd/tools/srs_dates.py             date what is undated
+    python3 srs-dd/tools/srs_dates.py --dry-run   say what would be written
 
-The date git already holds, written into the block once so that every
-lifecycle reading afterwards comes off the file rather than out of the log.
-Requirements that already carry a `created` date are left exactly as they
-are, which is what makes a second run cost nothing.
-
-This is the one command that writes requirement blocks. It is run on
-purpose, by a person, the way a baseline is frozen — never by a gate, a
-hook or an installer.
+The date git already holds, written into the block once so later readings come off
+the file. A requirement that carries `created` is left alone, so a second run costs
+nothing. The one command that writes requirement blocks, run by a person and never
+by a gate, a hook or an installer.
 
 Standard library only, compatible with Python 3.9.
 """
 
-# annotation removed on install
+# file annotation removed on install
 
 import os
 import re
@@ -32,7 +31,7 @@ import srs_check                                            # noqa: E402
 import srs_parse                                            # noqa: E402
 
 ROOT = srs_check.ROOT
-RE_ADDED = re.compile(r"^\+### ([A-Za-z][A-Za-z0-9]*-[A-Za-z][A-Za-z0-9]*-\d+)\s")
+RE_ADDED = re.compile(r"^\+### ([A-Za-z][A-Za-z0-9]*-[A-Za-z][A-Za-z0-9_]*-\d+)\s")   # annotation removed on install
 RE_HEADING = srs_check.RE_HEADING
 RE_FENCE_OPEN = re.compile(r"^\s*```+\s*yaml\s*$")
 RE_FENCE_CLOSE = re.compile(r"^\s*```+\s*$")
@@ -41,12 +40,9 @@ RE_CREATED = re.compile(r"^\s*created\s*:")
 
 
 def first_seen(paths):
-    """{identifier: date} from one pass over the history, or a problem.
-
-    One subprocess and one stream rather than a revision-by-revision walk:
-    the naive shape costs a `git show` per file per revision and takes
-    tens of seconds on a small specification.
-    """
+    """{identifier: date} from one pass over the history, or a problem: one subprocess and
+    one stream, where a revision-by-revision walk costs a `git show` per file per
+    revision."""
     def git(*args):
         return subprocess.check_output(
             ["git", "-C", ROOT] + list(args),
@@ -72,13 +68,10 @@ def first_seen(paths):
 
 
 def date_file(path, born, dry_run):
-    """Writes `created` into every undated block. Returns what it dated.
+    """Writes `created` into every undated block; returns what it dated.
 
-    Fenced blocks are stepped over whole, at both levels: a file may
-    document the format with an example requirement inside a fence, and
-    that example is not a requirement — fence opacity is the rule that
-    makes the checker agree, and a tool that edits the same files has to
-    agree with it or it edits documentation.
+    Fenced blocks are stepped over whole at both levels: an example inside a fence is
+    documentation, and the checker reads it the same way.
     """
     with open(path, "r", encoding="utf-8") as handle:
         lines = handle.read().split("\n")
@@ -166,11 +159,13 @@ def main():
     undated = [rid for _full, rel in files
                for rid in [r.id for r in srs_check.parse_file(_full, rel, [])]
                if rid not in born]
+    # annotation removed on install
     if undated:
         sys.stdout.write(
             "\nNot in the history and therefore not dated: %s. A requirement "
             "that has never been committed has no first appearance to "
             "read.\n" % ", ".join(sorted(set(undated), key=srs_parse.id_key)))
+    # annotation removed on install
 
     verb = "would be dated" if "--dry-run" in flags else "dated"
     sys.stdout.write("\n%d requirement(s) %s. (srs_dates %s)\n"

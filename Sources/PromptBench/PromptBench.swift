@@ -4,7 +4,7 @@
 // potentially harmful prompt inputs that you can run as part of your app's tests… log the
 // timestamp, full input prompt, the model's response, and whether it activates any
 // built-in safety").
-// implements: FR-TOOL-150, FR-TOOL-160
+// file implements: FR-TOOL-150, FR-TOOL-160
 import FoundationModels
 import Foundation
 

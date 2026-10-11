@@ -2,18 +2,19 @@
 name: srs-bet
 description: Working with the grounds register — writing a hypothesis, staking a requirement on it with a bet, recording a measurement, and settling what happens when one is refuted. Invoke when the user wants to record why the product does something, when a measurement comes in, or when a hypothesis expires. For requirements themselves use srs and srs-new.
 ---
+<!-- Copyright (c) 2026 CRELLIA S.L. — part of SRS-DD, distributed under the MIT License -->
 
 # Working with the grounds register
 
-The format lives in `grounds/README.md` and is not restated here.
-Read first: `grounds/README.md`, whole, in one call — it is the one file this procedure needs, and one read costs less than three.
-Every record named to a person — a hypothesis, a bet, a requirement — is cited at its first mention from `python3 tools/srs_grounds.py --cite <ID>…` or `python3 tools/srs_view.py --cite <ID>…`, pasted as printed, never typed from the file.
+The format lives in `srs-dd/grounds.md` and is not restated here.
+Read first: `srs-dd/grounds.md`, whole, in one call — it is the one file this procedure needs, and one read costs less than three.
+Every record named to a person — a hypothesis, a bet, a requirement — is cited at its first mention from `python3 srs-dd/tools/srs_grounds.py --cite <ID>…` or `python3 srs-dd/tools/srs_view.py --cite <ID>…`, pasted as printed, never typed from the file.
 The register answers what the specification does not — not what the system must do, but on what ground anyone decided it should: an ideology says who the product is for, a frame what it will not do for anyone, a hypothesis something about the world that could turn out to be false.
 Only the last is measured.
 
 ## Writing a hypothesis
 
-Section *`H` — hypothesis* and *The threshold* in `grounds/README.md`.
+Section *`H` — hypothesis* and *The threshold* in `srs-dd/grounds.md`.
 
 1. **What is claimed, and about whom.** A bounded population — "studios of five to fifty already tracking time", not "users" — or the claim is not falsifiable.
 2. **What action would show it.** An action somebody takes — exports, returns, pays, invites — never an attitude; "studios need roll-up" cannot be false, and distrust the word *need*.
@@ -49,7 +50,7 @@ Confirmed is not ours: admission to the core is the maintainer's separate decisi
 
 The requirements standing on it keep their code and lose their ground.
 
-1. Read what stood on it — the bets name the requirements; one whose other grounds hold is not affected. Name each as `AGENTS.md` asks at first mention: requirements from `python3 tools/srs_view.py --cite <ID>…`, the hypothesis and its bets from `python3 tools/srs_grounds.py --cite <ID>…`.
+1. Read what stood on it — the bets name the requirements; one whose other grounds hold is not affected. Name each as `AGENTS.md` asks at first mention: requirements from `python3 srs-dd/tools/srs_view.py --cite <ID>…`, the hypothesis and its bets from `python3 srs-dd/tools/srs_grounds.py --cite <ID>…`.
 2. Settle each with the maintainer, taking removal as the default.
 3. "Somebody still uses it" is a new fact — something else holds it up; naming that hypothesis is the price of keeping the code.
 4. Leave the instruments alone: a requirement its bet marks `instrument` is not put up for removal.
@@ -57,4 +58,4 @@ The requirements standing on it keep their code and lose their ground.
 
 ## What not to do
 
-Section *What not to do* in `grounds/README.md`: no bet invented to make a number look better; no record edited to agree with a result — the dashboard is the one file a machine writes; no threshold moved once measurement began; no expiry deciding anything; no hypothesis written on somebody's behalf. Check with `python3 tools/srs_grounds.py`.
+Section *What not to do* in `srs-dd/grounds.md`: no bet invented to make a number look better; no record edited to agree with a result — the dashboard is the one file a machine writes; no threshold moved once measurement began; no hypothesis that cannot be false, or that carries its solution; no hypothesis written on somebody's behalf. Check with `python3 srs-dd/tools/srs_grounds.py`.

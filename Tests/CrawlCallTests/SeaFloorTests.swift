@@ -2,7 +2,7 @@
 // mesh it is drawn with, and how the shipped island lays it out to the edge of the
 // frame. That the water over it can be seen through is IslandMapTests' (FR-MAP-280).
 //
-// verifies: FR-MAP-270
+// file verifies: FR-MAP-270
 import RealityKit
 import XCTest
 @testable import CrawlCall

@@ -10,7 +10,7 @@
 // bot ahead of the head is lunged at, and one that gets out from ahead of it is
 // missed: a head sent round behind itself folds the snake in two (ADR-0065).
 //
-// implements: FR-SNAKE-270, FR-SNAKE-055
+// file implements: FR-SNAKE-270, FR-SNAKE-055
 import Foundation
 
 struct Lunge: Equatable {

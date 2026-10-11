@@ -5,7 +5,7 @@
 //
 // The arenas are built here, so that what is in the way is known.
 //
-// verifies: FR-BOT-050, FR-BOT-220, FR-BOT-230, FR-BOT-240, FR-BOT-250, FR-BOT-260, FR-BOT-310, IF-BOT-010
+// file verifies: FR-BOT-050, FR-BOT-220, FR-BOT-230, FR-BOT-240, FR-BOT-250, FR-BOT-260, FR-BOT-310, IF-BOT-010
 import XCTest
 @testable import CrawlCall
 

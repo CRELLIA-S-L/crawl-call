@@ -13,6 +13,6 @@ iOS 27+ / macOS 27+ on devices with Apple Intelligence (iPhone 15 Pro and later,
 | `tools/` | `srs_check.py` and the rest of the SRS-DD tooling (Python ≥ 3.9, stdlib only) |
 | `AGENTS.md` | How a coding agent works in this repository |
 
-Check the specification: `python3 tools/srs_check.py`. Read it as a page: `python3 tools/srs_view.py --html`.
+Check the specification: `python3 srs-dd/tools/srs_check.py`. Read it as a page: `python3 srs-dd/tools/srs_view.py --html`.
 
 License: MIT (`LICENSE`). Third-party assets keep their own licenses.

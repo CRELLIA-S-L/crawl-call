@@ -1,4 +1,4 @@
-# SRS-DD-0.19.0 specification gate.
+# SRS-DD-0.24.0 specification gate.
 # Template copied into target projects as .github/workflows/srs.yml by
 # tools/srs_init.py.
 
@@ -21,53 +21,48 @@ jobs:
         with:
           python-version: "3.12"
 
-      # Add --strict to fail on warnings as well.
-      - name: Validate specification
-        run: python3 tools/srs_check.py
+      # The references between the parts are this project's own generated file:
+      # the architecture layer's model is compared against them, and the checker
+      # reads imports in Python only, so for a Swift project they are supplied.
+      # Produced from the code rather than kept, and a push that leaves them
+      # stale fails here (FR-TOOL-330, FR-TOOL-340).
+      #
+      # file implements: FR-TOOL-340
+      - name: References between the parts
+        run: python3 scripts/arch-edges.py --check
 
-      - name: Traceability matrix is fresh
-        run: |
-          git add -N specs/90-traceability.md
-          if ! git diff --exit-code -- specs/90-traceability.md; then
-            echo "specs/90-traceability.md is stale — run: python3 tools/srs_check.py and commit the result"
-            exit 1
-          fi
+      # The gate is srs-dd/tools/srs_gate.py, refreshed with the rest of the
+      # tooling, so this step has nothing to change when the gate does: it
+      # runs the checker — and the grounds register's and the architecture
+      # layer's where the project keeps them — and fails on any generated
+      # file that differs from the one committed. Add --strict to fail on
+      # warnings as well.
+      - name: Specification gate
+        run: python3 srs-dd/tools/srs_gate.py
 
-      # Only where the project keeps a grounds register; the step is
-      # inert everywhere else. The dashboard is generated and committed,
-      # so a stale one means the records moved and nobody looked.
-      - name: Grounds register
+      # The readable specification as one self-contained HTML file, and the page
+      # of each optional layer this project keeps beside it, each told which
+      # others will be there. Downloadable from the run's Artifacts; delete these
+      # two steps if you do not want them. `if` rather than `[ -d x ] && …`,
+      # which under `set -e` fails the step where the directory is absent.
+      - name: Render the pages
         run: |
-          if [ -f grounds/grounds-config.json ]; then
-            python3 tools/srs_grounds.py
-            git add -N grounds/90-dashboard.md
-            if ! git diff --exit-code -- grounds/90-dashboard.md; then
-              echo "grounds/90-dashboard.md is stale — run: python3 tools/srs_grounds.py and commit the result"
-              exit 1
-            fi
-          fi
-
-      # Only where the project keeps an architecture layer; the step is
-      # inert everywhere else. The map is generated and committed, so a
-      # stale one means the parts moved and nobody looked.
-      - name: Architecture layer
-        run: |
-          if [ -f arch/arch-config.json ]; then
-            python3 tools/srs_arch.py
-            git add -N arch/90-map.md
-            if ! git diff --exit-code -- arch/90-map.md; then
-              echo "arch/90-map.md is stale — run: python3 tools/srs_arch.py and commit the result"
-              exit 1
-            fi
-          fi
-
-      # The readable specification as one self-contained HTML file,
-      # downloadable from the run's Artifacts. Delete these two steps if
-      # you do not want it.
-      - name: Render the specification
-        run: |
-          python3 tools/srs_view.py --html site/index.html \
+          beside=""
+          if [ -d arch ]; then beside="arch.html"; fi
+          if [ -d grounds ]; then beside="${beside:+$beside,}grounds.html"; fi
+          python3 srs-dd/tools/srs_view.py --html site/index.html \
+            ${beside:+--link "$beside"} \
             --repo-url "${{ github.server_url }}/${{ github.repository }}/blob/${{ github.sha }}"
+          if [ -d arch ]; then
+            others="index.html"
+            if [ -d grounds ]; then others="index.html,grounds.html"; fi
+            python3 srs-dd/tools/srs_arch_doc.py --html --link "$others" > site/arch.html
+          fi
+          if [ -d grounds ]; then
+            others="index.html"
+            if [ -d arch ]; then others="index.html,arch.html"; fi
+            python3 srs-dd/tools/srs_grounds.py --html --link "$others" > site/grounds.html
+          fi
 
       - uses: actions/upload-artifact@v7
         with:

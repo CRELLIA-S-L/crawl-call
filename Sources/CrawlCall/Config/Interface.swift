@@ -2,7 +2,7 @@
 // and gestures (ART-070). Part of how the interface looks rather than of the world it
 // shows, so named here and not in the configuration (ADR-0026).
 //
-// implements: FR-VIEW-050, FR-VIEW-120, FR-VIEW-160, FR-VIEW-190, FR-TOOL-070, FR-VIEW-210, FR-MAP-140, FR-TOOL-260, FR-TOOL-270, FR-VIEW-155
+// file implements: FR-VIEW-050, FR-VIEW-120, FR-VIEW-160, FR-VIEW-190, FR-TOOL-070, FR-VIEW-210, FR-MAP-140, FR-TOOL-260, FR-TOOL-270, FR-VIEW-155
 import Foundation
 
 /// The look every plate and mark shares (FR-VIEW-120): a light, translucent plate and

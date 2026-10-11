@@ -3,7 +3,7 @@
 // down the body to the end of the tail and gone. Only the drawing's: the model knows a
 // meal while it lasts (`Eating`) and nothing after it.
 //
-// implements: FR-VIEW-280
+// file implements: FR-VIEW-280
 import Foundation
 
 struct Digestion: Equatable {

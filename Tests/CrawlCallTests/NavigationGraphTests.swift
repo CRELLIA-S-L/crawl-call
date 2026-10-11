@@ -1,7 +1,7 @@
 // One node per walkable cell and floor, an edge for every transition between floors
 // (FR-MAP-020), derived from the grids and the transitions (FR-TOOL-030).
 //
-// verifies: FR-TOOL-030, FR-MAP-020
+// file verifies: FR-TOOL-030, FR-MAP-020
 import XCTest
 @testable import CrawlCall
 

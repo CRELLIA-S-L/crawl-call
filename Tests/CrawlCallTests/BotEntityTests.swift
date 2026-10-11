@@ -2,7 +2,7 @@
 // colour that says which side it is on (FR-VIEW-060), and — while one is being eaten
 // — a body going into the snake rather than blinking out (FR-VIEW-100).
 //
-// verifies: FR-VIEW-060, FR-VIEW-100
+// file verifies: FR-VIEW-060, FR-VIEW-100
 import RealityKit
 import XCTest
 @testable import CrawlCall

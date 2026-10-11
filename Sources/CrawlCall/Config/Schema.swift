@@ -5,7 +5,7 @@
 // it ignores keys it does not know — so the shape is declared separately and walked
 // before decoding. Standard library only (ART-040).
 //
-// implements: IF-SNAKE-010, IF-MAP-020, IF-VIEW-020, IF-BOT-010, FR-TOOL-200
+// file implements: IF-SNAKE-010, IF-MAP-020, IF-VIEW-020, IF-BOT-010, FR-TOOL-200
 import Foundation
 
 /// The shape a configuration file must have: which keys exist, and where a caller

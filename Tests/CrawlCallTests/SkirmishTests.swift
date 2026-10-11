@@ -2,7 +2,7 @@
 // cover (FR-BOT-420), steps behind it to reload (FR-BOT-425), and with no cover near
 // keeps moving across the line of fire (FR-BOT-430).
 //
-// verifies: FR-BOT-420, FR-BOT-425, FR-BOT-430
+// file verifies: FR-BOT-420, FR-BOT-425, FR-BOT-430
 import XCTest
 @testable import CrawlCall
 

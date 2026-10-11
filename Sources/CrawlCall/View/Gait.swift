@@ -3,7 +3,7 @@
 // that the feet neither skate nor paddle. Only the drawing's: the model walks the
 // bot (`Execution`), and this only says what its figure does meanwhile.
 //
-// implements: FR-VIEW-290
+// file implements: FR-VIEW-290
 import Foundation
 
 struct Gait: Equatable {

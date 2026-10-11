@@ -3,7 +3,7 @@
 // sways the same way whenever the body passes over it, the head swaying with it — and
 // only the drawing: the snake the match knows stays on its path.
 //
-// verifies: FR-VIEW-330
+// file verifies: FR-VIEW-330
 import RealityKit
 import simd
 import XCTest

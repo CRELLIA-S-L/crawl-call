@@ -91,7 +91,7 @@ Numbers are unassigned; they are proposals until written into `specs/` and appro
 
 > The system **shall** provide the island setting: the arena on a grassy island ringed by trees and shrubs, with a shore and water reaching the edge of what the match camera can show, a daylight sky above, and birds that now and then cross over the arena.
 
-The first two belong to the VIEW and MAP areas; the third may sit in VIEW or be a kit-level requirement like FR-MAP-100. `python3 tools/srs_view.py --areas` and the neighbours of FR-VIEW-130 and FR-MAP-100 decide where they sit. The first one is verified by `T`: coverage is arithmetic, and a test computes it for the pitch range and several aspects and checks the surroundings' extent against it. The other two are `D`, judged on the phone.
+The first two belong to the VIEW and MAP areas; the third may sit in VIEW or be a kit-level requirement like FR-MAP-100. `python3 srs-dd/tools/srs_view.py --areas` and the neighbours of FR-VIEW-130 and FR-MAP-100 decide where they sit. The first one is verified by `T`: coverage is arithmetic, and a test computes it for the pitch range and several aspects and checks the surroundings' extent against it. The other two are `D`, judged on the phone.
 
 A decision record goes beside ADR-0022 and ADR-0023 in `specs/adr/`: the three layers, settings as families, scenery out of the plan, the coverage rule, and why the sky is lit rather than seen.
 
@@ -118,10 +118,10 @@ Run each through `build-loop` and then `review-loop`, as the maintainer asked fo
 
 ## How this project is worked, for an agent starting cold
 
-- Read `AGENTS.md` and `CLAUDE.md` first; `specs/README.md` wins on any conflict about the specification.
+- Read `AGENTS.md` and `CLAUDE.md` first; `srs-dd/standard.md` wins on any conflict about the specification.
 - Talk to the maintainer in Russian. The specification, code, comments and commit messages are in English.
-- Cite a record at its first mention in a message from the tool: `python3 tools/srs_view.py --cite <ID>`, `python3 tools/srs_arch.py --cite <ID>`, `python3 tools/srs_grounds.py --cite <ID>`.
+- Cite a record at its first mention in a message from the tool: `python3 srs-dd/tools/srs_view.py --cite <ID>`, `python3 srs-dd/tools/srs_arch.py --cite <ID>`, `python3 srs-dd/tools/srs_grounds.py --cite <ID>`.
 - Tests: `sh scripts/run-tests.sh <simulator-udid>`. The phone: `CRAWLCALL_DEVICE=<device-udid> sh scripts/run-on-device.sh <app> [screenshot]`, which closes the app when the run is over. No device or simulator identifier goes into the repository.
 - The simulator shows no controls and no bot movement in its first seconds; a build of commit `935d0f8`, made on 2026-09-24 to check exactly this, does the same, so it is the simulator and not a regression.
 - Commits are the maintainer's unless they ask the agent to make them. The pre-commit hook regenerates `specs/90-traceability.md` from the working tree, so two changes in one tree cannot be committed apart with `git add -p`; reduce the tree to the first change, commit, and restore the rest.
-- Checkers: `python3 tools/srs_check.py`, `python3 tools/srs_arch.py`, `python3 tools/srs_grounds.py`. At commit `b249987`, which this file was written on top of, they report no errors, and three warnings about FR-TOOL-150, FR-TOOL-160 and FR-TOOL-190 that predate this work.
+- Checkers: `python3 srs-dd/tools/srs_check.py`, `python3 srs-dd/tools/srs_arch.py`, `python3 srs-dd/tools/srs_grounds.py`. At commit `b249987`, which this file was written on top of, they report no errors, and three warnings about FR-TOOL-150, FR-TOOL-160 and FR-TOOL-190 that predate this work.

@@ -3,7 +3,7 @@
 // and its own body past the neck is crawled over (FR-SNAKE-055). Found on the phone on
 // 2026-09-30: a head in a corner pulled back folded the snake in two, through itself.
 //
-// verifies: FR-SNAKE-015, FR-SNAKE-016, FR-SNAKE-055, FR-SNAKE-056
+// file verifies: FR-SNAKE-015, FR-SNAKE-016, FR-SNAKE-055, FR-SNAKE-056
 import XCTest
 @testable import CrawlCall
 

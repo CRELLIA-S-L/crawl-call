@@ -1,13 +1,14 @@
 // The plan, in RealityKit. Everything that decides *where* a module goes is in
 // `ScenePlan`, which a test can read; this file only turns metres into entities.
 //
-// How the result is lit and seen is not here but in `View/`: the map is what the
-// arena is, the camera and the light are how it is looked at.
+// It sits in `View/` and not beside the plan: the map layer says what the arena is, and
+// turning that into entities, lighting it and placing the camera are all one act of
+// looking at it (ADR-0073). It reads the plan and the plan knows nothing of it.
 //
 // Colour comes from the kit's legend, not from here: what a module looks like is a
 // property of the kit a map is assembled from (FR-MAP-100).
 //
-// implements: FR-TOOL-020, FR-VIEW-140, FR-VIEW-150, FR-VIEW-155, FR-MAP-210, FR-VIEW-240
+// file implements: FR-TOOL-020, FR-VIEW-140, FR-VIEW-150, FR-VIEW-155, FR-MAP-210, FR-VIEW-240
 import Foundation
 import RealityKit
 import struct SwiftUI.Path

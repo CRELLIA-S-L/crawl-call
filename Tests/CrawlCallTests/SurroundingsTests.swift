@@ -6,7 +6,7 @@
 // taken from the camera entity the game itself places (`SceneView.place`), turned by
 // RealityKit's own quaternion, rather than from the formula under test.
 //
-// verifies: FR-MAP-120, FR-MAP-130, FR-MAP-140, IF-GREENHOLM-010, FR-GREENHOLM-010, FR-GREENHOLM-020, FR-GREENHOLM-030
+// file verifies: FR-MAP-120, FR-MAP-130, FR-MAP-140, IF-GREENHOLM-010, FR-GREENHOLM-010, FR-GREENHOLM-020, FR-GREENHOLM-030
 import RealityKit
 import XCTest
 @testable import CrawlCall

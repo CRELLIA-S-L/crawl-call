@@ -5,7 +5,7 @@
 //
 // Built with `BenchReport.swift` alone by `scripts/prompt-bench-selftest.sh`.
 //
-// verifies: FR-TOOL-150, FR-TOOL-160
+// file verifies: FR-TOOL-150, FR-TOOL-160
 import Foundation
 
 var failures = 0

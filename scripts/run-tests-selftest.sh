@@ -3,7 +3,7 @@
 # phase that outlives its limit, and reports which one, how long it had, and what the
 # process was doing. Standard tools only (ART-040).
 #
-# verifies: FR-TOOL-190, FR-TOOL-210, FR-TOOL-220
+# file verifies: FR-TOOL-190, FR-TOOL-210, FR-TOOL-220
 set -eu
 
 here=$(dirname "$0")

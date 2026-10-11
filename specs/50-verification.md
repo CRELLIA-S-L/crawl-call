@@ -11,7 +11,20 @@ How each verification method is carried out in this project.
 
 Implemented or partially implemented requirements with an empty `tests` field appear in `90-traceability.md` under “Requirements without listed tests”, whatever their method — as a reminder to either add the test or record how the check was performed.
 
-Test files may additionally carry `verifies:` annotations — see the Annotations section of `README.md`.
+Test files may additionally carry `verifies:` annotations — a suite that verifies a requirement as a whole says `file verifies:` in its header, and a block over one suite of several ends with `srs-end:` where that suite closes (ADR-0070); the rules are the Annotations section of `srs-dd/standard.md`.
+
+## A change goes on the phone before it is called done
+
+Where a device is connected, a change the build can see — code, configuration, a map, an asset, the project file — is built and installed on it and looked at, and that happens after the suite is green and before the change is reported as finished.
+It is not asked for and not waited for; ART-030 says so since 2026-10-11, and this section is how that article is carried out. The suite that comes before it is run on the same terms: when a change is finished, rather than when somebody asks.
+
+A change the build cannot see — a requirement, a decision record, a plan, this document — leaves the app byte for byte identical, and installing it would prove nothing. Those are reported without a device run, saying so.
+
+What the install is for decides what to look at. A change to what the player sees is looked at on the screen and recorded with the frame that shows it; a change to what the game does is driven to the behaviour it changed; a change that is meant to cost less is measured, over the session length the requirement names, by the unattended route rather than by eye. In all three the artefact goes into the report, because a judgement that names none is an opinion (above).
+
+The simulator does not stand in for this. It runs the logic and it draws the scene, and it answers nothing about the frame rate, the heat, or how a thing reads at arm's length on a screen held in the hand — the three questions this game's non-functional requirements are made of (NFR-PERF-010, NFR-PERF-050) — so a change judged only there is a change judged on the wrong machine. The suite on the simulator says the logic still holds; the phone says whether the change was any good.
+
+Where no device is connected, the change is finished, reported with the suite's result, and the report says that it has not been on a phone. That is a statement about the work, not a hedge: the next session installs it.
 
 ## What a run on the device is watched with
 
@@ -21,7 +34,7 @@ A run on a real device is not watched over somebody's shoulder. The machine driv
 - **Telemetry is pulled from the app's container afterwards**, not read aloud from the screen: `xcrun devicectl device copy from --device <id> --domain-type appDataContainer …`, which is how the spike's per-second CSV came back (`materials/spike/instrument/`).
 - **The console of a run is kept**, because a launch that failed says so there and nowhere else.
 
-This is the ordinary way to check a result, not a debugging measure of last resort: it is what makes a reading reproducible by somebody who was not in the room, which is what the `A` method above asks for. Attaching to the device and capturing from it needs the maintainer's confirmation each time, like any run (ART-030), and what is captured goes to the write-up rather than into the repository unless a requirement names it.
+This is the ordinary way to check a result, not a debugging measure of last resort: it is what makes a reading reproducible by somebody who was not in the room, which is what the `A` method above asks for. Attaching to the device, installing on it and capturing from it needs no confirmation and is not waited for (ART-030, amended 2026-10-11), and what is captured goes to the write-up rather than into the repository unless a requirement names it.
 
 ## Every run ends with the app closed
 

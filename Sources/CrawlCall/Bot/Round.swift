@@ -2,7 +2,7 @@
 // fires, and the round takes time to get there: a target that has moved on by then
 // is missed, and the round goes on to whatever is in its way (FR-BOT-400, FR-BOT-405).
 //
-// implements: FR-BOT-060, FR-VIEW-170, FR-BOT-400
+// file implements: FR-BOT-060, FR-VIEW-170, FR-BOT-400
 import Foundation
 
 struct Round: Equatable {

@@ -1,6 +1,6 @@
 // The coordinates a map turns into (FR-TOOL-020).
 //
-// verifies: FR-TOOL-020
+// file verifies: FR-TOOL-020
 import RealityKit
 import XCTest
 @testable import CrawlCall
@@ -126,6 +126,7 @@ final class ScenePlanBoundsTests: XCTestCase {
         XCTAssertEqual(world.plan.bounds.extent.z, 12.0, accuracy: 1e-9)   // 24 cells of 0.5
     }
 }
+// srs-end: FR-TOOL-020
 
 /// The scene as RealityKit gets it: the map, the light that makes it readable and the
 /// camera it is seen through, all present and wired.
@@ -216,6 +217,7 @@ final class SceneBuilderTests: XCTestCase {
         }
     }
 }
+// srs-end: FR-TOOL-020
 
 /// A cell holds one module, so the floor under a wall is the assembler's to place
 /// (FR-TOOL-020). Without it the scene has a hole wherever anything stands.
@@ -276,6 +278,7 @@ final class ImpliedFloorTests: XCTestCase {
         }
     }
 }
+// srs-end: FR-TOOL-020
 
 /// A tail rests on surfaces, so the surfaces under a route have to meet (FR-MAP-090).
 ///
@@ -329,6 +332,7 @@ final class TailSurfaceTests: XCTestCase {
         XCTAssertGreaterThan(try gap(floorWidth: 0.2), tolerance)
     }
 }
+// srs-end: FR-MAP-090
 
 /// The camera holds still while the snake moves inside the frame, and moves when it
 /// would leave it (FR-VIEW-020).
@@ -493,3 +497,4 @@ final class CameraFollowTests: XCTestCase {
         XCTAssertGreaterThan(camera.position.z, 3)
     }
 }
+// srs-end: FR-VIEW-020

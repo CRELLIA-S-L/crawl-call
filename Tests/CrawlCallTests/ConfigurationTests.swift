@@ -1,7 +1,7 @@
 // Every configuration the game reads at start: the shipped file decodes, and a file
 // with a typo in a key is refused rather than defaulted (ADR-0012).
 //
-// verifies: IF-SNAKE-010, IF-MAP-020, IF-VIEW-020, IF-BOT-010, INV-SNAKE-020
+// file verifies: IF-SNAKE-010, IF-MAP-020, IF-VIEW-020, IF-BOT-010, INV-SNAKE-020
 import XCTest
 @testable import CrawlCall
 

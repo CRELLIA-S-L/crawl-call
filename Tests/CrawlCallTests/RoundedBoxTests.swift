@@ -3,7 +3,7 @@
 // than 400 triangles — the ceiling that keeps RealityKit's own rounded box, 13 068
 // triangles at any size, out of the game (ADR-0037).
 //
-// verifies: FR-VIEW-240
+// file verifies: FR-VIEW-240
 import RealityKit
 import XCTest
 @testable import CrawlCall

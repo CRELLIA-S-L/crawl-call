@@ -9,7 +9,7 @@
 // A figure's origin is at its feet, so that it stands on the floor as placed and
 // shrinks into the floor as it is swallowed.
 //
-// implements: FR-VIEW-290, FR-VIEW-060, FR-VIEW-070, FR-VIEW-100, FR-VIEW-190, FR-BOT-280, FR-VIEW-300, FR-VIEW-320
+// file implements: FR-VIEW-290, FR-VIEW-060, FR-VIEW-070, FR-VIEW-100, FR-VIEW-190, FR-BOT-280, FR-VIEW-300, FR-VIEW-320
 import CoreGraphics
 import Foundation
 import Metal

@@ -4,7 +4,7 @@ Standing engineering principles of the project.
 Every plan and every diff is checked against them.
 Unlike requirements (what the system does) and ADRs (single decisions with their context), articles apply to all work at all times and change only through the amendment procedure in ART-090.
 
-- **Version:** 1.6.0
+- **Version:** 2.0.0
 - **Ratified:** 2026-08-05
 - **Amended:** 2026-08-05 — v1.1.0: ART-020 tightened to approved requirements; ART-090 taxonomy extended to classify tightening and relaxing (both changes MINOR per ART-090)
 - **Amended:** 2026-09-24 — v1.2.0: ART-070 added, named values in place of literals in code (MINOR per ART-090)
@@ -12,6 +12,7 @@ Unlike requirements (what the system does) and ADRs (single decisions with their
 - **Amended:** 2026-09-24 — v1.4.0: ART-080 added, no warnings and nothing deprecated (MINOR per ART-090)
 - **Amended:** 2026-09-25 — v1.5.0: ART-030 tightened: a change to a setting outside the repository needs the same confirmation, and no project script makes one (MINOR per ART-090)
 - **Amended:** 2026-09-29 — v1.6.0: ART-100 added, decisions rest on sources of the platform the project targets, and what it adopts is current (MINOR per ART-090)
+- **Amended:** 2026-10-11 — v2.0.0: ART-030 both relaxed and tightened — the maintainer's confirmation for builds, test runs and an install on a connected phone is given here once and standing instead of each time, and the suite and the phone are required after every finished change rather than permitted (MAJOR per ART-090, because a confirmation the article required is removed)
 
 Articles are numbered in steps of 10 and referenced from plans, reviews, and ADRs the same way requirements are: “rejected per ART-040”.
 The set below is a starting point — adapt the articles to your project, but keep the amendment procedure.
@@ -23,14 +24,24 @@ On conflict, neither side is silently fixed: the discrepancy is recorded in `91-
 
 ## ART-020 — Requirement before code
 
-No behavior changes without an **approved** requirement that describes the change — a `draft` is recorded, not approved (see the Lifecycle section of `specs/README.md`).
-The mechanics — statuses, numbering, closing the loop — live in `specs/README.md`; this article only makes the principle non-negotiable.
+No behavior changes without an **approved** requirement that describes the change — a `draft` is recorded, not approved (see the Lifecycle section of `srs-dd/standard.md`).
+The mechanics — statuses, numbering, closing the loop — live in `srs-dd/standard.md`; this article only makes the principle non-negotiable.
 
 ## ART-030 — Boundaries of agent autonomy
 
 Within an established requirement, an agent edits code and specification freely.
-Builds, test runs, external network calls, data migrations, and deletion of files it did not create require the user's explicit confirmation — each time, not once per session.
+External network calls, data migrations, and deletion of files it did not create require the user's explicit confirmation — each time, not once per session.
 A change to a setting outside the repository — the operating system's, another program's or the user's — requires the same confirmation, even when it is to be undone, and no script of the project makes one.
+
+Builds and test runs do not, and this article is where the confirmation SRS-DD-ART-030 of the method asks for is given: once, standing, by the maintainer on 2026-10-11, rather than fetched again at every turn.
+They are not merely permitted but required — the suite is run when a change is finished, not when somebody thinks to ask for it, and a change nobody has run is a change nobody has checked.
+A run that costs minutes may be narrowed while the work is in flight; it is run whole before the work is called done (`specs/50-verification.md`).
+
+The maintainer's phone goes further still: where a device is connected, a change the build can see — code, configuration, a map, an asset, the project file — is built and installed on it and looked at before the change is called done, without asking and without waiting to be asked.
+A change the build cannot see leaves the app identical, and there is nothing to install.
+The install comes after the suite is green, never instead of it, and the run ends with the app closed (`specs/50-verification.md`).
+No device identifier enters the repository: the device is named by the environment, which is the maintainer's standing rule.
+The reason the phone is required and not merely allowed is that the simulator cannot answer the questions this game asks — the frame rate, the heat, how a thing reads at arm's length on a screen held in the hand — so a change judged only on a simulator is a change judged on the wrong machine, and asking first merely delays the only measurement that counts.
 
 ## ART-040 — Simplicity
 
@@ -46,7 +57,7 @@ Verification by `D`, `I`, or `A` is carried out as described in `50-verification
 
 ## ART-060 — Quality gates
 
-A change merges only when `python3 tools/srs_check.py` passes and, if the change alters behavior, the commit or PR description names the requirement identifiers it implements.
+A change merges only when `python3 srs-dd/tools/srs_check.py` passes and, if the change alters behavior, the commit or PR description names the requirement identifiers it implements.
 
 ## ART-070 — Named values
 

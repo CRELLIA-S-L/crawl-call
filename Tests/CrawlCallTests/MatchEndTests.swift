@@ -6,7 +6,7 @@
 // what the requirements promise is that a match stops, and a flag nothing sets would
 // satisfy a test that only read it back.
 //
-// verifies: FR-SNAKE-210, FR-SCORE-140, FR-SCORE-150, FR-VIEW-190, FR-VIEW-320
+// file verifies: FR-SNAKE-210, FR-SCORE-140, FR-SCORE-150, FR-VIEW-190, FR-VIEW-320
 import RealityKit
 import XCTest
 @testable import CrawlCall

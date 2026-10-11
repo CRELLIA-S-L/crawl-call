@@ -8,7 +8,7 @@
 // own listing does, and the app ends itself once the file is written. Installed only
 // while the record is switched on: a game played without it terminates as it always did.
 //
-// implements: FR-TOOL-240
+// file implements: FR-TOOL-240
 import Foundation
 
 @MainActor

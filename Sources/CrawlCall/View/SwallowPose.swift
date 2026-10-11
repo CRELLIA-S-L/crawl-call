@@ -5,7 +5,7 @@
 // drawing: in the match the head stays where the coil left it (FR-SNAKE-090), and the
 // body drawn from the reared head down to that point is the neck.
 //
-// implements: FR-VIEW-320
+// file implements: FR-VIEW-320
 import Foundation
 
 struct SwallowPose: Equatable {

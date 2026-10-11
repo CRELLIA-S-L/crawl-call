@@ -8,7 +8,7 @@
 // rather than set against the world's up, so that the tube does not twist where the
 // line turns, climbs or drops straight down a ledge.
 //
-// implements: FR-VIEW-250, FR-VIEW-260, FR-VIEW-270, FR-VIEW-280, FR-VIEW-330
+// file implements: FR-VIEW-250, FR-VIEW-260, FR-VIEW-270, FR-VIEW-280, FR-VIEW-330
 import Foundation
 import simd
 

@@ -13,7 +13,7 @@ derives_from: []
 depends_on: [FR-MAP-120, FR-MAP-130, FR-MAP-140]
 refines: []
 conflicts_with: []
-code: [Sources/CrawlCall/Setting/Greenholm.swift, Sources/CrawlCall/Setting/SceneryBuilder.swift, Sources/CrawlCall/Config/Surroundings.swift, Sources/CrawlCall/CrawlCallApp.swift, config/setting/greenholm.json, Sources/CrawlCall/Setting/Outline.swift]
+code: [Sources/CrawlCall/Setting/Greenholm.swift, Sources/CrawlCall/Setting/SceneryBuilder.swift, Sources/CrawlCall/Config/Surroundings.swift, Sources/CrawlCall/CrawlCallApp.swift, config/setting/greenholm.json, Sources/CrawlCall/Map/Outline.swift]
 tests: [Tests/CrawlCallTests/SurroundingsTests.swift, Tests/CrawlCallTests/IslandMapTests.swift]
 created: 2026-09-24
 ```

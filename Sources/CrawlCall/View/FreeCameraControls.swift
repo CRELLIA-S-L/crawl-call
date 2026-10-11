@@ -12,7 +12,7 @@
 // `UIGestureRecognizerRepresentable` (SwiftUI, iOS 18.0): SwiftUI's own drag cannot be
 // told to wait for two fingers.
 //
-// implements: FR-TOOL-070
+// file implements: FR-TOOL-070
 import SwiftUI
 import UIKit
 

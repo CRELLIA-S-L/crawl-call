@@ -1,6 +1,6 @@
 // The SF Symbols the interface draws, by the names the system knows them by (ART-070).
 //
-// implements: FR-VIEW-050, FR-TOOL-070
+// file implements: FR-VIEW-050, FR-TOOL-070
 import Foundation
 
 enum SymbolName {

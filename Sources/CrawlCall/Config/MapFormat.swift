@@ -1,7 +1,7 @@
 // The words, separators and positions of the map file format (IF-MAP-010) and of a
 // kit's legend (ADR-0012), named once for the parser and for its messages (ART-070).
 //
-// implements: IF-MAP-010, FR-MAP-120, FR-MAP-150, FR-MAP-180, FR-TOOL-010, FR-TOOL-020, FR-TOOL-030, FR-MAP-100, FR-SNAKE-220
+// file implements: IF-MAP-010, FR-MAP-120, FR-MAP-150, FR-MAP-180, FR-TOOL-010, FR-TOOL-020, FR-TOOL-030, FR-MAP-100, FR-SNAKE-220
 import Foundation
 
 enum MapFormat {

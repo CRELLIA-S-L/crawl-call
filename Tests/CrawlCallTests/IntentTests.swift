@@ -1,7 +1,7 @@
 // IF-VIEW-010 says "exactly these intents". This is what makes another one a change
 // to the requirement rather than a quiet addition.
 //
-// verifies: IF-VIEW-010
+// file verifies: IF-VIEW-010
 import XCTest
 @testable import CrawlCall
 

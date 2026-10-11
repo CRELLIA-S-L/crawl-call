@@ -1,4 +1,11 @@
-# SRS-DD-0.20.1: the traceability matrix is generated with LF endings and
-# compared byte-for-byte by the CI freshness gate; autocrlf must not
-# rewrite it.
+# SRS-DD-0.24.0: the traceability matrix, and where a project keeps the
+# layers the register's dashboard and the architecture map, are generated
+# with LF endings and compared byte-for-byte by the CI freshness gate;
+# autocrlf must not rewrite them.
 specs/90-traceability.md text eol=lf
+grounds/90-dashboard.md text eol=lf
+arch/90-map.md text eol=lf
+
+# The references between the parts are this project's own generated file, written with
+# LF and compared byte-for-byte by the pre-commit hook and the pipeline (FR-TOOL-340).
+arch/edges.json text eol=lf

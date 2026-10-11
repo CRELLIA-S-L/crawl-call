@@ -1,7 +1,7 @@
 // Eating: the time it takes (FR-SNAKE-090), that live prey takes longer than a body
 // (FR-SNAKE-100), and the tail it leaves behind (FR-SNAKE-060).
 //
-// verifies: FR-SNAKE-060, FR-SNAKE-090, FR-SNAKE-100, FR-SNAKE-220
+// file verifies: FR-SNAKE-060, FR-SNAKE-090, FR-SNAKE-100, FR-SNAKE-220
 import XCTest
 @testable import CrawlCall
 

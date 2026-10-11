@@ -3,7 +3,7 @@
 // moves the birds. Nothing built here joins the map's entity or `SeeThrough`: scenery
 // is for the eye only (FR-MAP-130).
 //
-// implements: FR-GREENHOLM-010, FR-GREENHOLM-020, FR-GREENHOLM-030, FR-MAP-130, FR-TOOL-200, FR-MAP-200, FR-VIEW-240, FR-GREENHOLM-060, FR-GREENHOLM-070, FR-MAP-270, FR-MAP-280
+// file implements: FR-GREENHOLM-010, FR-GREENHOLM-020, FR-GREENHOLM-030, FR-MAP-130, FR-TOOL-200, FR-MAP-200, FR-VIEW-240, FR-GREENHOLM-060, FR-GREENHOLM-070, FR-MAP-270, FR-MAP-280
 import CoreGraphics
 import Foundation
 import Metal

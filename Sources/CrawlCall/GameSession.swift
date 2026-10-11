@@ -5,7 +5,7 @@
 // measured with — `specs/50-verification.md` says why, and the two are different
 // questions asked of the same number.
 //
-// implements: FR-TOOL-070, FR-VIEW-020, FR-VIEW-030, FR-VIEW-060, FR-VIEW-100, FR-VIEW-140, FR-VIEW-150, FR-VIEW-155, FR-VIEW-160, FR-VIEW-170, FR-VIEW-250, FR-VIEW-190, FR-VIEW-230, FR-VIEW-210, FR-TOOL-230, FR-TOOL-240, FR-GREENHOLM-030, FR-TOOL-260, FR-TOOL-270, FR-SNAKE-220, FR-VIEW-280, FR-VIEW-290, FR-VIEW-310, FR-VIEW-320, FR-VIEW-330
+// file implements: FR-TOOL-070, FR-VIEW-020, FR-VIEW-030, FR-VIEW-060, FR-VIEW-100, FR-VIEW-140, FR-VIEW-150, FR-VIEW-155, FR-VIEW-160, FR-VIEW-170, FR-VIEW-250, FR-VIEW-190, FR-VIEW-230, FR-VIEW-210, FR-TOOL-230, FR-TOOL-240, FR-GREENHOLM-030, FR-TOOL-260, FR-TOOL-270, FR-SNAKE-220, FR-VIEW-280, FR-VIEW-290, FR-VIEW-310, FR-VIEW-320, FR-VIEW-330
 import Foundation
 import Observation
 import RealityKit
@@ -234,9 +234,15 @@ final class GameSession {
             let gone = game.eating.flatMap { remaining(of: $0) }.map { Fraction.whole - $0 } ?? .zero
             swallowPose.step(seconds: seconds, eatingAlive: alive, height: figureHeight, gone: gone)
         }
+        // The pose is worked out from plain values rather than from the match: a drawing
+        // reads what it is given and never reaches back into the game (FR-VIEW-030, ADR-0073).
+        let prey = game.lunge.flatMap { lunge in game.bots.first { $0.id == lunge.prey }?.position }
+        let lungePose = LungePose.of(lunge: game.lunge,
+                                     windUp: game.world.configurations.snake.lunge.windUp, prey: prey,
+                                     sinceLanding: game.landedAt.map { game.elapsed - $0 })
         SnakeEntity.update(snakeEntity, from: game.snake,
                            radius: game.world.configurations.tuning.bodyRadius, lumps: digestion.lumps,
-                           lunge: LungePose.of(game), swallow: swallowPose,
+                           lunge: lungePose, swallow: swallowPose,
                            sway: SnakeBody.Sway(amplitude: game.world.configurations.view.slither.amplitude,
                                                 wavelength: game.world.configurations.view.slither.wavelength,
                                                 crawled: game.snake.crawled))

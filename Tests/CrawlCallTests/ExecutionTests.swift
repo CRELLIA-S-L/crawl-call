@@ -3,7 +3,7 @@
 // bot moving every frame (INV-BOT-010), a shot costing a round and dealing its
 // damage (FR-BOT-060), and the snake paying for it out of its tail (FR-SNAKE-070).
 //
-// verifies: FR-BOT-060, FR-BOT-150, FR-BOT-160, FR-BOT-165, FR-SNAKE-070, INV-BOT-010
+// file verifies: FR-BOT-060, FR-BOT-150, FR-BOT-160, FR-BOT-165, FR-SNAKE-070, INV-BOT-010
 import XCTest
 @testable import CrawlCall
 

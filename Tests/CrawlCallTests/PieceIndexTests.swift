@@ -2,7 +2,7 @@
 // (ADR-0028): every line asked through the index is answered as the whole plan would
 // answer it, and every piece that touches a box is among its candidates.
 //
-// verifies: FR-BOT-050, FR-BOT-118
+// file verifies: FR-BOT-050, FR-BOT-118
 import XCTest
 @testable import CrawlCall
 

@@ -2,7 +2,7 @@
 // no tighter than the turning radius instead of folding the snake in two, and a lunge
 // or a coil, which steer the head themselves, are not held to it.
 //
-// verifies: FR-SNAKE-290
+// file verifies: FR-SNAKE-290
 import simd
 import XCTest
 @testable import CrawlCall

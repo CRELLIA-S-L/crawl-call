@@ -4,7 +4,7 @@
 // is drawn (FR-VIEW-310). Geometry is compared within a tolerance, never for equality
 // (`specs/50-verification.md`).
 //
-// verifies: FR-SNAKE-270, FR-SNAKE-280, FR-VIEW-310, FR-VIEW-160
+// file verifies: FR-SNAKE-270, FR-SNAKE-280, FR-VIEW-310, FR-VIEW-160
 import XCTest
 @testable import CrawlCall
 

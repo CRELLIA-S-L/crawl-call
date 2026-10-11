@@ -7,7 +7,7 @@
 # nobody anything. Standard tools only (ART-040): no `timeout`, which macOS does not
 # ship, and no dependencies.
 #
-# implements: FR-TOOL-190
+# file implements: FR-TOOL-190
 #
 # Usage: scripts/run-tests.sh [simulator-udid]
 #   CRAWLCALL_SIM       the simulator to use, if no argument is given
@@ -98,6 +98,7 @@ build_report() {
   [ "$status" -ne 0 ] && return "$status"
   return 65
 }
+# srs-end: FR-TOOL-210
 
 # The count of tests run and failed, and the name of each that failed. Returns 0 only
 # where the log counts the whole suite and no failure in it. The count is the line
@@ -140,6 +141,7 @@ warnings_report() {
     printf '%s\n' "$found"
   fi
 }
+# srs-end: FR-TOOL-220
 
 build_status=0
 watch build '^\*\* TEST BUILD (SUCCEEDED|FAILED)' xcodebuild -project CrawlCall.xcodeproj -scheme CrawlCall \

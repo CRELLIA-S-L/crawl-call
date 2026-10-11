@@ -3,7 +3,7 @@
 // has, so that a kind added without an identifier, or an error type that writes its
 // own line, fails here rather than on the launch screen.
 //
-// verifies: FR-TOOL-200
+// file verifies: FR-TOOL-200
 import XCTest
 @testable import CrawlCall
 

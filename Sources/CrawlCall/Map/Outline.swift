@@ -13,7 +13,7 @@
 // part inside, with the edge placed between the samples by the field's values, so the
 // edge is smooth to a fraction of the grid's step rather than stepped by it.
 //
-// implements: FR-MAP-200, FR-MAP-170, FR-GREENHOLM-010, FR-MAP-270
+// file implements: FR-MAP-200, FR-MAP-170, FR-GREENHOLM-010, FR-MAP-270
 import Foundation
 import simd
 

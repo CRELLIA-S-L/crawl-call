@@ -60,7 +60,7 @@ derives_from: []
 depends_on: [FR-TOOL-030]
 refines: []
 conflicts_with: []
-code: [Sources/CrawlCall/Map/NavigationGraph.swift, Sources/CrawlCall/Launch.swift, Sources/CrawlCall/Snake/Surfaces.swift]
+code: [Sources/CrawlCall/Map/NavigationGraph.swift, Sources/CrawlCall/Map/World.swift, Sources/CrawlCall/Launch.swift, Sources/CrawlCall/Snake/Surfaces.swift]
 tests: [Tests/CrawlCallTests/NavigationGraphTests.swift, Tests/CrawlCallTests/LaunchTests.swift, Tests/CrawlCallTests/MapParserTests.swift, Tests/CrawlCallTests/FlightTests.swift]
 created: 2026-09-21
 ```
@@ -262,7 +262,7 @@ derives_from: []
 depends_on: [IF-MAP-010]
 refines: []
 conflicts_with: []
-code: [Sources/CrawlCall/Map/MapSpecification.swift, Sources/CrawlCall/Config/MapFormat.swift, Sources/CrawlCall/Setting/Setting.swift, Sources/CrawlCall/Launch.swift, Sources/CrawlCall/Config/Resource.swift, maps/blockout.map]
+code: [Sources/CrawlCall/Map/MapSpecification.swift, Sources/CrawlCall/Config/MapFormat.swift, Sources/CrawlCall/Map/Setting.swift, Sources/CrawlCall/Launch.swift, Sources/CrawlCall/Config/Resource.swift, maps/blockout.map]
 tests: [Tests/CrawlCallTests/MapParserTests.swift, Tests/CrawlCallTests/SurroundingsTests.swift]
 created: 2026-09-24
 ```
@@ -281,7 +281,7 @@ derives_from: []
 depends_on: [FR-MAP-120]
 refines: [FR-MAP-020, FR-BOT-050, FR-VIEW-150]
 conflicts_with: []
-code: [Sources/CrawlCall/Setting/Setting.swift, Sources/CrawlCall/Setting/Scenery.swift, Sources/CrawlCall/Setting/SceneryBuilder.swift, Sources/CrawlCall/Setting/Greenholm.swift, Sources/CrawlCall/Config/EntityName.swift]
+code: [Sources/CrawlCall/Setting/Scenery.swift, Sources/CrawlCall/Setting/SceneryBuilder.swift, Sources/CrawlCall/Setting/Greenholm.swift, Sources/CrawlCall/Config/EntityName.swift]
 tests: [Tests/CrawlCallTests/SurroundingsTests.swift]
 created: 2026-09-24
 ```
@@ -302,7 +302,7 @@ derives_from: []
 depends_on: [FR-MAP-120, FR-VIEW-010, FR-VIEW-020, FR-VIEW-210, IF-VIEW-020]
 refines: []
 conflicts_with: []
-code: [Sources/CrawlCall/Setting/FrameCoverage.swift, Sources/CrawlCall/Setting/Scenery.swift, Sources/CrawlCall/Setting/Greenholm.swift, Sources/CrawlCall/Config/Surroundings.swift, Sources/CrawlCall/Config/Interface.swift, Sources/CrawlCall/View/MatchHost.swift, Sources/CrawlCall/CrawlCallApp.swift, Sources/CrawlCall/Launch.swift]
+code: [Sources/CrawlCall/Setting/FrameCoverage.swift, Sources/CrawlCall/Map/GroundRect.swift, Sources/CrawlCall/Setting/Scenery.swift, Sources/CrawlCall/Setting/Greenholm.swift, Sources/CrawlCall/Config/Surroundings.swift, Sources/CrawlCall/Config/Interface.swift, Sources/CrawlCall/View/MatchHost.swift, Sources/CrawlCall/CrawlCallApp.swift, Sources/CrawlCall/Launch.swift]
 tests: [Tests/CrawlCallTests/SurroundingsTests.swift]
 created: 2026-09-24
 ```
@@ -348,7 +348,7 @@ derives_from: [FR-MAP-025]
 depends_on: [FR-MAP-150, IF-MAP-020]
 refines: []
 conflicts_with: []
-code: [Sources/CrawlCall/Map/MapSpecification.swift, Sources/CrawlCall/Launch.swift]
+code: [Sources/CrawlCall/Map/MapSpecification.swift, Sources/CrawlCall/Map/World.swift, Sources/CrawlCall/Launch.swift]
 tests: [Tests/CrawlCallTests/FlightTests.swift]
 created: 2026-09-25
 ```
@@ -372,7 +372,7 @@ derives_from: []
 depends_on: [IF-MAP-010]
 refines: []
 conflicts_with: []
-code: [Sources/CrawlCall/Map/ScenePlan.swift, Sources/CrawlCall/Setting/Greenholm.swift, Sources/CrawlCall/Setting/Outline.swift, Sources/CrawlCall/Game.swift]
+code: [Sources/CrawlCall/Map/ScenePlan.swift, Sources/CrawlCall/Setting/Greenholm.swift, Sources/CrawlCall/Map/Outline.swift, Sources/CrawlCall/Game.swift]
 tests: [Tests/CrawlCallTests/IslandMapTests.swift]
 created: 2026-09-25
 ```
@@ -427,7 +427,7 @@ derives_from: []
 depends_on: [FR-MAP-120, FR-MAP-170]
 refines: []
 conflicts_with: []
-code: [Sources/CrawlCall/Setting/Outline.swift, Sources/CrawlCall/Setting/DistanceField.swift, Sources/CrawlCall/Setting/Greenholm.swift, Sources/CrawlCall/Setting/SceneryBuilder.swift, Sources/CrawlCall/Setting/Scenery.swift, Sources/CrawlCall/Setting/FrameCoverage.swift, Sources/CrawlCall/Config/Surroundings.swift]
+code: [Sources/CrawlCall/Map/Outline.swift, Sources/CrawlCall/Map/GroundRect.swift, Sources/CrawlCall/Map/Setting.swift, Sources/CrawlCall/Map/DistanceField.swift, Sources/CrawlCall/Setting/Greenholm.swift, Sources/CrawlCall/Setting/SceneryBuilder.swift, Sources/CrawlCall/Setting/Scenery.swift, Sources/CrawlCall/Setting/FrameCoverage.swift, Sources/CrawlCall/Config/Surroundings.swift]
 tests: [Tests/CrawlCallTests/IslandMapTests.swift]
 created: 2026-09-25
 ```
@@ -446,7 +446,7 @@ derives_from: [FR-MAP-100]
 depends_on: [FR-MAP-020, FR-BOT-050]
 refines: []
 conflicts_with: []
-code: [Sources/CrawlCall/Map/Kit.swift, Sources/CrawlCall/Map/SceneBuilder.swift, Sources/CrawlCall/Config/Drawing.swift, config/kit/blockout/legend.json]
+code: [Sources/CrawlCall/Map/Kit.swift, Sources/CrawlCall/View/SceneBuilder.swift, Sources/CrawlCall/Config/Drawing.swift, config/kit/blockout/legend.json]
 tests: [Tests/CrawlCallTests/IslandMapTests.swift]
 created: 2026-09-25
 ```
@@ -484,7 +484,7 @@ derives_from: [FR-MAP-200]
 depends_on: [FR-MAP-170]
 refines: []
 conflicts_with: []
-code: [Sources/CrawlCall/Map/Passages.swift, Sources/CrawlCall/Setting/Setting.swift, Sources/CrawlCall/Setting/Greenholm.swift, Sources/CrawlCall/Setting/Outline.swift, Sources/CrawlCall/Map/MapSpecification.swift, Sources/CrawlCall/Launch.swift, maps/blockout.map]
+code: [Sources/CrawlCall/Map/Passages.swift, Sources/CrawlCall/Map/Setting.swift, Sources/CrawlCall/Setting/Greenholm.swift, Sources/CrawlCall/Map/Outline.swift, Sources/CrawlCall/Map/MapSpecification.swift, Sources/CrawlCall/Launch.swift, maps/blockout.map]
 tests: [Tests/CrawlCallTests/PassageTests.swift]
 created: 2026-09-25
 ```
@@ -549,7 +549,7 @@ derives_from: [FR-MAP-200, FR-MAP-220]
 depends_on: [FR-MAP-170, FR-SNAKE-010, IF-MAP-020]
 refines: []
 conflicts_with: []
-code: [Sources/CrawlCall/Map/Passages.swift, Sources/CrawlCall/Setting/Setting.swift, Sources/CrawlCall/Setting/Greenholm.swift, Sources/CrawlCall/Map/MapSpecification.swift, Sources/CrawlCall/Launch.swift, maps/blockout.map]
+code: [Sources/CrawlCall/Map/Passages.swift, Sources/CrawlCall/Map/Setting.swift, Sources/CrawlCall/Setting/Greenholm.swift, Sources/CrawlCall/Map/MapSpecification.swift, Sources/CrawlCall/Launch.swift, maps/blockout.map]
 tests: [Tests/CrawlCallTests/PassageTests.swift]
 created: 2026-09-25
 ```
@@ -568,7 +568,7 @@ derives_from: []
 depends_on: [FR-MAP-200, FR-MAP-140]
 refines: []
 conflicts_with: []
-code: [Sources/CrawlCall/Setting/Outline.swift, Sources/CrawlCall/Setting/Greenholm.swift, Sources/CrawlCall/Setting/SceneryBuilder.swift, Sources/CrawlCall/Setting/Scenery.swift, Sources/CrawlCall/Setting/SeaFloor.metal, Sources/CrawlCall/Config/GreenholmConfiguration.swift, Sources/CrawlCall/Config/Surroundings.swift, Sources/CrawlCall/Config/Geometry.swift, Sources/CrawlCall/Config/Resource.swift, config/setting/greenholm.json]
+code: [Sources/CrawlCall/Map/Outline.swift, Sources/CrawlCall/Setting/Greenholm.swift, Sources/CrawlCall/Setting/SceneryBuilder.swift, Sources/CrawlCall/Setting/Scenery.swift, Sources/CrawlCall/Setting/SeaFloor.metal, Sources/CrawlCall/Config/GreenholmConfiguration.swift, Sources/CrawlCall/Config/Surroundings.swift, Sources/CrawlCall/Config/Geometry.swift, Sources/CrawlCall/Config/Resource.swift, config/setting/greenholm.json]
 tests: [Tests/CrawlCallTests/SeaFloorTests.swift, Tests/CrawlCallTests/IslandMapTests.swift]
 created: 2026-09-25
 ```

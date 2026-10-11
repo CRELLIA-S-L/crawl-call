@@ -2,7 +2,7 @@
 // is not in the string catalog and is not translated (IF-VIEW-030); it is named here
 // rather than written where it is used (ART-070).
 //
-// implements: FR-TOOL-070, FR-TOOL-260, FR-TOOL-270
+// file implements: FR-TOOL-070, FR-TOOL-260, FR-TOOL-270
 import Foundation
 
 enum DebugText {

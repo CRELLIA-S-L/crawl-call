@@ -1,5 +1,4 @@
 # Crawl Call: Chomp Company
-<!-- SRS-DD-0.20.1 — installed by the framework; --force overwrites local edits -->
 
 `AGENTS.md` is the shared agent guide for this SRS-DD project, and it is imported here so that every session starts with it in front of you rather than behind a pointer:
 
@@ -13,3 +12,4 @@ Claude-specific additions:
 - To check a finished change, use the `srs-check` skill — it reads what each touched requirement asks for and offers to run exactly that; to read the specification as a page, `srs-page`.
 - To freeze the specification at a milestone, use the `srs-baseline` skill — it shows what changed, agrees the number with you, and writes the row; the commit stays yours.
 - To pick up a new framework version, use the `srs-upgrade` skill — one command, no framework clone to keep around.
+- This project keeps the architecture layer and the grounds register, so two more: `srs-arch` to write or redraw a part and `srs-arch-audit` to judge the cut, `srs-bet` for what a requirement stands on.

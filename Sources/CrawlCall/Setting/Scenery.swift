@@ -5,7 +5,7 @@
 // are what the snake collides with, what the bots see and what is cut open
 // (FR-MAP-130).
 //
-// implements: FR-MAP-130, FR-MAP-140, FR-MAP-200, FR-GREENHOLM-060, FR-GREENHOLM-070, FR-MAP-270, FR-MAP-280
+// file implements: FR-MAP-130, FR-MAP-140, FR-MAP-200, FR-GREENHOLM-060, FR-GREENHOLM-070, FR-MAP-270, FR-MAP-280
 import Foundation
 
 struct Scenery: Equatable {

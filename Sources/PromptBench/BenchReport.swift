@@ -2,7 +2,7 @@
 // result, the summary of a variant, the verdict on a run's control and the CSV a run
 // leaves behind. Kept free of FoundationModels so that it can be tested on its own —
 // the model is what the bench measures, and a test of the report must not need one.
-// implements: FR-TOOL-150, FR-TOOL-160
+// file implements: FR-TOOL-150, FR-TOOL-160
 import Foundation
 
 /// One call: what the model did with one variant on one scenario.

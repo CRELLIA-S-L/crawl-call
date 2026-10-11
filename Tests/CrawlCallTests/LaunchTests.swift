@@ -1,7 +1,7 @@
 // "When the game starts, the system shall read…" — this is that moment, exercised
 // the way the app exercises it.
 //
-// verifies: IF-SNAKE-010, IF-MAP-020, IF-VIEW-020, IF-BOT-010
+// file verifies: IF-SNAKE-010, IF-MAP-020, IF-VIEW-020, IF-BOT-010
 import XCTest
 @testable import CrawlCall
 
@@ -85,3 +85,4 @@ final class WorldTests: XCTestCase {
         }
     }
 }
+// srs-end: FR-MAP-010

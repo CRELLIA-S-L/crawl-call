@@ -4,7 +4,7 @@
 // squadmate's body gone from where it fell (FR-SCORE-125) — which only the snake can
 // have taken, since the squads leave bodies where they lie (INV-BOT-020).
 //
-// verifies: FR-SCORE-130, FR-SCORE-070, FR-SCORE-080, FR-SCORE-090, FR-SCORE-100, FR-SCORE-125, INV-BOT-020, IF-SCORE-010
+// file verifies: FR-SCORE-130, FR-SCORE-070, FR-SCORE-080, FR-SCORE-090, FR-SCORE-100, FR-SCORE-125, INV-BOT-020, IF-SCORE-010
 import XCTest
 @testable import CrawlCall
 

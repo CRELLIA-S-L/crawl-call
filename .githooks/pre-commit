@@ -1,5 +1,5 @@
 #!/bin/sh
-# SRS-DD-0.20.1 pre-commit gate.
+# SRS-DD-0.24.0 pre-commit gate.
 # Template copied into target projects as .githooks/pre-commit by
 # tools/srs_init.py. One-time activation in the target repository:
 #     git config core.hooksPath .githooks
@@ -10,34 +10,17 @@
 #     sh .githooks/pre-commit || exit 1
 # It cds to the repository root itself, so it works from anywhere.
 #
-# Validates the specification and regenerates the traceability matrix;
-# fails when the matrix being committed is stale. Add --strict below to
-# also fail on warnings.
+# The gate itself is srs-dd/tools/srs_gate.py, refreshed with the rest of the
+# tooling on every upgrade, so this file has nothing to change when the
+# gate does. --staged adds the grounds register's report on what the
+# commit touches; add --strict to also fail on warnings.
 set -e
 cd "$(git rev-parse --show-toplevel)"
+# The references between the parts are the project's own generated file: it is produced
+# from the code rather than kept, and a commit that leaves it stale is refused here
+# (FR-TOOL-330, FR-TOOL-340).
+#
+# file implements: FR-TOOL-340
+python3 scripts/arch-edges.py --check || exit 1
 
-python3 tools/srs_check.py
-
-git diff --exit-code -- specs/90-traceability.md >/dev/null 2>&1 || {
-    echo "pre-commit: specs/90-traceability.md was regenerated — stage it and retry." >&2
-    exit 1
-}
-
-# Where the project keeps a grounds register, say what the requirements
-# this commit touches are standing on. A report and never a verdict: a
-# refuted hypothesis is not the committer's fault and may be exactly what
-# they are in the middle of repairing, so nothing below can fail the
-# commit. What may not fail is this report — the checker above still
-# fails on a stale matrix.
-# Every staged file, not only the specification: a requirement owns the
-# files its `code` and `tests` fields name, and a commit that changes one of
-# those is exactly the moment this report exists for.
-# NUL-separated and through xargs, not a word-split variable: this shell
-# splits an unquoted expansion on spaces, and the list is now every staged
-# path rather than a handful of `specs/*.md`. A file with a space in its
-# name would arrive as two paths matching nothing, and the report would go
-# quiet about exactly the requirement somebody is touching.
-if [ -f grounds/grounds-config.json ]; then
-    git diff --cached --name-only -z --diff-filter=ACM \
-        | xargs -0 python3 tools/srs_grounds.py --blast || true
-fi
+exec python3 srs-dd/tools/srs_gate.py --staged

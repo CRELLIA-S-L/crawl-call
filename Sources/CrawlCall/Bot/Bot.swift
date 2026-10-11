@@ -2,7 +2,7 @@
 // personality its archetype gave it. No RealityKit here — this is the part a test
 // can read, the same split as `Snake`.
 //
-// implements: FR-BOT-030, FR-BOT-050, FR-BOT-060, FR-BOT-280, FR-BOT-290, FR-BOT-320, FR-BOT-340, FR-BOT-380, FR-BOT-420, FR-BOT-425, FR-BOT-430
+// file implements: FR-BOT-030, FR-BOT-050, FR-BOT-060, FR-BOT-280, FR-BOT-290, FR-BOT-320, FR-BOT-340, FR-BOT-380, FR-BOT-420, FR-BOT-425, FR-BOT-430
 import Foundation
 
 /// The two sides. Which one the player is nearer to is never a property of a squad:

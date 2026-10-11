@@ -1,7 +1,7 @@
 // Reading the configuration files. Paths are relative to the application bundle in
 // the game and to the repository root in the tools (ADR-0012); this is the game half.
 //
-// implements: IF-SNAKE-010, IF-MAP-020, IF-VIEW-020, IF-BOT-010, IF-SCORE-010, FR-TOOL-200
+// file implements: IF-SNAKE-010, IF-MAP-020, IF-VIEW-020, IF-BOT-010, IF-SCORE-010, FR-TOOL-200
 import Foundation
 
 enum ConfigurationError: IdentifiedError {

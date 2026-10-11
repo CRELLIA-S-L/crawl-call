@@ -4,7 +4,7 @@
 // has flown the round range (FR-BOT-405); and a bot does not fire through a squadmate
 // it sees (FR-BOT-410).
 //
-// verifies: FR-BOT-060, FR-BOT-400, FR-BOT-405, FR-BOT-410
+// file verifies: FR-BOT-060, FR-BOT-400, FR-BOT-405, FR-BOT-410
 import XCTest
 @testable import CrawlCall
 

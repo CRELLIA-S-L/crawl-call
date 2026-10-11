@@ -4,7 +4,7 @@
 # replaced on the path by one that records what it was asked to do, so what is under
 # test is the script that ships rather than a description of it.
 #
-# verifies: FR-TOOL-180, FR-TOOL-250
+# file verifies: FR-TOOL-180, FR-TOOL-250
 # Standard tools only (ART-040).
 set -eu
 

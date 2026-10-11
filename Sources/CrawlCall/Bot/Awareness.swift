@@ -6,7 +6,7 @@
 // A body that shows the snake killed it (FR-SCORE-110, FR-SCORE-120) has no case yet:
 // the snake kills nobody it does not eat.
 //
-// implements: FR-SCORE-130, FR-SCORE-070, FR-SCORE-080, FR-SCORE-090, FR-SCORE-100, FR-SCORE-125
+// file implements: FR-SCORE-130, FR-SCORE-070, FR-SCORE-080, FR-SCORE-090, FR-SCORE-100, FR-SCORE-125
 import Foundation
 
 /// A squad's state about the snake (FR-SCORE-130): everything explained, people

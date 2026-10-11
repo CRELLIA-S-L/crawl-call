@@ -2,7 +2,7 @@
 // (IF-VIEW-020): a scene built from a configuration with other numbers in it has
 // those numbers, which it cannot have if they are written anywhere but in the file.
 //
-// verifies: IF-VIEW-020
+// file verifies: IF-VIEW-020
 import RealityKit
 import XCTest
 @testable import CrawlCall

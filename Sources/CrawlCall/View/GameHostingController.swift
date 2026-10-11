@@ -5,7 +5,7 @@
 // iOS 26), and the controller SwiftUI's own `App` creates cannot be told to make it,
 // so the window is built by the scene delegate around this subclass (ADR-0027).
 //
-// implements: FR-VIEW-220
+// file implements: FR-VIEW-220
 import SwiftUI
 import UIKit
 

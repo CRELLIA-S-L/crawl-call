@@ -3,7 +3,7 @@
 // hands out go to whoever has waited longest with the most at stake (FR-BOT-160),
 // after any bot something has just happened to (FR-BOT-170).
 //
-// implements: FR-BOT-150, FR-BOT-160, FR-BOT-170
+// file implements: FR-BOT-150, FR-BOT-160, FR-BOT-170
 import Foundation
 
 struct Slots {

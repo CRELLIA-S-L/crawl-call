@@ -2,7 +2,7 @@
 // tail, resting on the surface, rounded at the head and narrowing to the tail's end,
 // facing out, untwisted down a drop, and under its ceiling of triangles.
 //
-// verifies: FR-VIEW-250, FR-VIEW-260, FR-VIEW-270
+// file verifies: FR-VIEW-250, FR-VIEW-260, FR-VIEW-270
 import simd
 import XCTest
 @testable import CrawlCall

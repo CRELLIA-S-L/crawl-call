@@ -15,7 +15,7 @@
 // The figure faces +z, towards the camera (FR-VIEW-010), because a bot has no facing
 // of its own to turn it by.
 //
-// implements: FR-VIEW-060, FR-VIEW-070, FR-VIEW-290, FR-VIEW-240
+// file implements: FR-VIEW-060, FR-VIEW-070, FR-VIEW-290, FR-VIEW-240
 import Foundation
 import RealityKit
 import UIKit

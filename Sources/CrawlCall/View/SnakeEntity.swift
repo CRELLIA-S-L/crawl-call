@@ -9,7 +9,7 @@
 //
 // Its skin is green and spotted (FR-VIEW-270), painted by `SnakeSkin.metal`.
 //
-// implements: FR-SNAKE-010, FR-SNAKE-020, FR-VIEW-250, FR-VIEW-260, FR-VIEW-270, FR-VIEW-280, FR-VIEW-310, FR-VIEW-320, FR-VIEW-330, FR-SNAKE-055
+// file implements: FR-SNAKE-010, FR-SNAKE-020, FR-VIEW-250, FR-VIEW-260, FR-VIEW-270, FR-VIEW-280, FR-VIEW-310, FR-VIEW-320, FR-VIEW-330, FR-SNAKE-055
 import Foundation
 import Metal
 import RealityKit

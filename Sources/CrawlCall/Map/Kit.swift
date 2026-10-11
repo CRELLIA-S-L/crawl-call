@@ -7,7 +7,7 @@
 // holds distances, not storeys (IF-MAP-020) — so it lives with the geometry it is a
 // property of. Said out loud because the specification is silent on it.
 //
-// implements: FR-MAP-100, FR-TOOL-200, FR-MAP-150, FR-MAP-210, FR-TOOL-020
+// file implements: FR-MAP-100, FR-TOOL-200, FR-MAP-150, FR-MAP-210, FR-TOOL-020
 import Foundation
 
 struct Kit: Decodable, Equatable {

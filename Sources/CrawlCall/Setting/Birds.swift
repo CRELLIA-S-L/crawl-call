@@ -10,7 +10,7 @@
 // looked at — and its ends just outside the frame at that line, so that the flock
 // enters and leaves out of sight on any window, however wide the widest.
 //
-// implements: FR-GREENHOLM-030
+// file implements: FR-GREENHOLM-030
 import Foundation
 import simd
 

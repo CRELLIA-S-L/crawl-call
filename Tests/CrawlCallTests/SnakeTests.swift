@@ -1,7 +1,7 @@
 // The head's movement and the tail that follows it. Geometry is compared within a
 // tolerance, never for equality (`specs/50-verification.md`).
 //
-// verifies: FR-SNAKE-010, FR-SNAKE-015, FR-SNAKE-020, FR-SNAKE-030, FR-SNAKE-220, FR-MAP-025, FR-MAP-150, FR-SNAKE-260
+// file verifies: FR-SNAKE-010, FR-SNAKE-015, FR-SNAKE-020, FR-SNAKE-030, FR-SNAKE-220, FR-MAP-025, FR-MAP-150, FR-SNAKE-260
 import XCTest
 @testable import CrawlCall
 
@@ -866,3 +866,4 @@ final class SnakeClimbTests: XCTestCase {
         XCTAssertNil(surfaces.rise(at: SIMD3(0, 0, 0), from: 0), "a plain floor cell offered a way up")
     }
 }
+// srs-end: FR-SNAKE-010

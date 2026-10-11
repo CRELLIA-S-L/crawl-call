@@ -14,7 +14,7 @@
 // metres. The contract is the SDK's own (RealityKitSurfaceShader.h, iOS 27.0 SDK), as
 // for the water and the floor (WaterRipple.metal, SeaFloor.metal).
 //
-// implements: FR-VIEW-270
+// file implements: FR-VIEW-270
 #include <RealityKit/RealityKit.h>
 
 using namespace metal;

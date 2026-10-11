@@ -9,7 +9,7 @@
 // which is a bug the grid cannot see and a player can. Said out loud because the
 // specification is silent on it.
 //
-// implements: FR-TOOL-030, FR-MAP-020, FR-MAP-150, FR-MAP-025, FR-MAP-220
+// file implements: FR-TOOL-030, FR-MAP-020, FR-MAP-150, FR-MAP-025, FR-MAP-220
 import Foundation
 
 struct NavigationGraph: Equatable {

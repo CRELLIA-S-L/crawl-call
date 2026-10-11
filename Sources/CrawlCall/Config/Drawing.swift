@@ -2,7 +2,7 @@
 // rather than the look (ART-070). What the models themselves look like — sizes,
 // colours, materials — waits for their rework (Q-280).
 //
-// implements: FR-VIEW-170, FR-MAP-210, FR-VIEW-240, FR-VIEW-250, FR-VIEW-260, FR-VIEW-270, FR-VIEW-280, FR-VIEW-290, FR-VIEW-300, FR-VIEW-310, FR-VIEW-320
+// file implements: FR-VIEW-170, FR-MAP-210, FR-VIEW-240, FR-VIEW-250, FR-VIEW-260, FR-VIEW-270, FR-VIEW-280, FR-VIEW-290, FR-VIEW-300, FR-VIEW-310, FR-VIEW-320
 import Foundation
 
 /// How a module drawn as a figure fills its box (ADR-0034). Only the drawing: for sight

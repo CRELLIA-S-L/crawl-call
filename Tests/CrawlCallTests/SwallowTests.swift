@@ -4,7 +4,7 @@
 // away at the mouth, its boots last. Geometry is compared within a tolerance, never for
 // equality (`specs/50-verification.md`).
 //
-// verifies: FR-VIEW-320
+// file verifies: FR-VIEW-320
 import RealityKit
 import simd
 import XCTest

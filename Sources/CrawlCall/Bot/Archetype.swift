@@ -6,7 +6,7 @@
 // (IF-BOT-010), so a kind with no entry there is a configuration error and not a
 // silent default.
 //
-// implements: FR-BOT-010, INV-BOT-030
+// file implements: FR-BOT-010, INV-BOT-030
 import Foundation
 
 enum Archetype: String, CaseIterable, Equatable {

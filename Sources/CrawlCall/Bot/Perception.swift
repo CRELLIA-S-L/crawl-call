@@ -5,7 +5,7 @@
 // a cone round the way the bot faces (FR-BOT-280), as wide as the configuration's
 // angle — and with nothing in the way. A bot does not see with the back of its head.
 //
-// implements: FR-BOT-050, FR-BOT-230, FR-BOT-240, FR-BOT-320
+// file implements: FR-BOT-050, FR-BOT-230, FR-BOT-240, FR-BOT-320
 import Foundation
 
 enum Perception {

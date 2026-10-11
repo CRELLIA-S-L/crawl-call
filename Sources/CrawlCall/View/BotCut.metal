@@ -8,7 +8,7 @@
 // iOS 27.0 SDK): a surface shader sets the base colour or the entity renders white, and
 // the material's own values reach it through material_constants().
 //
-// implements: FR-VIEW-320
+// file implements: FR-VIEW-320
 #include <RealityKit/RealityKit.h>
 
 using namespace metal;

@@ -19,7 +19,7 @@
 // (RealityKitSurfaceShader.h, iOS 27.0 SDK), as for the hole shader beside the
 // modules (SeeThroughHole.metal).
 //
-// implements: FR-GREENHOLM-070, FR-MAP-280
+// file implements: FR-GREENHOLM-070, FR-MAP-280
 #include <RealityKit/RealityKit.h>
 
 using namespace metal;

@@ -2,7 +2,7 @@
 // catalogue: an archetype may add to it, and nothing may quietly drop out of it
 // (FR-BOT-200).
 //
-// implements: FR-BOT-200, FR-BOT-360, FR-BOT-370
+// file implements: FR-BOT-200, FR-BOT-360, FR-BOT-370
 import Foundation
 
 /// What a shot is aimed at. The snake is named by the point that is being shot at —

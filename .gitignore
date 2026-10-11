@@ -28,3 +28,8 @@ __pycache__/
 *.xcodeproj/project.xcworkspace/
 runs/
 bench.csv
+
+# Written by a build that numbers itself from the commits behind it, and read by
+# nothing here; ignored so that a checkout which has built such a branch does not show
+# it as untracked.
+Generated.xcconfig

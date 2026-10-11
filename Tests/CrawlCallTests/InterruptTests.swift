@@ -2,7 +2,7 @@
 // found when it happens and not again while it lasts, the bot it happened to put ahead
 // of the queue, and — in a match — deciding in the very next frame.
 //
-// verifies: FR-BOT-170
+// file verifies: FR-BOT-170
 import XCTest
 @testable import CrawlCall
 

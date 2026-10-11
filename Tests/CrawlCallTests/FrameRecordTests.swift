@@ -2,7 +2,7 @@
 // how many it dropped, the file reads as the columns promise, events land in the frame
 // they happened in, and a real match — deliberating, eating, ending — records itself.
 //
-// verifies: FR-TOOL-230, FR-TOOL-240
+// file verifies: FR-TOOL-230, FR-TOOL-240
 import RealityKit
 import XCTest
 @testable import CrawlCall

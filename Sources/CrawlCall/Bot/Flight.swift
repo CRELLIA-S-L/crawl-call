@@ -6,7 +6,7 @@
 // on, rounded at both ends; the snake's is the body radius round the line through its
 // head and tail points, raised off the ground by the radius, as it is drawn (ADR-0063).
 //
-// implements: FR-BOT-400, FR-BOT-405
+// file implements: FR-BOT-400, FR-BOT-405
 import Foundation
 
 enum Flight {

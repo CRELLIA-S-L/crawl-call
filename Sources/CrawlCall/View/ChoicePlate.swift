@@ -5,7 +5,7 @@
 // Drawn as the rest of the interface is (FR-VIEW-120): a rounded, light, translucent
 // plate and a bold rounded typeface.
 //
-// implements: FR-VIEW-190, FR-VIEW-230, FR-VIEW-120, FR-VIEW-200
+// file implements: FR-VIEW-190, FR-VIEW-230, FR-VIEW-120, FR-VIEW-200
 import SwiftUI
 
 struct ChoicePlate: View {

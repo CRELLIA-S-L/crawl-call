@@ -7,23 +7,8 @@
 // is not something the specification settles yet; what it must not do — carry on with
 // defaults — it does settle, by ADR-0012's rule that a typo is an error.
 //
-// implements: IF-SNAKE-010, IF-MAP-020, IF-VIEW-020, IF-BOT-010, FR-MAP-020, FR-MAP-160, FR-TOOL-200, FR-MAP-120, FR-MAP-140, IF-GREENHOLM-010, FR-MAP-190, FR-MAP-260
+// file implements: IF-SNAKE-010, IF-MAP-020, IF-VIEW-020, IF-BOT-010, FR-MAP-020, FR-MAP-160, FR-TOOL-200, FR-MAP-120, FR-MAP-140, IF-GREENHOLM-010, FR-MAP-190, FR-MAP-260
 import Foundation
-
-/// Everything a match runs on, read once at start: the tuning, the kit, the map as
-/// parsed, the setting it names, the graph the bots path over and the geometry the
-/// player sees. Assembled in one place so that the scene and the graph cannot come
-/// from different files.
-struct World {
-    let configurations: Configurations
-    let kit: Kit
-    let map: MapSpecification
-    /// The world the arena stands in (FR-MAP-120). Scenery only: nothing below reads
-    /// it but the view (FR-MAP-130).
-    let setting: Setting
-    let graph: NavigationGraph
-    let plan: ScenePlan
-}
 
 enum Launch {
     /// Reads everything the game starts on: the configurations, then the kit the map

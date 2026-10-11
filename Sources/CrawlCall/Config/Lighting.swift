@@ -2,7 +2,7 @@
 // look (ART-070); the look itself — the sky's colour, the sun's strength and where it
 // stands — is the view configuration's (IF-VIEW-020, ADR-0026).
 //
-// implements: FR-VIEW-130, FR-VIEW-030
+// file implements: FR-VIEW-130, FR-VIEW-030
 import Foundation
 import RealityKit
 

@@ -3,7 +3,7 @@
 // whatever else there is (FR-BOT-120) — and an alarmed squad keeps together
 // (FR-BOT-190).
 //
-// verifies: FR-BOT-120, FR-BOT-180, FR-BOT-190
+// file verifies: FR-BOT-120, FR-BOT-180, FR-BOT-190
 import XCTest
 @testable import CrawlCall
 

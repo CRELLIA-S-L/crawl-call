@@ -6,7 +6,7 @@
 // wide a frame this device can give the game, which the surroundings are sized for
 // (FR-MAP-140).
 //
-// implements: FR-VIEW-230, FR-TOOL-230, FR-MAP-140
+// file implements: FR-VIEW-230, FR-TOOL-230, FR-MAP-140
 import Foundation
 
 @MainActor

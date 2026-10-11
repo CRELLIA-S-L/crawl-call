@@ -3,7 +3,7 @@
 // placed on, the line test itself, the switch, and the four together over the real
 // blockout.
 //
-// verifies: FR-TOOL-260, FR-TOOL-270, FR-VIEW-140, FR-VIEW-150, FR-VIEW-155
+// file verifies: FR-TOOL-260, FR-TOOL-270, FR-VIEW-140, FR-VIEW-150, FR-VIEW-155
 import RealityKit
 import XCTest
 @testable import CrawlCall

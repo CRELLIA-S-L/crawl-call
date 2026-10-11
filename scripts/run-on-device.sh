@@ -19,7 +19,7 @@
 # Standard tools only (ART-040): `xcrun devicectl` and `plutil`, which read the JSON
 # `devicectl` writes without a language runtime in between.
 #
-# implements: FR-TOOL-180
+# file implements: FR-TOOL-180
 #
 # Usage: CRAWLCALL_DEVICE=<udid> scripts/run-on-device.sh <app> [screenshot]
 #   CRAWLCALL_DEVICE   the device to install on; required
@@ -59,6 +59,7 @@ frames_report() {
     printf "\n"
   }'
 }
+# srs-end: FR-TOOL-250
 
 if [ -z "$APP" ]; then
   echo "usage: CRAWLCALL_DEVICE=<udid> $0 <app> [screenshot]" >&2

@@ -2,7 +2,7 @@
 // of fixed size so that recording a frame allocates nothing and cannot itself be the
 // spike it looks for, and written as CSV (FR-TOOL-240).
 //
-// implements: FR-TOOL-230, FR-TOOL-240
+// file implements: FR-TOOL-230, FR-TOOL-240
 import Foundation
 
 /// What a frame's own step spends its time on. `step` is the match's whole step and

@@ -10,7 +10,7 @@
 // arrows point to the floor above (FR-MAP-150); one too steep to climb is refused
 // here, where the map is read (FR-MAP-160, ADR-0033).
 //
-// implements: IF-MAP-010, FR-MAP-120, FR-MAP-150, FR-MAP-160, FR-MAP-180, FR-MAP-190, FR-TOOL-010, FR-TOOL-200, FR-MAP-220, FR-MAP-260
+// file implements: IF-MAP-010, FR-MAP-120, FR-MAP-150, FR-MAP-160, FR-MAP-180, FR-MAP-190, FR-TOOL-010, FR-TOOL-200, FR-MAP-220, FR-MAP-260
 import Foundation
 
 struct MapSpecification: Equatable {

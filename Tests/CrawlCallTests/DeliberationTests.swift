@@ -4,7 +4,7 @@
 // The arena is built here rather than loaded, so that what is in the way, where the
 // cover is and how far the snake stands are all known quantities.
 //
-// verifies: FR-BOT-080, FR-BOT-090, FR-BOT-118, FR-BOT-200, FR-BOT-210, IF-BOT-010, FR-BOT-220
+// file verifies: FR-BOT-080, FR-BOT-090, FR-BOT-118, FR-BOT-200, FR-BOT-210, IF-BOT-010, FR-BOT-220
 import XCTest
 @testable import CrawlCall
 

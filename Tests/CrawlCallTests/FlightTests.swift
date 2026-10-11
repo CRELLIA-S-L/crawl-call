@@ -2,7 +2,7 @@
 // above (FR-MAP-150), refused when too steep (FR-MAP-160), joined into the graph by
 // the step height (FR-MAP-020), built as blocks, and climbed by the snake and the bots.
 //
-// verifies: IF-MAP-010, FR-MAP-020, FR-MAP-150, FR-MAP-160, FR-MAP-025, FR-SNAKE-016
+// file verifies: IF-MAP-010, FR-MAP-020, FR-MAP-150, FR-MAP-160, FR-MAP-025, FR-SNAKE-016
 import XCTest
 @testable import CrawlCall
 

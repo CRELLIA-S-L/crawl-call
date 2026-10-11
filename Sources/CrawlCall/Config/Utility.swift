@@ -2,7 +2,7 @@
 // tuning (ART-070); the weight of each term against the others is tuning, and is in
 // the bot configuration (IF-BOT-010).
 //
-// implements: FR-BOT-340, FR-BOT-080, FR-BOT-090, FR-BOT-210, FR-BOT-150, FR-BOT-160, FR-BOT-060, FR-BOT-270, FR-BOT-280, FR-BOT-050, FR-BOT-230, FR-BOT-400, FR-BOT-430
+// file implements: FR-BOT-340, FR-BOT-080, FR-BOT-090, FR-BOT-210, FR-BOT-150, FR-BOT-160, FR-BOT-060, FR-BOT-270, FR-BOT-280, FR-BOT-050, FR-BOT-230, FR-BOT-400, FR-BOT-430
 import Foundation
 
 enum Utility {

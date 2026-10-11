@@ -1,7 +1,7 @@
 // The same prompt bench, run from the command line on the Mac: the system model is the
 // same one the phone runs, and without rendering a variant takes seconds instead of
 // minutes. Usage: bench [variants|all] [repeats]; README.md beside this file has the rest.
-// implements: FR-TOOL-150
+// file implements: FR-TOOL-150
 import Foundation
 import FoundationModels
 

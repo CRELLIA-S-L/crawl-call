@@ -2,7 +2,7 @@
 // from `config/setting/greenholm.json` when a map that stands on it is loaded. Its
 // numbers are taste, settled by eye on the phone, so none of them is in code (ART-070).
 //
-// implements: IF-GREENHOLM-010, FR-MAP-270, FR-MAP-280, FR-GREENHOLM-050, FR-GREENHOLM-060, FR-GREENHOLM-070
+// file implements: IF-GREENHOLM-010, FR-MAP-270, FR-MAP-280, FR-GREENHOLM-050, FR-GREENHOLM-060, FR-GREENHOLM-070
 import Foundation
 
 struct GreenholmConfiguration: Decodable, Equatable {

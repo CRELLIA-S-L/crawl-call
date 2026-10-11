@@ -2,7 +2,7 @@
 // for, and where the knob is drawn while it asks. And what the eat button knows
 // about itself (FR-VIEW-160).
 //
-// verifies: FR-VIEW-050, FR-VIEW-160
+// file verifies: FR-VIEW-050, FR-VIEW-160
 import XCTest
 @testable import CrawlCall
 

@@ -23,7 +23,7 @@
 // tree at the water's edge and a cell the drawn ground closes over are all found by
 // the same comparison, and so is whatever nobody has thought of yet.
 //
-// implements: FR-MAP-260
+// file implements: FR-MAP-260
 import Foundation
 
 enum Passages {

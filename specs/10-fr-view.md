@@ -57,7 +57,7 @@ derives_from: [FR-VIEW-010]
 depends_on: [FR-MAP-010]
 refines: []
 conflicts_with: []
-code: [Sources/CrawlCall/View/SeeThrough.swift, Sources/CrawlCall/Map/SceneBuilder.swift, Sources/CrawlCall/GameSession.swift]
+code: [Sources/CrawlCall/View/SeeThrough.swift, Sources/CrawlCall/View/SceneBuilder.swift, Sources/CrawlCall/GameSession.swift]
 tests: [Tests/CrawlCallTests/SeeThroughTests.swift]
 created: 2026-09-22
 ```
@@ -79,7 +79,7 @@ derives_from: [FR-VIEW-010]
 depends_on: [FR-SNAKE-010, FR-VIEW-020, IF-VIEW-020]
 refines: []
 conflicts_with: []
-code: [Sources/CrawlCall/View/SeeThrough.swift, Sources/CrawlCall/Map/Sight.swift, Sources/CrawlCall/Map/SceneBuilder.swift, Sources/CrawlCall/GameSession.swift, Sources/CrawlCall/View/SeeThroughHole.metal, Sources/CrawlCall/Config/Geometry.swift, Sources/CrawlCall/Config/Resource.swift]
+code: [Sources/CrawlCall/View/SeeThrough.swift, Sources/CrawlCall/Map/Sight.swift, Sources/CrawlCall/View/SceneBuilder.swift, Sources/CrawlCall/GameSession.swift, Sources/CrawlCall/View/SeeThroughHole.metal, Sources/CrawlCall/Config/Geometry.swift, Sources/CrawlCall/Config/Resource.swift]
 tests: [Tests/CrawlCallTests/SeeThroughTests.swift]
 created: 2026-09-22
 ```
@@ -104,7 +104,7 @@ derives_from: [FR-VIEW-010]
 depends_on: [FR-SNAKE-010, FR-VIEW-020, IF-VIEW-020]
 refines: []
 conflicts_with: []
-code: [Sources/CrawlCall/View/SeeThrough.swift, Sources/CrawlCall/Map/SceneBuilder.swift, Sources/CrawlCall/GameSession.swift, Sources/CrawlCall/View/SeeThroughHole.metal, Sources/CrawlCall/Config/Interface.swift]
+code: [Sources/CrawlCall/View/SeeThrough.swift, Sources/CrawlCall/View/SceneBuilder.swift, Sources/CrawlCall/GameSession.swift, Sources/CrawlCall/View/SeeThroughHole.metal, Sources/CrawlCall/Config/Interface.swift]
 tests: [Tests/CrawlCallTests/SeeThroughTests.swift, Tests/CrawlCallTests/WindowTests.swift]
 created: 2026-09-23
 ```
@@ -521,7 +521,7 @@ derives_from: []
 depends_on: [FR-VIEW-170, FR-GREENHOLM-030]
 refines: []
 conflicts_with: []
-code: [Sources/CrawlCall/Map/SceneBuilder.swift, Sources/CrawlCall/View/ShotEntity.swift, Sources/CrawlCall/Setting/SceneryBuilder.swift, Sources/CrawlCall/Config/Drawing.swift, Sources/CrawlCall/View/Figure.swift]
+code: [Sources/CrawlCall/View/SceneBuilder.swift, Sources/CrawlCall/View/ShotEntity.swift, Sources/CrawlCall/Setting/SceneryBuilder.swift, Sources/CrawlCall/Config/Drawing.swift, Sources/CrawlCall/View/Figure.swift]
 tests: [Tests/CrawlCallTests/RoundedBoxTests.swift, Tests/CrawlCallTests/FigureTests.swift]
 created: 2026-09-25
 ```

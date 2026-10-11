@@ -4,7 +4,7 @@
 # which does not import FoundationModels, together with the checks in
 # `Tests/PromptBenchTests/main.swift`. Needs the Swift compiler and nothing else.
 #
-# verifies: FR-TOOL-150, FR-TOOL-160
+# file verifies: FR-TOOL-150, FR-TOOL-160
 set -eu
 here=$(cd "$(dirname "$0")/.." && pwd)
 work=$(mktemp -d)

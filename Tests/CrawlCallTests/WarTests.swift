@@ -4,7 +4,7 @@
 // hides from the enemy as from the snake (FR-BOT-330); and a bot that stands looks
 // where there is something to see, not at a wall (FR-BOT-340).
 //
-// verifies: FR-BOT-060, FR-BOT-140, FR-BOT-320, FR-BOT-330, FR-BOT-340, FR-VIEW-300, FR-BOT-400
+// file verifies: FR-BOT-060, FR-BOT-140, FR-BOT-320, FR-BOT-330, FR-BOT-340, FR-VIEW-300, FR-BOT-400
 import RealityKit
 import XCTest
 @testable import CrawlCall

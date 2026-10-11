@@ -1,12 +1,13 @@
 ---
 name: srs-baseline
-description: Freeze this project's specification as a baseline — read what changed since the last one, agree the version with the maintainer, then run tools/srs_baseline.py, which writes the row into specs/92-baselines.md. Invoke when the user asks to cut, freeze, record or tag a baseline of the specification, or at a milestone worth being able to compare against later. The commit, and any spec/v* tag, stay with the maintainer's git client.
+description: Freeze this project's specification as a baseline — read what changed since the last one, agree the version with the maintainer, then run srs-dd/tools/srs_baseline.py, which writes the row into specs/92-baselines.md. Invoke when the user asks to cut, freeze, record or tag a baseline of the specification, or at a milestone worth being able to compare against later. The commit, and any spec/v* tag, stay with the maintainer's git client.
 ---
+<!-- Copyright (c) 2026 CRELLIA S.L. — part of SRS-DD, distributed under the MIT License -->
 
 # Freezing a baseline
 
 A baseline is a row in `specs/92-baselines.md` and the commit that adds it.
-The rules are in the Baselines section of `specs/README.md`; read it if you have not in this session.
+The rules are in the Baselines section of `srs-dd/standard.md`; read it if you have not in this session.
 The command writes the row.
 What it will not decide is the number that row carries, and it deliberately stops before the commit.
 
@@ -16,11 +17,11 @@ What it will not decide is the number that row carries, and it deliberately stop
    The newest version in `specs/92-baselines.md` is the one to compare against:
 
    ```
-   python3 tools/srs_view.py --diff <that version>
+   python3 srs-dd/tools/srs_view.py --diff <that version>
    ```
 
    A version, not a tag: a baseline need not have one.
-   Show the user what comes back — requirements added, removed, reworded, each named as `AGENTS.md` asks at its first mention, which `python3 tools/srs_view.py --cite <ID>…` prints.
+   Show the user what comes back — requirements added, removed, reworded, each named as `AGENTS.md` asks at its first mention, which `python3 srs-dd/tools/srs_view.py --cite <ID>…` prints.
    A column of bare numbers is the one thing this list must not be: it is the last look before the freeze.
    This is what the baseline is about to freeze, and it is the last moment to notice something in it that was not meant to be frozen yet.
 
@@ -32,7 +33,7 @@ What it will not decide is the number that row carries, and it deliberately stop
    The procedure is `srs-audit`; offer it and accept a no.
 
 3. **Propose the version, and let the maintainer settle it.**
-   The scheme is in the Baselines section of `specs/README.md`.
+   The scheme is in the Baselines section of `srs-dd/standard.md`.
    Read step 1 against it and say which reading you used, out loud — "MINOR, because two requirements were added and none removed".
 
    Do not settle it yourself.
@@ -41,8 +42,8 @@ What it will not decide is the number that row carries, and it deliberately stop
 4. **Write the row.**
 
    ```
-   python3 tools/srs_baseline.py X.Y.Z --dry-run
-   python3 tools/srs_baseline.py X.Y.Z
+   python3 srs-dd/tools/srs_baseline.py X.Y.Z --dry-run
+   python3 srs-dd/tools/srs_baseline.py X.Y.Z
    ```
 
    The dry run prints the row and writes nothing.
@@ -59,8 +60,8 @@ What it will not decide is the number that row carries, and it deliberately stop
 
 ## When it refuses
 
-Exit code 2, before writing anything: a version the log already records, or an error from the checker.
-A warning does not stop it; the Baselines section of `specs/README.md` says on what terms, and why.
+Exit code 2, before the row is written: a malformed version, a missing log or one with no table, a version the log already records, or an error from the checker.
+A warning does not stop it; the Baselines section of `srs-dd/standard.md` says on what terms, and why.
 Fix the cause and run it again — there is nothing to clean up, and nothing in the history was touched.
 
 ## What this procedure does not do

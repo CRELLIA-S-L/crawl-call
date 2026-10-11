@@ -33,7 +33,7 @@ derives_from: [FR-TOOL-010]
 depends_on: [FR-MAP-100]
 refines: []
 conflicts_with: []
-code: [Sources/CrawlCall/Map/ScenePlan.swift, Sources/CrawlCall/Map/SceneBuilder.swift, Sources/CrawlCall/Config/EntityName.swift, Sources/CrawlCall/Config/MapFormat.swift, Sources/CrawlCall/Config/Geometry.swift, Sources/CrawlCall/Map/Kit.swift]
+code: [Sources/CrawlCall/Map/ScenePlan.swift, Sources/CrawlCall/View/SceneBuilder.swift, Sources/CrawlCall/Config/EntityName.swift, Sources/CrawlCall/Config/MapFormat.swift, Sources/CrawlCall/Config/Geometry.swift, Sources/CrawlCall/Map/Kit.swift]
 tests: [Tests/CrawlCallTests/ScenePlanTests.swift, Tests/CrawlCallTests/MapParserTests.swift, Tests/CrawlCallTests/LaunchTests.swift]
 created: 2026-09-21
 ```
@@ -313,6 +313,43 @@ When a commit stages the Xcode project file, the pre-commit hook **shall** rejec
 
 **Rationale.** Concept §17.4: choosing a team in Xcode silently writes the Team ID into `project.pbxproj`, bypassing the config; the diff is checked before every commit — a job for the hook.
 
+### FR-TOOL-330 — The references between the parts are produced from the code
+
+```yaml
+status: implemented
+verification: T
+derives_from: []
+depends_on: []
+refines: []
+conflicts_with: []
+code: [scripts/arch-edges.py]
+tests: [scripts/arch-edges-selftest.sh]
+created: 2026-10-11
+```
+
+A command in the repository **shall** write the references between the parts of the system into `arch/edges.json`, read from the source files by the rule that a type declared at the top level of a file names that file, and a mention of such a name elsewhere — outside a string literal, outside a comment, not qualified by a container, and not a name the mentioning file declares itself — is a reference.
+
+**Rationale.** The architecture layer declares what each part leans on, and the checker reads imports in Python and nothing else; this project is Swift and Metal, so without a supplied `arch/edges.json` the declared model has nothing that ever disagrees with it, and `Warnings: 0` is the absence of a verdict rather than a verdict (`srs-dd/arch.md`). The file was supplied by hand on 2026-10-10 (ADR-0071), which left the model compared against a list somebody kept rather than against the code of the day — the standard says as much: a stale list is silent the way an absent one is. The rule is ADR-0071's, and writing it as a command found two places where the hand pass had departed from it: a name the mentioning file declares itself at any depth, and a name qualified by its container, each of which had produced an edge that does not exist (ADR-0072).
+
+### FR-TOOL-340 — A commit leaves the references as the code has them
+
+```yaml
+status: implemented
+verification: I
+derives_from: []
+depends_on: [FR-TOOL-330]
+refines: []
+conflicts_with: []
+code: [.githooks/pre-commit, .github/workflows/srs.yml]
+tests: []
+created: 2026-10-11
+```
+
+The pre-commit hook and the pipeline **shall** reject a commit whose `arch/edges.json` differs from what the command of FR-TOOL-330 writes, naming the command to run.
+
+**Rationale.** A generated file nothing holds against its source is the staleness the generator was written to end: the one thing the hand-kept file was never caught at was going out of date. The project already gates the three files its checkers generate (`srs-dd/tools/srs_gate.py`); this is the same guard for the one file the project generates itself, and it belongs with the other pre-commit guard, FR-TOOL-140.
+Verified by inspection rather than by a test: both ends are one line of wiring, and a test that drove the hook in a throwaway repository would see the commit refused by the gate for other reasons and pass for the wrong one. The command's own behaviour under `--check`, which the wiring leans on, is tested (FR-TOOL-330).
+
 ## Prompt tests
 
 ### FR-TOOL-150 — The prompt bench
@@ -470,7 +507,7 @@ derives_from: []
 depends_on: []
 refines: []
 conflicts_with: []
-code: [Sources/CrawlCall/Config/ErrorIdentifier.swift, Sources/CrawlCall/Config/Schema.swift, Sources/CrawlCall/Config/Configurations+Load.swift, Sources/CrawlCall/Map/Kit.swift, Sources/CrawlCall/Map/MapSpecification.swift, Sources/CrawlCall/Launch.swift, Sources/CrawlCall/View/SceneView.swift, Sources/CrawlCall/Setting/Setting.swift, Sources/CrawlCall/Setting/SceneryBuilder.swift, Sources/CrawlCall/Setting/FrameCoverage.swift]
+code: [Sources/CrawlCall/Config/ErrorIdentifier.swift, Sources/CrawlCall/Config/Schema.swift, Sources/CrawlCall/Config/Configurations+Load.swift, Sources/CrawlCall/Map/Kit.swift, Sources/CrawlCall/Map/MapSpecification.swift, Sources/CrawlCall/Launch.swift, Sources/CrawlCall/View/SceneView.swift, Sources/CrawlCall/Map/Setting.swift, Sources/CrawlCall/Setting/SceneryBuilder.swift, Sources/CrawlCall/Setting/FrameCoverage.swift]
 tests: [Tests/CrawlCallTests/ErrorIdentifierTests.swift]
 exempt: [unlinked]
 created: 2026-09-24
