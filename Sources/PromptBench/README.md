@@ -7,7 +7,7 @@ It calls the system model directly with no rendering, so a hundred calls take mi
 
 ```
 swiftc -O -target arm64-apple-macos27.0 -parse-as-library \
-    PromptBench.swift PromptVariants.swift main.swift -o bench
+    PromptBench.swift PromptVariants.swift BenchReport.swift main.swift -o bench
 ./bench all 5                 # every instruction variant, 5 calls per scenario
 ./bench v2-soft 10            # one variant
 ./bench patterns 30           # kept session vs fresh vs fresh-without-schema

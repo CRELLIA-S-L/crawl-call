@@ -173,3 +173,10 @@ What remains is what a decision inside the repository cannot close.
 - **Found:** on 2026-09-30, when the snake came to crawl over its own body (FR-SNAKE-055) and FR-SNAKE-050, the tail stopping the head, was superseded.
 - **What diverged:** FR-MAP-080 asks every map for two corridors narrow enough that a snake of the trap length locks itself in, and depends on FR-SNAKE-050; a snake that crawls over itself cannot lock itself in.
 - **Still needed:** the maintainer's word on FR-MAP-080: withdraw it, keep narrow corridors for what the tail does to the bots (FR-SNAKE-040) and reword it so, or leave it deferred until the maps are designed.
+
+### Q-540 — CON-CMD-010's rationale cites a measured window a later measurement contradicts
+
+- **Found:** on 2026-10-11, running the project's own prompt bench on the development Mac. Two of its four anatomy probes came back `Content contains 8193 tokens, which exceeds the maximum allowed context size of 8192.`
+- **What diverged:** nothing that blocks anything. CON-CMD-010's rationale states "the context is 4096 tokens", given as measured in the spike on iOS 27.0 (`materials/spike/README.md`); the model answering on this machine today states 8192. One of the two readings is stale, or they measure different things — the spike's number may be a per-session allowance or the point the prefix cache is evicted at rather than the hard window, and the spike measured on a phone while the bench runs on a Mac.
+  **The requirement's 4096 stands either way and nothing waits on this.** It is a ceiling, and a model that allows more does not make a call that fits in 4096 stop fitting. The commander is nowhere near either number: the whole call measured 405 input tokens on the bench and 531–537 in the spike's play runs, an eighth of the smaller window, with no transcript to accumulate (FR-CMD-025) and the response capped at 80 tokens.
+- **Still needed:** when somebody is on the phone with the bench anyway, read the window there and correct whichever number is wrong, so that a rationale citing a measurement is citing one that holds. Until then the entry is a note to the next reader, not work to schedule.
