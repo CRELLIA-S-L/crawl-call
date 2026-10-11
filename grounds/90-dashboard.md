@@ -220,6 +220,7 @@ requirements link to them, plus how many files their `code` field names.
 | FR-VIEW-330 | 0 | 5 | 5 |
 | NFR-PERF-010 | 5 | 0 | 5 |
 | CON-PUB-010 | 4 | 0 | 4 |
+| FR-BOT-040 | 2 | 2 | 4 |
 | FR-BOT-170 | 0 | 4 | 4 |
 | FR-BOT-260 | 0 | 4 | 4 |
 | FR-BOT-270 | 2 | 2 | 4 |
@@ -253,7 +254,6 @@ requirements link to them, plus how many files their `code` field names.
 | CON-PUB-060 | 2 | 0 | 2 |
 | CON-PUB-070 | 2 | 0 | 2 |
 | CON-PUB-080 | 2 | 0 | 2 |
-| FR-BOT-040 | 2 | 0 | 2 |
 | FR-BOT-100 | 2 | 0 | 2 |
 | FR-BOT-118 | 0 | 2 | 2 |
 | FR-BOT-120 | 1 | 1 | 2 |

@@ -8,9 +8,9 @@ Total requirements: 279.
 | Status | Requirements |
 |---|---|
 | `draft` | 4 |
-| `deferred` | 115 |
+| `deferred` | 114 |
 | `partial` | 12 |
-| `implemented` | 142 |
+| `implemented` | 143 |
 | `superseded` | 6 |
 | `withdrawn` | 0 |
 
@@ -36,7 +36,7 @@ Total requirements: 279.
 | **FR-BOT-010** Six archetypes | `implemented` | I | `Sources/CrawlCall/Bot/Archetype.swift` | `Tests/CrawlCallTests/BotTests.swift` |
 | **FR-BOT-020** Two squads at war | `implemented` | T | `Sources/CrawlCall/Bot/Squads.swift`<br>`Sources/CrawlCall/Game.swift` | `Tests/CrawlCallTests/BotTests.swift` |
 | **FR-BOT-030** Archetype sets base personality weights | `implemented` | T | `Sources/CrawlCall/Bot/Bot.swift`<br>`config/bot.json` | `Tests/CrawlCallTests/BotTests.swift` |
-| **FR-BOT-040** One bot per squad holds the commander role | `deferred` | T | — | — |
+| **FR-BOT-040** One bot per squad holds the commander role | `implemented` | T | `Sources/CrawlCall/Bot/Squads.swift`<br>`Sources/CrawlCall/Bot/Bot.swift` | `Tests/CrawlCallTests/BotTests.swift` |
 | **FR-BOT-050** A bot notices the snake in view | `implemented` | T | `Sources/CrawlCall/Bot/Perception.swift`<br>`Sources/CrawlCall/Bot/Knowledge.swift`<br>`Sources/CrawlCall/Game.swift`<br>`Sources/CrawlCall/Map/Sight.swift`<br>`Sources/CrawlCall/Bot/Bot.swift`<br>`Sources/CrawlCall/Config/Geometry.swift`<br>`Sources/CrawlCall/Map/PieceIndex.swift`<br>`Sources/CrawlCall/Config/Utility.swift`<br>`Sources/CrawlCall/Config/Configurations.swift`<br>`config/bot.json` | `Tests/CrawlCallTests/PerceptionTests.swift`<br>`Tests/CrawlCallTests/KnowledgeTests.swift`<br>`Tests/CrawlCallTests/PieceIndexTests.swift` |
 | **FR-BOT-060** A bot fires at its target | `implemented` | T | `Sources/CrawlCall/Bot/Execution.swift`<br>`Sources/CrawlCall/Bot/Deliberation.swift`<br>`Sources/CrawlCall/Bot/Bot.swift`<br>`Sources/CrawlCall/Bot/Round.swift`<br>`Sources/CrawlCall/Config/Utility.swift`<br>`Sources/CrawlCall/Game.swift` | `Tests/CrawlCallTests/ExecutionTests.swift`<br>`Tests/CrawlCallTests/ShotTests.swift`<br>`Tests/CrawlCallTests/WarTests.swift`<br>`Tests/CrawlCallTests/RoundTests.swift` |
 | **FR-BOT-070** Heavy and sapper weapons destroy cover | `deferred` | T | — | — |

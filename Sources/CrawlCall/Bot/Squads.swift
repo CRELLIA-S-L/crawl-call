@@ -6,7 +6,7 @@
 // a map does say: which cells are walkable, where they lie, and which of them the
 // snake's start reaches. When a map gains squad areas, they replace the ends.
 //
-// file implements: FR-BOT-020, FR-BOT-350, INV-BOT-030, FR-MAP-150, FR-BOT-280, FR-BOT-250
+// file implements: FR-BOT-020, FR-BOT-040, FR-BOT-350, INV-BOT-030, FR-MAP-150, FR-BOT-280, FR-BOT-250
 import Foundation
 
 enum Squads {
@@ -87,7 +87,32 @@ enum Squads {
                 bots.append(bot)
             }
         }
+        for squad in Squad.allCases {
+            guard let id = commander(of: squad, among: bots, configuration: world.configurations.match),
+                  let index = bots.firstIndex(where: { $0.id == id }) else { continue }
+            bots[index].isCommander = true
+        }
         return bots
+    }
+
+    /// Who speaks for a squad (FR-BOT-040): the lowest-numbered of its bots whose
+    /// archetype the match configuration admits, so that the same match set up twice
+    /// has the same commander, as everything else about a spawn does (ADR-0056).
+    ///
+    /// An empty list of eligible archetypes admits every archetype. The list is there
+    /// to exclude — "the match configuration may exclude archetypes from it as
+    /// tuning" (ADR-0011) — and read the other way the shipped configuration would
+    /// leave both squads without the voice FR-CMD-140 gives them.
+    ///
+    /// Nil where the squad has nobody eligible, which is a configuration that names
+    /// archetypes no bot of that squad has; the caller decides what that means.
+    static func commander(of squad: Squad, among bots: [Bot],
+                          configuration: MatchConfiguration) -> Int? {
+        let allowed = configuration.commanderEligibleArchetypes
+        return bots
+            .filter { $0.squad == squad && (allowed.isEmpty || allowed.contains($0.archetype.rawValue)) }
+            .map(\.id)
+            .min()
     }
 
     /// Where a cell stands, in metres.

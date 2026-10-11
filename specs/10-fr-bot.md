@@ -89,14 +89,14 @@ Courage joined the weights on 2026-09-25 (FR-BOT-090); the concept's table preda
 ### FR-BOT-040 — One bot per squad holds the commander role
 
 ```yaml
-status: deferred
+status: implemented
 verification: T
 derives_from: []
 depends_on: [FR-BOT-020]
 refines: []
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Bot/Squads.swift, Sources/CrawlCall/Bot/Bot.swift]
+tests: [Tests/CrawlCallTests/BotTests.swift]
 created: 2026-09-21
 ```
 
@@ -104,6 +104,8 @@ When a match starts, the system **shall** designate exactly one bot in each squa
 
 **Rationale.** Concept §9.4 and §14: eating the bot that holds the role collapses the squad (FR-CMD-120), and it is the player's main lever on the balance of the war.
 A role rather than a seventh archetype, and no marker: the role-holder is found by listening — he is the one who speaks the orders (ADR-0011, FR-CMD-140).
+Built on 2026-10-11 (ADR-0076): the role goes to the lowest-numbered bot of the squad whose archetype the configuration admits, and an empty list of eligible archetypes admits every one of them, since the list is there to exclude.
+Nothing draws the flag, and nothing can: a figure is built from an archetype and never from a bot.
 
 ## Perception and fire
 

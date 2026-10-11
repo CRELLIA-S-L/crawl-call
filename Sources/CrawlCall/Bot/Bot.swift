@@ -2,7 +2,7 @@
 // personality its archetype gave it. No RealityKit here — this is the part a test
 // can read, the same split as `Snake`.
 //
-// file implements: FR-BOT-030, FR-BOT-050, FR-BOT-060, FR-BOT-280, FR-BOT-290, FR-BOT-320, FR-BOT-340, FR-BOT-380, FR-BOT-420, FR-BOT-425, FR-BOT-430
+// file implements: FR-BOT-030, FR-BOT-040, FR-BOT-050, FR-BOT-060, FR-BOT-280, FR-BOT-290, FR-BOT-320, FR-BOT-340, FR-BOT-380, FR-BOT-420, FR-BOT-425, FR-BOT-430
 import Foundation
 
 /// The two sides. Which one the player is nearer to is never a property of a squad:
@@ -40,6 +40,13 @@ struct Bot: Equatable {
     /// inputs (FR-BOT-080), and both start from the archetype's entry (IF-BOT-010).
     var health: Double
     var ammunition: Int
+    /// Whether this bot speaks for its squad (FR-BOT-040). Nothing draws it: the
+    /// role-holder is found by listening to who gives the orders, not by looking
+    /// (ADR-0011), and `Figure.parts` is handed an archetype and never a bot.
+    /// A body keeps the flag — losing the holder is what collapses a squad
+    /// (FR-CMD-120), so the game asks whether a living bot still carries it.
+    var isCommander = false
+
     /// What this bot knows: what it has seen and been told (ADR-0032). It acts on
     /// this and on nothing else (FR-BOT-220).
     var knowledge = Knowledge()
