@@ -38,4 +38,16 @@ A commanded squad now moves when it is told to, and the obedience term has somet
 
 One number in `config/bot.json` is new, and IF-BOT-010's enumeration of the distances it reads gains a fourth. Nothing else reads it.
 
+**It is not free, and the phone says what it costs.** The walk that makes a destination reachable by construction covers the square of its reach: about 2800 cells at fifteen metres against about 314 at five, over a grid of half a metre. Two 45-second runs on the iPhone 16 Pro, the same build but for this change, thermal `nominal` in both:
+
+| | before | after |
+|---|---|---|
+| frames deliberating | 340 of 2086 | 372 of 2010 |
+| deliberation in such a frame, median | 0.214 ms | 0.484 ms |
+| the same, 95th | 0.488 ms | 2.042 ms |
+| the worst frame | 0.716 ms | 4.723 ms |
+| the app's own work, median / 95th | 1.36 / 2.38 ms | 1.60 / 3.28 ms |
+
+NFR-PERF-020 asks deliberation for at most 0.5 ms in a frame, and the median is now at that line with the 95th four times over it. The spikes carry no commander event, so they are ordinary two-slot frames and not the answer being applied. Q-640 holds the question and the three ways out; the frame rate itself is still the model's and not this (ADR-0078).
+
 The match this was measured in changed enough to make a test of the commander's events over-specified — it asserted that the list was empty after the carrying call, where a squad that is now moving under orders gets hit in the meantime. The test asserts what it meant to: the loss it watched is spent.

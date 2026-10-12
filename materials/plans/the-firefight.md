@@ -10,9 +10,11 @@ Under ART-030 of `specs/constitution.md`, amended 2026-10-11, the suite is run w
 
 ## Where this stands, 2026-10-12
 
-Steps 1 to 4 are done and committed. Step 5 was weighed on step 4's numbers and **not taken**; what is left of it is Q-620 of `specs/91-open-issues.md`. Steps 6 to 9 are the commander's and follow.
+Every step is done or decided. Steps 1, 2, 3, 4, 6 and 7 are built and committed; step 5 was weighed on step 4's numbers and **not taken**; step 8 was decided without a change — the five orders stay five; step 9 was answered by a measurement and cannot be built as it was planned.
 
 The same arena, the same starting cell and nobody steering, before and after: the squads went from 0.00 m of movement and no action but firing and reloading, to a firefight that advances, takes cover, fires, reloads and finishes — one squad wiped out by the eighty-fifth second. On the phone, 2086 frames at 45.1 a second with the commander running, thermal `nominal`, the app's own work 1.36 ms median and 2.38 ms at the 95th, deliberation 0.27 ms at the 95th and 0.72 ms at its worst.
+
+Three questions were opened by the work and are in `specs/91-open-issues.md`: Q-620, the two survivors of a won match pacing; Q-630, the roles coming back as free text; and Q-640, what the order's reach costs the deliberation — 0.48 ms in a deliberating frame against the 0.5 ms NFR-PERF-020 asks for, with the 95th four times over it. Q-570, the shape of the answer, is open from before. Two were settled and left the register: Q-600 and Q-610.
 
 ## What is actually wrong
 
@@ -133,15 +135,19 @@ with `orderReach` in `config/bot.json` beside `groupingDistance`. ADR-0079 took 
 
 The flank rule goes with it: today a flanking cell may not be further from the enemy than the bot already stands, which over five metres means there is no going round anything.
 
-### Step 8 — Whether five words are enough *(waits on decision 6)*
+### Step 8 — Whether five words are enough *(decided on 2026-10-12: they stay five)*
 
 FR-CMD-040 — The commander issues an order (specs/10-fr-cmd.md, implemented) and IF-CMD-020 — Commander output (specs/20-interfaces.md, implemented) carry the vocabulary: hold, flank, withdraw to a zone, disperse, destroy the enemy's cover. A commander cannot say take the upstairs, leave the room, gather at the gate, or wait until they reload. Any addition changes both statements and the generated schema, and costs one word of output — the cheap end of ADR-0078 — but each new word needs a cell rule in `Orders.zone` that is honest about what a bot can do, which is where the real cost is.
 
-This step is deliberately last of the commander steps: steps 6 and 7 may be enough on their own, and a vocabulary chosen before the squad can carry out the five words it already has would be five more words nobody obeys.
+**Decided without a change.** Steps 6 and 7 gave the five words something to mean — a commander that can see what happened and reach the next room — and a sixth word chosen before anybody has watched those five being obeyed would be a word nobody obeys. The step is closed, not deferred: it reopens on evidence that a squad wanted to be told something the five cannot say.
 
-### Step 9 — A role does something *(waits on decision 7)*
+### Step 9 — A role does something *(answered on 2026-10-12: it cannot, as planned)*
 
-FR-CMD-050's own rationale records the gap: a role is stored, and what it does to utility is nothing. Three roles — holding a stair, covering, distracting — each a bias in one bot's utility, which is tuning rather than a new mechanism, over terms that already exist. It is listed here because it is the fourth route by which the commander's answer reaches the squad and the only one still inert, and it is last because it is worth nothing until the squads fight.
+FR-CMD-050's own rationale recorded the gap: a role is stored, and what it does to utility is nothing. The plan was three roles — holding a stair, covering, distracting — each a bias over terms that already exist.
+
+**The measurement says the plan was wrong.** Nine calls under the game's own schema named fifteen different roles: leader, scout, blocker, distractor, spy, shield, runner, builder, alert, hold, cover, "hold the stair", "cover the door", none — and once `flank`, which is an order. The field is free text, IF-CMD-020 names no vocabulary for it, and the model treats it as free text. A bias keyed on those words would fire for a minority of calls and be silently wrong for the rest.
+
+So the role keeps the one use it serves honestly — written on the bot and read back into the next call's state — and the choice that would change that is Q-630: close the vocabulary in IF-CMD-020, or say out loud in FR-CMD-050 that a role is something a commander says to itself.
 
 ### Step 10 — Close the loop
 

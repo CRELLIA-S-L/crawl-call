@@ -291,3 +291,22 @@ What remains is what a decision inside the repository cannot close.
   Fifteen distinct words and phrases in nine calls, of which two — "hold the stair" and "cover the door" — are the ones the prompt itself had just shown the model under `jobs you gave:`. Left to itself it invents: `builder`, `spy`, `runner`, `shield`, `alert`, and `flank`, which is an order and not a role.
 - **Therefore.** A utility bias keyed on this text would fire for a minority of calls and would be silently wrong for the rest: a bot named `builder` or `spy` would be read as having no role, and a bot named `flank` would be read as having a role when the model meant an order. The role is therefore left doing what it does today — written on the bot, and read back into the next call's state, which is the one use it serves honestly.
 - **Still needed:** the maintainer's choice between two ways. Close the vocabulary in IF-CMD-020 — a role from a named set, as the threat and the order already are, which costs nothing in tokens and makes the field tunable; or leave it open and accept that a role is something the commander says to itself between calls and never a mechanism. The first is a change to IF-CMD-020 and FR-CMD-050 and voids the prompt measurement again (FR-TOOL-170); the second is a sentence in FR-CMD-050's rationale and nothing else.
+
+### Q-640 — An order that reaches the next room costs the deliberation its budget
+
+- **Found:** on 2026-10-12, on the phone, measuring the build that gave an order its own reach (ADR-0084).
+- **What the runs show.** Two 45-second runs, the same build but for the order reach, nobody steering, thermal `nominal` in both, the frame record reading the deliberation's own time.
+
+  | | reach 5 m | reach 15 m |
+  |---|---|---|
+  | frames in which the deliberation ran | 340 of 2086 | 372 of 2010 |
+  | its time in such a frame, median | 0.214 ms | 0.484 ms |
+  | the same, 95th | 0.488 ms | 2.042 ms |
+  | the worst frame | 0.716 ms | 4.723 ms |
+  | the app's own work over the whole frame, median / 95th | 1.36 / 2.38 ms | 1.60 / 3.28 ms |
+
+- **Why.** `Deliberation.walk` walks every cell within the reach over a grid of half a metre: about 314 cells at five metres and about 2800 at fifteen. `Orders.zone` runs it for every bot at every slot while a squad carries an order, which is five times a second each.
+- **What it is measured against.** NFR-PERF-020 asks the deliberation for at most 0.5 ms in a frame. The median is now at that line and the 95th is four times over it. The requirement is `deferred` and its method is an unattended run along a fixed route, which the game has no autopilot for (Q-570), so this is a price comparison between two builds measured the same way and not a verdict.
+- **What it is not.** Not the frame rate: 43.7 frames a second against 45.1, with the commander's inference where ADR-0078 measured the frames going. The spikes carry no `commander_answered` event, so they are ordinary two-slot frames.
+- **Three ways out, and the maintainer's to choose.** Narrow the reach — ten metres is four times five metres' area rather than nine. Cheapen the walk — the same cells are walked again at every slot while a bot carries one order, and a bot standing still walks them for nothing. Or accept it and say so in NFR-PERF-020, whose 0.5 ms was written before an order could reach anywhere.
+- **Still needed:** that choice. Nothing waits on it: the orders work and the frame rate is the model's.
