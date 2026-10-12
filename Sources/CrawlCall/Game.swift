@@ -5,7 +5,7 @@
 // or a key: the schemes produce intents (FR-VIEW-050), the logic consumes them, and
 // neither knows about the other.
 //
-// file implements: FR-CMD-010, FR-CMD-020, FR-SNAKE-270, FR-SNAKE-280, FR-SNAKE-285, FR-SNAKE-055, FR-SNAKE-056, FR-SNAKE-016, FR-VIEW-160, FR-BOT-060, FR-BOT-320, FR-BOT-050, FR-BOT-220, FR-BOT-230, FR-BOT-240, FR-BOT-260, FR-BOT-310, FR-VIEW-030, FR-VIEW-170, FR-VIEW-190, FR-SNAKE-010, FR-SNAKE-030, FR-SNAKE-290, FR-BOT-020, FR-BOT-150, FR-BOT-170, FR-BOT-380, FR-SCORE-130, FR-SCORE-070, FR-BOT-180, FR-SNAKE-060, FR-SNAKE-070, FR-SNAKE-090, FR-SCORE-140, FR-SCORE-150, INV-BOT-010, FR-VIEW-230, FR-TOOL-230, FR-MAP-150, FR-MAP-180, FR-MAP-170, FR-SNAKE-220, FR-BOT-400, FR-CMD-030, FR-CMD-040, FR-CMD-050, FR-CMD-060, FR-CMD-120, FR-CMD-125, FR-CMD-130
+// file implements: FR-BOT-167, FR-CMD-010, FR-CMD-020, FR-SNAKE-270, FR-SNAKE-280, FR-SNAKE-285, FR-SNAKE-055, FR-SNAKE-056, FR-SNAKE-016, FR-VIEW-160, FR-BOT-060, FR-BOT-320, FR-BOT-050, FR-BOT-220, FR-BOT-230, FR-BOT-240, FR-BOT-260, FR-BOT-310, FR-VIEW-030, FR-VIEW-170, FR-VIEW-190, FR-SNAKE-010, FR-SNAKE-030, FR-SNAKE-290, FR-BOT-020, FR-BOT-150, FR-BOT-170, FR-BOT-380, FR-SCORE-130, FR-SCORE-070, FR-BOT-180, FR-SNAKE-060, FR-SNAKE-070, FR-SNAKE-090, FR-SCORE-140, FR-SCORE-150, INV-BOT-010, FR-VIEW-230, FR-TOOL-230, FR-MAP-150, FR-MAP-180, FR-MAP-170, FR-SNAKE-220, FR-BOT-400, FR-CMD-030, FR-CMD-040, FR-CMD-050, FR-CMD-060, FR-CMD-120, FR-CMD-125, FR-CMD-130
 import Foundation
 
 struct Game {
@@ -386,12 +386,14 @@ struct Game {
         let clock = ContinuousClock()
         // A bot something happened to thinks in this frame, whether or not the clock
         // gives one a step (FR-BOT-170): a step of its own when the clock gives none,
-        // the front of the queue when it does.
-        let alone = steps == .zero && !interrupted.isEmpty
+        // the front of the queue when it does. A bot whose route came back empty is in
+        // the same hurry for the same reason, and its slot is owed by FR-BOT-167.
+        let stuck = Set(bots.filter { $0.isAlive && $0.unreachable != nil }.map(\.id))
+        let alone = steps == .zero && !(interrupted.isEmpty && stuck.isEmpty)
         for _ in Int.zero..<(alone ? 1 : steps) {
             // Only the living are given a turn to think (FR-BOT-320).
             let living = bots.filter(\.isAlive)
-            let ahead = Set(interrupted.keys)
+            let ahead = Set(interrupted.keys).union(living.filter { $0.unreachable != nil }.map(\.id))
             let holders = alone
                 ? slots.next(among: living.filter { ahead.contains($0.id) }, snake: body,
                              configuration: world.configurations.bot)

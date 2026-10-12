@@ -13,7 +13,7 @@
 // configuration (IF-BOT-010), as is how much an unhurt bot fears the snake
 // (FR-BOT-210). What shapes each term — a share, a whole — is in `Utility`.
 //
-// file implements: FR-BOT-080, FR-BOT-090, FR-BOT-110, FR-BOT-115, FR-BOT-118, FR-BOT-119, FR-BOT-360, FR-BOT-370, FR-BOT-120, FR-BOT-180, FR-BOT-190, FR-BOT-200, FR-BOT-210, FR-MAP-150, FR-BOT-220, FR-BOT-060, FR-BOT-140, FR-BOT-330, FR-BOT-410, FR-BOT-420, FR-BOT-425, FR-BOT-130, FR-CMD-030
+// file implements: FR-BOT-167, FR-BOT-080, FR-BOT-090, FR-BOT-110, FR-BOT-115, FR-BOT-118, FR-BOT-119, FR-BOT-360, FR-BOT-370, FR-BOT-120, FR-BOT-180, FR-BOT-190, FR-BOT-200, FR-BOT-210, FR-MAP-150, FR-BOT-220, FR-BOT-060, FR-BOT-140, FR-BOT-330, FR-BOT-410, FR-BOT-420, FR-BOT-425, FR-BOT-130, FR-CMD-030
 import Foundation
 
 enum Deliberation {
@@ -176,7 +176,10 @@ enum Deliberation {
             }
         }
 
-        return scored.map { (action: $0.0, utility: $0.1) }
+        // An action whose goal the graph had no route to is left out of this slot and
+        // of this slot only (FR-BOT-167): the tail that cut the passage may be gone a
+        // second later, so the exclusion is one slot wide and the bot asks again.
+        return scored.map { (action: $0.0, utility: $0.1) }.filter { $0.action != bot.unreachable }
     }
 
     /// What the bot fires at, and what firing at it is worth: the best of the nearest
@@ -331,14 +334,22 @@ enum Deliberation {
                                         x: Int((bot.position.x / situation.cellSize).rounded()),
                                         z: Int((bot.position.z / situation.cellSize).rounded()))
         guard situation.graph.isWalkable(here) else { return nil }
-        let advance = situation.enemyBelief.flatMap { nearestCell(to: $0, from: here, in: situation) }
-        let explore = unseen(from: here, in: situation)
+        // The cell nearest what it believes is found over the whole graph and can lie
+        // the other side of a wall (ADR-0059); the one it has not seen is walked to and
+        // cannot. So an advance is the motive this exclusion is usually about, and it is
+        // asked here rather than in `scores`, which never offers either (FR-BOT-167).
+        var advance = situation.enemyBelief
+            .flatMap { nearestCell(to: $0, from: here, in: situation) }
+            .map { Action.advance(to: $0) }
+        var explore = unseen(from: here, in: situation).map { Action.explore(to: $0) }
+        if advance == bot.unreachable { advance = nil }
+        if explore == bot.unreachable { explore = nil }
         let aggression = bot.weights.aggression
         switch (advance, explore) {
         case (let target?, let look?):
-            return aggression >= Fraction.whole - aggression ? .advance(to: target) : .explore(to: look)
-        case (let target?, nil): return .advance(to: target)
-        case (nil, let look?): return .explore(to: look)
+            return aggression >= Fraction.whole - aggression ? target : look
+        case (let target?, nil): return target
+        case (nil, let look?): return look
         case (nil, nil): return nil
         }
     }

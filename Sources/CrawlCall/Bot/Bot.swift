@@ -2,7 +2,7 @@
 // personality its archetype gave it. No RealityKit here — this is the part a test
 // can read, the same split as `Snake`.
 //
-// file implements: FR-BOT-030, FR-BOT-040, FR-BOT-050, FR-BOT-060, FR-BOT-280, FR-BOT-290, FR-BOT-320, FR-BOT-340, FR-BOT-380, FR-BOT-420, FR-BOT-425, FR-BOT-430
+// file implements: FR-BOT-167, FR-BOT-030, FR-BOT-040, FR-BOT-050, FR-BOT-060, FR-BOT-280, FR-BOT-290, FR-BOT-320, FR-BOT-340, FR-BOT-380, FR-BOT-420, FR-BOT-425, FR-BOT-430
 import Foundation
 
 /// The two sides. Which one the player is nearer to is never a property of a squad:
@@ -66,6 +66,11 @@ struct Bot: Equatable {
     /// What it decided to do at its last slot, and what is left of the way there.
     var action: Action?
     var path: [NavigationGraph.Node] = []
+    /// An action the graph held no route to the goal of, left out of the scoring at the
+    /// bot's next slot and cleared by it (FR-BOT-167): being cut off is an ordinary
+    /// event, and a bot that keeps asking for the route it cannot have is the standing
+    /// still concept §9.2 calls the signature stupidity.
+    var unreachable: Action?
     /// Which way the bot faces, as an angle round the vertical from +z towards +x, in
     /// radians (FR-BOT-280): where it looks from, and where its figure faces.
     var facing: Double = .zero

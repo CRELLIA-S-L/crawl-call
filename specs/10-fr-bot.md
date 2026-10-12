@@ -704,14 +704,14 @@ What is counted is deliberation steps and not frames, because this requirement d
 ### FR-BOT-167 — An unreachable target sends the bot back to deliberation
 
 ```yaml
-status: deferred
+status: implemented
 verification: T
 derives_from: [FR-BOT-165]
 depends_on: [FR-BOT-080, FR-SNAKE-040]
 refines: []
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Bot/Execution.swift, Sources/CrawlCall/Bot/Deliberation.swift, Sources/CrawlCall/Bot/Bot.swift, Sources/CrawlCall/Game.swift]
+tests: [Tests/CrawlCallTests/UnreachableTests.swift]
 created: 2026-09-22
 ```
 
@@ -721,6 +721,10 @@ When the navigation graph holds no route to the target of a bot's chosen action,
 A bot that keeps asking for the route it cannot have is the "signature stupidity" concept §9.2 names — it must pick something else and pick it now.
 Excluding only the failed action, and only until the slot after, keeps the choice honest when the tail moves away a second later.
 Measured on the spike in its worst-case mode, about one path request in a hundred found no route — a rate that belongs to that arena's random targets rather than to the search, but enough to settle that this is an ordinary path and not an error path.
+Built on 2026-10-12 (ADR-0082): the action is written onto the bot, which puts it ahead of the queue in the next frame — the route interrupts take, without being one of FR-BOT-170's seven events — and is spent by the slot it earns.
+Two lists are filtered, because an action comes from either: the scored ones, and the advance or the look the quiet motives offer, which is where an unreachable goal actually arises (ADR-0059).
+A bot standing on the cell its action names has arrived rather than been cut off: it holds nothing against the next slot, so an order to hold ground is obeyed again and not treated as a loop (ADR-0079).
+The branch cannot fire in a connected arena — everything else a bot makes for is walked out over the graph — so it is verified on a map of two rooms with no door between them, and will be exercised in a match the day a tail can block a passage (FR-SNAKE-040).
 
 ### FR-BOT-165 — At most one path is computed per frame
 

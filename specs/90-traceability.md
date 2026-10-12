@@ -8,9 +8,9 @@ Total requirements: 280.
 | Status | Requirements |
 |---|---|
 | `draft` | 4 |
-| `deferred` | 96 |
+| `deferred` | 95 |
 | `partial` | 12 |
-| `implemented` | 162 |
+| `implemented` | 163 |
 | `superseded` | 6 |
 | `withdrawn` | 0 |
 
@@ -54,7 +54,7 @@ Total requirements: 280.
 | **FR-BOT-150** Deliberation runs on a fixed step, not per frame | `implemented` | T | `Sources/CrawlCall/Bot/Slots.swift`<br>`Sources/CrawlCall/Game.swift`<br>`Sources/CrawlCall/Config/Utility.swift` | `Tests/CrawlCallTests/ExecutionTests.swift` |
 | **FR-BOT-160** Slots go by priority, not round-robin | `implemented` | T | `Sources/CrawlCall/Bot/Slots.swift`<br>`Sources/CrawlCall/Config/Utility.swift` | `Tests/CrawlCallTests/ExecutionTests.swift` |
 | **FR-BOT-165** At most one path is computed per frame | `implemented` | T | `Sources/CrawlCall/Bot/Route.swift`<br>`Sources/CrawlCall/Bot/Execution.swift` | `Tests/CrawlCallTests/ExecutionTests.swift` |
-| **FR-BOT-167** An unreachable target sends the bot back to deliberation | `deferred` | T | — | — |
+| **FR-BOT-167** An unreachable target sends the bot back to deliberation | `implemented` | T | `Sources/CrawlCall/Bot/Execution.swift`<br>`Sources/CrawlCall/Bot/Deliberation.swift`<br>`Sources/CrawlCall/Bot/Bot.swift`<br>`Sources/CrawlCall/Game.swift` | `Tests/CrawlCallTests/UnreachableTests.swift` |
 | **FR-BOT-170** Interrupts grant a slot at once | `partial` | T | `Sources/CrawlCall/Bot/Interrupts.swift`<br>`Sources/CrawlCall/Bot/Slots.swift`<br>`Sources/CrawlCall/Bot/Execution.swift`<br>`Sources/CrawlCall/Game.swift` | `Tests/CrawlCallTests/InterruptTests.swift` |
 | **FR-BOT-180** Calm squads do not hunt the snake | `implemented` | T | `Sources/CrawlCall/Bot/Deliberation.swift`<br>`Sources/CrawlCall/Bot/Execution.swift`<br>`Sources/CrawlCall/Game.swift` | `Tests/CrawlCallTests/SquadStateTests.swift` |
 | **FR-BOT-190** Alarmed squads keep together | `implemented` | T | `Sources/CrawlCall/Bot/Deliberation.swift`<br>`Sources/CrawlCall/Bot/Execution.swift` | `Tests/CrawlCallTests/SquadStateTests.swift` |
