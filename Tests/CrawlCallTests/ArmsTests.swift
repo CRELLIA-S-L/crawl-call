@@ -5,7 +5,7 @@
 // The arena is an open strip, forty metres of it, so that nothing stands between
 // anybody and every distance in the test is the one that was asked for.
 //
-// file verifies: FR-BOT-440, FR-BOT-450, FR-BOT-460, INV-BOT-040, IF-BOT-010
+// file verifies: FR-BOT-080, FR-BOT-440, FR-BOT-450, FR-BOT-460, INV-BOT-040, IF-BOT-010
 import XCTest
 @testable import CrawlCall
 
@@ -196,10 +196,14 @@ final class ArmsTests: XCTestCase {
         // cannot be routed to: reloading is off its list for this slot, and what it has
         // left is the sidearm. It is also the one case in which the sidearm is what the
         // scores choose (ADR-0086).
-        var bots = try pair(.assault, apart: 1)
+        // Three metres: inside the pistol and outside the knife. With the pouch empty
+        // as well, the sidearm is the only thing the bot has left to do.
+        var bots = try pair(.assault, apart: 3)
         let index = try checkedIndex(0, of: bots)
         bots[index].arms.primary.rounds = .zero
+        bots[index].arms.grenades.left = .zero
         bots[index].unreachable = .reload
+        XCTAssertLessThan(try XCTUnwrap(try element(0, of: bots).arms.knife).numbers.reach, 3)
         let volley = Execution.deliberate(&bots, slots: [0], world: world, now: now)
         XCTAssertEqual(try element(0, of: bots).action, .fire(at: .bot(id: 1), with: .sidearm))
         let sidearm = try element(0, of: bots).arms.sidearm

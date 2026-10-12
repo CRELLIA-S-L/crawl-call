@@ -162,14 +162,18 @@ final class CollapsedMatchTests: XCTestCase {
 
         XCTAssertTrue(game.commands.hasCollapsed(.red))
         XCTAssertNil(game.commands.of(.red))
+        // And the other squad is untouched: this is one squad falling apart, not the
+        // commander layer switching itself off. Read here rather than at the end of
+        // the run below, because the squads are at war and twenty seconds of it may
+        // take blue's role-holder too — which would be FR-CMD-120 working again and
+        // not this rule failing (FR-BOT-440 made the firefight that much quicker).
+        XCTAssertFalse(game.commands.hasCollapsed(.blue))
+        XCTAssertTrue(game.bots.contains { $0.squad == .blue && $0.isAlive && $0.isCommander })
+
         // FR-CMD-120: never called again, however long the match runs.
         for _ in 0..<Int(20 / frame) { game.advance(seconds: frame) }
         XCTAssertFalse(game.dueCalls().contains { $0.squad == .red },
                        "a squad with no role-holder was called again")
-        // And the other squad is untouched: this is one squad falling apart, not the
-        // commander layer switching itself off.
-        XCTAssertFalse(game.commands.hasCollapsed(.blue))
-        XCTAssertTrue(game.bots.contains { $0.squad == .blue && $0.isAlive && $0.isCommander })
     }
 
     func testASquadWhoseHolderIsStandingIsNeverCollapsed() throws {

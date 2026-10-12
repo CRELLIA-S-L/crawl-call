@@ -250,7 +250,8 @@ final class GameSession {
                            sway: SnakeBody.Sway(amplitude: game.world.configurations.view.slither.amplitude,
                                                 wavelength: game.world.configurations.view.slither.wavelength,
                                                 crawled: game.snake.crawled))
-        BotEntity.update(botEntities, from: game.bots, gaits: gaits, eaten: game.eating?.prey)
+        BotEntity.update(botEntities, from: game.bots, gaits: gaits, eaten: game.eating?.prey,
+                         height: game.world.configurations.bot.figureHeight)
         // Every round in flight is drawn where it is (FR-VIEW-170).
         ShotEntity.update(shotEntities, from: game.rounds)
         // A meal under way is drawn going in (FR-VIEW-100). What is left of the prey

@@ -14,7 +14,7 @@
 // configuration (IF-BOT-010), as is how much an unhurt bot fears the snake
 // (FR-BOT-210). What shapes each term — a share, a whole — is in `Utility`.
 //
-// file implements: FR-BOT-167, FR-BOT-116, FR-BOT-460, FR-BOT-450, FR-BOT-470, FR-BOT-500, FR-BOT-080, FR-BOT-090, FR-BOT-110, FR-BOT-115, FR-BOT-118, FR-BOT-119, FR-BOT-360, FR-BOT-370, FR-BOT-120, FR-BOT-180, FR-BOT-190, FR-BOT-200, FR-BOT-210, FR-MAP-150, FR-BOT-220, FR-BOT-060, FR-BOT-140, FR-BOT-330, FR-BOT-410, FR-BOT-420, FR-BOT-425, FR-BOT-130, FR-CMD-030
+// file implements: FR-BOT-167, FR-BOT-116, FR-BOT-460, FR-BOT-450, FR-BOT-470, FR-BOT-500, FR-BOT-510, FR-BOT-520, FR-BOT-080, FR-BOT-090, FR-BOT-110, FR-BOT-115, FR-BOT-118, FR-BOT-119, FR-BOT-360, FR-BOT-370, FR-BOT-120, FR-BOT-180, FR-BOT-190, FR-BOT-200, FR-BOT-210, FR-MAP-150, FR-BOT-220, FR-BOT-060, FR-BOT-140, FR-BOT-330, FR-BOT-410, FR-BOT-420, FR-BOT-425, FR-BOT-130, FR-CMD-030
 import Foundation
 
 enum Deliberation {
@@ -165,6 +165,25 @@ enum Deliberation {
             }
         }
 
+        // The knife, while it still has one: at the reach of an arm it is struck with
+        // (FR-BOT-510), and a little further off it is thrown and gone (FR-BOT-520).
+        // Its own weight is what makes a throw cost something, since what a bot gives
+        // up is the only knife it has.
+        if let knife = bot.arms.knife {
+            if let close = target(for: bot, in: situation, within: knife.numbers.reach, worth: { metres in
+                   term.attack * nearness(metres, within: entry.detectionRange)
+                       * bot.weights.aggression * bot.weights.courage
+               }) {
+                scored.append((.strike(at: close.target), close.utility))
+            }
+            if let away = target(for: bot, in: situation, within: knife.numbers.throwRange, worth: { metres in
+                   term.thrown * nearness(metres, within: entry.detectionRange)
+                       * bot.weights.aggression * bot.weights.courage
+               }) {
+                scored.append((.throwKnife(at: away.target), away.utility))
+            }
+        }
+
         // Cover: worth more the nearer it is, the nearer the danger is — the snake or
         // an enemy (FR-BOT-330) — and the less of the bot is left.
         let danger = (situation.snake + situation.enemies)
@@ -237,10 +256,32 @@ enum Deliberation {
             }
         }
 
+        // What the squad was told to worry about ranks the kinds of target over all the
+        // weapons together and not inside each of them (FR-CMD-030). Told to worry
+        // about the snake, a bot does not throw its knife at an enemy because the snake
+        // stands a metre beyond the throw: while anything it carries reaches a part of
+        // the snake, the enemy is not what this slot is for.
+        var ranked = scored
+        if let priority = situation.priority {
+            let isSnake = { (action: Action) in
+                if case .snake = aimed(action) { return true }
+                return false
+            }
+            let wanted: ((Action) -> Bool)?
+            switch priority {
+            case .snake: wanted = isSnake
+            case .enemy: wanted = { aimed($0) != nil && !isSnake($0) }
+            case .withdraw: wanted = nil
+            }
+            if let wanted, ranked.contains(where: { wanted($0.0) }) {
+                ranked = ranked.filter { aimed($0.0) == nil || wanted($0.0) }
+            }
+        }
+
         // An action whose goal the graph had no route to is left out of this slot and
         // of this slot only (FR-BOT-167): the tail that cut the passage may be gone a
         // second later, so the exclusion is one slot wide and the bot asks again.
-        return scored.map { (action: $0.0, utility: $0.1) }.filter { $0.action != bot.unreachable }
+        return ranked.map { (action: $0.0, utility: $0.1) }.filter { $0.action != bot.unreachable }
     }
 
     /// What the bot fires at, and what firing at it is worth: the best of the nearest
@@ -362,6 +403,16 @@ enum Deliberation {
         let top = max(radius, situation.configuration.figureHeight - radius)
         return Flight.contact(from: from, to: aim, axis: mate.position + SIMD3(.zero, radius, .zero),
                               mate.position + SIMD3(.zero, top, .zero), radius: radius) != nil
+    }
+
+    /// What an action is aimed at, where it is aimed at anything: every weapon has a
+    /// target and nothing else does.
+    static func aimed(_ action: Action) -> Target? {
+        switch action {
+        case .fire(let target, _), .throwGrenade(let target),
+             .strike(let target), .throwKnife(let target): return target
+        case .takeCover, .moveToOrderedZone, .flee, .reload, .heal, .advance, .explore: return nil
+        }
     }
 
     /// How many bodies of the other side a blast at `point` would catch, as the bot

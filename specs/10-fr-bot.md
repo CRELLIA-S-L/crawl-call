@@ -386,14 +386,14 @@ The thrower itself needs no rule: a place within its own blast is a place its ow
 ### FR-BOT-510 — A knife strikes what is within its reach
 
 ```yaml
-status: deferred
+status: implemented
 verification: T
 derives_from: [FR-BOT-440]
 depends_on: [FR-BOT-440, IF-BOT-010]
 refines: []
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Bot/Execution.swift, Sources/CrawlCall/Bot/Deliberation.swift, Sources/CrawlCall/Bot/Action.swift, Sources/CrawlCall/Bot/Arms.swift, config/bot.json, Sources/CrawlCall/Game.swift]
+tests: [Tests/CrawlCallTests/KnifeTests.swift]
 created: 2026-10-11
 ```
 
@@ -406,14 +406,14 @@ No line of fire is asked for, because at the reach of an arm there is nothing to
 ### FR-BOT-520 — A thrown knife leaves the bot
 
 ```yaml
-status: deferred
+status: implemented
 verification: T
 derives_from: [FR-BOT-510]
 depends_on: [FR-BOT-510]
 refines: []
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Bot/Execution.swift, Sources/CrawlCall/Bot/Deliberation.swift, Sources/CrawlCall/Bot/Action.swift, Sources/CrawlCall/Bot/Arms.swift, config/bot.json]
+tests: [Tests/CrawlCallTests/KnifeTests.swift, Tests/CrawlCallTests/FigureTests.swift]
 created: 2026-10-11
 ```
 
@@ -428,14 +428,14 @@ Nothing picks it up again: there is no gathering in this game, and a thrown knif
 ### FR-BOT-080 — Action chosen by maximum utility
 
 ```yaml
-status: partial
+status: implemented
 verification: T
 derives_from: []
 depends_on: []
 refines: []
 conflicts_with: []
-code: [Sources/CrawlCall/Bot/Deliberation.swift, Sources/CrawlCall/Config/Utility.swift, Sources/CrawlCall/Config/Geometry.swift]
-tests: [Tests/CrawlCallTests/DeliberationTests.swift]
+code: [Sources/CrawlCall/Bot/Arms.swift, Sources/CrawlCall/Bot/Blast.swift, Sources/CrawlCall/Bot/Deliberation.swift, Sources/CrawlCall/Config/Utility.swift, Sources/CrawlCall/Config/Geometry.swift]
+tests: [Tests/CrawlCallTests/ArmsTests.swift, Tests/CrawlCallTests/GrenadeTests.swift, Tests/CrawlCallTests/KnifeTests.swift, Tests/CrawlCallTests/DeliberationTests.swift]
 created: 2026-09-21
 ```
 
@@ -452,8 +452,7 @@ When a bot receives a deliberation slot, the system **shall** select the action 
 **Rationale.** Concept §9.2: every possible action gets a numeric utility; the maximum is chosen.
 The inputs are named so that a test can vary each and observe the choice move; their weighting is tuning.
 The list is the maintainer's, rewritten on 2026-09-25 when they settled what a bot knows (ADR-0032): each input is read from what the bot and its squad have perceived, never from the truth, and courage is a personality weight of its own (FR-BOT-090).
-Six of the seven inputs are read: the enemy since the squads went to war on 2026-09-26, as a target and as a danger to hide from (FR-BOT-060, FR-BOT-330, ADR-0044), and the fifth personality weight since 2026-10-11 (ADR-0074).
-`partial` because the seventh is written and not built: on 2026-10-11 the maintainer settled what a bot carries — a primary weapon, a sidearm, grenades and a knife (FR-BOT-440, ADR-0075) — and until a bot carries them it still has nothing to fight with but a magazine.
+All seven inputs are read: the enemy since the squads went to war on 2026-09-26, as a target and as a danger to hide from (FR-BOT-060, FR-BOT-330, ADR-0044); the fifth personality weight since 2026-10-11 (ADR-0074); and what a bot has to fight with since 2026-10-12, when the arms were built — a primary, a sidearm, grenades and a knife, each of them an action of its own with its own numbers behind it (FR-BOT-440, FR-BOT-460, ADR-0086, ADR-0087, ADR-0088).
 
 ### FR-BOT-090 — Personality weights multiply utility
 

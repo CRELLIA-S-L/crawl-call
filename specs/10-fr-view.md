@@ -717,14 +717,14 @@ The maintainer chose 5 cm to either side on a wave of 1.2 m, and the head swayin
 ### FR-VIEW-340 — A bot holds the weapon it is using
 
 ```yaml
-status: deferred
+status: implemented
 verification: T
 derives_from: [FR-BOT-440]
 depends_on: [FR-BOT-440, FR-VIEW-070]
 refines: []
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/View/Figure.swift, Sources/CrawlCall/View/BotEntity.swift, Sources/CrawlCall/Config/EntityName.swift]
+tests: [Tests/CrawlCallTests/FigureTests.swift]
 created: 2026-10-11
 ```
 

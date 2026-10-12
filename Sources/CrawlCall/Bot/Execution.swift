@@ -10,7 +10,7 @@
 // slot is aimed through the slots it has to wait out. Until 2026-10-12 the period was
 // the cadence, because no requirement gave a weapon a rate of fire.
 //
-// file implements: FR-BOT-450, FR-BOT-470, FR-BOT-167, FR-BOT-060, FR-BOT-110, FR-BOT-115, FR-BOT-170, FR-BOT-360, FR-BOT-370, FR-BOT-380, FR-BOT-180, FR-BOT-190, INV-BOT-020, INV-BOT-010, FR-BOT-165, FR-MAP-150, FR-BOT-270, FR-BOT-280, FR-BOT-290, FR-BOT-300, FR-BOT-220, FR-BOT-310, FR-BOT-320, FR-BOT-330, FR-BOT-340, FR-BOT-420, FR-BOT-425, FR-BOT-430, FR-CMD-030, FR-CMD-040
+// file implements: FR-BOT-450, FR-BOT-470, FR-BOT-510, FR-BOT-520, FR-BOT-167, FR-BOT-060, FR-BOT-110, FR-BOT-115, FR-BOT-170, FR-BOT-360, FR-BOT-370, FR-BOT-380, FR-BOT-180, FR-BOT-190, INV-BOT-020, INV-BOT-010, FR-BOT-165, FR-MAP-150, FR-BOT-270, FR-BOT-280, FR-BOT-290, FR-BOT-300, FR-BOT-220, FR-BOT-310, FR-BOT-320, FR-BOT-330, FR-BOT-340, FR-BOT-420, FR-BOT-425, FR-BOT-430, FR-CMD-030, FR-CMD-040
 import Foundation
 
 enum Execution {
@@ -21,6 +21,10 @@ enum Execution {
         /// The grenades thrown in it, to burn their fuses down from the next frame on
         /// (FR-BOT-470).
         var grenades: [Thrown] = []
+        /// What the knives struck of the snake in it (FR-BOT-510): a knife deals its
+        /// damage where it stands and sends nothing flying, and the snake is not the
+        /// squads' to change, so it is carried out to the match as a round's damage is.
+        var struck = Flight.Struck()
     }
 
     /// One deliberation step: the bots holding a slot choose, and a bot whose choice
@@ -203,6 +207,53 @@ enum Execution {
                 bots[index].post = nil
                 bots[index].refuge = nil
                 bots[index].postTarget = nil
+            case .strike(let target):
+                // At the reach of an arm, with no line of fire asked for: there is
+                // nothing to stand in the way at that distance (FR-BOT-510). It still
+                // has to be what the bot sees, as everything a bot acts on is
+                // (FR-BOT-220), and it still costs the slot.
+                // How often it may be swung is the knife's own, the way a weapon's
+                // cadence is its own (FR-BOT-450): without it the knife would be swung
+                // at every slot, which at the reach of an arm is the deadliest thing in
+                // the game by a factor of ten.
+                guard let knife = bots[index].arms.knife,
+                      now - bots[index].lastShot >= knife.numbers.timeBetweenStrikes - Firing.cadenceSlack,
+                      !interrupted.contains(id)
+                        || now - bots[index].lastShot >= world.configurations.bot.deliberationPeriod else { break }
+                bots[index].lastShot = now
+                switch target {
+                case .snake(let point):
+                    guard situation.inView.contains(point),
+                          Perception.metres(bots[index].position, point) <= knife.numbers.reach else { break }
+                    volley.struck.damage += knife.numbers.damage
+                    volley.struck.hits += 1
+                case .bot(let enemy):
+                    guard let other = bots.firstIndex(where: { $0.id == enemy }), bots[other].isAlive,
+                          situation.enemiesInView.contains(where: { $0.id == enemy }),
+                          Perception.metres(bots[index].position, bots[other].position) <= knife.numbers.reach
+                    else { break }
+                    bots[other].health = max(.zero, bots[other].health - knife.numbers.damage)
+                    if !bots[other].isAlive { fall(&bots[other]) }
+                }
+            case .throwKnife(let target):
+                // Thrown, it flies and strikes what it meets like anything else sent
+                // through the air (FR-BOT-400, FR-BOT-405); and it is gone whether it
+                // struck or not (FR-BOT-520).
+                let seen: Bool
+                switch target {
+                case .snake(let point): seen = situation.inView.contains(point)
+                case .bot(let enemy): seen = situation.enemiesInView.contains { $0.id == enemy }
+                }
+                guard let knife = bots[index].arms.knife, seen,
+                      let flight = Deliberation.aim(at: target, from: bots[index], in: situation),
+                      !interrupted.contains(id)
+                        || now - bots[index].lastShot >= world.configurations.bot.deliberationPeriod else { break }
+                bots[index].lastShot = now
+                bots[index].arms.throwKnife()
+                if let round = Round(shooter: bots[index].id, squad: bots[index].squad, from: bots[index].eye,
+                                     towards: flight, damage: knife.numbers.damage) {
+                    volley.rounds.append(round)
+                }
             case .reload:
                 // Behind the cover it fired from beside, where it has one: it goes into
                 // the hidden cell and reloads there (FR-BOT-425).
@@ -439,7 +490,7 @@ enum Execution {
              .advance(let node), .explore(let node): return node
         case .fire: return bot.post
         case .reload: return bot.post == nil ? nil : bot.refuge
-        case .throwGrenade, .heal, .none: return nil
+        case .throwGrenade, .strike, .throwKnife, .heal, .none: return nil
         }
     }
 
@@ -448,7 +499,7 @@ enum Execution {
     static func travels(_ action: Action?) -> Bool {
         switch action {
         case .takeCover, .moveToOrderedZone, .flee, .advance, .explore: return true
-        case .fire, .throwGrenade, .reload, .heal, .none: return false
+        case .fire, .throwGrenade, .strike, .throwKnife, .reload, .heal, .none: return false
         }
     }
 
@@ -571,7 +622,8 @@ enum Execution {
             // What it is shooting at or throwing at is what it faces.
             var aimedAt: Target?
             switch bot.action {
-            case .fire(let target, _), .throwGrenade(let target): aimedAt = target
+            case .fire(let target, _), .throwGrenade(let target),
+                 .strike(let target), .throwKnife(let target): aimedAt = target
             default: aimedAt = nil
             }
             if let aimedAt {

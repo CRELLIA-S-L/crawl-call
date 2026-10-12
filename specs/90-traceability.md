@@ -8,9 +8,9 @@ Total requirements: 281.
 | Status | Requirements |
 |---|---|
 | `draft` | 4 |
-| `deferred` | 87 |
-| `partial` | 10 |
-| `implemented` | 172 |
+| `deferred` | 84 |
+| `partial` | 9 |
+| `implemented` | 176 |
 | `superseded` | 6 |
 | `withdrawn` | 2 |
 
@@ -40,7 +40,7 @@ Total requirements: 281.
 | **FR-BOT-050** A bot notices the snake in view | `implemented` | T | `Sources/CrawlCall/Bot/Perception.swift`<br>`Sources/CrawlCall/Bot/Knowledge.swift`<br>`Sources/CrawlCall/Game.swift`<br>`Sources/CrawlCall/Map/Sight.swift`<br>`Sources/CrawlCall/Bot/Bot.swift`<br>`Sources/CrawlCall/Config/Geometry.swift`<br>`Sources/CrawlCall/Map/PieceIndex.swift`<br>`Sources/CrawlCall/Config/Utility.swift`<br>`Sources/CrawlCall/Config/Configurations.swift`<br>`config/bot.json` | `Tests/CrawlCallTests/PerceptionTests.swift`<br>`Tests/CrawlCallTests/KnowledgeTests.swift`<br>`Tests/CrawlCallTests/PieceIndexTests.swift` |
 | **FR-BOT-060** A bot fires at its target | `implemented` | T | `Sources/CrawlCall/Bot/Execution.swift`<br>`Sources/CrawlCall/Bot/Deliberation.swift`<br>`Sources/CrawlCall/Bot/Bot.swift`<br>`Sources/CrawlCall/Bot/Round.swift`<br>`Sources/CrawlCall/Config/Utility.swift`<br>`Sources/CrawlCall/Game.swift` | `Tests/CrawlCallTests/ExecutionTests.swift`<br>`Tests/CrawlCallTests/ShotTests.swift`<br>`Tests/CrawlCallTests/WarTests.swift`<br>`Tests/CrawlCallTests/RoundTests.swift` |
 | **FR-BOT-070** Heavy and sapper weapons destroy cover | `deferred` | T | — | — |
-| **FR-BOT-080** Action chosen by maximum utility | `partial` | T | `Sources/CrawlCall/Bot/Deliberation.swift`<br>`Sources/CrawlCall/Config/Utility.swift`<br>`Sources/CrawlCall/Config/Geometry.swift` | `Tests/CrawlCallTests/DeliberationTests.swift` |
+| **FR-BOT-080** Action chosen by maximum utility | `implemented` | T | `Sources/CrawlCall/Bot/Arms.swift`<br>`Sources/CrawlCall/Bot/Blast.swift`<br>`Sources/CrawlCall/Bot/Deliberation.swift`<br>`Sources/CrawlCall/Config/Utility.swift`<br>`Sources/CrawlCall/Config/Geometry.swift` | `Tests/CrawlCallTests/ArmsTests.swift`<br>`Tests/CrawlCallTests/GrenadeTests.swift`<br>`Tests/CrawlCallTests/KnifeTests.swift`<br>`Tests/CrawlCallTests/DeliberationTests.swift` |
 | **FR-BOT-090** Personality weights multiply utility | `implemented` | T | `Sources/CrawlCall/Bot/Deliberation.swift`<br>`Sources/CrawlCall/Config/Utility.swift` | `Tests/CrawlCallTests/DeliberationTests.swift` |
 | **FR-BOT-100** Cover is valued by what is left of it | `deferred` | T | — | — |
 | **FR-BOT-105** Cover is worth less against a wrecking weapon | `deferred` | T | — | — |
@@ -91,8 +91,8 @@ Total requirements: 281.
 | **FR-BOT-480** An explosion strikes every body within its blast | `implemented` | T | `Sources/CrawlCall/Bot/Blast.swift`<br>`Sources/CrawlCall/Game.swift` | `Tests/CrawlCallTests/GrenadeTests.swift` |
 | **FR-BOT-490** An explosion that covers more of the snake hurts it more | `implemented` | T | `Sources/CrawlCall/Bot/Blast.swift`<br>`Sources/CrawlCall/Game.swift` | `Tests/CrawlCallTests/GrenadeTests.swift` |
 | **FR-BOT-500** A bot does not throw where it would catch a squadmate | `implemented` | T | `Sources/CrawlCall/Bot/Deliberation.swift` | `Tests/CrawlCallTests/GrenadeTests.swift` |
-| **FR-BOT-510** A knife strikes what is within its reach | `deferred` | T | — | — |
-| **FR-BOT-520** A thrown knife leaves the bot | `deferred` | T | — | — |
+| **FR-BOT-510** A knife strikes what is within its reach | `implemented` | T | `Sources/CrawlCall/Bot/Execution.swift`<br>`Sources/CrawlCall/Bot/Deliberation.swift`<br>`Sources/CrawlCall/Bot/Action.swift`<br>`Sources/CrawlCall/Bot/Arms.swift`<br>`config/bot.json`<br>`Sources/CrawlCall/Game.swift` | `Tests/CrawlCallTests/KnifeTests.swift` |
+| **FR-BOT-520** A thrown knife leaves the bot | `implemented` | T | `Sources/CrawlCall/Bot/Execution.swift`<br>`Sources/CrawlCall/Bot/Deliberation.swift`<br>`Sources/CrawlCall/Bot/Action.swift`<br>`Sources/CrawlCall/Bot/Arms.swift`<br>`config/bot.json` | `Tests/CrawlCallTests/KnifeTests.swift`<br>`Tests/CrawlCallTests/FigureTests.swift` |
 | **FR-CMD-010** One commander per squad | `implemented` | T | `Sources/CrawlCall/Commander/CommanderDesk.swift`<br>`Sources/CrawlCall/Game.swift`<br>`Sources/CrawlCall/CrawlCallApp.swift` | `Tests/CrawlCallTests/CommanderCallTests.swift` |
 | **FR-CMD-020** The commander is called on an interval | `implemented` | T | `Sources/CrawlCall/Commander/CommanderDesk.swift`<br>`Sources/CrawlCall/Game.swift`<br>`Sources/CrawlCall/Commander/SquadView.swift` | `Tests/CrawlCallTests/CommanderCallTests.swift` |
 | **FR-CMD-025** Each commander call is its own session | `implemented` | T | `Sources/CrawlCall/Commander/SystemModelCommander.swift`<br>`Sources/CrawlCall/Commander/CommanderDesk.swift` | `Tests/CrawlCallTests/CommanderCallTests.swift` |
@@ -264,7 +264,7 @@ Total requirements: 281.
 | **FR-VIEW-310** A lunge is drawn as a cartoon | `implemented` | D | `Sources/CrawlCall/View/LungePose.swift`<br>`Sources/CrawlCall/View/SnakeEntity.swift`<br>`Sources/CrawlCall/GameSession.swift`<br>`Sources/CrawlCall/Config/Drawing.swift` | `Tests/CrawlCallTests/LungeTests.swift` |
 | **FR-VIEW-320** A living bot is swallowed from the top down | `implemented` | D | `Sources/CrawlCall/View/SwallowPose.swift`<br>`Sources/CrawlCall/View/SnakeEntity.swift`<br>`Sources/CrawlCall/View/BotEntity.swift`<br>`Sources/CrawlCall/View/BotCut.metal`<br>`Sources/CrawlCall/GameSession.swift`<br>`Sources/CrawlCall/Config/Drawing.swift`<br>`Sources/CrawlCall/Config/Resource.swift` | `Tests/CrawlCallTests/SwallowTests.swift`<br>`Tests/CrawlCallTests/MatchEndTests.swift` |
 | **FR-VIEW-330** The snake slithers | `implemented` | T | `Sources/CrawlCall/View/SnakeBody.swift`<br>`Sources/CrawlCall/View/SnakeEntity.swift`<br>`Sources/CrawlCall/Snake/Snake.swift`<br>`Sources/CrawlCall/GameSession.swift`<br>`Sources/CrawlCall/Config/Configurations.swift` | `Tests/CrawlCallTests/SlitherTests.swift` |
-| **FR-VIEW-340** A bot holds the weapon it is using | `deferred` | T | — | — |
+| **FR-VIEW-340** A bot holds the weapon it is using | `implemented` | T | `Sources/CrawlCall/View/Figure.swift`<br>`Sources/CrawlCall/View/BotEntity.swift`<br>`Sources/CrawlCall/Config/EntityName.swift` | `Tests/CrawlCallTests/FigureTests.swift` |
 | **IF-BOT-010** Bot and match configuration | `implemented` | T | `Sources/CrawlCall/Config/Configurations.swift`<br>`Sources/CrawlCall/Config/Configurations+Load.swift`<br>`Sources/CrawlCall/Config/Schema.swift`<br>`Sources/CrawlCall/Launch.swift`<br>`Sources/CrawlCall/CrawlCallApp.swift`<br>`Sources/CrawlCall/Config/Resource.swift` | `Tests/CrawlCallTests/ArmsTests.swift`<br>`Tests/CrawlCallTests/ConfigurationTests.swift`<br>`Tests/CrawlCallTests/LaunchTests.swift`<br>`Tests/CrawlCallTests/SchemaTests.swift`<br>`Tests/CrawlCallTests/DeliberationTests.swift`<br>`Tests/CrawlCallTests/KnowledgeTests.swift` |
 | **IF-CMD-010** Commander input | `implemented` | T | `Sources/CrawlCall/Commander/CommanderInput.swift`<br>`Sources/CrawlCall/Commander/SquadView.swift`<br>`Sources/CrawlCall/Commander/SquadHappenings.swift`<br>`Sources/CrawlCall/Game.swift` | `Tests/CrawlCallTests/CommanderContractTests.swift` |
 | **IF-CMD-020** Commander output | `implemented` | T | `Sources/CrawlCall/Commander/CommanderDecision.swift`<br>`Sources/CrawlCall/Commander/SystemModelCommander.swift`<br>`Sources/CrawlCall/Commander/Commander.swift` | `Tests/CrawlCallTests/CommanderContractTests.swift` |

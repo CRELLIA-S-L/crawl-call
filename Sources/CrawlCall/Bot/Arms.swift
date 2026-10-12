@@ -9,7 +9,7 @@
 // carries; a weapon its archetype names and the catalogue does not know is a
 // configuration error there and then, the same as an archetype with no entry at all.
 //
-// file implements: FR-BOT-440, FR-BOT-450, FR-BOT-470
+// file implements: FR-BOT-080, FR-BOT-440, FR-BOT-450, FR-BOT-470, FR-BOT-510, FR-BOT-520
 import Foundation
 
 struct Arms: Equatable {
@@ -84,6 +84,9 @@ struct Arms: Equatable {
         guard best > .zero else { return .zero }
         return self[slot].numbers.damage / best
     }
+
+    /// The knife gone, thrown and not picked up again (FR-BOT-520).
+    mutating func throwKnife() { knife = nil }
 
     /// A round spent out of one firearm (FR-BOT-450).
     mutating func spend(_ slot: Slot) {

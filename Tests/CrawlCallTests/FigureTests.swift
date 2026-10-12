@@ -5,7 +5,7 @@
 // they are six different ones and that the figure is built the way that judgement
 // assumes.
 //
-// file verifies: FR-VIEW-060, FR-VIEW-070, FR-VIEW-240
+// file verifies: FR-VIEW-060, FR-VIEW-070, FR-VIEW-240, FR-VIEW-340, FR-BOT-520
 import RealityKit
 import XCTest
 @testable import CrawlCall
@@ -25,6 +25,83 @@ final class FigureTests: XCTestCase {
     /// else of the figure.
     private func silhouette(of archetype: Archetype) -> [Figure.Part] {
         Figure.parts(for: archetype, height: height).filter { $0.role == .headgear || $0.role == .weapon || $0.role == .kit }
+    }
+
+    // MARK: what is in the hands and what is stowed (FR-VIEW-340)
+
+    func testEveryArchetypeCarriesItsFourWeaponsAndHoldsTheOneItIsUsing() throws {
+        for archetype in Archetype.allCases {
+            for using in Figure.Carried.allCases {
+                let parts = Figure.parts(for: archetype, height: height, using: using)
+                let carried = parts.compactMap(\.carried)
+                XCTAssertEqual(Set(carried), Set(Figure.Carried.allCases),
+                               "\(archetype) went out without all four of its weapons drawn")
+                XCTAssertEqual(carried.count, Figure.Carried.allCases.count, "a weapon is drawn twice")
+                // The one in use is out in front of the figure, and every other is
+                // behind it or at its belt — never in the same place as the hands.
+                let hands = try XCTUnwrap(parts.first { $0.carried == using }).centre
+                for part in parts where part.carried != nil && part.carried != using {
+                    XCTAssertNotEqual(part.centre, hands, "\(archetype) holds two things at once")
+                }
+                XCTAssertGreaterThan(hands.z, 0, "\(archetype) holds its \(using) behind itself")
+            }
+        }
+    }
+
+    func testThePrimaryIsAcrossTheBackWhileSomethingElseIsInTheHands() throws {
+        for archetype in Archetype.allCases {
+            let held = try XCTUnwrap(Figure.parts(for: archetype, height: height, using: .primary)
+                .first { $0.carried == .primary })
+            let slung = try XCTUnwrap(Figure.parts(for: archetype, height: height, using: .knife)
+                .first { $0.carried == .primary })
+            XCTAssertGreaterThan(held.centre.z, slung.centre.z, "\(archetype)'s primary is not stowed behind it")
+            XCTAssertEqual(held.turn, 0, "\(archetype) holds its primary sideways")
+            XCTAssertEqual(slung.turn, .pi / 2, accuracy: 1e-12, "\(archetype)'s primary is not across its back")
+        }
+    }
+
+    func testWhatABotNoLongerCarriesIsDrawnNowhere() throws {
+        // A knife is gone once thrown (FR-BOT-520) and a pouch empties; neither is
+        // drawn on a figure that has none.
+        let parts = Figure.parts(for: .assault, height: height, using: .primary, carrying: [.primary, .sidearm])
+        XCTAssertNil(parts.first { $0.carried == .knife }, "a thrown knife is still on the belt")
+        XCTAssertNil(parts.first { $0.carried == .grenade }, "an empty pouch still has a grenade in it")
+        XCTAssertNotNil(parts.first { $0.carried == .primary })
+    }
+
+    func testTheWeaponAFigureHoldsFollowsWhatTheBotIsDoing() throws {
+        // What the view reads off a bot's last decision, which is the whole of how the
+        // hands change within a match.
+        XCTAssertEqual(Figure.using(.fire(at: .bot(id: 1), with: .primary)), .primary)
+        XCTAssertEqual(Figure.using(.fire(at: .bot(id: 1), with: .sidearm)), .sidearm)
+        XCTAssertEqual(Figure.using(.throwGrenade(at: .bot(id: 1))), .grenade)
+        XCTAssertEqual(Figure.using(.strike(at: .bot(id: 1))), .knife)
+        XCTAssertEqual(Figure.using(.throwKnife(at: .bot(id: 1))), .knife)
+        // Walking, reloading, doing nothing: the primary, which is what a bot carries
+        // about in its hands.
+        XCTAssertEqual(Figure.using(.reload), .primary)
+        XCTAssertEqual(Figure.using(nil), .primary)
+    }
+
+    @MainActor
+    func testTheFigureMovesItsWeaponsWhenTheBotChangesWhatItUses() throws {
+        let world = try Launch.world().get()
+        var bot = try XCTUnwrap(Bot(id: 0, squad: .red, archetype: .assault, at: .zero, floor: 0,
+                                    configuration: world.configurations.bot))
+        let entity = BotEntity.make(for: [bot], height: height)
+        let figure = try XCTUnwrap(entity.children.first)
+        let knife = try XCTUnwrap(figure.children.first { $0.name == EntityName.weapon(Figure.Carried.knife.rawValue) })
+        let stowed = knife.position
+
+        bot.action = .strike(at: .bot(id: 1))
+        BotEntity.update(entity, from: [bot], height: height)
+        XCTAssertNotEqual(knife.position, stowed, "the knife stayed on the belt while the bot was striking with it")
+        XCTAssertTrue(knife.isEnabled)
+
+        // Thrown, it is on the figure nowhere (FR-BOT-520).
+        bot.arms.throwKnife()
+        BotEntity.update(entity, from: [bot], height: height)
+        XCTAssertFalse(knife.isEnabled, "a thrown knife is still drawn")
     }
 
     func testEveryArchetypeHasHeadgearAndAWeapon() {
@@ -135,7 +212,7 @@ final class FigureTests: XCTestCase {
         // axis; the figure turns it onto z. What this holds is the outcome: the tube is
         // long front to back and short up and down.
         let figure = Figure.make(.heavy, height: height, materials: Figure.materials(for: .blue))
-        let tube = try XCTUnwrap(figure.children.first { $0.name == "weapon" })
+        let tube = try XCTUnwrap(figure.children.first { $0.name == EntityName.weapon(Figure.Carried.primary.rawValue) })
         let extent = tube.visualBounds(relativeTo: figure).extents
         // Four times as long as it is thick, drawn; three is the least that still
         // says lying rather than standing whatever size the figure is set down at.

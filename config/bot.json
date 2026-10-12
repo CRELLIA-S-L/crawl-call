@@ -305,6 +305,7 @@
       "combatKnife": {
         "damage": 20.0,
         "reach": 1.2,
+        "timeBetweenStrikes": 1.0,
         "throwRange": 5.0
       }
     }
@@ -328,7 +329,8 @@
     "snakePath": 1.0,
     "together": 1.0,
     "ordered": 1.0,
-    "blast": 1.2
+    "blast": 1.2,
+    "thrown": 1.0
   },
   "figureHeight": 1.12,
   "eyeHeight": 0.875,

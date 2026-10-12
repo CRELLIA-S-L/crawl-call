@@ -278,10 +278,12 @@ struct BotConfiguration: Decodable, Equatable {
     }
 
     /// What a knife is (FR-BOT-510, FR-BOT-520): what it deals, how far an arm with
-    /// one in it reaches, and how far it goes thrown.
+    /// one in it reaches, how long between one strike and the next, and how far it
+    /// goes thrown.
     struct Knife: Decodable, Equatable {
         let damage: Double
         let reach: Double
+        let timeBetweenStrikes: Double
         let throwRange: Double
     }
 
@@ -325,6 +327,10 @@ struct BotConfiguration: Decodable, Equatable {
         /// `attack`, or a bot would throw its two grenades in the first seconds of
         /// every firefight: at half of it a bot throws once its magazine is half gone.
         let blast: Double
+        /// Throwing the knife (FR-BOT-520), which is what a bot has one of. Below
+        /// `attack` as well, and for the same reason doubled: a throw costs the knife,
+        /// and what it is worth has to carry that.
+        let thrown: Double
     }
     let utilityTermWeights: UtilityTermWeights
     /// How tall a bot's figure is drawn, in metres, at its tallest (FR-VIEW-070).
@@ -387,7 +393,7 @@ struct BotConfiguration: Decodable, Equatable {
                 "blastRadius": .value, "furtherPartShare": .value,
             ])),
             "knives": .named(of: .object([
-                "damage": .value, "reach": .value, "throwRange": .value,
+                "damage": .value, "reach": .value, "timeBetweenStrikes": .value, "throwRange": .value,
             ])),
         ]),
         "overrideDistance": .value,
@@ -402,7 +408,7 @@ struct BotConfiguration: Decodable, Equatable {
             "attack": .value, "threat": .value, "wounded": .value,
             "obedience": .value, "mercy": .value, "empty": .value,
             "height": .value, "snakePath": .value, "together": .value, "ordered": .value,
-            "blast": .value,
+            "blast": .value, "thrown": .value,
         ]),
         "figureHeight": .value,
         "eyeHeight": .value,

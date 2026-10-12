@@ -278,4 +278,19 @@ What remains is what a decision inside the repository cannot close.
 - **Why it could not be seen before.** Until FR-BOT-119 the quiet motives were unreachable in play: something always scored above zero, so no bot ever advanced or explored in a match. This is not new behaviour, it is behaviour that was never reached.
 - **Where it belongs.** The state it happens in should not last: one squad is gone, and the match goes on because FR-SCORE-150 ends it only when no bot is left at all. And the alternation is the shape ADR-0059 chose — a quiet motive consulted only where nothing scores flips as soon as what scores flickers around zero. Scoring the two beside the rest is the answer that was weighed and left out on 2026-10-12, and this entry is the case that would reopen it.
 - **Still needed:** the slot-by-slot reading, and then the maintainer's word on whether the pacing is worth the reversal of ADR-0059 — or whether it is FR-SCORE-150 that should have ended the match before anybody could pace.
+- **Re-read on 2026-10-12, after the arms were built** (FR-BOT-440 and its neighbours, ADR-0086 through ADR-0088): the same shape sooner and with more of them. One squad is gone by the fifty-third second rather than the eighty-sixth, three bots are left rather than two, and from the sixtieth second to the hundred and fiftieth the furthest any of them gets from where it stood in ten seconds is 0.65 to 1.64 m, exploring and fleeing by turns. Nothing about the question changes; the numbers in it do.
+
+### Q-650 — A commander test passes or fails on when a detached call finishes
+
+- **Found:** on 2026-10-12, building the arms: `CommanderCallTests.swift:200` failed once with "expected non-nil value of type CommanderInput" and passed on the next run with nothing in the tree changed, and on every run after.
+- **What diverges.** Nothing a requirement says. `testTheSquadsAreToldDifferentThings` reads `dueCalls()` before advancing the match and again four seconds in, and a squad already waiting on a call is not due (FR-CMD-080, ADR-0068). Whether blue's first call has been started and cleared by then depends on when the detached task the match spawns gets to run, which nothing in the test controls.
+- **Why it matters.** A test that fails one run in some number of runs is not a test of what it says it tests, and the next agent to see it red will go looking for a fault in whatever it was building.
+- **Still needed:** either the test reads the rule without the clock — the desk's `isDue` directly, as `testASquadWithNoLivingRoleHolderHasNoStateToSend` reads the state directly — or the match is advanced in frames until blue is due, with a bound. Both are the maintainer's to choose between; neither changes the game.
+
+### Q-660 — FR-BOT-170 is `partial` for a reason that has gone
+
+- **Found:** on 2026-10-12, reading the interrupts while building the arms.
+- **What diverges.** FR-BOT-170's rationale says it is `partial` because three of its seven events have nothing to be found in yet: destroyed cover (FR-MAP-030), a snake-marked body (FR-SCORE-120) and an order (FR-CMD-040). The third is no longer true — FR-CMD-040 was built on 2026-10-11 and a squad does receive orders — and the interrupt for it is still not raised. `Interrupts.swift` says the same thing in its header.
+- **Still needed:** the maintainer's word on whether a new order should interrupt. It is one comparison in `Interrupts.find` — the standing order of a squad changing between the frame's start and its end — and it would give a bot the slot in which to act on what it was told, rather than up to a deliberation period later. Until then the requirement stays `partial` for two reasons rather than three, and the rationale should say so.
+
 

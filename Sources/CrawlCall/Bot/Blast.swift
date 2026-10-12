@@ -7,7 +7,7 @@
 // when the fuse runs out — which is what makes it answerable, since the bots and the
 // snake move in the seconds between.
 //
-// file implements: FR-BOT-470, FR-BOT-480, FR-BOT-490
+// file implements: FR-BOT-080, FR-BOT-470, FR-BOT-480, FR-BOT-490
 import Foundation
 
 /// A grenade on its way out of a bot's hand and on the ground: where it will go off,

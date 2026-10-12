@@ -2,7 +2,7 @@
 // catalogue: an archetype may add to it, and nothing may quietly drop out of it
 // (FR-BOT-200).
 //
-// file implements: FR-BOT-200, FR-BOT-460, FR-BOT-470, FR-BOT-360, FR-BOT-370
+// file implements: FR-BOT-200, FR-BOT-460, FR-BOT-470, FR-BOT-510, FR-BOT-520, FR-BOT-360, FR-BOT-370
 import Foundation
 
 /// What a shot is aimed at. The snake is named by the point that is being shot at —
@@ -21,6 +21,10 @@ enum Action: Equatable {
     /// Throwing a grenade where the target is: another weapon that reaches, scored
     /// as an action of its own (FR-BOT-460, FR-BOT-470).
     case throwGrenade(at: Target)
+    /// The knife, at the reach of an arm (FR-BOT-510), and thrown a little further at
+    /// the cost of having it at all (FR-BOT-520).
+    case strike(at: Target)
+    case throwKnife(at: Target)
     case takeCover(at: NavigationGraph.Node)
     case moveToOrderedZone(NavigationGraph.Node)
     case flee(to: NavigationGraph.Node)

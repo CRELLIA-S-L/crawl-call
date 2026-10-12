@@ -2,7 +2,7 @@
 // part of the scene finds another — the match looks the camera up by it — so it is
 // declared once and not spelled at each end.
 //
-// file implements: FR-TOOL-020, FR-VIEW-020, FR-VIEW-100, FR-VIEW-170, FR-MAP-130, FR-GREENHOLM-030, FR-VIEW-260, FR-VIEW-290
+// file implements: FR-VIEW-340, FR-TOOL-020, FR-VIEW-020, FR-VIEW-100, FR-VIEW-170, FR-MAP-130, FR-GREENHOLM-030, FR-VIEW-260, FR-VIEW-290
 import Foundation
 
 enum EntityName {
@@ -39,6 +39,12 @@ enum EntityName {
 
     /// `segment<index>`, `bot<id>`: one of many of a kind, by its number.
     static func numbered(_ kind: String, _ number: Int) -> String { kind + String(number) }
+    /// One of the weapons a figure carries, named by which weapon it is, so that the
+    /// view can find it again and move it between the hands and where it is stowed
+    /// (FR-VIEW-340). The name is a string here and the weapons are the view's: the
+    /// configuration layer knows what a name looks like and not what a figure holds.
+    static let weaponPrefix = "weapon:"
+    static func weapon(_ carried: String) -> String { weaponPrefix + carried }
     /// The ground slabs of one module, drawn as one mesh (ADR-0047).
     static let slabsPrefix = "slabs:"
     static func slabs(_ module: String) -> String { slabsPrefix + module }

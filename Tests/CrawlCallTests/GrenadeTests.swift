@@ -5,7 +5,7 @@
 //
 // The arena is an open strip, so that the only thing between anybody is distance.
 //
-// file verifies: FR-BOT-470, FR-BOT-480, FR-BOT-490, FR-BOT-500
+// file verifies: FR-BOT-080, FR-BOT-470, FR-BOT-480, FR-BOT-490, FR-BOT-500
 import XCTest
 @testable import CrawlCall
 

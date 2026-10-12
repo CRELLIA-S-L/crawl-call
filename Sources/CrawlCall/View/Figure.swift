@@ -15,7 +15,7 @@
 // The figure faces +z, towards the camera (FR-VIEW-010), because a bot has no facing
 // of its own to turn it by.
 //
-// file implements: FR-VIEW-060, FR-VIEW-070, FR-VIEW-290, FR-VIEW-240
+// file implements: FR-VIEW-340, FR-VIEW-060, FR-VIEW-070, FR-VIEW-290, FR-VIEW-240
 import Foundation
 import RealityKit
 import UIKit
@@ -44,6 +44,11 @@ enum Figure {
         case leftLeg, rightLeg
     }
 
+    /// One of the four things a bot carries (FR-BOT-440), as the figure draws them:
+    /// what is in the hands is what it is using, and the rest hang where they are
+    /// carried (FR-VIEW-340).
+    enum Carried: String, CaseIterable, Equatable { case primary, sidearm, grenade, knife }
+
     struct Part: Equatable {
         let role: Role
         let shape: Shape
@@ -51,7 +56,13 @@ enum Figure {
         let centre: SIMD3<Double>
         /// Stretch along each axis — a helmet is a squashed sphere.
         var stretch = SIMD3<Double>(1, 1, 1)
+        /// Turned about the vertical, in radians: what a weapon slung across the back
+        /// is turned by, where in the hands it points forward.
+        var turn: Double = .zero
         let paint: Paint
+        /// Which of the bot's weapons this part is, for the parts that are one: the
+        /// view finds it by this to move it between the hands and its place.
+        var carried: Carried?
     }
 
     /// The proportions the figure is drawn in: a figure this tall, with its eyes at
@@ -71,9 +82,15 @@ enum Figure {
     private static let hips = 0.42
 
     /// The figure's parts set down at a height, in metres, at its tallest.
-    static func parts(for archetype: Archetype, height: Double) -> [Part] {
+    ///
+    /// `using` is the weapon drawn in the hands and `carrying` what the bot still has
+    /// on it at all — a knife it has thrown and an empty pouch are drawn nowhere
+    /// (FR-VIEW-340, FR-BOT-520).
+    static func parts(for archetype: Archetype, height: Double,
+                      using: Carried = .primary,
+                      carrying: Set<Carried> = Set(Carried.allCases)) -> [Part] {
         let scale = height / drawnHeight
-        return drawn(archetype).map { part in
+        return drawn(archetype, using: using, carrying: carrying).map { part in
             let shape: Shape
             switch part.shape {
             case .box(let size, let corner): shape = .box(size * scale, corner: corner * scale)
@@ -82,12 +99,13 @@ enum Figure {
                 shape = .cylinder(radius: radius * scale, height: length * scale, lying: lying)
             }
             return Part(role: part.role, shape: shape, centre: part.centre * scale,
-                        stretch: part.stretch, paint: part.paint)
+                        stretch: part.stretch, turn: part.turn, paint: part.paint, carried: part.carried)
         }
     }
 
     /// The figure in its drawn proportions.
-    private static func drawn(_ archetype: Archetype) -> [Part] {
+    private static func drawn(_ archetype: Archetype, using: Carried = .primary,
+                              carrying: Set<Carried> = Set(Carried.allCases)) -> [Part] {
         let heavy = archetype == .heavy
         let torso = heavy ? SIMD3(0.54, 0.5, 0.34) : SIMD3(0.42, 0.45, 0.28)
         let hips = Figure.hips
@@ -110,7 +128,8 @@ enum Figure {
             Part(role: .eye, shape: .sphere(radius: 0.028), centre: SIMD3(0.08, drawnEye, headRadius - 0.03), paint: .dark),
         ]
         parts += headgear(for: archetype)
-        parts += carried(by: archetype, torso: torso, torsoCentre: torsoCentre)
+        parts += carried(by: archetype, torso: torso, torsoCentre: torsoCentre,
+                         using: using, carrying: carrying)
         return parts
     }
 
@@ -154,41 +173,101 @@ enum Figure {
         }
     }
 
-    /// What it carries. The weapon is the second half of what an archetype is read
-    /// by, and it is laid where its outline shows from above: out in front, or over a
-    /// shoulder, or at the side.
-    private static func carried(by archetype: Archetype, torso: SIMD3<Double>, torsoCentre: Double) -> [Part] {
+    /// What it carries (FR-VIEW-340): the weapon it is using in its hands, out in
+    /// front where its outline shows from above, and the rest where each is carried —
+    /// the primary across the back, the sidearm and the knife at the belt, the
+    /// grenades at the belt in front.
+    ///
+    /// The primary is also the second half of what an archetype is read by (FR-VIEW-070),
+    /// which is why each kind has a shape of its own and why the sapper keeps its
+    /// sledgehammer: that is its wrecking tool rather than a weapon (ADR-0086), and it
+    /// is drawn as kit.
+    private static func carried(by archetype: Archetype, torso: SIMD3<Double>, torsoCentre: Double,
+                                using: Carried, carrying: Set<Carried>) -> [Part] {
         let hand = torso.x / 2 + 0.06
-        switch archetype {
-        case .assault:
-            // A short automatic across the chest.
-            return [Part(role: .weapon, shape: .box(SIMD3(0.07, 0.1, 0.46), corner: 0.02),
-                         centre: SIMD3(0.06, torsoCentre, 0.26), paint: .metal)]
-        case .heavy:
-            // A thick tube on the shoulder, pointing forward.
-            return [Part(role: .weapon, shape: .cylinder(radius: 0.1, height: 0.8, lying: true),
-                         centre: SIMD3(hand + 0.02, torsoCentre + torso.y / 2 + 0.08, 0.12), paint: .metal)]
-        case .sapper:
-            // A sledgehammer held upright: the one who breaks partitions.
-            return [Part(role: .weapon, shape: .cylinder(radius: 0.025, height: 0.75, lying: false),
-                         centre: SIMD3(hand + 0.08, 0.52, 0.06), paint: .cloth),
-                    Part(role: .weapon, shape: .box(SIMD3(0.13, 0.13, 0.26), corner: 0.02),
-                         centre: SIMD3(hand + 0.08, 0.92, 0.06), paint: .metal)]
-        case .scout:
-            // A pistol in the hand at the side, and nothing else to slow it down.
-            return [Part(role: .weapon, shape: .box(SIMD3(0.05, 0.09, 0.17), corner: 0.015),
-                         centre: SIMD3(hand, torsoCentre - 0.2, 0.1), paint: .metal)]
-        case .sniper:
-            // A long rifle held out in front, twice the assault's.
-            return [Part(role: .weapon, shape: .box(SIMD3(0.05, 0.07, 1.0), corner: 0.02),
-                         centre: SIMD3(0.1, torsoCentre + 0.04, 0.34), paint: .metal)]
-        case .medic:
-            // A pistol, and a white satchel on the hip.
-            return [Part(role: .weapon, shape: .box(SIMD3(0.05, 0.09, 0.17), corner: 0.015),
-                         centre: SIMD3(hand, torsoCentre - 0.2, 0.1), paint: .metal),
-                    Part(role: .kit, shape: .box(SIMD3(0.1, 0.2, 0.24), corner: 0.03),
-                         centre: SIMD3(-(hand + 0.02), hips + 0.02, 0), paint: .white)]
+        /// Where a weapon in the hands is: out in front, at the height of the chest.
+        let held = SIMD3(0.06, torsoCentre, 0.26)
+        let drawn = SIMD3(hand, torsoCentre - 0.2, 0.1)
+        var parts: [Part] = []
+
+        if carrying.contains(.primary) {
+            let shape: Shape
+            switch archetype {
+            case .assault: shape = .box(SIMD3(0.07, 0.1, 0.46), corner: 0.02)
+            case .heavy:   shape = .cylinder(radius: 0.1, height: 0.8, lying: true)
+            case .sapper:  shape = .box(SIMD3(0.06, 0.09, 0.55), corner: 0.02)
+            case .scout:   shape = .box(SIMD3(0.05, 0.08, 0.62), corner: 0.02)
+            case .sniper:  shape = .box(SIMD3(0.05, 0.07, 1.0), corner: 0.02)
+            case .medic:   shape = .box(SIMD3(0.06, 0.1, 0.32), corner: 0.02)
+            }
+            // The heavy's tube rides on the shoulder in its hands, where every other
+            // primary is held at the chest.
+            let inHand = archetype == .heavy
+                ? SIMD3(hand + 0.02, torsoCentre + torso.y / 2 + 0.08, 0.12)
+                : held
+            let onBack = SIMD3(.zero, torsoCentre + 0.04, -(torso.z / 2 + 0.09))
+            parts.append(Part(role: .weapon, shape: shape,
+                              centre: using == .primary ? inHand : onBack,
+                              turn: using == .primary ? .zero : .pi / 2,
+                              paint: .metal, carried: .primary))
         }
+        if carrying.contains(.sidearm) {
+            parts.append(Part(role: .weapon, shape: .box(SIMD3(0.05, 0.09, 0.17), corner: 0.015),
+                              centre: using == .sidearm ? drawn : SIMD3(hand, hips + 0.1, .zero),
+                              paint: .metal, carried: .sidearm))
+        }
+        if carrying.contains(.knife) {
+            parts.append(Part(role: .weapon, shape: .box(SIMD3(0.02, 0.05, 0.16), corner: 0.008),
+                              centre: using == .knife ? drawn : SIMD3(-hand, hips + 0.1, .zero),
+                              paint: .metal, carried: .knife))
+        }
+        if carrying.contains(.grenade) {
+            parts.append(Part(role: .weapon, shape: .sphere(radius: 0.045),
+                              centre: using == .grenade ? drawn : SIMD3(-0.05, hips + 0.12, torso.z / 2 + 0.03),
+                              paint: .dark, carried: .grenade))
+        }
+        parts += kit(of: archetype, torso: torso, torsoCentre: torsoCentre, hand: hand)
+        return parts
+    }
+
+    /// What an archetype carries that is not a weapon: the sapper's sledgehammer, held
+    /// upright for breaking partitions (FR-BOT-070), and the medic's satchel.
+    private static func kit(of archetype: Archetype, torso: SIMD3<Double>, torsoCentre: Double,
+                            hand: Double) -> [Part] {
+        switch archetype {
+        case .sapper:
+            return [Part(role: .kit, shape: .cylinder(radius: 0.025, height: 0.75, lying: false),
+                         centre: SIMD3(hand + 0.08, 0.52, 0.06), paint: .cloth),
+                    Part(role: .kit, shape: .box(SIMD3(0.13, 0.13, 0.26), corner: 0.02),
+                         centre: SIMD3(hand + 0.08, 0.92, 0.06), paint: .metal)]
+        case .medic:
+            return [Part(role: .kit, shape: .box(SIMD3(0.1, 0.2, 0.24), corner: 0.03),
+                         centre: SIMD3(-(hand + 0.02), hips + 0.02, .zero), paint: .white)]
+        case .assault, .heavy, .scout, .sniper:
+            return []
+        }
+    }
+
+    /// Which weapon a bot is using, as its last decision says (FR-VIEW-340): what it
+    /// is firing, throwing or striking with, and otherwise its primary, which is what
+    /// a bot walks about holding.
+    static func using(_ action: Action?) -> Carried {
+        switch action {
+        case .fire(_, .sidearm): return .sidearm
+        case .throwGrenade: return .grenade
+        case .strike, .throwKnife: return .knife
+        case .fire, .takeCover, .moveToOrderedZone, .flee, .reload, .heal, .advance, .explore, .none:
+            return .primary
+        }
+    }
+
+    /// What a bot still has on it to be drawn: both firearms always, an empty pouch
+    /// and a thrown knife nowhere (FR-BOT-520).
+    static func carrying(_ arms: Arms) -> Set<Carried> {
+        var carried: Set<Carried> = [.primary, .sidearm]
+        if arms.grenades.left > .zero { carried.insert(.grenade) }
+        if arms.knife != nil { carried.insert(.knife) }
+        return carried
     }
 
     // MARK: building it
@@ -210,12 +289,12 @@ enum Figure {
         }
         for part in parts(for: archetype, height: height) {
             let model = ModelEntity(mesh: mesh(for: part.shape), materials: [materials[part.paint] ?? SimpleMaterial()])
-            model.name = "\(part.role)"
+            // A weapon is named by which weapon it is, so that the view can find it
+            // again and move it between the hands and its place (FR-VIEW-340).
+            model.name = part.carried.map { EntityName.weapon($0.rawValue) } ?? "\(part.role)"
             model.position = SIMD3<Float>(part.centre)
             model.scale = SIMD3<Float>(part.stretch)
-            if case .cylinder(_, _, true) = part.shape {
-                model.orientation = simd_quatf(angle: .pi / 2, axis: SIMD3<Float>(1, 0, 0))
-            }
+            model.orientation = turned(part)
             if let joint = joints.first(where: { $0.0 == part.role })?.1 {
                 model.position -= joint.position
                 joint.addChild(model)
@@ -224,6 +303,16 @@ enum Figure {
             }
         }
         return figure
+    }
+
+    /// How a part is turned: about the vertical by its own turn, and a cylinder lying
+    /// on z by the quarter turn that lays it there.
+    static func turned(_ part: Part) -> simd_quatf {
+        var orientation = simd_quatf(angle: Float(part.turn), axis: SIMD3<Float>(0, 1, 0))
+        if case .cylinder(_, _, true) = part.shape {
+            orientation *= simd_quatf(angle: .pi / 2, axis: SIMD3<Float>(1, 0, 0))
+        }
+        return orientation
     }
 
     /// Where a leg's hip joint is on a figure `height` tall: at the top of the leg,

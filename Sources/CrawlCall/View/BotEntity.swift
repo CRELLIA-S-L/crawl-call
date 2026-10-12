@@ -9,7 +9,7 @@
 // A figure's origin is at its feet, so that it stands on the floor as placed and
 // shrinks into the floor as it is swallowed.
 //
-// file implements: FR-VIEW-290, FR-VIEW-060, FR-VIEW-070, FR-VIEW-100, FR-VIEW-190, FR-BOT-280, FR-VIEW-300, FR-VIEW-320
+// file implements: FR-VIEW-340, FR-VIEW-290, FR-VIEW-060, FR-VIEW-070, FR-VIEW-100, FR-VIEW-190, FR-BOT-280, FR-VIEW-300, FR-VIEW-320
 import CoreGraphics
 import Foundation
 import Metal
@@ -61,7 +61,12 @@ enum BotEntity {
     /// bodies rather than the bots for that reason: what is gone is what has no bot
     /// left to answer for it.
     @MainActor
-    static func update(_ entity: Entity, from bots: [Bot], gaits: [Int: Gait] = [:], eaten: Int? = nil) {
+    /// `height` is how tall the figures were built, which is what the weapons' places
+    /// are measured in (FR-VIEW-340); given none, the weapons are left where the
+    /// figure was built with them, which is what a caller that is not drawing the arms
+    /// needs to know about them.
+    static func update(_ entity: Entity, from bots: [Bot], gaits: [Int: Gait] = [:], eaten: Int? = nil,
+                       height: Double? = nil) {
         var standing: [String: Bot] = [:]
         for bot in bots { standing[EntityName.numbered(EntityName.bot, bot.id)] = bot }
         for body in entity.children {
@@ -93,6 +98,9 @@ enum BotEntity {
                 body.children.first { $0.name == name }?.orientation =
                     simd_quatf(angle: -sign * Float(pose.swing), axis: SIMD3(1, 0, 0))
             }
+            // In its hands what it is using, and the rest where each is carried
+            // (FR-VIEW-340).
+            if let height { arm(body, of: bot, height: height) }
             // A body lies where it fell, on its back, its feet where it stood
             // (FR-VIEW-300).
             if !bot.isAlive {
@@ -100,6 +108,27 @@ enum BotEntity {
                 body.orientation = simd_quatf(angle: Float(bot.facing), axis: SIMD3(0, 1, 0))
                     * simd_quatf(angle: -.pi / 2, axis: SIMD3(1, 0, 0))
             }
+        }
+    }
+
+    /// Moves a figure's weapons to where that bot's arms are now: the one it is using
+    /// into its hands, the others to their places, and the ones it no longer carries
+    /// off the figure altogether (FR-VIEW-340, FR-BOT-520).
+    @MainActor
+    private static func arm(_ body: Entity, of bot: Bot, height: Double) {
+        let places = Figure.parts(for: bot.archetype, height: height,
+                                  using: Figure.using(bot.action),
+                                  carrying: Figure.carrying(bot.arms))
+        var placed: [String: Figure.Part] = [:]
+        for part in places {
+            guard let carried = part.carried else { continue }
+            placed[EntityName.weapon(carried.rawValue)] = part
+        }
+        for child in body.children where child.name.hasPrefix(EntityName.weaponPrefix) {
+            guard let part = placed[child.name] else { child.isEnabled = false; continue }
+            child.isEnabled = true
+            child.position = SIMD3<Float>(part.centre)
+            child.orientation = Figure.turned(part)
         }
     }
 
