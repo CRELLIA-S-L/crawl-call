@@ -8,9 +8,9 @@ Total requirements: 279.
 | Status | Requirements |
 |---|---|
 | `draft` | 4 |
-| `deferred` | 99 |
+| `deferred` | 96 |
 | `partial` | 11 |
-| `implemented` | 159 |
+| `implemented` | 162 |
 | `superseded` | 6 |
 | `withdrawn` | 0 |
 
@@ -105,9 +105,9 @@ Total requirements: 279.
 | **FR-CMD-100** A truce stops fire between the squads | `deferred` | T | — | — |
 | **FR-CMD-105** A truce turns both squads on the snake | `deferred` | T | — | — |
 | **FR-CMD-110** A truce is fragile | `deferred` | T | — | — |
-| **FR-CMD-120** Losing the role-holder silences the commander | `deferred` | T | — | — |
-| **FR-CMD-125** Losing the role-holder voids orders and roles | `deferred` | T | — | — |
-| **FR-CMD-130** Collapsed bots keep their last weights, with more panic | `deferred` | T | — | — |
+| **FR-CMD-120** Losing the role-holder silences the commander | `implemented` | T | `Sources/CrawlCall/Commander/SquadCommand.swift`<br>`Sources/CrawlCall/Game.swift` | `Tests/CrawlCallTests/CommanderCollapseTests.swift` |
+| **FR-CMD-125** Losing the role-holder voids orders and roles | `implemented` | T | `Sources/CrawlCall/Commander/SquadCommand.swift`<br>`Sources/CrawlCall/Game.swift` | `Tests/CrawlCallTests/CommanderCollapseTests.swift` |
+| **FR-CMD-130** Collapsed bots keep their last weights, with more panic | `implemented` | T | `Sources/CrawlCall/Commander/SquadCommand.swift`<br>`Sources/CrawlCall/Game.swift` | `Tests/CrawlCallTests/CommanderCollapseTests.swift` |
 | **FR-CMD-140** Bots speak on events | `deferred` | D | — | — |
 | **FR-CMD-150** Speech is rate-limited and queued | `deferred` | T | — | — |
 | **FR-CMD-160** Every line passes a content filter | `deferred` | T | — | — |

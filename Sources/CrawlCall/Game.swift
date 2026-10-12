@@ -5,7 +5,7 @@
 // or a key: the schemes produce intents (FR-VIEW-050), the logic consumes them, and
 // neither knows about the other.
 //
-// file implements: FR-CMD-010, FR-CMD-020, FR-SNAKE-270, FR-SNAKE-280, FR-SNAKE-285, FR-SNAKE-055, FR-SNAKE-056, FR-SNAKE-016, FR-VIEW-160, FR-BOT-060, FR-BOT-320, FR-BOT-050, FR-BOT-220, FR-BOT-230, FR-BOT-240, FR-BOT-260, FR-BOT-310, FR-VIEW-030, FR-VIEW-170, FR-VIEW-190, FR-SNAKE-010, FR-SNAKE-030, FR-SNAKE-290, FR-BOT-020, FR-BOT-150, FR-BOT-170, FR-BOT-380, FR-SCORE-130, FR-SCORE-070, FR-BOT-180, FR-SNAKE-060, FR-SNAKE-070, FR-SNAKE-090, FR-SCORE-140, FR-SCORE-150, INV-BOT-010, FR-VIEW-230, FR-TOOL-230, FR-MAP-150, FR-MAP-180, FR-MAP-170, FR-SNAKE-220, FR-BOT-400, FR-CMD-030, FR-CMD-040, FR-CMD-050, FR-CMD-060
+// file implements: FR-CMD-010, FR-CMD-020, FR-SNAKE-270, FR-SNAKE-280, FR-SNAKE-285, FR-SNAKE-055, FR-SNAKE-056, FR-SNAKE-016, FR-VIEW-160, FR-BOT-060, FR-BOT-320, FR-BOT-050, FR-BOT-220, FR-BOT-230, FR-BOT-240, FR-BOT-260, FR-BOT-310, FR-VIEW-030, FR-VIEW-170, FR-VIEW-190, FR-SNAKE-010, FR-SNAKE-030, FR-SNAKE-290, FR-BOT-020, FR-BOT-150, FR-BOT-170, FR-BOT-380, FR-SCORE-130, FR-SCORE-070, FR-BOT-180, FR-SNAKE-060, FR-SNAKE-070, FR-SNAKE-090, FR-SCORE-140, FR-SCORE-150, INV-BOT-010, FR-VIEW-230, FR-TOOL-230, FR-MAP-150, FR-MAP-180, FR-MAP-170, FR-SNAKE-220, FR-BOT-400, FR-CMD-030, FR-CMD-040, FR-CMD-050, FR-CMD-060, FR-CMD-120, FR-CMD-125, FR-CMD-130
 import Foundation
 
 struct Game {
@@ -422,6 +422,7 @@ struct Game {
         }
         stealth.step(before: before, after: bots, prey: eating?.prey ?? coil?.prey, plan: world.plan,
                      bot: world.configurations.bot, scoring: world.configurations.scoring, now: elapsed)
+        collapseSquadsWithNoRoleHolder()
         callCommanders()
         // A bot that died or was eaten before its slot came has nothing left to decide.
         interrupted = interrupted.filter { entry in bots.contains { $0.id == entry.key && $0.isAlive } }
@@ -438,6 +439,16 @@ struct Game {
     /// The meal is over: the bot is gone from the map — squads do not remove bodies,
     /// the snake does (concept §6.2) — and the tail is longer by what its archetype
     /// is worth (FR-SNAKE-060).
+    /// A squad whose role-holder is gone falls apart (FR-CMD-120, FR-CMD-125,
+    /// FR-CMD-130), once, on the frame that finds it.
+    ///
+    private mutating func collapseSquadsWithNoRoleHolder() {
+        for squad in Squad.allCases
+        where !commands.hasCollapsed(squad) && SquadCommands.collapses(squad, among: bots) {
+            commands.collapse(squad, among: &bots, configuration: world.configurations.bot)
+        }
+    }
+
     /// Starts the calls that are due, and takes what earlier ones came back with
     /// (FR-CMD-020).
     ///
@@ -479,6 +490,11 @@ struct Game {
     func dueCalls() -> [(squad: Squad, state: CommanderInput)] {
         guard let desk else { return [] }
         return Squad.allCases.compactMap { squad in
+            // A squad that has lost its role-holder is never called again (FR-CMD-120).
+            // The state below would be nil for it anyway, since there is nobody whose
+            // knowledge to build it from; saying it here is what makes the rule a rule
+            // rather than a consequence of how the state happens to be built.
+            guard !commands.hasCollapsed(squad) else { return nil }
             guard desk.isDue(squad, at: elapsed) else { return nil }
             // A squad with no living role-holder is not called at all (FR-CMD-020).
             guard let state = SquadView.state(of: squad, among: bots,

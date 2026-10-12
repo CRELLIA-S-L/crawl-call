@@ -47,7 +47,7 @@
   {
     "from": "Sources/CrawlCall/Game.swift",
     "to": "Sources/CrawlCall/Bot/Bot.swift",
-    "via": "Bot:27 — one witness of 24 reference(s) from 1 file(s)"
+    "via": "Bot:27 — one witness of 25 reference(s) from 1 file(s)"
   },
   {
     "from": "Sources/CrawlCall/Game.swift",

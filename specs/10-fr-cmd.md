@@ -290,14 +290,14 @@ One act over an enumerated set of triggers.
 ### FR-CMD-120 — Losing the role-holder silences the commander
 
 ```yaml
-status: deferred
+status: implemented
 verification: T
 derives_from: []
 depends_on: [FR-BOT-040]
 refines: []
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Commander/SquadCommand.swift, Sources/CrawlCall/Game.swift]
+tests: [Tests/CrawlCallTests/CommanderCollapseTests.swift]
 created: 2026-09-21
 ```
 
@@ -305,18 +305,19 @@ When the bot holding a squad's commander role is consumed or killed, the system 
 
 **Rationale.** Concept §9.4: the squad falls apart into uncoordinated executors.
 A free consequence of the architecture and the player's main lever on the balance of the war.
+Built on 2026-10-12 (ADR-0080). The match asks on every frame whether anybody living still holds the role, and a squad that has lost it is skipped where the calls are decided — said there rather than left to follow from the state being unbuildable, so that the rule is a rule.
 
 ### FR-CMD-125 — Losing the role-holder voids orders and roles
 
 ```yaml
-status: deferred
+status: implemented
 verification: T
 derives_from: [FR-CMD-120]
 depends_on: [FR-CMD-040, FR-CMD-050]
 refines: []
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Commander/SquadCommand.swift, Sources/CrawlCall/Game.swift]
+tests: [Tests/CrawlCallTests/CommanderCollapseTests.swift]
 created: 2026-09-21
 ```
 
@@ -324,18 +325,19 @@ When the bot holding a squad's commander role is consumed or killed, the system 
 
 **Rationale.** Concept §9.4: coordination disappears.
 Split from FR-CMD-120 because a squad could stop receiving new orders and still act on the old one, and that is a different squad from one with none.
+Built on 2026-10-12 (ADR-0080). The order goes and every role goes with it, the body's included; what the bots keep is their weights, which is FR-CMD-130.
 
 ### FR-CMD-130 — Collapsed bots keep their last weights, with more panic
 
 ```yaml
-status: deferred
+status: implemented
 verification: T
 derives_from: [FR-CMD-120]
 depends_on: [FR-BOT-030]
 refines: []
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Commander/SquadCommand.swift, Sources/CrawlCall/Game.swift]
+tests: [Tests/CrawlCallTests/CommanderCollapseTests.swift]
 created: 2026-09-21
 ```
 
@@ -345,6 +347,7 @@ When a squad loses its role-holder, the system **shall** raise each surviving bo
 A commander's last mood outlives him, which is why eating a commander mid-retreat is different from eating one mid-assault.
 
 ## Speech
+Built on 2026-10-12 (ADR-0080). The panic is raised up to what the archetype allows, which is the bound FR-CMD-060 holds the commander's own weights to and the only one the configuration carries; a body is not raised, since nothing reads a dead bot's weights.
 
 ### FR-CMD-140 — Bots speak on events
 

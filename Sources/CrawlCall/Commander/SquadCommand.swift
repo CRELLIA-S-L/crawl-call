@@ -8,7 +8,7 @@
 // model. A squad with no command standing behaves exactly as it did before there were
 // commanders, which is what makes the commander optional rather than load-bearing.
 //
-// file implements: FR-CMD-030, FR-CMD-040, FR-CMD-050, FR-CMD-060
+// file implements: FR-CMD-030, FR-CMD-040, FR-CMD-050, FR-CMD-060, FR-CMD-120, FR-CMD-125, FR-CMD-130
 import Foundation
 
 /// What one squad stands under until its commander says otherwise.
@@ -27,9 +27,16 @@ struct SquadCommand: Equatable {
 /// (FR-CMD-125).
 struct SquadCommands: Equatable {
     private var standing: [Squad: SquadCommand] = [:]
+    /// The squads whose role-holder is gone. A squad enters this set once and never
+    /// leaves it: the role does not pass to anybody (FR-BOT-040), so a collapse is
+    /// for the rest of the match (FR-CMD-120).
+    private var fallen: Set<Squad> = []
 
     /// What a squad stands under, or nil where no commander has spoken to it yet.
     func of(_ squad: Squad) -> SquadCommand? { standing[squad] }
+
+    /// Whether a squad has lost its role-holder.
+    func hasCollapsed(_ squad: Squad) -> Bool { fallen.contains(squad) }
 
     /// Applies one answer to one squad: the threat and the order to the squad, the role
     /// and the weights to each soldier the answer names.
@@ -48,6 +55,53 @@ struct SquadCommands: Equatable {
             bots[index].weights = Self.weights(from: lean, for: bots[index].archetype,
                                                configuration: configuration)
         }
+    }
+
+    /// Whether a squad has just lost its role-holder: somebody of it is still alive
+    /// and none of the living holds the role.
+    ///
+    /// A squad with nobody left alive is not collapsing — there is nothing to take an
+    /// order away from, and a squad wiped out is not what concept §9.4 describes. The
+    /// holder's own body keeps the flag (FR-BOT-040), so what is asked is whether
+    /// anybody *living* carries it.
+    static func collapses(_ squad: Squad, among bots: [Bot]) -> Bool {
+        bots.contains { $0.squad == squad && $0.isAlive }
+            && !bots.contains { $0.squad == squad && $0.isAlive && $0.isCommander }
+    }
+
+    /// The squad's commander is gone: it is called no more (FR-CMD-120), the order it
+    /// stood under and every role it was given are void (FR-CMD-125), and what is left
+    /// of it keeps the weights it had with more panic in them (FR-CMD-130).
+    ///
+    /// Done once, the first frame that finds the role-holder gone. The weights are the
+    /// commander's last mood and it outlives him, which is why eating a commander
+    /// mid-retreat is a different thing from eating one mid-assault (concept §9.4).
+    mutating func collapse(_ squad: Squad, among bots: inout [Bot], configuration: BotConfiguration) {
+        guard fallen.insert(squad).inserted else { return }
+        standing[squad] = nil
+        for index in bots.indices where bots[index].squad == squad {
+            bots[index].role = nil
+            guard bots[index].isAlive else { continue }
+            bots[index].weights = Self.panicking(bots[index], by: configuration.collapsePanicIncrement,
+                                                 configuration: configuration)
+        }
+    }
+
+    /// One bot's weights with its panic raised by the collapse increment, up to what
+    /// its archetype allows (FR-CMD-130). The bound is the one the commander's own
+    /// weights are held to (FR-CMD-060), because it is the only bound the
+    /// configuration carries; where the archetype names none, the panic is raised
+    /// unheld.
+    static func panicking(_ bot: Bot, by increment: Double,
+                          configuration: BotConfiguration) -> BotConfiguration.Weights {
+        let was = bot.weights
+        let raised = was.panic + increment
+        let highest = configuration.archetypes[bot.archetype.rawValue]?.allowedRanges["panic"]?.highest
+        return BotConfiguration.Weights(panic: highest.map { min($0, raised) } ?? raised,
+                                        discipline: was.discipline,
+                                        aggression: was.aggression,
+                                        selfSacrifice: was.selfSacrifice,
+                                        courage: was.courage)
     }
 
     /// The commander's five numbers, each held to what the archetype allows
