@@ -577,6 +577,28 @@ When a bot chooses to flee, the system **shall** send it to a cell the navigatio
 Fleeing is the one action whose destination could be unreachable: a cover position is walked out over the graph and is reachable by construction, and an ordered zone comes from a commander (FR-BOT-040), while the spot to run to was chosen by how much ground it puts between the bot and the danger — a distance across the map, not along it.
 This is not FR-BOT-167, which says what to do when a target turns out to be unreachable; it keeps most of those cases from arising, and both are needed once the tail can cut a passage (FR-SNAKE-040) and a route can disappear after it was chosen.
 
+### FR-BOT-119 — A bot in cover stays in it
+
+```yaml
+status: deferred
+verification: T
+derives_from: [FR-BOT-200]
+depends_on: [FR-BOT-330]
+refines: [FR-BOT-200]
+conflicts_with: []
+code: []
+tests: []
+created: 2026-10-12
+```
+
+While nothing a bot knows of watches the cell it stands in, the system **shall** leave taking cover out of the actions available to it.
+
+**Rationale.** A bot whose position already shields it from everything it knows of has no business looking for another wall: the maintainer's rule, given on 2026-10-12, and the reading of cover the specification had been missing.
+It is also the way out of a standstill that was measured, not argued: the search walks outwards from the bot's own cell and that cell ranks first by nearness, so five bots of eight spent a whole match choosing to take cover where they already stood, at utilities of 0.072 to 0.167, which outscored nothing-at-all and so kept every other motive out of reach (Q-600).
+"Somewhere else" would have been the wrong rule twice over — a bot trading a wall that holds for a wall that holds is the signature stupidity concept §9.2 names, and the search already skips a cell an enemy or the snake watches (FR-BOT-330), so a bot whose own cell is watched never gets that cell as the answer anyway. One rule covers both.
+What still moves a bot out of cover is a threat or an order, neither of which this statement touches: flight is its own action, holding ground falls as the danger closes (FR-BOT-090, ADR-0074), and an ordered zone is scored by the obedience term whatever cover the bot is in (FR-BOT-130).
+Not built.
+
 ### FR-BOT-120 — Nearby snake overrides the commander's priority
 
 ```yaml

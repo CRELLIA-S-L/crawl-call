@@ -36,7 +36,7 @@ No step here produces an autopilot, so no step produces a verdict on NFR-PERF-03
 
 ## The steps
 
-Ordered by what each lands on, not by number. Steps 1 to 4 are the bot and wait on nothing but the statement step 2 authors; steps 5 to 9 each wait on a decision listed at the end of this file.
+Ordered by what each lands on, not by number. Steps 1 to 4 are the bot and wait on nothing; steps 5 to 9 each wait on a decision listed at the end of this file.
 
 ### Step 1 — A measurement that outlives the session
 
@@ -46,15 +46,13 @@ It verifies FR-BOT-360 and FR-BOT-370 by method `T`, and it is written to fail n
 
 Keep the diagnostic reading beside it as a scratch script rather than a test, in the session scratchpad: twelve windows of sixty frames, the actions chosen in each, the distance per bot to its nearest enemy. It is what tells the maintainer in step 4 whether the squads look like they are fighting, which no assertion answers.
 
-### Step 2 — A bot in cover stays in it *(waits on decision 1)*
+### Step 2 — A bot in cover stays in it
 
-**Changes the specification.** Nothing in `specs/` says what a bot that is already hidden does about cover: FR-BOT-118 — A bot flees to somewhere it can get to (specs/10-fr-bot.md, implemented) is about reachability, FR-BOT-200 — The actions a bot can choose from (specs/10-fr-bot.md, implemented) lists moving to a cover position without saying from where, and FR-BOT-330 — A bot hides from the enemy as from the snake (specs/10-fr-bot.md, implemented) says what counts as watched and nothing about the cell the bot is in. So the first act is authoring, through the `srs-new` dialog, and the statement this plan proposes is:
+**Changed the specification already.** Nothing in `specs/` said what a bot that is already hidden does about cover: FR-BOT-118 — A bot flees to somewhere it can get to (specs/10-fr-bot.md, implemented) is about reachability, FR-BOT-200 — The actions a bot can choose from (specs/10-fr-bot.md, implemented) lists moving to a cover position without saying from where, and FR-BOT-330 — A bot hides from the enemy as from the snake (specs/10-fr-bot.md, implemented) says what counts as watched and nothing about the cell the bot is in. So the requirement was authored first, on the maintainer's word of 2026-10-12, and is written — FR-BOT-119 — A bot in cover stays in it (specs/10-fr-bot.md, deferred):
 
-> **FR-BOT-119 — A bot in cover stays in it** *(a proposal; the specification does not carry this number)*
->
 > While nothing a bot knows of watches the cell it stands in, the system **shall** leave taking cover out of the actions available to it.
 
-The rule is the maintainer's, settled on 2026-10-12: a bot whose position already shields it from what it knows of has no business looking for another wall, and the thing that moves it off that position is a threat that reaches it or an order, not a better hiding place. One capability, confirmable by a test on a bot standing in an unwatched cell, and it says what and not how. The number is free: `python3 srs-dd/tools/srs_view.py --list --area BOT` prints 118 and 120 with nothing between them.
+A bot whose position already shields it from what it knows of has no business looking for another wall, and what moves it off that position is a threat that reaches it or an order, not a better hiding place.
 
 It does not say "some other cell", on purpose. Hunting for a different wall while the present one holds is the behaviour the statement forbids, and it is also unnecessary: `cover` rejects a watched cell by the sight test it already makes, so once a bot whose own cell is unwatched has no cover action at all, the own cell can never be the answer — it is either unwatched, and there is no action, or watched, and the function skips it like any other watched cell. One rule covers both halves of the defect.
 
@@ -143,7 +141,7 @@ Then `python3 srs-dd/tools/srs_check.py`, `python3 srs-dd/tools/srs_arch.py`, `p
 
 ## The decisions that belong to the maintainer
 
-1. **Settled in substance on 2026-10-12** — a bot in cover stays in it, and only a threat or an order moves it — and open on the words: the statement quoted in step 2 is what would be written into `specs/10-fr-bot.md`, and nothing in steps 2 to 4 moves before it is confirmed or reworded.
+1. **Settled on 2026-10-12, and written.** FR-BOT-119 is in `specs/10-fr-bot.md` as `deferred`: a bot in cover stays in it, and only a threat or an order moves it. Steps 1 to 4 wait on nothing now.
 2. **Settled on 2026-10-12.** IF-CMD-010 went to `partial`, with the reason in its rationale and in Q-610; it goes back to `implemented` at the end of step 6.
 3. **Whether step 5 happens at all**, answered after step 4's numbers. Steps 2 and 3 end the standstill; step 5 is what makes a squad press an attack while a far danger scores. It reverses ADR-0059 and is the largest behaviour change in this plan.
 4. **What a call carries of the fight.** Three sizes. Only losses and hits taken, which is two short clauses and nearly free. Those plus a shot fired, a magazine emptied and a squadmate seen eaten, which is what `Interrupts` already computes and about a line of text. Or those plus a trend — ground gained or lost, who is firing at whom — which needs state nothing keeps today and is the only one of the three that cannot be built from what the frame already has. The plan builds the second unless told otherwise, and whichever is chosen goes in the ADR rather than into IF-CMD-010's statement, which already obliges "the events since the previous call" and needs no rewording to permit any of the three.

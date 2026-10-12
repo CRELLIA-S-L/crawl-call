@@ -123,11 +123,11 @@ Counted by quarter, which is what `period` says in the register's configuration.
 | quarter | arrived unclaimed | areas |
 |---|---|---|
 | 2026-Q3 | 190 | BOT 45, GREENHOLM 7, MAP 25, PERF 4, PUB 12, SCORE 7, SNAKE 29, TOOL 25, VIEW 36 |
-| 2026-Q4 | 13 | BOT 10, TOOL 2, VIEW 1 |
+| 2026-Q4 | 14 | BOT 11, TOOL 2, VIEW 1 |
 
 ## Requirements resting on no hypothesis
 
-203 of 273 requirements. Weight is what stands on them: how many
+204 of 274 requirements. Weight is what stands on them: how many
 requirements link to them, plus how many files their `code` field names.
 
 | Requirement | Incoming | Code files | Weight |
@@ -166,6 +166,7 @@ requirements link to them, plus how many files their `code` field names.
 | FR-VIEW-010 | 7 | 1 | 8 |
 | FR-VIEW-170 | 1 | 7 | 8 |
 | FR-VIEW-190 | 1 | 7 | 8 |
+| FR-BOT-200 | 5 | 2 | 7 |
 | FR-BOT-320 | 2 | 5 | 7 |
 | FR-MAP-100 | 3 | 4 | 7 |
 | FR-MAP-220 | 2 | 5 | 7 |
@@ -198,10 +199,10 @@ requirements link to them, plus how many files their `code` field names.
 | FR-VIEW-200 | 1 | 5 | 6 |
 | FR-VIEW-210 | 2 | 4 | 6 |
 | FR-VIEW-290 | 0 | 6 | 6 |
-| FR-BOT-200 | 3 | 2 | 5 |
 | FR-BOT-250 | 3 | 2 | 5 |
 | FR-BOT-290 | 1 | 4 | 5 |
 | FR-BOT-310 | 0 | 5 | 5 |
+| FR-BOT-330 | 2 | 3 | 5 |
 | FR-BOT-480 | 5 | 0 | 5 |
 | FR-MAP-130 | 1 | 4 | 5 |
 | FR-MAP-180 | 1 | 4 | 5 |
@@ -224,7 +225,6 @@ requirements link to them, plus how many files their `code` field names.
 | FR-BOT-170 | 0 | 4 | 4 |
 | FR-BOT-260 | 0 | 4 | 4 |
 | FR-BOT-270 | 2 | 2 | 4 |
-| FR-BOT-330 | 1 | 3 | 4 |
 | FR-BOT-340 | 1 | 3 | 4 |
 | FR-BOT-360 | 0 | 4 | 4 |
 | FR-BOT-430 | 0 | 4 | 4 |
@@ -301,6 +301,7 @@ requirements link to them, plus how many files their `code` field names.
 | CON-PUB-110 | 0 | 0 | 0 |
 | CON-PUB-120 | 0 | 0 | 0 |
 | FR-BOT-105 | 0 | 0 | 0 |
+| FR-BOT-119 | 0 | 0 | 0 |
 | FR-BOT-460 | 0 | 0 | 0 |
 | FR-BOT-490 | 0 | 0 | 0 |
 | FR-BOT-500 | 0 | 0 | 0 |
