@@ -2,7 +2,7 @@
 // tuning (ART-070); the weight of each term against the others is tuning, and is in
 // the bot configuration (IF-BOT-010).
 //
-// file implements: FR-BOT-340, FR-BOT-080, FR-BOT-090, FR-BOT-210, FR-BOT-150, FR-BOT-160, FR-BOT-060, FR-BOT-270, FR-BOT-280, FR-BOT-050, FR-BOT-230, FR-BOT-400, FR-BOT-430
+// file implements: FR-BOT-450, FR-BOT-340, FR-BOT-080, FR-BOT-090, FR-BOT-210, FR-BOT-150, FR-BOT-160, FR-BOT-060, FR-BOT-270, FR-BOT-280, FR-BOT-050, FR-BOT-230, FR-BOT-400, FR-BOT-430
 import Foundation
 
 enum Utility {
@@ -96,6 +96,15 @@ enum Idle {
 enum Firing {
     /// A shot spends one round of the magazine.
     static let roundsPerShot = 1
+    /// Seconds of slack in the comparison of a weapon's time between shots with the
+    /// time since its last one (FR-BOT-450). A weapon whose cadence is the
+    /// deliberation period must fire at every slot it gets, and the difference of two
+    /// times a match added up a frame at a time is the period give or take the last
+    /// bits of a double — so the comparison is made with a tolerance, as every other
+    /// comparison of two distances or two times in this project is
+    /// (`specs/50-verification.md`). A nanosecond is far below any cadence a weapon
+    /// could be given and far above the error a match of any length accumulates.
+    static let cadenceSlack = 1e-9
 }
 
 /// How a round in flight is followed (FR-BOT-060, FR-BOT-400).

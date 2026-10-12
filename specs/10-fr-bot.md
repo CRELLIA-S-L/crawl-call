@@ -243,14 +243,14 @@ Rounds from a primary or a sidearm still leave a module alone: destruction is th
 ### FR-BOT-440 — What a bot carries
 
 ```yaml
-status: deferred
+status: implemented
 verification: T
 derives_from: [FR-BOT-010]
 depends_on: [IF-BOT-010]
 refines: []
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Bot/Arms.swift, Sources/CrawlCall/Bot/Bot.swift, Sources/CrawlCall/Config/Configurations.swift, config/bot.json]
+tests: [Tests/CrawlCallTests/ArmsTests.swift]
 created: 2026-10-11
 ```
 
@@ -264,14 +264,14 @@ One knife and not a number of them, because a thrown knife is gone (FR-BOT-520) 
 ### FR-BOT-450 — A shot's numbers are the weapon's
 
 ```yaml
-status: deferred
+status: implemented
 verification: T
 derives_from: [FR-BOT-060]
 depends_on: [FR-BOT-440, IF-BOT-010]
 refines: [FR-BOT-060]
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Bot/Arms.swift, Sources/CrawlCall/Bot/Execution.swift, Sources/CrawlCall/Bot/Deliberation.swift, Sources/CrawlCall/Config/Utility.swift, Sources/CrawlCall/Config/Configurations.swift, config/bot.json]
+tests: [Tests/CrawlCallTests/ArmsTests.swift, Tests/CrawlCallTests/ExecutionTests.swift, Tests/CrawlCallTests/InterruptTests.swift]
 created: 2026-10-11
 ```
 
@@ -284,14 +284,14 @@ What a bot sees is still the archetype's: how far it looks is about eyes, not ab
 ### FR-BOT-460 — Each weapon that reaches is an action of its own
 
 ```yaml
-status: deferred
+status: implemented
 verification: T
 derives_from: [FR-BOT-080]
 depends_on: [FR-BOT-440]
 refines: [FR-BOT-200]
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Bot/Deliberation.swift, Sources/CrawlCall/Bot/Action.swift]
+tests: [Tests/CrawlCallTests/ArmsTests.swift]
 created: 2026-10-11
 ```
 

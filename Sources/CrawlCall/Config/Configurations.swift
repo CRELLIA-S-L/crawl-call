@@ -3,7 +3,7 @@
 // a file with an unknown key is rejected at load rather than silently defaulted,
 // which is what `Schema` is for.
 //
-// file implements: IF-CMD-040, IF-SNAKE-010, IF-MAP-020, IF-VIEW-020, IF-BOT-010, IF-SCORE-010, FR-SNAKE-220, FR-BOT-280, FR-BOT-050, FR-BOT-290, FR-BOT-260, FR-BOT-310, FR-SNAKE-270, FR-SNAKE-280, FR-SNAKE-290, FR-VIEW-330, FR-BOT-405, FR-BOT-430, FR-SNAKE-055, FR-SNAKE-016
+// file implements: FR-BOT-440, FR-BOT-450, IF-CMD-040, IF-SNAKE-010, IF-MAP-020, IF-VIEW-020, IF-BOT-010, IF-SCORE-010, FR-SNAKE-220, FR-BOT-280, FR-BOT-050, FR-BOT-290, FR-BOT-260, FR-BOT-310, FR-SNAKE-270, FR-SNAKE-280, FR-SNAKE-290, FR-VIEW-330, FR-BOT-405, FR-BOT-430, FR-SNAKE-055, FR-SNAKE-016
 import Foundation
 
 // MARK: - Snake (IF-SNAKE-010)
@@ -226,15 +226,67 @@ struct BotConfiguration: Decodable, Equatable {
         let basePersonalityWeights: Weights
         let allowedRanges: [String: Range]
         let runSpeed: Double
-        let weaponDamage: Double
-        /// What a bot of this kind starts with and what it can spend before it has to
-        /// reload — both named as utility inputs by FR-BOT-080.
+        /// What a bot of this kind starts with — named as a utility input by
+        /// FR-BOT-080. What it fights with is `arms`, and the numbers behind each
+        /// weapon are the catalogue's (FR-BOT-450).
         let health: Double
-        let magazine: Int
         let detectionRange: Double
+        /// Which weapons out of the catalogue a bot of this kind is given when it is
+        /// spawned, and how many grenades (FR-BOT-440).
+        let arms: Arms
+    }
+
+    /// What an archetype carries, by the names the catalogue below knows it by: a
+    /// weapon absent from the catalogue is a configuration error at spawn and not a
+    /// bot that goes out unarmed (FR-BOT-440).
+    struct Arms: Decodable, Equatable {
+        let primary: String
+        let sidearm: String
+        let grenade: String
+        let grenadesCarried: Int
+        let knife: String
+    }
+
+    /// Every weapon the configuration describes, by kind (IF-BOT-010). An archetype
+    /// names what it takes from here, so that two archetypes may carry different
+    /// sidearms without a word changing in the specification (ADR-0075).
+    struct Weapons: Decodable, Equatable {
+        let firearms: [String: Firearm]
+        let grenades: [String: Grenade]
+        let knives: [String: Knife]
+    }
+
+    /// What one shot of a firearm is (FR-BOT-450): what it deals to what it strikes,
+    /// how far it reaches, how long before it may be fired again, and how many rounds
+    /// it holds between reloads.
+    struct Firearm: Decodable, Equatable {
+        let damage: Double
+        let range: Double
+        let timeBetweenShots: Double
+        let magazine: Int
+    }
+
+    /// What a grenade is (FR-BOT-470, FR-BOT-480, FR-BOT-490): what the blast deals,
+    /// how far it may be thrown, how long it waits before it goes off, how wide the
+    /// blast is, and how much every part of the snake beyond the first within it adds.
+    struct Grenade: Decodable, Equatable {
+        let damage: Double
+        let throwRange: Double
+        let fuseTime: Double
+        let blastRadius: Double
+        let furtherPartShare: Double
+    }
+
+    /// What a knife is (FR-BOT-510, FR-BOT-520): what it deals, how far an arm with
+    /// one in it reaches, and how far it goes thrown.
+    struct Knife: Decodable, Equatable {
+        let damage: Double
+        let reach: Double
+        let throwRange: Double
     }
 
     let archetypes: [String: Archetype]
+    let weapons: Weapons
     let overrideDistance: Double
     let interruptDistance: Double
     let groupingDistance: Double
@@ -316,10 +368,24 @@ struct BotConfiguration: Decodable, Equatable {
             "allowedRanges": .named(of: .object(["lowest": .value, "highest": .value])),
             "runSpeed": .value,
             "health": .value,
-            "magazine": .value,
-            "weaponDamage": .value,
             "detectionRange": .value,
+            "arms": .object([
+                "primary": .value, "sidearm": .value,
+                "grenade": .value, "grenadesCarried": .value, "knife": .value,
+            ]),
         ])),
+        "weapons": .object([
+            "firearms": .named(of: .object([
+                "damage": .value, "range": .value, "timeBetweenShots": .value, "magazine": .value,
+            ])),
+            "grenades": .named(of: .object([
+                "damage": .value, "throwRange": .value, "fuseTime": .value,
+                "blastRadius": .value, "furtherPartShare": .value,
+            ])),
+            "knives": .named(of: .object([
+                "damage": .value, "reach": .value, "throwRange": .value,
+            ])),
+        ]),
         "overrideDistance": .value,
         "interruptDistance": .value,
         "groupingDistance": .value,

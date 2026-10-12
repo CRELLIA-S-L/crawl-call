@@ -3,7 +3,7 @@
 // bot moving every frame (INV-BOT-010), a shot costing a round and dealing its
 // damage (FR-BOT-060), and the snake paying for it out of its tail (FR-SNAKE-070).
 //
-// file verifies: FR-BOT-060, FR-BOT-150, FR-BOT-160, FR-BOT-165, FR-SNAKE-070, INV-BOT-010
+// file verifies: FR-BOT-450, FR-BOT-060, FR-BOT-150, FR-BOT-160, FR-BOT-165, FR-SNAKE-070, INV-BOT-010
 import XCTest
 @testable import CrawlCall
 
@@ -200,14 +200,14 @@ final class ExecutionTests: XCTestCase {
         var bots = [try bot(0, at: here, in: world)]
         bots[try checkedIndex(0, of: bots)].knowledge.snake = [0: .init(point: .zero, time: 0)]
         let target = SIMD3(Double(here.x) * cell + cell, 0, Double(here.z) * cell)
-        let before = try element(0, of: bots).ammunition
+        let before = try element(0, of: bots).arms.rounds
 
         let volley = Execution.deliberate(&bots, slots: [0], snake: [target], world: world)
         let entry = try XCTUnwrap(world.configurations.bot.archetypes[Archetype.assault.rawValue])
-        XCTAssertEqual(try element(0, of: bots).action, .fire(at: .snake(at: target)))
+        XCTAssertEqual(try element(0, of: bots).action, .fire(at: .snake(at: target), with: .primary))
         let struck = Flight.land(volley.rounds, bots: &bots, snake: [target], world: world)
-        XCTAssertEqual(struck.damage, entry.weaponDamage)
-        XCTAssertEqual(try element(0, of: bots).ammunition, before - 1)
+        XCTAssertEqual(struck.damage, try XCTUnwrap(world.configurations.bot.weapons.firearms[entry.arms.primary]).damage)
+        XCTAssertEqual(try element(0, of: bots).arms.rounds, before - 1)
     }
 
     func testABotThatHasNotSeenTheSnakeDoesNotFireAtIt() throws {
@@ -228,12 +228,11 @@ final class ExecutionTests: XCTestCase {
         let cell = world.configurations.tuning.navigationGraphCellSize
         var bots = [try bot(0, at: here, in: world)]
         bots[try checkedIndex(0, of: bots)].knowledge.snake = [0: .init(point: .zero, time: 0)]
-        bots[try checkedIndex(0, of: bots)].ammunition = 0
+        bots[try checkedIndex(0, of: bots)].emptyEveryFirearm()
         let target = SIMD3(Double(here.x) * cell + cell, 0, Double(here.z) * cell)
         XCTAssertTrue(Execution.deliberate(&bots, slots: [0], snake: [target], world: world).rounds.isEmpty)
         XCTAssertEqual(try element(0, of: bots).action, .reload)
-        XCTAssertEqual(try element(0, of: bots).ammunition,
-                       try XCTUnwrap(world.configurations.bot.archetypes[Archetype.assault.rawValue]).magazine)
+        XCTAssertEqual(try element(0, of: bots).arms.rounds, try element(0, of: bots).arms.magazines)
     }
 }
 

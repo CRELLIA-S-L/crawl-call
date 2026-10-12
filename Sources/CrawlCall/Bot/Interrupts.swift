@@ -26,7 +26,9 @@ struct Interrupts {
         let id: Int
         let squad: Squad
         let health: Double
-        let ammunition: Int
+        /// What was in each firearm it carries: a bot carries two, and emptying either
+        /// is the event the requirement names, not emptying the last of them.
+        let rounds: [Arms.Slot: Int]
         let position: SIMD3<Double>
         let eye: SIMD3<Double>
         var isAlive: Bool { health > .zero }
@@ -35,7 +37,7 @@ struct Interrupts {
             id = bot.id
             squad = bot.squad
             health = bot.health
-            ammunition = bot.ammunition
+            rounds = Dictionary(uniqueKeysWithValues: Arms.Slot.allCases.map { ($0, bot.arms[$0].rounds) })
             position = bot.position
             eye = bot.eye
         }
@@ -77,7 +79,11 @@ struct Interrupts {
             let range = configuration.archetypes[bot.archetype.rawValue]?.detectionRange ?? .zero
             if let earlier = was[bot.id] {
                 if bot.health < earlier.health { note(.hit) }
-                if earlier.ammunition > .zero && bot.ammunition == .zero { note(.magazineEmpty) }
+                if Arms.Slot.allCases.contains(where: {
+                    (earlier.rounds[$0] ?? .zero) > .zero && bot.arms[$0].rounds == .zero
+                }) {
+                    note(.magazineEmpty)
+                }
             }
             if bot.knowledge.snake(seenAt: now).contains(where: {
                 Perception.metres(bot.position, $0) <= configuration.interruptDistance

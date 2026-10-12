@@ -64,7 +64,7 @@ final class SquadStateTests: XCTestCase {
         situation.snake = situation.inView
         for (state, fires) in [(Awareness.calm, false), (.alarm, true), (.confirmed, true)] {
             situation.awareness = state
-            let target = Deliberation.target(for: sniper, in: situation, worth: { _ in 1 })
+            let target = Deliberation.target(for: sniper, in: situation, within: .infinity, worth: { _ in 1 })
             XCTAssertEqual(target != nil, fires, "a \(state) squad's bot got it wrong")
         }
     }
@@ -76,14 +76,14 @@ final class SquadStateTests: XCTestCase {
         // An enemy bot nearer still, worth more, and already being fired at: the snake is
         // the target.
         let enemy = try bot(1, .blue, .assault, at: 2, in: world)
-        sniper.action = .fire(at: .bot(id: enemy.id))
+        sniper.action = .fire(at: .bot(id: enemy.id), with: .primary)
         var situation = Deliberation.Situation(plan: world.plan, graph: world.graph,
                                                configuration: world.configurations.bot, cellSize: cell)
         situation.enemiesInView = [(id: enemy.id, point: enemy.position)]
         situation.inView = [at(1 + override * 0.9)]
         situation.snake = situation.inView
         situation.awareness = .calm
-        let target = Deliberation.target(for: sniper, in: situation, worth: { metres in 10 - metres })
+        let target = Deliberation.target(for: sniper, in: situation, within: .infinity, worth: { metres in 10 - metres })
         guard case .snake = target?.target else { return XCTFail("fired at \(String(describing: target))") }
     }
 
@@ -96,7 +96,7 @@ final class SquadStateTests: XCTestCase {
         soldier.knowledge.snake[head] = .init(point: at(1 + (override + range) / 2), time: 5)
         func reacts(_ action: Action?) -> Bool {
             switch action {
-            case .fire(.snake)?, .flee?, .takeCover?: return true
+            case .fire(.snake, _)?, .flee?, .takeCover?: return true
             default: return false
             }
         }

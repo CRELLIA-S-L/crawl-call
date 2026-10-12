@@ -60,7 +60,7 @@ final class BotFacingTests: XCTestCase {
         let here = NavigationGraph.Node(floor: 0, x: 10, z: 10)
         var firing = try bot(at: here)
         let target = SIMD3(Double(here.x) * cell, 0, Double(here.z) * cell - 3)   // due -z
-        firing.action = .fire(at: .snake(at: target))
+        firing.action = .fire(at: .snake(at: target), with: .primary)
         var standing = try bot(at: NavigationGraph.Node(floor: 0, x: 12, z: 10), id: 1)
         standing.facing = 1.0
         var bots = [firing, standing]
@@ -74,7 +74,7 @@ final class BotFacingTests: XCTestCase {
 
     func testABotInTheSnakesMouthDoesNotTurn() throws {
         var held = try bot(at: NavigationGraph.Node(floor: 0, x: 10, z: 10))
-        held.action = .fire(at: .snake(at: SIMD3(10, 0, 10)))
+        held.action = .fire(at: .snake(at: SIMD3(10, 0, 10)), with: .primary)
         held.facing = 0.3
         var bots = [held]
         for _ in 0..<30 { Execution.walk(&bots, seconds: 1.0 / 60, world: world, holding: held.id) }

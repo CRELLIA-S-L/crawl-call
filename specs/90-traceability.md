@@ -8,9 +8,9 @@ Total requirements: 281.
 | Status | Requirements |
 |---|---|
 | `draft` | 4 |
-| `deferred` | 95 |
-| `partial` | 11 |
-| `implemented` | 163 |
+| `deferred` | 91 |
+| `partial` | 10 |
+| `implemented` | 168 |
 | `superseded` | 6 |
 | `withdrawn` | 2 |
 
@@ -84,9 +84,9 @@ Total requirements: 281.
 | **FR-BOT-420** A bot fires from beside cover | `implemented` | T | `Sources/CrawlCall/Bot/Deliberation.swift`<br>`Sources/CrawlCall/Bot/Execution.swift`<br>`Sources/CrawlCall/Bot/Bot.swift` | `Tests/CrawlCallTests/SkirmishTests.swift` |
 | **FR-BOT-425** A bot reloads behind cover | `implemented` | T | `Sources/CrawlCall/Bot/Execution.swift`<br>`Sources/CrawlCall/Bot/Bot.swift`<br>`Sources/CrawlCall/Bot/Deliberation.swift` | `Tests/CrawlCallTests/SkirmishTests.swift` |
 | **FR-BOT-430** A bot with no cover beside it fires on the move | `implemented` | T | `Sources/CrawlCall/Bot/Execution.swift`<br>`Sources/CrawlCall/Bot/Bot.swift`<br>`Sources/CrawlCall/Config/Configurations.swift`<br>`Sources/CrawlCall/Config/Utility.swift` | `Tests/CrawlCallTests/SkirmishTests.swift`<br>`Tests/CrawlCallTests/BotFacingTests.swift` |
-| **FR-BOT-440** What a bot carries | `deferred` | T | — | — |
-| **FR-BOT-450** A shot's numbers are the weapon's | `deferred` | T | — | — |
-| **FR-BOT-460** Each weapon that reaches is an action of its own | `deferred` | T | — | — |
+| **FR-BOT-440** What a bot carries | `implemented` | T | `Sources/CrawlCall/Bot/Arms.swift`<br>`Sources/CrawlCall/Bot/Bot.swift`<br>`Sources/CrawlCall/Config/Configurations.swift`<br>`config/bot.json` | `Tests/CrawlCallTests/ArmsTests.swift` |
+| **FR-BOT-450** A shot's numbers are the weapon's | `implemented` | T | `Sources/CrawlCall/Bot/Arms.swift`<br>`Sources/CrawlCall/Bot/Execution.swift`<br>`Sources/CrawlCall/Bot/Deliberation.swift`<br>`Sources/CrawlCall/Config/Utility.swift`<br>`Sources/CrawlCall/Config/Configurations.swift`<br>`config/bot.json` | `Tests/CrawlCallTests/ArmsTests.swift`<br>`Tests/CrawlCallTests/ExecutionTests.swift`<br>`Tests/CrawlCallTests/InterruptTests.swift` |
+| **FR-BOT-460** Each weapon that reaches is an action of its own | `implemented` | T | `Sources/CrawlCall/Bot/Deliberation.swift`<br>`Sources/CrawlCall/Bot/Action.swift` | `Tests/CrawlCallTests/ArmsTests.swift` |
 | **FR-BOT-470** A thrown grenade flies no further than its throw and waits out its fuse | `deferred` | T | — | — |
 | **FR-BOT-480** An explosion strikes every body within its blast | `deferred` | T | — | — |
 | **FR-BOT-490** An explosion that covers more of the snake hurts it more | `deferred` | T | — | — |
@@ -265,7 +265,7 @@ Total requirements: 281.
 | **FR-VIEW-320** A living bot is swallowed from the top down | `implemented` | D | `Sources/CrawlCall/View/SwallowPose.swift`<br>`Sources/CrawlCall/View/SnakeEntity.swift`<br>`Sources/CrawlCall/View/BotEntity.swift`<br>`Sources/CrawlCall/View/BotCut.metal`<br>`Sources/CrawlCall/GameSession.swift`<br>`Sources/CrawlCall/Config/Drawing.swift`<br>`Sources/CrawlCall/Config/Resource.swift` | `Tests/CrawlCallTests/SwallowTests.swift`<br>`Tests/CrawlCallTests/MatchEndTests.swift` |
 | **FR-VIEW-330** The snake slithers | `implemented` | T | `Sources/CrawlCall/View/SnakeBody.swift`<br>`Sources/CrawlCall/View/SnakeEntity.swift`<br>`Sources/CrawlCall/Snake/Snake.swift`<br>`Sources/CrawlCall/GameSession.swift`<br>`Sources/CrawlCall/Config/Configurations.swift` | `Tests/CrawlCallTests/SlitherTests.swift` |
 | **FR-VIEW-340** A bot holds the weapon it is using | `deferred` | T | — | — |
-| **IF-BOT-010** Bot and match configuration | `partial` | T | `Sources/CrawlCall/Config/Configurations.swift`<br>`Sources/CrawlCall/Config/Configurations+Load.swift`<br>`Sources/CrawlCall/Config/Schema.swift`<br>`Sources/CrawlCall/Launch.swift`<br>`Sources/CrawlCall/CrawlCallApp.swift`<br>`Sources/CrawlCall/Config/Resource.swift` | `Tests/CrawlCallTests/ConfigurationTests.swift`<br>`Tests/CrawlCallTests/LaunchTests.swift`<br>`Tests/CrawlCallTests/SchemaTests.swift`<br>`Tests/CrawlCallTests/DeliberationTests.swift`<br>`Tests/CrawlCallTests/KnowledgeTests.swift` |
+| **IF-BOT-010** Bot and match configuration | `implemented` | T | `Sources/CrawlCall/Config/Configurations.swift`<br>`Sources/CrawlCall/Config/Configurations+Load.swift`<br>`Sources/CrawlCall/Config/Schema.swift`<br>`Sources/CrawlCall/Launch.swift`<br>`Sources/CrawlCall/CrawlCallApp.swift`<br>`Sources/CrawlCall/Config/Resource.swift` | `Tests/CrawlCallTests/ArmsTests.swift`<br>`Tests/CrawlCallTests/ConfigurationTests.swift`<br>`Tests/CrawlCallTests/LaunchTests.swift`<br>`Tests/CrawlCallTests/SchemaTests.swift`<br>`Tests/CrawlCallTests/DeliberationTests.swift`<br>`Tests/CrawlCallTests/KnowledgeTests.swift` |
 | **IF-CMD-010** Commander input | `implemented` | T | `Sources/CrawlCall/Commander/CommanderInput.swift`<br>`Sources/CrawlCall/Commander/SquadView.swift`<br>`Sources/CrawlCall/Commander/SquadHappenings.swift`<br>`Sources/CrawlCall/Game.swift` | `Tests/CrawlCallTests/CommanderContractTests.swift` |
 | **IF-CMD-020** Commander output | `implemented` | T | `Sources/CrawlCall/Commander/CommanderDecision.swift`<br>`Sources/CrawlCall/Commander/SystemModelCommander.swift`<br>`Sources/CrawlCall/Commander/Commander.swift` | `Tests/CrawlCallTests/CommanderContractTests.swift` |
 | **IF-CMD-030** Speech configuration | `deferred` | T | — | — |
@@ -283,7 +283,7 @@ Total requirements: 281.
 | **INV-BOT-010** Execution runs every frame for every bot | `implemented` | T | `Sources/CrawlCall/Bot/Execution.swift`<br>`Sources/CrawlCall/Game.swift` | `Tests/CrawlCallTests/ExecutionTests.swift` |
 | **INV-BOT-020** Squads never remove bodies | `implemented` | T | `Sources/CrawlCall/Bot/Execution.swift` | `Tests/CrawlCallTests/AwarenessTests.swift` |
 | **INV-BOT-030** Both squads share one archetype set | `implemented` | I | `Sources/CrawlCall/Bot/Archetype.swift`<br>`Sources/CrawlCall/Bot/Squads.swift` | `Tests/CrawlCallTests/BotTests.swift` |
-| **INV-BOT-040** A primary weapon outreaches and outhits the sidearm beside it | `deferred` | T | — | — |
+| **INV-BOT-040** A primary weapon outreaches and outhits the sidearm beside it | `implemented` | T | `config/bot.json` | `Tests/CrawlCallTests/ArmsTests.swift` |
 | **INV-MAP-010** The load-bearing frame never breaks | `deferred` | T | — | — |
 | **INV-MAP-020** Destruction never disconnects floors | `deferred` | T | — | — |
 | **INV-SCORE-010** Nothing but consumption scores | `deferred` | T | — | — |
@@ -468,7 +468,7 @@ Verified by means other than testing — or the check has not been set up yet.
 
 ## Code files outside the specification
 
-No requirement references them: 4 of 111.
+No requirement references them: 4 of 112.
 
 - `scripts/arch-edges-selftest.sh`
 - `scripts/prompt-bench-selftest.sh`

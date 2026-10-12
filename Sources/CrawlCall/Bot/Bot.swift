@@ -2,7 +2,7 @@
 // personality its archetype gave it. No RealityKit here — this is the part a test
 // can read, the same split as `Snake`.
 //
-// file implements: FR-BOT-167, FR-BOT-030, FR-BOT-040, FR-BOT-050, FR-BOT-060, FR-BOT-280, FR-BOT-290, FR-BOT-320, FR-BOT-340, FR-BOT-380, FR-BOT-420, FR-BOT-425, FR-BOT-430
+// file implements: FR-BOT-167, FR-BOT-440, FR-BOT-030, FR-BOT-040, FR-BOT-050, FR-BOT-060, FR-BOT-280, FR-BOT-290, FR-BOT-320, FR-BOT-340, FR-BOT-380, FR-BOT-420, FR-BOT-425, FR-BOT-430
 import Foundation
 
 /// The two sides. Which one the player is nearer to is never a property of a squad:
@@ -36,10 +36,12 @@ struct Bot: Equatable {
     /// Where the bot looks from.
     var eye: SIMD3<Double> { SIMD3(position.x, position.y + eyeHeight, position.z) }
 
-    /// What is left of it and what it can fire before reloading — both are utility
-    /// inputs (FR-BOT-080), and both start from the archetype's entry (IF-BOT-010).
+    /// What is left of it: a utility input (FR-BOT-080), from the archetype's entry
+    /// (IF-BOT-010).
     var health: Double
-    var ammunition: Int
+    /// What it carries and what is left of each weapon (FR-BOT-440): its archetype's
+    /// arms, taken out of the catalogue when it was spawned.
+    var arms: Arms
 
     /// Whether this bot speaks for its squad (FR-BOT-040). Nothing draws it: the
     /// role-holder is found by listening to who gives the orders, not by looking
@@ -99,18 +101,21 @@ struct Bot: Equatable {
     /// (FR-BOT-320).
     var isAlive: Bool { health > .zero }
 
-    /// A bot as its archetype starts it. Nil where the configuration carries no entry
-    /// for that archetype — the caller says what that means, because at start-up it is
-    /// a configuration error and mid-match it cannot happen.
+    /// A bot as its archetype starts it, armed with what that archetype carries
+    /// (FR-BOT-440). Nil where the configuration carries no entry for that archetype,
+    /// or where the arms it names are not in the catalogue — the caller says what that
+    /// means, because at start-up it is a configuration error and mid-match it cannot
+    /// happen.
     init?(id: Int, squad: Squad, archetype: Archetype,
           at position: SIMD3<Double>, floor: Int, configuration: BotConfiguration) {
-        guard let entry = configuration.archetypes[archetype.rawValue] else { return nil }
+        guard let entry = configuration.archetypes[archetype.rawValue],
+              let arms = Arms(entry.arms, from: configuration.weapons) else { return nil }
         self.id = id
         self.squad = squad
         self.archetype = archetype
         self.weights = entry.basePersonalityWeights
         self.health = entry.health
-        self.ammunition = entry.magazine
+        self.arms = arms
         self.position = position
         self.floor = floor
         self.eyeHeight = configuration.eyeHeight

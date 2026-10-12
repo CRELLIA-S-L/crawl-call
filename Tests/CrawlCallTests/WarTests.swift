@@ -42,7 +42,11 @@ final class WarTests: XCTestCase {
         Deliberation.Situation(plan: floor.plan, graph: floor.graph, configuration: configuration, cellSize: cell)
     }
 
-    private var damage: Double { configuration.archetypes["assault"]?.weaponDamage ?? .nan }
+    /// What one round of an assault's primary deals, read the way a bot reads it:
+    /// its archetype names the weapon and the catalogue holds the number (FR-BOT-450).
+    private var damage: Double {
+        configuration.archetypes["assault"].flatMap { configuration.weapons.firearms[$0.arms.primary]?.damage } ?? .nan
+    }
 
     // MARK: fire at the enemy (FR-BOT-060)
 
@@ -54,11 +58,11 @@ final class WarTests: XCTestCase {
         let enemy = try bot(1, .blue, at: 8, 0, facing: -east)
         var bots = [shooter, enemy]
         let volley = Execution.deliberate(&bots, slots: [0], world: floor, now: 2)
-        XCTAssertEqual(try element(0, of: bots).action, .fire(at: .bot(id: 1)))
+        XCTAssertEqual(try element(0, of: bots).action, .fire(at: .bot(id: 1), with: .primary))
         XCTAssertEqual(volley.rounds.count, 1, "no round was sent")
         let struck = Flight.land(volley.rounds, bots: &bots, world: floor)
         XCTAssertEqual(try element(1, of: bots).health, enemy.health - damage, accuracy: 1e-9)
-        XCTAssertEqual(try element(0, of: bots).ammunition, shooter.ammunition - 1)
+        XCTAssertEqual(try element(0, of: bots).arms.rounds, shooter.arms.rounds - 1)
         XCTAssertEqual(struck.damage, 0, "a shot at a bot struck the snake")
         XCTAssertEqual(struck.hits, 0)
 
@@ -94,16 +98,16 @@ final class WarTests: XCTestCase {
         func worth(_ gap: Double) -> (Double) -> Double {
             { metres in metres < 3.0 ? 1 + gap : 1 }
         }
-        XCTAssertEqual(Deliberation.target(for: shooter, in: seen, worth: worth(margin / 2))?.target, .bot(id: 1))
+        XCTAssertEqual(Deliberation.target(for: shooter, in: seen, within: .infinity, worth: worth(margin / 2))?.target, .bot(id: 1))
 
         // Already firing at 2: the other is better, by less than the margin — kept.
-        shooter.action = .fire(at: .bot(id: 2))
-        XCTAssertEqual(Deliberation.target(for: shooter, in: seen, worth: worth(margin / 2))?.target, .bot(id: 2))
+        shooter.action = .fire(at: .bot(id: 2), with: .primary)
+        XCTAssertEqual(Deliberation.target(for: shooter, in: seen, within: .infinity, worth: worth(margin / 2))?.target, .bot(id: 2))
         // By more than the margin — changed.
-        XCTAssertEqual(Deliberation.target(for: shooter, in: seen, worth: worth(margin * 2))?.target, .bot(id: 1))
+        XCTAssertEqual(Deliberation.target(for: shooter, in: seen, within: .infinity, worth: worth(margin * 2))?.target, .bot(id: 1))
         // Its target out of view: nothing to keep.
         seen.enemiesInView = [(id: 1, point: at(6, 0))]
-        XCTAssertEqual(Deliberation.target(for: shooter, in: seen, worth: worth(margin / 2))?.target, .bot(id: 1))
+        XCTAssertEqual(Deliberation.target(for: shooter, in: seen, within: .infinity, worth: worth(margin / 2))?.target, .bot(id: 1))
     }
 
     // MARK: the dead (FR-BOT-320)
@@ -153,7 +157,7 @@ final class WarTests: XCTestCase {
         XCTAssertNil(knowledge.enemies.first { $0.key == 1 }, "the body is still an enemy")
         XCTAssertEqual(knowledge.fallen, [1: 2])
         _ = Execution.deliberate(&bots, slots: [0], world: floor, now: 2)
-        XCTAssertNotEqual(try element(0, of: bots).action, .fire(at: .bot(id: 1)))
+        XCTAssertNotEqual(try element(0, of: bots).action, .fire(at: .bot(id: 1), with: .primary))
 
         // The squad hears of it after its delay, and an older sighting of the enemy
         // standing does not bring it back.

@@ -41,6 +41,19 @@ func vertex(_ corner: Int, of mesh: Mesh, file: StaticString = #filePath, line: 
                 file: file, line: line)
 }
 
+extension Bot {
+    /// Nothing left in any firearm it carries: what emptying the magazine meant while
+    /// a bot carried one weapon (FR-BOT-440).
+    mutating func emptyEveryFirearm() {
+        for slot in Arms.Slot.allCases { arms[slot].rounds = .zero }
+    }
+
+    /// Half of every magazine spent: a bot that has been firing a while.
+    mutating func spendHalfOfEveryFirearm() {
+        for slot in Arms.Slot.allCases { arms[slot].rounds = arms[slot].numbers.magazine / 2 }
+    }
+}
+
 extension Execution {
     /// Deliberation as a test poses it: every bot that knows the snake at all sees it
     /// now, where `snake` says, and one that does not has not seen it (FR-BOT-220).

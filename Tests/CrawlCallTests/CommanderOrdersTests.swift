@@ -225,13 +225,13 @@ final class OrderedDeliberationTests: XCTestCase {
         // The control for the two below: with nothing told, the scores decide, and the
         // enemy at two metres beats the snake at five and a half.
         let (situation, soldier) = try bothInView()
-        XCTAssertEqual(Deliberation.choose(for: soldier, in: situation), .fire(at: .bot(id: 7)))
+        XCTAssertEqual(Deliberation.choose(for: soldier, in: situation), .fire(at: .bot(id: 7), with: .primary))
     }
 
     func testToldToWorryAboutTheSnakeTheBotFiresAtItOverANearerEnemy() throws {
         var (situation, soldier) = try bothInView()
         situation.priority = .snake
-        XCTAssertEqual(Deliberation.choose(for: soldier, in: situation), .fire(at: .snake(at: at(12, 0))))
+        XCTAssertEqual(Deliberation.choose(for: soldier, in: situation), .fire(at: .snake(at: at(12, 0)), with: .primary))
 
         // And what firing is worth is the snake's own score, unchanged: the priority
         // ranks the kinds of target and does not scale what either is worth.
@@ -246,13 +246,13 @@ final class OrderedDeliberationTests: XCTestCase {
     func testToldToWorryAboutTheEnemyTheBotLeavesTheSnakeAlone() throws {
         var (situation, soldier) = try bothInView()
         situation.priority = .enemy
-        XCTAssertEqual(Deliberation.choose(for: soldier, in: situation), .fire(at: .bot(id: 7)))
+        XCTAssertEqual(Deliberation.choose(for: soldier, in: situation), .fire(at: .bot(id: 7), with: .primary))
     }
 
     func testWithdrawNamesNothingToFireAtAndLeavesTheRankingWhereItWas() throws {
         var (situation, soldier) = try bothInView()
         situation.priority = .withdraw
-        XCTAssertEqual(Deliberation.choose(for: soldier, in: situation), .fire(at: .bot(id: 7)))
+        XCTAssertEqual(Deliberation.choose(for: soldier, in: situation), .fire(at: .bot(id: 7), with: .primary))
     }
 
     func testTheSnakeWithinTheOverrideDistanceBeatsAnOrderToWorryAboutTheEnemy() throws {
@@ -267,7 +267,7 @@ final class OrderedDeliberationTests: XCTestCase {
         let soldier = try bot(at: 1, 0)
         XCTAssertLessThanOrEqual(Perception.metres(soldier.position, at(6, 0)),
                                  configuration.overrideDistance, "the arena does not pose the override")
-        XCTAssertEqual(Deliberation.choose(for: soldier, in: situation), .fire(at: .snake(at: at(6, 0))))
+        XCTAssertEqual(Deliberation.choose(for: soldier, in: situation), .fire(at: .snake(at: at(6, 0)), with: .primary))
     }
 
     // MARK: discipline against the bot's own reading (FR-BOT-130)

@@ -5,11 +5,12 @@
 //
 // A shot is fired by the deliberation step rather than by the frame, so that a bot
 // firing at sixty frames a second and one firing at thirty deal the same damage a
-// second. Cadence is therefore the deliberation period, and that is a statement
-// rather than an accident: no requirement gives a weapon a rate of fire, and
-// inventing one would put a number in this file that no interface carries.
+// second. How often it may fire is its weapon's own (FR-BOT-450) and the step is the
+// floor under it: a weapon quicker than a slot fires once a slot, one slower than a
+// slot is aimed through the slots it has to wait out. Until 2026-10-12 the period was
+// the cadence, because no requirement gave a weapon a rate of fire.
 //
-// file implements: FR-BOT-167, FR-BOT-060, FR-BOT-110, FR-BOT-115, FR-BOT-170, FR-BOT-360, FR-BOT-370, FR-BOT-380, FR-BOT-180, FR-BOT-190, INV-BOT-020, INV-BOT-010, FR-BOT-165, FR-MAP-150, FR-BOT-270, FR-BOT-280, FR-BOT-290, FR-BOT-300, FR-BOT-220, FR-BOT-310, FR-BOT-320, FR-BOT-330, FR-BOT-340, FR-BOT-420, FR-BOT-425, FR-BOT-430, FR-CMD-030, FR-CMD-040
+// file implements: FR-BOT-450, FR-BOT-167, FR-BOT-060, FR-BOT-110, FR-BOT-115, FR-BOT-170, FR-BOT-360, FR-BOT-370, FR-BOT-380, FR-BOT-180, FR-BOT-190, INV-BOT-020, INV-BOT-010, FR-BOT-165, FR-MAP-150, FR-BOT-270, FR-BOT-280, FR-BOT-290, FR-BOT-300, FR-BOT-220, FR-BOT-310, FR-BOT-320, FR-BOT-330, FR-BOT-340, FR-BOT-420, FR-BOT-425, FR-BOT-430, FR-CMD-030, FR-CMD-040
 import Foundation
 
 enum Execution {
@@ -42,7 +43,10 @@ enum Execution {
         for id in slots {
             // A body decides nothing (FR-BOT-320).
             guard let index = bots.firstIndex(where: { $0.id == id }), bots[index].isAlive else { continue }
-            guard let entry = world.configurations.bot.archetypes[bots[index].archetype.rawValue] else { continue }
+            // An archetype the configuration knows nothing of decides nothing either:
+            // what a bot is made of is read from its entry (IF-BOT-010), and the
+            // numbers of what it fires from its arms (FR-BOT-450).
+            guard world.configurations.bot.archetypes[bots[index].archetype.rawValue] != nil else { continue }
             var situation = Deliberation.Situation(plan: world.plan,
                                                    graph: world.graph,
                                                    configuration: world.configurations.bot,
@@ -126,7 +130,7 @@ enum Execution {
             // spent with it: the next slot after scores that action again (FR-BOT-167).
             bots[index].unreachable = nil
             switch chosen {
-            case .fire(let target):
+            case .fire(let target, let slot):
                 // Where the line of fire is judged from: the ground under the part of the
                 // snake it sees, as it sees it (FR-BOT-050), or the enemy's eyes.
                 // It fires only at what it sees now (FR-BOT-060); a target it knows of and
@@ -144,16 +148,24 @@ enum Execution {
                 }
                 guard let aim = Deliberation.aim(at: target, from: bots[index], in: situation) else { continue }
                 place(&bots[index], at: target, aim: aim, before: before, in: situation, now: now)
-                guard seen, bots[index].ammunition > .zero,
+                // The weapon it chose decides how often it may fire and what the round
+                // deals (FR-BOT-450). The cadence is its own guard and not the slot's:
+                // a weapon slower than the deliberation period is aimed for a slot or
+                // two before it goes off, and a bot given a slot ahead of the queue
+                // still fires no faster than once a period, which is what keeps an
+                // interrupt from being extra shots (FR-BOT-170, ADR-0057).
+                let firearm = bots[index].arms[slot]
+                guard seen, firearm.rounds > .zero,
+                      now - bots[index].lastShot >= firearm.numbers.timeBetweenShots - Firing.cadenceSlack,
                       !interrupted.contains(id)
                         || now - bots[index].lastShot >= world.configurations.bot.deliberationPeriod,
                       Sight.isClear(from: bots[index].eye, to: sighted, through: world.plan) else { break }
-                bots[index].ammunition -= Firing.roundsPerShot
+                bots[index].arms.spend(slot)
                 bots[index].lastShot = now
                 // Sent at the point where the target is now; what it strikes is where
                 // it flies (FR-BOT-060, FR-BOT-400).
                 if let round = Round(shooter: bots[index].id, squad: bots[index].squad, from: bots[index].eye,
-                                     towards: aim, damage: entry.weaponDamage) {
+                                     towards: aim, damage: firearm.numbers.damage) {
                     volley.rounds.append(round)
                 }
             case .reload:
@@ -163,13 +175,13 @@ enum Execution {
                     // Already in it, it reloads there, and keeps where it fires from to
                     // come out to again (ADR-0063); on the way, it goes on.
                     if cell(of: bots[index], world: world) == refuge {
-                        bots[index].ammunition = entry.magazine
+                        bots[index].arms.reload()
                         bots[index].path = []
                     } else if before != .reload {
                         bots[index].path = []
                     }
                 } else {
-                    bots[index].ammunition = entry.magazine
+                    bots[index].arms.reload()
                     bots[index].post = nil
                     bots[index].refuge = nil
                     bots[index].postTarget = nil
@@ -342,9 +354,8 @@ enum Execution {
     /// A bot come to the end of its way: one that went behind cover to reload reloads
     /// there (FR-BOT-425).
     private static func arrive(_ bot: inout Bot, world: World) {
-        guard bot.action == .reload,
-              let magazine = world.configurations.bot.archetypes[bot.archetype.rawValue]?.magazine else { return }
-        bot.ammunition = magazine
+        guard bot.action == .reload else { return }
+        bot.arms.reload()
         bot.action = nil
     }
 
@@ -353,7 +364,7 @@ enum Execution {
     /// goes turns back once the strafing interval has passed, and where the ground it
     /// would move onto does not hold it (FR-BOT-430).
     static func strafe(_ bot: inout Bot, seconds: Double, world: World, now: Double) {
-        guard case .fire(let target) = bot.action else { return }
+        guard case .fire(let target, _) = bot.action else { return }
         let towards: SIMD3<Double>?
         switch target {
         case .snake(let point): towards = point
@@ -522,7 +533,7 @@ enum Execution {
         for index in bots.indices where bots[index].id != held && bots[index].isAlive {
             let bot = bots[index]
             var wanted: Double?
-            if case .fire(let target) = bot.action {
+            if case .fire(let target, _) = bot.action {
                 switch target {
                 case .snake(let point): wanted = Turning.angle(from: bot.position, to: point)
                 case .bot(let id): wanted = bot.knowledge.enemies[id].flatMap { Turning.angle(from: bot.position, to: $0.point) }

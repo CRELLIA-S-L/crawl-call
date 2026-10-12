@@ -38,7 +38,10 @@ final class RoundTests: XCTestCase {
         return made
     }
 
-    private var damage: Double { configuration.archetypes["assault"]?.weaponDamage ?? .nan }
+    /// What one round of an assault's primary deals (FR-BOT-450).
+    private var damage: Double {
+        configuration.archetypes["assault"].flatMap { configuration.weapons.firearms[$0.arms.primary]?.damage } ?? .nan
+    }
 
     private func round(from shooter: Bot, towards point: SIMD3<Double>) throws -> Round {
         try XCTUnwrap(Round(shooter: shooter.id, squad: shooter.squad, from: shooter.eye, towards: point, damage: damage))
@@ -234,16 +237,16 @@ final class RoundTests: XCTestCase {
         var seen = situation(floor)
         seen.enemiesInView = [(id: 9, point: at(12, 1))]
         func worth(_ metres: Double) -> Double { 1 }
-        XCTAssertEqual(Deliberation.target(for: shooter, in: seen, worth: worth)?.target, .bot(id: 9),
+        XCTAssertEqual(Deliberation.target(for: shooter, in: seen, within: .infinity, worth: worth)?.target, .bot(id: 9),
                        "nothing to fire at with nobody in the way, so this proves nothing")
 
         seen.allies = [shooter, try bot(1, .red, at: 6, 1, facing: -east)]
-        XCTAssertNil(Deliberation.target(for: shooter, in: seen, worth: worth), "the bot fired through its squadmate")
+        XCTAssertNil(Deliberation.target(for: shooter, in: seen, within: .infinity, worth: worth), "the bot fired through its squadmate")
 
         // A squadmate beside the line, clear of it by more than its body, is no reason not to.
         seen.allies = [shooter, try bot(1, .red, at: 6, 0, facing: -east)]
         XCTAssertGreaterThan(cell, radius, "a cell aside is within the body's reach, so this proves nothing")
-        XCTAssertEqual(Deliberation.target(for: shooter, in: seen, worth: worth)?.target, .bot(id: 9))
+        XCTAssertEqual(Deliberation.target(for: shooter, in: seen, within: .infinity, worth: worth)?.target, .bot(id: 9))
     }
 
     func testASquadmateInTheWayOfTheSnakeSendsTheBotToAnotherTarget() throws {
@@ -256,10 +259,10 @@ final class RoundTests: XCTestCase {
         seen.inView = [at(5, 1)]
         seen.enemiesInView = [(id: 9, point: at(1, 2))]
         func worth(_ metres: Double) -> Double { 1 }
-        if case .snake? = Deliberation.target(for: shooter, in: seen, worth: worth)?.target {} else {
+        if case .snake? = Deliberation.target(for: shooter, in: seen, within: .infinity, worth: worth)?.target {} else {
             XCTFail("the snake within the override distance was not the target, so this proves nothing")
         }
         seen.allies = [shooter, try bot(1, .red, at: 3, 1, facing: -east)]
-        XCTAssertEqual(Deliberation.target(for: shooter, in: seen, worth: worth)?.target, .bot(id: 9))
+        XCTAssertEqual(Deliberation.target(for: shooter, in: seen, within: .infinity, worth: worth)?.target, .bot(id: 9))
     }
 }

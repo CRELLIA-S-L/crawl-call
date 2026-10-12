@@ -36,12 +36,16 @@ enum SquadView {
     }
 
     /// What is left in a pouch, or nil where there is nothing worth the tokens: a
-    /// soldier with half a magazine is a soldier the commander need hear nothing about.
-    static func pouch(of bot: Bot, magazine: Int) -> String? {
-        guard magazine > .zero else { return nil }
-        let left = Double(bot.ammunition) / Double(magazine)
+    /// soldier with half his rounds is a soldier the commander need hear nothing about.
+    /// What it has left is counted over both its firearms (FR-BOT-440): a soldier
+    /// with an empty rifle and a full pistol has something to fire with, and the
+    /// commander is told about a pouch and not about a weapon.
+    static func pouch(of bot: Bot) -> String? {
+        let whole = bot.arms.magazines
+        guard whole > .zero else { return nil }
+        let left = Double(bot.arms.rounds) / Double(whole)
         if left > half { return nil }
-        return bot.ammunition > .zero ? "running low" : "pouch empty"
+        return bot.arms.rounds > .zero ? "running low" : "pouch empty"
     }
 
     /// Where something stands, in the arena's own quarters. The compass is this file's
@@ -78,7 +82,7 @@ enum SquadView {
             crew.append(CommanderInput.Soldier(
                 name: name,
                 standing: standing(of: bot, whole: entry?.health ?? .zero),
-                pouch: pouch(of: bot, magazine: entry?.magazine ?? .zero),
+                pouch: pouch(of: bot),
                 place: place(of: bot.position, floor: bot.floor, in: bounds)))
         }
         return (crew, gone)

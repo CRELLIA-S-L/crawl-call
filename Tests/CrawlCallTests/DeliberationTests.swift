@@ -71,7 +71,7 @@ final class DeliberationTests: XCTestCase {
         situation.allies = [hurt]
 
         var medic = try bot(.medic, at: 1, 0)
-        medic.ammunition = 15
+        medic.spendHalfOfEveryFirearm()
         let actions = Deliberation.scores(for: medic, in: situation).map(\.action)
         XCTAssertTrue(actions.contains(where: isFire), "fire is not on the list")
         XCTAssertTrue(actions.contains(where: isCover), "taking cover is not on the list")
@@ -97,7 +97,7 @@ final class DeliberationTests: XCTestCase {
         situation.snake = [at(6, 0)]
         situation.inView = situation.snake  // seen now, as these tests pose it (FR-BOT-220)
         var medic = try bot(.medic, at: 1, 0)
-        medic.ammunition = 9
+        medic.spendHalfOfEveryFirearm()
         var hurt = try bot(.heavy, at: 1, 1, id: 1)
         hurt.health = 30
         situation.allies = [hurt]
@@ -116,7 +116,7 @@ final class DeliberationTests: XCTestCase {
         XCTAssertEqual(Deliberation.choose(for: armed, in: situation).map(isFire), true)
 
         var empty = armed
-        empty.ammunition = 0
+        empty.emptyEveryFirearm()
         XCTAssertEqual(Deliberation.choose(for: empty, in: situation), .reload)
         XCTAssertNil(utility(of: isFire, for: empty, in: situation), "an empty bot still offered to fire")
     }

@@ -4,16 +4,17 @@
 //
 // The inputs are the ones FR-BOT-080 names — what the bot knows of the snake and of
 // the enemy, the order it was given, the danger it stands in, its health, its five
-// personality weights and the rounds it has left — and the terms below are written so
-// that each of them can be varied on its own and the choice watched to move, which is
-// what its rationale asks of a test. The seventh, what a bot carries beyond its
-// magazine, is undecided (Q-310).
+// personality weights, and what it has to fight with — and the terms below are written
+// so that each of them can be varied on its own and the choice watched to move, which
+// is what its rationale asks of a test. The last of them is four weapons rather than
+// one magazine (FR-BOT-440): each firearm that has a round and reaches is scored on
+// its own numbers (FR-BOT-450, FR-BOT-460).
 //
 // The weight of one term against another is tuning, and is read from the bot
 // configuration (IF-BOT-010), as is how much an unhurt bot fears the snake
 // (FR-BOT-210). What shapes each term — a share, a whole — is in `Utility`.
 //
-// file implements: FR-BOT-167, FR-BOT-116, FR-BOT-080, FR-BOT-090, FR-BOT-110, FR-BOT-115, FR-BOT-118, FR-BOT-119, FR-BOT-360, FR-BOT-370, FR-BOT-120, FR-BOT-180, FR-BOT-190, FR-BOT-200, FR-BOT-210, FR-MAP-150, FR-BOT-220, FR-BOT-060, FR-BOT-140, FR-BOT-330, FR-BOT-410, FR-BOT-420, FR-BOT-425, FR-BOT-130, FR-CMD-030
+// file implements: FR-BOT-167, FR-BOT-116, FR-BOT-460, FR-BOT-450, FR-BOT-080, FR-BOT-090, FR-BOT-110, FR-BOT-115, FR-BOT-118, FR-BOT-119, FR-BOT-360, FR-BOT-370, FR-BOT-120, FR-BOT-180, FR-BOT-190, FR-BOT-200, FR-BOT-210, FR-MAP-150, FR-BOT-220, FR-BOT-060, FR-BOT-140, FR-BOT-330, FR-BOT-410, FR-BOT-420, FR-BOT-425, FR-BOT-130, FR-CMD-030
 import Foundation
 
 enum Deliberation {
@@ -95,31 +96,47 @@ enum Deliberation {
             .map { (point: $0, metres: Perception.metres(bot.position, $0)) }
             .min { $0.metres < $1.metres }
         let health = entry.health > .zero ? bot.health / entry.health : .zero
-        let ammunition = entry.magazine > .zero ? Double(bot.ammunition) / Double(entry.magazine) : .zero
 
-        // Fire: needs something to shoot at that the bot sees now, a line to it and a
-        // round to send; a remembered snake is somewhere to be afraid of, not a target.
-        // Of the targets, the nearest part of the snake and each enemy bot in view
-        // (FR-BOT-060), the one it is already firing at is kept unless another is
-        // worth more by the hysteresis margin (FR-BOT-140).
-        if bot.ammunition > .zero,
-           let target = target(for: bot, in: situation, worth: { metres in
-               term.attack * nearness(metres, within: entry.detectionRange) * ammunition
-                   * bot.weights.aggression * bot.weights.courage
-           }) {
-            scored.append((.fire(at: target.target), target.utility))
-        } else if bot.ammunition > .zero, bot.post != nil, let kept = bot.postTarget,
-                  let known = remembered(kept, by: bot, in: situation),
-                  !Perception.sees(aim(at: known.target, from: bot, in: situation) ?? known.point, from: bot,
-                                   within: entry.detectionRange, plan: situation.plan,
-                                   configuration: situation.configuration) {
-            // Behind the cover it fired from beside, out of sight of what it was firing
-            // at: it comes out again to fire from where it did, at what it knows of it
-            // (FR-BOT-420, ADR-0063). It fires only once it sees it (FR-BOT-060). Where
-            // it sees the place and nothing there, what it knows is no target.
-            let worth = term.attack * nearness(Perception.metres(bot.position, known.point), within: entry.detectionRange)
-                * ammunition * bot.weights.aggression * bot.weights.courage
-            scored.append((.fire(at: known.target), worth))
+        // Fire: one action for each firearm the bot carries that has a round left and
+        // whose range covers the target (FR-BOT-460) — so which weapon it uses is
+        // decided by the score, as everything else about a bot is, and not by a rule
+        // about primaries and sidearms (ADR-0086).
+        //
+        // Each is scored with its own numbers (FR-BOT-450): what is left in that
+        // magazine against that magazine's size, and how hard it hits against the
+        // hardest-hitting thing the bot has. Firing needs something to shoot at that
+        // the bot sees now, a line to it and a round to send; a remembered snake is
+        // somewhere to be afraid of, not a target. Of the targets, the nearest part of
+        // the snake and each enemy bot in view (FR-BOT-060), the one it is already
+        // firing at is kept unless another is worth more by the hysteresis margin
+        // (FR-BOT-140).
+        for slot in Arms.Slot.allCases {
+            let firearm = bot.arms[slot]
+            guard firearm.rounds > .zero else { continue }
+            let loaded = firearm.numbers.magazine > .zero
+                ? Double(firearm.rounds) / Double(firearm.numbers.magazine)
+                : .zero
+            let strength = bot.arms.strength(of: slot)
+            let worth = { (metres: Double) in
+                term.attack * nearness(metres, within: entry.detectionRange) * loaded * strength
+                    * bot.weights.aggression * bot.weights.courage
+            }
+            if let target = target(for: bot, in: situation, within: firearm.numbers.range, worth: worth) {
+                scored.append((.fire(at: target.target, with: slot), target.utility))
+            } else if bot.post != nil, let kept = bot.postTarget,
+                      let known = remembered(kept, by: bot, in: situation),
+                      Perception.metres(bot.position, known.point) <= firearm.numbers.range,
+                      !Perception.sees(aim(at: known.target, from: bot, in: situation) ?? known.point, from: bot,
+                                       within: entry.detectionRange, plan: situation.plan,
+                                       configuration: situation.configuration) {
+                // Behind the cover it fired from beside, out of sight of what it was
+                // firing at: it comes out again to fire from where it did, at what it
+                // knows of it (FR-BOT-420, ADR-0063). It fires only once it sees it
+                // (FR-BOT-060). Where it sees the place and nothing there, what it
+                // knows is no target.
+                scored.append((.fire(at: known.target, with: slot),
+                               worth(Perception.metres(bot.position, known.point))))
+            }
         }
 
         // Cover: worth more the nearer it is, the nearer the danger is — the snake or
@@ -158,11 +175,20 @@ enum Deliberation {
                                * holding(against: danger, for: bot, within: entry.detectionRange)))
         }
 
-        if bot.ammunition < entry.magazine {
+        // Reload: one action for the weapons it carries, because one reload is one act
+        // (FR-BOT-200) and a bot that stops to reload reloads what it has. What it is
+        // worth is the emptiest magazine of them and not the sum of the two: a bot
+        // whose primary is dry wants it filled whatever is still in the sidearm, which
+        // is also what the single magazine of before was worth (ADR-0086).
+        if bot.arms.rounds < bot.arms.magazines {
             // Squared, so that the term stays flat while there is a magazine to
             // spend and climbs only as it runs out: a bot that reloaded after every
             // shot would spend a firefight looking at its hands.
-            let spent = Fraction.whole - ammunition
+            let spent = Arms.Slot.allCases.map { slot -> Double in
+                let firearm = bot.arms[slot]
+                guard firearm.numbers.magazine > .zero else { return .zero }
+                return Fraction.whole - Double(firearm.rounds) / Double(firearm.numbers.magazine)
+            }.max() ?? .zero
             scored.append((.reload, term.empty * spent * spent))
         }
 
@@ -196,14 +222,18 @@ enum Deliberation {
     /// by `worth` of the distance, except that the target it is already firing at is
     /// kept while nothing else is worth more by the hysteresis margin (FR-BOT-140).
     /// Two targets are one where both are the snake, or both the same bot.
-    static func target(for bot: Bot, in situation: Situation,
+    ///
+    /// `range` is how far the weapon being scored reaches: a target further off than
+    /// that is no target for it at all, rather than one it would score at nothing
+    /// (FR-BOT-460).
+    static func target(for bot: Bot, in situation: Situation, within range: Double,
                        worth: (Double) -> Double) -> (target: Target, utility: Double)? {
         var candidates: [(target: Target, utility: Double)] = []
         var snakeOverride = false
         let snake = situation.inView
             .map { (point: $0, metres: Perception.metres(bot.position, $0)) }
             .min { $0.metres < $1.metres }
-        if let snake, Sight.isClear(from: bot.eye, to: snake.point, through: situation.plan) {
+        if let snake, snake.metres <= range, Sight.isClear(from: bot.eye, to: snake.point, through: situation.plan) {
             // Within the override distance the snake is the top threat, whatever else
             // there is and whatever the bot was firing at (FR-BOT-120); beyond it, a calm
             // squad does not hunt it (FR-BOT-180).
@@ -216,6 +246,7 @@ enum Deliberation {
         }
         for enemy in situation.enemiesInView {
             let eye = enemy.point + SIMD3(0, bot.eyeHeight, 0)
+            guard Perception.metres(bot.position, enemy.point) <= range else { continue }
             guard Sight.isClear(from: bot.eye, to: eye, through: situation.plan) else { continue }
             candidates.append((.bot(id: enemy.id), worth(Perception.metres(bot.position, enemy.point))))
         }
@@ -262,7 +293,7 @@ enum Deliberation {
         var best: (target: Target, utility: Double)?
         for candidate in candidates where candidate.utility > (best?.utility ?? -.infinity) { best = candidate }
         guard let best else { return nil }
-        guard case .fire(let current) = bot.action,
+        guard case .fire(let current, _) = bot.action,
               let kept = candidates.first(where: { same($0.target, current) }),
               best.utility - kept.utility < situation.configuration.hysteresisMargin else { return best }
         return kept

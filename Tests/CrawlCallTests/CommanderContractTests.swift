@@ -297,13 +297,11 @@ final class SquadViewTests: XCTestCase {
         let world = try world()
         let start = try XCTUnwrap(Game.firstStart(in: world))
         var bot = try XCTUnwrap(Game(world: world, start: start).bots.first)
-        let magazine = try XCTUnwrap(world.configurations.bot.archetypes[bot.archetype.rawValue]).magazine
-        bot.ammunition = magazine
-        XCTAssertNil(SquadView.pouch(of: bot, magazine: magazine))
-        bot.ammunition = magazine / 4
-        XCTAssertEqual(SquadView.pouch(of: bot, magazine: magazine), "running low")
-        bot.ammunition = .zero
-        XCTAssertEqual(SquadView.pouch(of: bot, magazine: magazine), "pouch empty")
+        XCTAssertNil(SquadView.pouch(of: bot), "a full pouch is not worth the tokens")
+        for slot in Arms.Slot.allCases { bot.arms[slot].rounds = bot.arms[slot].numbers.magazine / 4 }
+        XCTAssertEqual(SquadView.pouch(of: bot), "running low")
+        bot.emptyEveryFirearm()
+        XCTAssertEqual(SquadView.pouch(of: bot), "pouch empty")
     }
 
     func testAPlaceIsAQuarterOfTheArenaAndNotAPairOfMetres() throws {

@@ -31,10 +31,15 @@
         }
       },
       "runSpeed": 4.5,
-      "weaponDamage": 2,
       "detectionRange": 6.0,
       "health": 100.0,
-      "magazine": 30
+      "arms": {
+        "primary": "shortAutomatic",
+        "sidearm": "pistol",
+        "grenade": "fragmentation",
+        "grenadesCarried": 2,
+        "knife": "combatKnife"
+      }
     },
     "heavy": {
       "basePersonalityWeights": {
@@ -67,10 +72,15 @@
         }
       },
       "runSpeed": 3.5,
-      "weaponDamage": 2,
       "detectionRange": 6.0,
       "health": 150.0,
-      "magazine": 30
+      "arms": {
+        "primary": "shoulderGun",
+        "sidearm": "pistol",
+        "grenade": "fragmentation",
+        "grenadesCarried": 1,
+        "knife": "combatKnife"
+      }
     },
     "sapper": {
       "basePersonalityWeights": {
@@ -103,10 +113,15 @@
         }
       },
       "runSpeed": 4.5,
-      "weaponDamage": 2,
       "detectionRange": 6.0,
       "health": 100.0,
-      "magazine": 30
+      "arms": {
+        "primary": "carbine",
+        "sidearm": "pistol",
+        "grenade": "fragmentation",
+        "grenadesCarried": 3,
+        "knife": "combatKnife"
+      }
     },
     "scout": {
       "basePersonalityWeights": {
@@ -139,10 +154,15 @@
         }
       },
       "runSpeed": 5.5,
-      "weaponDamage": 2,
       "detectionRange": 6.0,
       "health": 100.0,
-      "magazine": 30
+      "arms": {
+        "primary": "automaticRifle",
+        "sidearm": "pistol",
+        "grenade": "fragmentation",
+        "grenadesCarried": 1,
+        "knife": "combatKnife"
+      }
     },
     "sniper": {
       "basePersonalityWeights": {
@@ -175,10 +195,15 @@
         }
       },
       "runSpeed": 4.5,
-      "weaponDamage": 2,
       "detectionRange": 9.0,
       "health": 100.0,
-      "magazine": 30
+      "arms": {
+        "primary": "longRifle",
+        "sidearm": "pistol",
+        "grenade": "fragmentation",
+        "grenadesCarried": 1,
+        "knife": "combatKnife"
+      }
     },
     "medic": {
       "basePersonalityWeights": {
@@ -211,10 +236,77 @@
         }
       },
       "runSpeed": 4.5,
-      "weaponDamage": 2,
       "detectionRange": 6.0,
       "health": 100.0,
-      "magazine": 30
+      "arms": {
+        "primary": "submachineGun",
+        "sidearm": "pistol",
+        "grenade": "fragmentation",
+        "grenadesCarried": 1,
+        "knife": "combatKnife"
+      }
+    }
+  },
+  "weapons": {
+    "firearms": {
+      "shortAutomatic": {
+        "damage": 2.0,
+        "range": 12.0,
+        "timeBetweenShots": 0.2,
+        "magazine": 30
+      },
+      "shoulderGun": {
+        "damage": 4.0,
+        "range": 12.0,
+        "timeBetweenShots": 0.4,
+        "magazine": 20
+      },
+      "carbine": {
+        "damage": 2.5,
+        "range": 14.0,
+        "timeBetweenShots": 0.25,
+        "magazine": 24
+      },
+      "automaticRifle": {
+        "damage": 2.0,
+        "range": 14.0,
+        "timeBetweenShots": 0.2,
+        "magazine": 30
+      },
+      "longRifle": {
+        "damage": 10.0,
+        "range": 20.0,
+        "timeBetweenShots": 1.0,
+        "magazine": 5
+      },
+      "submachineGun": {
+        "damage": 1.5,
+        "range": 10.0,
+        "timeBetweenShots": 0.15,
+        "magazine": 25
+      },
+      "pistol": {
+        "damage": 1.0,
+        "range": 6.0,
+        "timeBetweenShots": 0.2,
+        "magazine": 12
+      }
+    },
+    "grenades": {
+      "fragmentation": {
+        "damage": 25.0,
+        "throwRange": 10.0,
+        "fuseTime": 2.0,
+        "blastRadius": 2.5,
+        "furtherPartShare": 0.18
+      }
+    },
+    "knives": {
+      "combatKnife": {
+        "damage": 20.0,
+        "reach": 1.2,
+        "throwRange": 5.0
+      }
     }
   },
   "overrideDistance": 5.0,

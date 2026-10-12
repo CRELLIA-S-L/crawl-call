@@ -104,14 +104,14 @@ The two squads **shall** differ only in colour and in their commander, never in 
 ### INV-BOT-040 — A primary weapon outreaches and outhits the sidearm beside it
 
 ```yaml
-status: deferred
+status: implemented
 verification: T
 derives_from: []
 depends_on: [FR-BOT-440, FR-BOT-450]
 refines: []
 conflicts_with: []
-code: []
-tests: []
+code: [config/bot.json]
+tests: [Tests/CrawlCallTests/ArmsTests.swift]
 created: 2026-10-11
 ```
 

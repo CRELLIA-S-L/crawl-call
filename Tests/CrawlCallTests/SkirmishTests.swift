@@ -128,13 +128,13 @@ final class SkirmishTests: XCTestCase {
         let enemy = try bot(1, .blue, at: 12, 2, in: floor, facing: -east)
         var bots = [shooter, enemy]
         let volley = Execution.deliberate(&bots, slots: [0], world: floor, now: 0)
-        XCTAssertEqual(try element(0, of: bots).action, .fire(at: .bot(id: 1)))
+        XCTAssertEqual(try element(0, of: bots).action, .fire(at: .bot(id: 1), with: .primary))
         XCTAssertEqual(volley.rounds.count, 1, "it did not fire as it set off")
         let post = try XCTUnwrap(try element(0, of: bots).post, "it found nowhere beside cover")
         XCTAssertNotNil(try element(0, of: bots).refuge)
         for _ in 0..<120 { Execution.walk(&bots, seconds: frame, world: floor, now: 0) }
         XCTAssertEqual(Execution.cell(of: try element(0, of: bots), world: floor), post, "it did not get there")
-        XCTAssertEqual(try element(0, of: bots).action, .fire(at: .bot(id: 1)), "arriving ended its firing")
+        XCTAssertEqual(try element(0, of: bots).action, .fire(at: .bot(id: 1), with: .primary), "arriving ended its firing")
         XCTAssertEqual(try element(0, of: bots).speed, 0, "it did not stop there")
     }
 
@@ -154,16 +154,16 @@ final class SkirmishTests: XCTestCase {
         let first = try checkedIndex(0, of: bots)
         bots[first].position = SIMD3(Double(post.x) * size, 0, Double(post.z) * size)
         bots[first].path = []
-        bots[first].ammunition = 0
-        let magazine = try XCTUnwrap(configuration.archetypes["assault"]).magazine
+        bots[first].emptyEveryFirearm()
+        let rounds = try element(0, of: bots).arms.magazines
         _ = Execution.deliberate(&bots, slots: [0], world: floor, now: 1)
         XCTAssertEqual(try element(0, of: bots).action, .reload)
-        XCTAssertEqual(try element(0, of: bots).ammunition, 0, "it reloaded out in the open")
+        XCTAssertEqual(try element(0, of: bots).arms.rounds, 0, "it reloaded out in the open")
         for _ in 0..<120 {
             Execution.walk(&bots, seconds: frame, world: floor, now: 1)
-            if try element(0, of: bots).ammunition > 0 { break }
+            if try element(0, of: bots).arms.rounds > 0 { break }
         }
-        XCTAssertEqual(try element(0, of: bots).ammunition, magazine, "it never reloaded")
+        XCTAssertEqual(try element(0, of: bots).arms.rounds, rounds, "it never reloaded")
         XCTAssertEqual(Execution.cell(of: try element(0, of: bots), world: floor), refuge,
                        "it reloaded somewhere other than the hidden cell")
     }
@@ -190,7 +190,7 @@ final class SkirmishTests: XCTestCase {
         XCTAssertFalse(Sight.isClear(from: try element(0, of: bots).eye, to: enemy.eye, through: floor.plan),
                        "the enemy is in sight from the hidden cell, so this proves nothing")
         let hidden = Execution.deliberate(&bots, slots: [0], world: floor, now: 1)
-        XCTAssertEqual(try element(0, of: bots).action, .fire(at: .bot(id: 1)), "it stayed behind the cover")
+        XCTAssertEqual(try element(0, of: bots).action, .fire(at: .bot(id: 1), with: .primary), "it stayed behind the cover")
         XCTAssertTrue(hidden.rounds.isEmpty, "it fired at an enemy it does not see")
         for _ in 0..<120 { Execution.walk(&bots, seconds: frame, world: floor, now: 1) }
         XCTAssertEqual(Execution.cell(of: try element(0, of: bots), world: floor), post,
@@ -235,15 +235,15 @@ final class SkirmishTests: XCTestCase {
         let first = try checkedIndex(0, of: bots)
         bots[first].position = SIMD3(Double(refuge.x) * size, 0, Double(refuge.z) * size)
         bots[first].path = []
-        bots[first].ammunition = 0
+        bots[first].emptyEveryFirearm()
         _ = Execution.deliberate(&bots, slots: [0], world: floor, now: 1)
         XCTAssertEqual(try element(0, of: bots).action, .reload)
-        XCTAssertEqual(try element(0, of: bots).ammunition, try XCTUnwrap(configuration.archetypes["assault"]).magazine)
+        XCTAssertEqual(try element(0, of: bots).arms.rounds, try element(0, of: bots).arms.magazines)
         XCTAssertEqual(try element(0, of: bots).post, post, "it forgot where it fires from")
         // Out of sight of the enemy, it goes back out to fire.
         bots[first].action = nil
         _ = Execution.deliberate(&bots, slots: [0], world: floor, now: 2)
-        XCTAssertEqual(try element(0, of: bots).action, .fire(at: .bot(id: 1)), "it stays behind the cover")
+        XCTAssertEqual(try element(0, of: bots).action, .fire(at: .bot(id: 1), with: .primary), "it stays behind the cover")
     }
 
     func testABotWithNoCoverBesideItReloadsWhereItStands() throws {
@@ -251,11 +251,11 @@ final class SkirmishTests: XCTestCase {
                               String(repeating: ".", count: 20))
         var shooter = try bot(0, .red, at: 1, 1, in: floor)
         shooter.knowledge.enemies = [1: .init(point: at(12, 1), time: 0)]
-        shooter.ammunition = 0
+        shooter.emptyEveryFirearm()
         var bots = [shooter, try bot(1, .blue, at: 12, 1, in: floor, facing: -east)]
         _ = Execution.deliberate(&bots, slots: [0], world: floor, now: 0)
         XCTAssertEqual(try element(0, of: bots).action, .reload)
-        XCTAssertEqual(try element(0, of: bots).ammunition, try XCTUnwrap(configuration.archetypes["assault"]).magazine)
+        XCTAssertEqual(try element(0, of: bots).arms.rounds, try element(0, of: bots).arms.magazines)
     }
 
     // MARK: on the move (FR-BOT-430)
@@ -270,7 +270,7 @@ final class SkirmishTests: XCTestCase {
         let enemy = try bot(1, .blue, at: 12, 8, in: floor, facing: -east)
         var bots = [shooter, enemy]
         _ = Execution.deliberate(&bots, slots: [0], world: floor, now: 0)
-        XCTAssertEqual(try element(0, of: bots).action, .fire(at: .bot(id: 1)))
+        XCTAssertEqual(try element(0, of: bots).action, .fire(at: .bot(id: 1), with: .primary))
         XCTAssertNil(try element(0, of: bots).post, "a cell beside cover was found in the open")
         XCTAssertLessThan(configuration.strafingSpeed * configuration.strafingInterval, 4,
                           "the bot reaches the edge within an interval, so this proves nothing")

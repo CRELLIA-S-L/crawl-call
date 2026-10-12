@@ -121,7 +121,7 @@ final class BotMotionTests: XCTestCase {
         // The one on the cell keeps to it: it fires from there (FR-BOT-420), and walks back
         // onto it when it is pushed off. One with nothing to do would give way.
         var standing = try bot(1, at: goal)
-        standing.action = .fire(at: .bot(id: 99))
+        standing.action = .fire(at: .bot(id: 99), with: .primary)
         standing.post = goal
         var bots = [sent(try bot(at: NavigationGraph.Node(floor: 0, x: 6, z: 6)), to: goal), standing]
         for _ in 0..<120 { Execution.walk(&bots, seconds: frame, world: world) }

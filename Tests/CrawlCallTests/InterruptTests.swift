@@ -2,7 +2,7 @@
 // found when it happens and not again while it lasts, the bot it happened to put ahead
 // of the queue, and — in a match — deciding in the very next frame.
 //
-// file verifies: FR-BOT-170
+// file verifies: FR-BOT-170, FR-BOT-450
 import XCTest
 @testable import CrawlCall
 
@@ -32,8 +32,9 @@ final class InterruptTests: XCTestCase {
     private var configuration: BotConfiguration { world.configurations.bot }
 
     /// A bot on the strip's middle line at `x` metres, facing +x.
-    private func bot(_ id: Int, _ squad: Squad = .red, at x: Double) throws -> Bot {
-        var bot = try XCTUnwrap(Bot(id: id, squad: squad, archetype: .assault, at: SIMD3(x, 0, 0.5), floor: 0,
+    private func bot(_ id: Int, _ squad: Squad = .red, at x: Double,
+                     _ archetype: Archetype = .assault) throws -> Bot {
+        var bot = try XCTUnwrap(Bot(id: id, squad: squad, archetype: archetype, at: SIMD3(x, 0, 0.5), floor: 0,
                                     configuration: configuration))
         bot.facing = .pi / 2
         return bot
@@ -54,9 +55,9 @@ final class InterruptTests: XCTestCase {
 
     func testABotWhoseMagazineRunsDryIsInterruptedOnce() throws {
         var last = try bot(0, at: 5)
-        last.ammunition = 1
+        last.arms.primary.rounds = 1
         var dry = last
-        dry.ammunition = 0
+        dry.arms.primary.rounds = 0
         var interrupts = Interrupts()
         XCTAssertEqual(find(&interrupts, before: [last], after: [dry]), [0: .magazineEmpty])
         XCTAssertEqual(find(&interrupts, before: [dry], after: [dry]), [:])
@@ -134,16 +135,23 @@ final class InterruptTests: XCTestCase {
     }
 
     func testASlotAheadOfTheQueueDecidesButDoesNotFireFasterThanOnceAPeriod() throws {
+        // A medic, because its weapon is the one that fires faster than a slot comes
+        // round: 0.15 s between shots against a deliberation period of 0.2 (FR-BOT-450).
+        // That is what lets this test tell the two guards apart — a shot its weapon
+        // would allow and the interrupt still refuses (ADR-0057).
         let period = configuration.deliberationPeriod
-        var shooter = try bot(0, at: 5)
+        var shooter = try bot(0, at: 5, .medic)
+        let cadence = shooter.arms.primary.numbers.timeBetweenShots
+        XCTAssertLessThan(cadence, period, "the weapon is slower than a slot, and this test proves nothing")
         let enemy = try bot(1, .blue, at: 8)
         shooter.knowledge.enemies[enemy.id] = .init(point: enemy.position, time: now)
-        shooter.lastShot = now - period * 0.5
+        // Long enough ago for the weapon, not long enough for the queue.
+        shooter.lastShot = now - (cadence + period) * 0.5
         var bots = [shooter, enemy]
         let held = Execution.deliberate(&bots, slots: [shooter.id], world: world, now: now, interrupted: [shooter.id])
-        XCTAssertEqual(bots.first?.action, .fire(at: .bot(id: enemy.id)), "the interrupted bot did not decide")
-        XCTAssertTrue(held.rounds.isEmpty, "fired again half a period after its last shot")
-        XCTAssertEqual(bots.first?.ammunition, shooter.ammunition)
+        XCTAssertEqual(bots.first?.action, .fire(at: .bot(id: enemy.id), with: .primary), "the interrupted bot did not decide")
+        XCTAssertTrue(held.rounds.isEmpty, "fired again less than a period after its last shot")
+        XCTAssertEqual(bots.first?.arms.rounds, shooter.arms.rounds)
         // In its own turn, or more than a period on, it fires.
         bots = [shooter, enemy]
         XCTAssertEqual(Execution.deliberate(&bots, slots: [shooter.id], world: world, now: now).rounds.count, 1)
