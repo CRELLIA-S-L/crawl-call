@@ -175,6 +175,102 @@ final class CommanderInputTests: XCTestCase {
     }
 }
 
+final class SquadHappeningsTests: XCTestCase {
+    private func bot(_ archetype: Archetype, _ squad: Squad = .red, id: Int = 0) throws -> Bot {
+        let configuration = try Launch.world().get().configurations.bot
+        return try XCTUnwrap(Bot(id: id, squad: squad, archetype: archetype, at: .zero, floor: 0,
+                                 configuration: configuration))
+    }
+
+    func testASquadThatLostSomebodyTookHitsAndRanDryIsToldAllThree() throws {
+        // The three a firefight produces, each from an event the frame already found.
+        var happenings = SquadHappenings()
+        happenings.lost(.scout, of: .red)
+        happenings.note(.hit, of: try bot(.assault))
+        happenings.note(.magazineEmpty, of: try bot(.heavy, id: 1))
+
+        XCTAssertEqual(happenings.lines(of: .red),
+                       ["Otto gone missing", "Davis took a hit", "Pike ran out"])
+    }
+
+    func testTheOrderOfTheLinesIsTheSameWhateverOrderThingsHappenedIn() throws {
+        // Two calls that met the same events cost the same tokens, which is what a
+        // bench measurement covers (FR-TOOL-170).
+        var one = SquadHappenings()
+        one.note(.magazineEmpty, of: try bot(.heavy, id: 1))
+        one.lost(.scout, of: .red)
+        var other = SquadHappenings()
+        other.lost(.scout, of: .red)
+        other.note(.magazineEmpty, of: try bot(.heavy, id: 1))
+
+        XCTAssertEqual(one.lines(of: .red), other.lines(of: .red))
+    }
+
+    func testASoldierHitFiveTimesIsNamedOnceAndTwoAreListedTheWayEnglishListsThem() throws {
+        var happenings = SquadHappenings()
+        for _ in 0..<5 { happenings.note(.hit, of: try bot(.assault)) }
+        XCTAssertEqual(happenings.lines(of: .red), ["Davis took a hit"])
+
+        happenings.note(.hit, of: try bot(.heavy, id: 1))
+        XCTAssertEqual(happenings.lines(of: .red), ["Davis and Pike took hits"])
+    }
+
+    func testTheSnakeAndWhatWasSeenOfItAreTold() throws {
+        var happenings = SquadHappenings()
+        happenings.note(.snakeClose, of: try bot(.assault))
+        happenings.note(.sawEating, of: try bot(.medic, id: 1))
+
+        XCTAssertEqual(happenings.lines(of: .red),
+                       ["the snake came near", "Kit saw the snake take one of ours"])
+    }
+
+    func testAnAllyDyingAddsNothingBecauseTheBodyIsOneEventNotFour() throws {
+        // Every bot that saw it is interrupted by it (FR-BOT-170); the commander is
+        // told once, by whoever went down, and not once per witness.
+        var happenings = SquadHappenings()
+        happenings.note(.allyDied, of: try bot(.assault))
+        happenings.note(.allyDied, of: try bot(.heavy, id: 1))
+        XCTAssertEqual(happenings.lines(of: .red), [])
+
+        happenings.lost(.scout, of: .red)
+        XCTAssertEqual(happenings.lines(of: .red), ["Otto gone missing"])
+    }
+
+    func testOneSquadIsNotToldTheOthersNews() throws {
+        var happenings = SquadHappenings()
+        happenings.note(.hit, of: try bot(.assault, .red))
+        happenings.lost(.sniper, of: .blue)
+
+        XCTAssertEqual(happenings.lines(of: .red), ["Davis took a hit"])
+        XCTAssertEqual(happenings.lines(of: .blue), ["Beans gone missing"])
+        happenings.clear(.red)
+        XCTAssertEqual(happenings.lines(of: .red), [])
+        XCTAssertEqual(happenings.lines(of: .blue), ["Beans gone missing"], "clearing one squad emptied the other")
+    }
+
+    func testAQuietSquadSaysNothingAtAll() throws {
+        let happenings = SquadHappenings()
+        XCTAssertEqual(happenings.lines(of: .red), [])
+        XCTAssertEqual(happenings.lines(of: .blue), [])
+    }
+
+    func testTheWordsAreTheMeasuredOnesAndNotTheBlockedOnes() throws {
+        // The same list the state's own test holds: what these lines say must pass the
+        // guardrail the rest of the state was measured against (ADR-0017).
+        let forbidden = ["bleed", "blood", "wound", "dead", "death", "died", "kill",
+                         "corpse", "body", "bodies", "scream", "crush", "execut", "tear"]
+        var happenings = SquadHappenings()
+        happenings.lost(.scout, of: .red)
+        happenings.note(.hit, of: try bot(.assault))
+        happenings.note(.magazineEmpty, of: try bot(.heavy, id: 1))
+        happenings.note(.snakeClose, of: try bot(.sapper, id: 2))
+        happenings.note(.sawEating, of: try bot(.medic, id: 3))
+
+        let said = happenings.lines(of: .red).joined(separator: "; ").lowercased()
+        for word in forbidden { XCTAssertFalse(said.contains(word), "the events said \(word): \(said)") }
+    }
+}
+
 final class SquadViewTests: XCTestCase {
     private func world() throws -> World { try Launch.world().get() }
 

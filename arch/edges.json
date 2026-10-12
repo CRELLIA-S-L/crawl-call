@@ -52,12 +52,12 @@
   {
     "from": "Sources/CrawlCall/Game.swift",
     "to": "Sources/CrawlCall/Config/Motion.swift",
-    "via": "Motion:115 — one witness of 49 reference(s) from 4 file(s)"
+    "via": "Motion:119 — one witness of 49 reference(s) from 4 file(s)"
   },
   {
     "from": "Sources/CrawlCall/Game.swift",
     "to": "Sources/CrawlCall/Input/Intent.swift",
-    "via": "Intent:120 — one witness of 2 reference(s) from 2 file(s)"
+    "via": "Intent:124 — one witness of 2 reference(s) from 2 file(s)"
   },
   {
     "from": "Sources/CrawlCall/Game.swift",

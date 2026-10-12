@@ -48,6 +48,10 @@ struct Game {
     /// the bots waiting for the slot it gives them.
     private var interrupts = Interrupts()
     private(set) var interrupted: [Int: Interrupt] = [:]
+    /// What has happened to each squad since its commander was last called
+    /// (IF-CMD-010): filled from the same interrupts the bots react to, emptied by the
+    /// call that carries it.
+    private(set) var happenings = SquadHappenings()
     /// What each squad knows of the snake, and what is on its way to raising it
     /// (FR-SCORE-130).
     private(set) var stealth = Stealth()
@@ -330,6 +334,10 @@ struct Game {
         // nothing in it moves again until a new one is started (FR-VIEW-190).
         guard !isPaused, outcome == nil else { return report }
         let before = Interrupts.glance(bots)
+        // Who was who as the frame began: a bot the snake finishes in it is gone from
+        // `bots` by the end, and its squad still has to be told (IF-CMD-010).
+        let lineup = Dictionary(bots.map { ($0.id, (squad: $0.squad, archetype: $0.archetype)) },
+                                uniquingKeysWith: { first, _ in first })
         if eating != nil {
             // FR-SNAKE-090: the head stays where it is until the meal is over, which
             // is what makes eating a choice with a price. Live prey is chewed through
@@ -416,11 +424,23 @@ struct Game {
                        routeOrder: slots.order(among: bots, snake: body,
                                                configuration: world.configurations.bot),
                        holding: eating?.prey ?? coil?.prey, now: elapsed)
-        // Found after the frame's shots and meals, and served in the next frame.
-        for (id, reason) in interrupts.find(before: before, after: bots, meal: eating?.prey ?? coil?.prey,
-                                            plan: world.plan, configuration: world.configurations.bot, now: elapsed)
-        where interrupted[id] == nil {
-            interrupted[id] = reason
+        // Found after the frame's shots and meals, and served in the next frame. Each
+        // is also something to tell the squad's commander when it is next called
+        // (IF-CMD-010), whether or not the bot is still waiting for an earlier slot.
+        let found = interrupts.find(before: before, after: bots, meal: eating?.prey ?? coil?.prey,
+                                    plan: world.plan, configuration: world.configurations.bot, now: elapsed)
+        for (id, reason) in found {
+            if let bot = bots.first(where: { $0.id == id }) { happenings.note(reason, of: bot) }
+            if interrupted[id] == nil { interrupted[id] = reason }
+        }
+        // And whoever went down in this frame, named once: a body its squad can see and
+        // a soldier the snake has finished eating read the same to a commander
+        // (IF-CMD-010). Read from the line-up taken as the frame began, since a bot the
+        // snake finished is no longer among the bots to be asked what it was.
+        let standing = Set(bots.filter(\.isAlive).map(\.id))
+        for glance in before where glance.isAlive && !standing.contains(glance.id) {
+            guard let was = lineup[glance.id] else { continue }
+            happenings.lost(was.archetype, of: was.squad)
         }
         stealth.step(before: before, after: bots, prey: eating?.prey ?? coil?.prey, plan: world.plan,
                      bot: world.configurations.bot, scoring: world.configurations.scoring, now: elapsed)
@@ -480,6 +500,10 @@ struct Game {
         let now = elapsed
         for (squad, state) in dueCalls() {
             commanderCalls += 1
+            // Carried, so spent: the next call speaks of what happens from here and not
+            // of the whole match (IF-CMD-010). Emptied where the call is started and not
+            // where it is decided, so that reading `dueCalls` changes nothing.
+            happenings.clear(squad)
             Task.detached { [desk] in await desk.call(squad, with: state, at: now) }
         }
     }
@@ -504,7 +528,7 @@ struct Game {
                                               in: world.plan.bounds,
                                               configuration: world.configurations.bot,
                                               lastCall: desk.lastDecision(of: squad),
-                                              truce: nil, events: [])
+                                              truce: nil, events: happenings.lines(of: squad))
             else { return nil }
             return (squad, state)
         }

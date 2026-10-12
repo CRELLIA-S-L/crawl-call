@@ -139,6 +139,41 @@ final class CommanderInTheMatchTests: XCTestCase {
         XCTAssertEqual(due.map(\.squad), [.red])
     }
 
+    func testACallCarriesWhatHappenedSinceTheLastOneAndThenForgetsIt() async throws {
+        // IF-CMD-010's second half, end to end. The snake takes one of red's, through
+        // the game's own act (FR-SNAKE-270 is the player's business and not this
+        // test's), and the next call red's commander is handed says so.
+        //
+        // What the commander heard is read rather than what the match was about to
+        // send: a call becomes due inside `advance` and is started and spent there, so
+        // there is no moment between the two for a test to look at.
+        var (game, scripted) = try match([.decision(decision)])
+        let commander = try XCTUnwrap(scripted)
+        let frame = 1.0 / 60
+        let prey = try XCTUnwrap(game.bots.first { $0.squad == .red && !$0.isCommander })
+        game.begin(eating: prey.id)
+        var frames = 0
+        while game.bots.contains(where: { $0.id == prey.id }) && frames < Int(60 / frame) {
+            game.advance(seconds: frame)
+            frames += 1
+        }
+        XCTAssertFalse(game.bots.contains { $0.id == prey.id }, "the meal never finished")
+
+        let name = SquadView.name(of: prey.archetype)
+        XCTAssertEqual(game.happenings.lines(of: .red).first, "\(name) gone missing",
+                       "the match did not notice that it had lost somebody")
+
+        var told = false
+        for _ in 0..<Int(20 / frame) where !told {
+            game.advance(seconds: frame)
+            await Task.yield()
+            told = commander.heard.contains { $0.prompt.contains("just happened: \(name) gone missing") }
+        }
+        XCTAssertTrue(told, "no call carried what had happened: \(commander.heard.map(\.prompt))")
+        XCTAssertEqual(game.happenings.lines(of: .red), [],
+                       "the call carried the events and left them to be told again")
+    }
+
     func testACallCarriesTheStateTheRequirementDefines() throws {
         // The end-to-end shape of IF-CMD-010: what the match hands over is the state
         // built from the role-holder's knowledge, not a sketch of it.
