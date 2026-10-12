@@ -13,7 +13,7 @@
 // configuration (IF-BOT-010), as is how much an unhurt bot fears the snake
 // (FR-BOT-210). What shapes each term — a share, a whole — is in `Utility`.
 //
-// file implements: FR-BOT-080, FR-BOT-090, FR-BOT-110, FR-BOT-115, FR-BOT-118, FR-BOT-360, FR-BOT-370, FR-BOT-120, FR-BOT-180, FR-BOT-190, FR-BOT-200, FR-BOT-210, FR-MAP-150, FR-BOT-220, FR-BOT-060, FR-BOT-140, FR-BOT-330, FR-BOT-410, FR-BOT-420, FR-BOT-425
+// file implements: FR-BOT-080, FR-BOT-090, FR-BOT-110, FR-BOT-115, FR-BOT-118, FR-BOT-360, FR-BOT-370, FR-BOT-120, FR-BOT-180, FR-BOT-190, FR-BOT-200, FR-BOT-210, FR-MAP-150, FR-BOT-220, FR-BOT-060, FR-BOT-140, FR-BOT-330, FR-BOT-410, FR-BOT-420, FR-BOT-425, FR-BOT-130, FR-CMD-030
 import Foundation
 
 enum Deliberation {
@@ -39,6 +39,10 @@ enum Deliberation {
         var enemiesInView: [(id: Int, point: SIMD3<Double>)] = []
         var allies: [Bot] = []
         var orderedZone: NavigationGraph.Node?
+        /// What the squad's commander told it to worry about (FR-CMD-030), or nil where
+        /// no commander has spoken: a bot then ranks threats as it did before there
+        /// were commanders.
+        var priority: CommanderDecision.Threat?
         /// Where the bot takes the snake's head to be: the part nearest the head it
         /// has seen, where it saw it (FR-BOT-220). Nil where it has seen none, and a
         /// position is then worth what it was without the snake (FR-BOT-110, FR-BOT-115).
@@ -69,6 +73,14 @@ enum Deliberation {
         guard let entry = situation.configuration.archetypes[bot.archetype.rawValue] else { return [] }
         // The mix: the weight of one named input in one action's score.
         let term = situation.configuration.utilityTermWeights
+        // How much of the bot's own reading of the danger survives an order
+        // (FR-BOT-130): all of it where there is no order to contradict, and one minus
+        // its discipline where there is. The order's own term is weighted by the
+        // discipline itself, below, so a bot of discipline 1.0 does what it was told
+        // and one of 0.0 never does.
+        let local = situation.orderedZone == nil
+            ? Fraction.whole
+            : Fraction.whole - bot.weights.discipline
 
         let nearest = situation.snake
             .map { (point: $0, metres: Perception.metres(bot.position, $0)) }
@@ -112,7 +124,7 @@ enum Deliberation {
             let handy = nearness(Perception.metres(bot.position, centre(of: cover.node, in: situation)), within: reach)
             scored.append((.takeCover(at: cover.node),
                            term.threat * closeness * handy * (term.wounded - health * Utility.coverHealthShare)
-                               * bot.weights.panic))
+                               * bot.weights.panic * local))
         }
 
         // Flight: the same fear, spent on distance rather than on a wall. A whole bot
@@ -121,7 +133,7 @@ enum Deliberation {
         if let nearest, let away = away(from: nearest.point, for: bot, in: situation) {
             let closeness = nearness(nearest.metres, within: entry.detectionRange)
             let fear = situation.configuration.fearWhenUnhurt + (term.wounded - health)
-            scored.append((.flee(to: away), term.threat * closeness * fear * bot.weights.panic))
+            scored.append((.flee(to: away), term.threat * closeness * fear * bot.weights.panic * local))
         }
 
         // An order to obey is the one thing discipline scales; without a commander
@@ -211,6 +223,28 @@ enum Deliberation {
         }
         if snakeOverride, let snake = candidates.first(where: { if case .snake = $0.target { true } else { false } }) {
             return snake
+        }
+        // What the squad was told to worry about ranks the kinds of target rather than
+        // scaling them (FR-CMD-030), which is how the one other priority in this
+        // function works: the snake within the override distance has just won above,
+        // whatever the commander said (FR-BOT-120). Told to worry about the snake, a
+        // bot fires at a part of it in view over any enemy; told to worry about the
+        // enemy, the other way round. `withdraw` names nothing to fire at, and leaves
+        // the ranking where it was.
+        //
+        // Narrowing the candidates rather than returning one of them keeps the
+        // hysteresis below: the margin that stops a bot swapping targets every step
+        // (FR-BOT-140) still applies, within the kind the commander named.
+        let isSnake = { (candidate: (target: Target, utility: Double)) in
+            if case .snake = candidate.target { true } else { false }
+        }
+        switch situation.priority {
+        case .snake where candidates.contains(where: isSnake):
+            candidates = candidates.filter(isSnake)
+        case .enemy where candidates.contains(where: { !isSnake($0) }):
+            candidates = candidates.filter { !isSnake($0) }
+        case .snake, .enemy, .withdraw, nil:
+            break
         }
         // The first of the best, so that a tie goes the same way every time.
         var best: (target: Target, utility: Double)?

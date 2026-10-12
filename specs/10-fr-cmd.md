@@ -91,14 +91,14 @@ Built on 2026-10-11. The shipped number is no longer the eighty above: the struc
 ### FR-CMD-030 — The commander sets the threat priority
 
 ```yaml
-status: deferred
+status: implemented
 verification: T
 derives_from: [FR-CMD-020]
 depends_on: [IF-CMD-020]
 refines: []
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Commander/SquadCommand.swift, Sources/CrawlCall/Game.swift, Sources/CrawlCall/Bot/Execution.swift, Sources/CrawlCall/Bot/Deliberation.swift]
+tests: [Tests/CrawlCallTests/CommanderOrdersTests.swift]
 created: 2026-09-21
 ```
 
@@ -106,18 +106,20 @@ When a commander's response arrives, the system **shall** set the squad's threat
 
 **Rationale.** Concept §9.1: the key decision with three sides on the map.
 The local override near the snake is FR-BOT-120.
+Built on 2026-10-12 (ADR-0079): the priority ranks the kinds of target rather than scaling what either is worth, which is how the one other priority in the deliberation already worked (FR-BOT-120).
+Told to worry about the snake, a bot fires at a part of it in view over any enemy; told to worry about the enemy, the other way round; `withdraw` names nothing to fire at and leaves the ranking where it was.
 
 ### FR-CMD-040 — The commander issues an order
 
 ```yaml
-status: deferred
+status: implemented
 verification: T
 derives_from: [FR-CMD-020]
 depends_on: [IF-CMD-020]
 refines: []
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Commander/SquadCommand.swift, Sources/CrawlCall/Commander/Orders.swift, Sources/CrawlCall/Game.swift, Sources/CrawlCall/Bot/Execution.swift]
+tests: [Tests/CrawlCallTests/CommanderOrdersTests.swift]
 created: 2026-09-21
 ```
 
@@ -125,18 +127,19 @@ When a commander's response arrives, the system **shall** set the squad's curren
 
 **Rationale.** Concept §9.1 lists these five orders.
 Setting the order is the "new order" event of FR-BOT-170; how much a bot obeys is FR-BOT-130.
+Built on 2026-10-12 (ADR-0079). Four of the five orders become one cell for each bot to be in — the hook the deliberation has always had and that nothing set in play — and the fifth, destroying the enemy's cover, names none until a bot can wreck a wall (FR-BOT-070).
 
 ### FR-CMD-050 — The commander assigns roles
 
 ```yaml
-status: deferred
+status: implemented
 verification: T
 derives_from: [FR-CMD-020]
 depends_on: [IF-CMD-020]
 refines: []
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Commander/SquadCommand.swift, Sources/CrawlCall/Game.swift]
+tests: [Tests/CrawlCallTests/CommanderOrdersTests.swift]
 created: 2026-09-21
 ```
 
@@ -144,18 +147,20 @@ When a commander's response arrives, the system **shall** assign each bot of the
 
 **Rationale.** Concept §9.1: who holds the stair, who covers, who distracts.
 A role is a bias in that bot's utility, the mechanism being tuning.
+Built on 2026-10-12 (ADR-0079). A soldier the answer passes over keeps the role it had, which is IF-CMD-020's refusal to repair read on this side of the crossing: a role cleared because the model forgot to mention it is an order nobody gave.
+What a role does to a bot's utility is still nothing: the bias is tuning and no interface carries it yet.
 
 ### FR-CMD-060 — The commander sets personality weights
 
 ```yaml
-status: deferred
+status: implemented
 verification: T
 derives_from: [FR-CMD-020]
 depends_on: [IF-CMD-020, FR-BOT-030]
 refines: []
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Commander/SquadCommand.swift, Sources/CrawlCall/Game.swift]
+tests: [Tests/CrawlCallTests/CommanderOrdersTests.swift]
 created: 2026-09-21
 ```
 
@@ -163,6 +168,7 @@ When a commander's response arrives, the system **shall** replace each bot's per
 
 **Rationale.** Concept §9.1: the weights are the most important part — through them the LLM shapes behaviour without taking per-frame decisions.
 Clamping keeps a commander from turning a heavy into a coward outright; the range is per archetype so that the silhouette keeps meaning what it looks like.
+Built on 2026-10-12 (ADR-0079). The clamp reads `allowedRanges` of the bot configuration, which nothing had ever read; every range in the shipped file runs 0 to 1, so the clamp holds nothing back today, and the numbers that would make it bite are the maintainer's to set in the file (ART-070).
 
 ### FR-CMD-070 — Awareness gates what the commander is told
 

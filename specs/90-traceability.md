@@ -8,9 +8,9 @@ Total requirements: 279.
 | Status | Requirements |
 |---|---|
 | `draft` | 4 |
-| `deferred` | 104 |
-| `partial` | 12 |
-| `implemented` | 153 |
+| `deferred` | 99 |
+| `partial` | 11 |
+| `implemented` | 159 |
 | `superseded` | 6 |
 | `withdrawn` | 0 |
 
@@ -47,8 +47,8 @@ Total requirements: 279.
 | **FR-BOT-110** Height advantage enters position scoring | `implemented` | T | `Sources/CrawlCall/Bot/Deliberation.swift`<br>`Sources/CrawlCall/Bot/Execution.swift` | `Tests/CrawlCallTests/PositionTests.swift` |
 | **FR-BOT-115** Distance along the snake's path enters position scoring | `implemented` | T | `Sources/CrawlCall/Bot/Deliberation.swift`<br>`Sources/CrawlCall/Bot/Execution.swift` | `Tests/CrawlCallTests/PositionTests.swift` |
 | **FR-BOT-118** A bot flees to somewhere it can get to | `implemented` | T | `Sources/CrawlCall/Bot/Deliberation.swift`<br>`Sources/CrawlCall/Map/PieceIndex.swift` | `Tests/CrawlCallTests/DeliberationTests.swift`<br>`Tests/CrawlCallTests/PieceIndexTests.swift` |
-| **FR-BOT-120** Nearby snake overrides the commander's priority | `partial` | T | `Sources/CrawlCall/Bot/Deliberation.swift` | `Tests/CrawlCallTests/SquadStateTests.swift` |
-| **FR-BOT-130** Discipline decides how far an order is kept | `deferred` | T | — | — |
+| **FR-BOT-120** Nearby snake overrides the commander's priority | `implemented` | T | `Sources/CrawlCall/Bot/Deliberation.swift` | `Tests/CrawlCallTests/SquadStateTests.swift`<br>`Tests/CrawlCallTests/CommanderOrdersTests.swift` |
+| **FR-BOT-130** Discipline decides how far an order is kept | `implemented` | T | `Sources/CrawlCall/Bot/Deliberation.swift` | `Tests/CrawlCallTests/CommanderOrdersTests.swift` |
 | **FR-BOT-140** Target choice has hysteresis | `implemented` | T | `Sources/CrawlCall/Bot/Deliberation.swift` | `Tests/CrawlCallTests/WarTests.swift` |
 | **FR-BOT-150** Deliberation runs on a fixed step, not per frame | `implemented` | T | `Sources/CrawlCall/Bot/Slots.swift`<br>`Sources/CrawlCall/Game.swift`<br>`Sources/CrawlCall/Config/Utility.swift` | `Tests/CrawlCallTests/ExecutionTests.swift` |
 | **FR-BOT-160** Slots go by priority, not round-robin | `implemented` | T | `Sources/CrawlCall/Bot/Slots.swift`<br>`Sources/CrawlCall/Config/Utility.swift` | `Tests/CrawlCallTests/ExecutionTests.swift` |
@@ -95,10 +95,10 @@ Total requirements: 279.
 | **FR-CMD-020** The commander is called on an interval | `implemented` | T | `Sources/CrawlCall/Commander/CommanderDesk.swift`<br>`Sources/CrawlCall/Game.swift`<br>`Sources/CrawlCall/Commander/SquadView.swift` | `Tests/CrawlCallTests/CommanderCallTests.swift` |
 | **FR-CMD-025** Each commander call is its own session | `implemented` | T | `Sources/CrawlCall/Commander/SystemModelCommander.swift`<br>`Sources/CrawlCall/Commander/CommanderDesk.swift` | `Tests/CrawlCallTests/CommanderCallTests.swift` |
 | **FR-CMD-027** Every generation carries a response ceiling | `implemented` | T | `Sources/CrawlCall/Commander/SystemModelCommander.swift`<br>`Sources/CrawlCall/CrawlCallApp.swift`<br>`config/match.json` | `Tests/CrawlCallTests/CommanderCallTests.swift` |
-| **FR-CMD-030** The commander sets the threat priority | `deferred` | T | — | — |
-| **FR-CMD-040** The commander issues an order | `deferred` | T | — | — |
-| **FR-CMD-050** The commander assigns roles | `deferred` | T | — | — |
-| **FR-CMD-060** The commander sets personality weights | `deferred` | T | — | — |
+| **FR-CMD-030** The commander sets the threat priority | `implemented` | T | `Sources/CrawlCall/Commander/SquadCommand.swift`<br>`Sources/CrawlCall/Game.swift`<br>`Sources/CrawlCall/Bot/Execution.swift`<br>`Sources/CrawlCall/Bot/Deliberation.swift` | `Tests/CrawlCallTests/CommanderOrdersTests.swift` |
+| **FR-CMD-040** The commander issues an order | `implemented` | T | `Sources/CrawlCall/Commander/SquadCommand.swift`<br>`Sources/CrawlCall/Commander/Orders.swift`<br>`Sources/CrawlCall/Game.swift`<br>`Sources/CrawlCall/Bot/Execution.swift` | `Tests/CrawlCallTests/CommanderOrdersTests.swift` |
+| **FR-CMD-050** The commander assigns roles | `implemented` | T | `Sources/CrawlCall/Commander/SquadCommand.swift`<br>`Sources/CrawlCall/Game.swift` | `Tests/CrawlCallTests/CommanderOrdersTests.swift` |
+| **FR-CMD-060** The commander sets personality weights | `implemented` | T | `Sources/CrawlCall/Commander/SquadCommand.swift`<br>`Sources/CrawlCall/Game.swift` | `Tests/CrawlCallTests/CommanderOrdersTests.swift` |
 | **FR-CMD-070** Awareness gates what the commander is told | `implemented` | T | `Sources/CrawlCall/Commander/SquadView.swift` | `Tests/CrawlCallTests/CommanderCallTests.swift`<br>`Tests/CrawlCallTests/CommanderContractTests.swift` |
 | **FR-CMD-080** The two commanders run out of phase | `implemented` | T | `Sources/CrawlCall/Commander/CommanderDesk.swift` | `Tests/CrawlCallTests/CommanderCallTests.swift` |
 | **FR-CMD-090** A commander may propose a truce | `deferred` | T | — | — |
@@ -467,7 +467,7 @@ Verified by means other than testing — or the check has not been set up yet.
 
 ## Code files outside the specification
 
-No requirement references them: 4 of 108.
+No requirement references them: 4 of 110.
 
 - `scripts/arch-edges-selftest.sh`
 - `scripts/prompt-bench-selftest.sh`

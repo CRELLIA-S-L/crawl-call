@@ -9,7 +9,7 @@
 // rather than an accident: no requirement gives a weapon a rate of fire, and
 // inventing one would put a number in this file that no interface carries.
 //
-// file implements: FR-BOT-060, FR-BOT-110, FR-BOT-115, FR-BOT-170, FR-BOT-360, FR-BOT-370, FR-BOT-380, FR-BOT-180, FR-BOT-190, INV-BOT-020, INV-BOT-010, FR-BOT-165, FR-MAP-150, FR-BOT-270, FR-BOT-280, FR-BOT-290, FR-BOT-300, FR-BOT-220, FR-BOT-310, FR-BOT-320, FR-BOT-330, FR-BOT-340, FR-BOT-420, FR-BOT-425, FR-BOT-430
+// file implements: FR-BOT-060, FR-BOT-110, FR-BOT-115, FR-BOT-170, FR-BOT-360, FR-BOT-370, FR-BOT-380, FR-BOT-180, FR-BOT-190, INV-BOT-020, INV-BOT-010, FR-BOT-165, FR-MAP-150, FR-BOT-270, FR-BOT-280, FR-BOT-290, FR-BOT-300, FR-BOT-220, FR-BOT-310, FR-BOT-320, FR-BOT-330, FR-BOT-340, FR-BOT-420, FR-BOT-425, FR-BOT-430, FR-CMD-030, FR-CMD-040
 import Foundation
 
 enum Execution {
@@ -32,7 +32,8 @@ enum Execution {
     /// snake is taken as known.
     static func deliberate(_ bots: inout [Bot], slots: [Int], world: World, now: Double = .zero,
                            interrupted: Set<Int> = [],
-                           awareness: (Squad) -> Awareness = { _ in .confirmed }) -> Volley {
+                           awareness: (Squad) -> Awareness = { _ in .confirmed },
+                           command: (Squad) -> SquadCommand? = { _ in nil }) -> Volley {
         var volley = Volley()
         // The snake's paths from where each bot takes its head to be, walked once a
         // step for every bot that takes it to be in the same cell (FR-BOT-115).
@@ -95,6 +96,17 @@ enum Execution {
                     if paths[node] == nil { paths[node] = Squads.distances(in: world.graph, from: node) }
                     situation.fromHead = paths[node] ?? [:]
                 }
+            }
+
+            // What its commander last told the squad, if it has one: what to worry about,
+            // which ranks what it fires at (FR-CMD-030), and what to do, which becomes
+            // the one cell this bot is to be in (FR-CMD-040). The order is turned into
+            // a cell here, per bot and per step, rather than kept with the command: it
+            // depends on where the bot stands and on what it knows, and both change
+            // between one call and the next.
+            if let standing = command(bots[index].squad) {
+                situation.priority = standing.threat
+                situation.orderedZone = Orders.zone(for: bots[index], under: standing.order, in: situation)
             }
 
             let chosen = Deliberation.choose(for: bots[index], in: situation)

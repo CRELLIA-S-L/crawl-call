@@ -580,33 +580,34 @@ This is not FR-BOT-167, which says what to do when a target turns out to be unre
 ### FR-BOT-120 — Nearby snake overrides the commander's priority
 
 ```yaml
-status: partial
+status: implemented
 verification: T
 derives_from: [FR-BOT-080]
 depends_on: [FR-CMD-030]
 refines: [FR-BOT-080]
 conflicts_with: []
 code: [Sources/CrawlCall/Bot/Deliberation.swift]
-tests: [Tests/CrawlCallTests/SquadStateTests.swift]
+tests: [Tests/CrawlCallTests/SquadStateTests.swift, Tests/CrawlCallTests/CommanderOrdersTests.swift]
 created: 2026-09-21
 ```
 
 When the snake's head is within the override distance of the bot configuration from a bot, the system **shall** rank the snake as that bot's top threat regardless of the commander's threat priority.
 
 **Rationale.** Concept §9.2: the commander sets the priority, the utility layer corrects it locally — a snake five metres away overrides any order.
-`partial` because there is no commander yet (FR-CMD-030): the snake within the override distance is ranked above everything the bot itself would fire at, which is what overriding the priority will mean once there is one (ADR-0060).
+It stood `partial` while there was no commander whose priority to override: the snake within the override distance was ranked above everything the bot itself would fire at, which is what overriding the priority meant with nobody giving one (ADR-0060).
+Closed on 2026-10-12 with FR-CMD-030, and the override is now the thing it was written to be: the priority ranks the kinds of target, and a snake inside the distance wins ahead of it, told to worry about the enemy or not.
 
 ### FR-BOT-130 — Discipline decides how far an order is kept
 
 ```yaml
-status: deferred
+status: implemented
 verification: T
 derives_from: [FR-BOT-090]
 depends_on: [FR-CMD-040]
 refines: []
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Bot/Deliberation.swift]
+tests: [Tests/CrawlCallTests/CommanderOrdersTests.swift]
 created: 2026-09-21
 ```
 
@@ -614,6 +615,7 @@ When a bot's local threat assessment contradicts the commander's current order, 
 
 **Rationale.** Concept §9.2: discipline determines how much a bot sticks to the order against the local situation.
 The formula is the simplest one that makes discipline 1.0 mean "always the order" and 0.0 mean "never".
+Built on 2026-10-12 (ADR-0079). The local term is the one the bot's own reading of the danger pays for — taking cover and running — and an order is in force where the squad's order named a cell this bot can reach: the order's term already carried the discipline, and what the change adds is the other half of the same scale on the two actions that contradict it.
 
 ### FR-BOT-140 — Target choice has hysteresis
 

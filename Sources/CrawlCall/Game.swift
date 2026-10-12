@@ -5,7 +5,7 @@
 // or a key: the schemes produce intents (FR-VIEW-050), the logic consumes them, and
 // neither knows about the other.
 //
-// file implements: FR-CMD-010, FR-CMD-020, FR-SNAKE-270, FR-SNAKE-280, FR-SNAKE-285, FR-SNAKE-055, FR-SNAKE-056, FR-SNAKE-016, FR-VIEW-160, FR-BOT-060, FR-BOT-320, FR-BOT-050, FR-BOT-220, FR-BOT-230, FR-BOT-240, FR-BOT-260, FR-BOT-310, FR-VIEW-030, FR-VIEW-170, FR-VIEW-190, FR-SNAKE-010, FR-SNAKE-030, FR-SNAKE-290, FR-BOT-020, FR-BOT-150, FR-BOT-170, FR-BOT-380, FR-SCORE-130, FR-SCORE-070, FR-BOT-180, FR-SNAKE-060, FR-SNAKE-070, FR-SNAKE-090, FR-SCORE-140, FR-SCORE-150, INV-BOT-010, FR-VIEW-230, FR-TOOL-230, FR-MAP-150, FR-MAP-180, FR-MAP-170, FR-SNAKE-220, FR-BOT-400
+// file implements: FR-CMD-010, FR-CMD-020, FR-SNAKE-270, FR-SNAKE-280, FR-SNAKE-285, FR-SNAKE-055, FR-SNAKE-056, FR-SNAKE-016, FR-VIEW-160, FR-BOT-060, FR-BOT-320, FR-BOT-050, FR-BOT-220, FR-BOT-230, FR-BOT-240, FR-BOT-260, FR-BOT-310, FR-VIEW-030, FR-VIEW-170, FR-VIEW-190, FR-SNAKE-010, FR-SNAKE-030, FR-SNAKE-290, FR-BOT-020, FR-BOT-150, FR-BOT-170, FR-BOT-380, FR-SCORE-130, FR-SCORE-070, FR-BOT-180, FR-SNAKE-060, FR-SNAKE-070, FR-SNAKE-090, FR-SCORE-140, FR-SCORE-150, INV-BOT-010, FR-VIEW-230, FR-TOOL-230, FR-MAP-150, FR-MAP-180, FR-MAP-170, FR-SNAKE-220, FR-BOT-400, FR-CMD-030, FR-CMD-040, FR-CMD-050, FR-CMD-060
 import Foundation
 
 struct Game {
@@ -51,6 +51,10 @@ struct Game {
     /// What each squad knows of the snake, and what is on its way to raising it
     /// (FR-SCORE-130).
     private(set) var stealth = Stealth()
+    /// What each squad's commander last told it to worry about and to do (FR-CMD-030,
+    /// FR-CMD-040). Empty until an answer comes back, and a squad with nothing here
+    /// deliberates as it did before there were commanders.
+    private(set) var commands = SquadCommands()
     /// Seconds of the match played: when a sighting was made (ADR-0032).
     private(set) var elapsed: Double = .zero
     /// When the squads last passed on what they had seen (FR-BOT-310).
@@ -396,8 +400,10 @@ struct Game {
             for id in served { interrupted[id] = nil }
             let deciding = clock.now
             let known = stealth
+            let standing = commands
             let volley = Execution.deliberate(&bots, slots: holders, world: world, now: elapsed, interrupted: served,
-                                              awareness: { known.of($0) })
+                                              awareness: { known.of($0) },
+                                              command: { standing.of($0) })
             report.deliberationTime += clock.now - deciding
             report.deliberations += holders.count
             rounds += volley.rounds
@@ -442,11 +448,20 @@ struct Game {
     private mutating func callCommanders() {
         guard let desk else { return }
         for (squad, answer) in desk.take() {
-            if case .failure(let why) = answer {
+            switch answer {
+            case .failure(let why):
+                // A call that came back with nothing leaves the squad under the order
+                // it already had (CON-CMD-020): a missed cycle, not a squad without a
+                // commander.
                 commanderFailures.append((squad, why))
                 commanderMisses += 1
-            } else {
+            case .success(let decision):
                 commanderAnswers += 1
+                // Applied at a frame boundary and nowhere else: this is the only place
+                // a model's answer reaches the match (FR-CMD-030, FR-CMD-040,
+                // FR-CMD-050, FR-CMD-060).
+                commands.apply(decision, to: squad, among: &bots,
+                               configuration: world.configurations.bot)
             }
         }
         let now = elapsed
