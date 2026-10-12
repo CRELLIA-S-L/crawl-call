@@ -271,6 +271,9 @@ struct BotConfiguration: Decodable, Equatable {
         /// A position within the grouping distance of a squadmate, while the squad is
         /// alarmed (FR-BOT-190).
         let together: Double
+        /// How much a position gains for lying near the part of the arena the squad's
+        /// commander pointed at (FR-BOT-116).
+        let ordered: Double
     }
     let utilityTermWeights: UtilityTermWeights
     /// How tall a bot's figure is drawn, in metres, at its tallest (FR-VIEW-070).
@@ -334,7 +337,7 @@ struct BotConfiguration: Decodable, Equatable {
         "utilityTermWeights": .object([
             "attack": .value, "threat": .value, "wounded": .value,
             "obedience": .value, "mercy": .value, "empty": .value,
-            "height": .value, "snakePath": .value, "together": .value,
+            "height": .value, "snakePath": .value, "together": .value, "ordered": .value,
         ]),
         "figureHeight": .value,
         "eyeHeight": .value,

@@ -13,7 +13,7 @@
 // configuration (IF-BOT-010), as is how much an unhurt bot fears the snake
 // (FR-BOT-210). What shapes each term — a share, a whole — is in `Utility`.
 //
-// file implements: FR-BOT-167, FR-BOT-080, FR-BOT-090, FR-BOT-110, FR-BOT-115, FR-BOT-118, FR-BOT-119, FR-BOT-360, FR-BOT-370, FR-BOT-120, FR-BOT-180, FR-BOT-190, FR-BOT-200, FR-BOT-210, FR-MAP-150, FR-BOT-220, FR-BOT-060, FR-BOT-140, FR-BOT-330, FR-BOT-410, FR-BOT-420, FR-BOT-425, FR-BOT-130, FR-CMD-030
+// file implements: FR-BOT-167, FR-BOT-116, FR-BOT-080, FR-BOT-090, FR-BOT-110, FR-BOT-115, FR-BOT-118, FR-BOT-119, FR-BOT-360, FR-BOT-370, FR-BOT-120, FR-BOT-180, FR-BOT-190, FR-BOT-200, FR-BOT-210, FR-MAP-150, FR-BOT-220, FR-BOT-060, FR-BOT-140, FR-BOT-330, FR-BOT-410, FR-BOT-420, FR-BOT-425, FR-BOT-130, FR-CMD-030
 import Foundation
 
 enum Deliberation {
@@ -39,6 +39,15 @@ enum Deliberation {
         var enemiesInView: [(id: Int, point: SIMD3<Double>)] = []
         var allies: [Bot] = []
         var orderedZone: NavigationGraph.Node?
+        /// The middle of the part of the arena the squad's commander pointed at
+        /// (FR-BOT-116), or nil where no commander has named one. A point and not a
+        /// word: which quarter of the arena the word means is decided where the words
+        /// are, and the deliberation is given the place itself.
+        var orderedPart: SIMD3<Double>?
+        /// How far apart the arena's two furthest corners are: what nearness to the
+        /// ordered part is measured against, so that the term runs from one at the
+        /// place itself to nothing at the other end of the island.
+        var arenaSpan: Double = .zero
         /// What the squad's commander told it to worry about (FR-CMD-030), or nil where
         /// no commander has spoken: a bot then ranks threats as it did before there
         /// were commanders.
@@ -392,9 +401,10 @@ enum Deliberation {
     /// What a position is worth: one, raised by its height above the snake's head up to
     /// a floor (FR-BOT-110), by the length of the snake's shortest path to it up to the
     /// bot's detection range (FR-BOT-115) — a cell the snake cannot reach at all being as
-    /// far as a path can count — and, while the bot's squad is alarmed, by lying within
-    /// the grouping distance of a squadmate (FR-BOT-190). One where the bot knows no
-    /// snake and its squad is not alarmed.
+    /// far as a path can count — by lying near the part of the arena the squad's
+    /// commander pointed at (FR-BOT-116), and, while the bot's squad is alarmed, by lying
+    /// within the grouping distance of a squadmate (FR-BOT-190). One where the bot knows
+    /// no snake, stands under no order and its squad is not alarmed.
     ///
     /// It decides where a bot hides or runs to, not how much it wants to: multiplied into
     /// the wish itself, it made hiding and running up to three times what firing is
@@ -408,15 +418,27 @@ enum Deliberation {
                 && Perception.metres(ally.position, centre(of: node, in: situation))
                     <= situation.configuration.groupingDistance
         } ? term.together : .zero
+        // Where the commander pointed (FR-BOT-116): a whole at the place itself, nothing
+        // at the far end of the arena, and the slope between is what makes every step
+        // towards it worth more than a step away. Measured against the arena's own span
+        // so that the same order means the same thing on any map.
+        let ordered: Double
+        if let part = situation.orderedPart, situation.arenaSpan > .zero {
+            ordered = term.ordered * nearness(Perception.metres(centre(of: node, in: situation), part),
+                                              within: situation.arenaSpan)
+        } else {
+            ordered = .zero
+        }
         guard let head = situation.snakeHead,
               let range = situation.configuration.archetypes[bot.archetype.rawValue]?.detectionRange,
-              range > .zero else { return Fraction.whole + together }
+              range > .zero else { return Fraction.whole + together + ordered }
         let floor = situation.plan.floorHeight
         let above = floor > .zero ? (centre(of: node, in: situation).y - head.y) / floor : .zero
         let path = situation.fromHead[node].map {
             Double($0) / Double(MapGrid.stepsPerNeighbour) * situation.cellSize / range
         } ?? Fraction.whole
-        return Fraction.whole + term.height * clamped(above) + term.snakePath * clamped(path) + together
+        return Fraction.whole + term.height * clamped(above) + term.snakePath * clamped(path)
+            + together + ordered
     }
 
     /// Between nothing and one.

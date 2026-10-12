@@ -557,6 +557,28 @@ When scoring a position, the system **shall** raise the score with the length of
 **Rationale.** Concept §13 stage 2: bots retreat to floors the snake takes long to reach — a different thing from being above it, since a balcony over the snake may be one ramp away.
 How the path is counted, from where the bot last saw the snake, is ADR-0058.
 
+### FR-BOT-116 — An order's part of the arena raises what a position is worth
+
+```yaml
+status: implemented
+verification: T
+derives_from: [FR-CMD-040]
+depends_on: [FR-BOT-080]
+refines: []
+conflicts_with: []
+code: [Sources/CrawlCall/Bot/Deliberation.swift]
+tests: [Tests/CrawlCallTests/DeliberationTests.swift]
+created: 2026-10-12
+```
+
+When scoring a position for a bot whose squad is under an order naming a part of the arena, the system **shall** raise the score the nearer the position lies to that part.
+
+**Rationale.** The maintainer's rule of 2026-10-12: a commander is a strategist and says what matters and where, and the bots work out the tactics — who goes round from where, how to cover the enemy, where to look for cover.
+This is the whole mechanism that rule needs. An order stops naming a cell for each bot (ADR-0079) and becomes a fourth term beside the height a position stands at (FR-BOT-110), its distance along the snake's path (FR-BOT-115) and its nearness to a squadmate (FR-BOT-190), so cover is still chosen by what is hidden, flight by what is far and the firing position by what it can see — and every one of them leans towards where the commander pointed.
+"The nearer the position lies to that part" and not "a position in that part", because an order has to move a squad that is nowhere near it: a step towards the named quarter has to be worth more than a step away from it, from anywhere in the arena.
+Written beside FR-BOT-110 and FR-BOT-115 because it is the same kind of term and belongs with them; the word the order carries and how it reaches the deliberation are FR-CMD-040's.
+Built the same day: the deliberation is given the place itself rather than the word for it, and the term runs from a whole at that place to nothing at the arena's far corner, measured against the arena's own span so the same order means the same thing on any map.
+
 ### FR-BOT-118 — A bot flees to somewhere it can get to
 
 ```yaml

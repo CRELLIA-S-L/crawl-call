@@ -235,7 +235,8 @@
     "empty": 1.2,
     "height": 1.0,
     "snakePath": 1.0,
-    "together": 1.0
+    "together": 1.0,
+    "ordered": 1.0
   },
   "figureHeight": 1.12,
   "eyeHeight": 0.875,

@@ -4,7 +4,7 @@
 // The arena is built here rather than loaded, so that what is in the way, where the
 // cover is and how far the snake stands are all known quantities.
 //
-// file verifies: FR-BOT-080, FR-BOT-090, FR-BOT-118, FR-BOT-119, FR-BOT-200, FR-BOT-210, IF-BOT-010, FR-BOT-220
+// file verifies: FR-BOT-080, FR-BOT-090, FR-BOT-116, FR-BOT-118, FR-BOT-119, FR-BOT-200, FR-BOT-210, IF-BOT-010, FR-BOT-220
 import XCTest
 @testable import CrawlCall
 
@@ -184,6 +184,83 @@ final class DeliberationTests: XCTestCase {
         let handy = try XCTUnwrap(utility(of: isCover, for: bot, in: near))
         let distant = try XCTUnwrap(utility(of: isCover, for: bot, in: far))
         XCTAssertGreaterThan(handy, distant)
+    }
+
+    // MARK: where the commander pointed (FR-BOT-116)
+
+    func testAPositionNearerWhereTheCommanderPointedIsWorthMore() throws {
+        // The term is a slope and not a border: a cell halfway to the named part is
+        // worth more than one at the far end, so a squad anywhere in the arena has a
+        // reason to take a step towards it.
+        var situation = try arena(String(repeating: ".", count: 40))
+        situation.arenaSpan = 20
+        situation.orderedPart = at(39, 0)
+        let soldier = try bot(.assault, at: 1, 0)
+
+        let near = Deliberation.worth(of: NavigationGraph.Node(floor: 0, x: 35, z: 0), for: soldier, in: situation)
+        let middling = Deliberation.worth(of: NavigationGraph.Node(floor: 0, x: 20, z: 0), for: soldier, in: situation)
+        let far = Deliberation.worth(of: NavigationGraph.Node(floor: 0, x: 1, z: 0), for: soldier, in: situation)
+
+        XCTAssertGreaterThan(near, middling)
+        XCTAssertGreaterThan(middling, far)
+    }
+
+    func testWithNoOrderStandingEveryPositionIsWorthWhatItWasBefore() throws {
+        // The term is absent and not zero-valued: a squad under no commander scores
+        // exactly as it did before there were commanders.
+        var situation = try arena(String(repeating: ".", count: 40))
+        situation.arenaSpan = 20
+        let soldier = try bot(.assault, at: 1, 0)
+        let here = NavigationGraph.Node(floor: 0, x: 35, z: 0)
+        let plain = Deliberation.worth(of: here, for: soldier, in: situation)
+
+        situation.orderedPart = at(39, 0)
+        XCTAssertGreaterThan(Deliberation.worth(of: here, for: soldier, in: situation), plain,
+                             "an order changed nothing about what a position is worth")
+    }
+
+    func testTheOrderedTermIsMeasuredAgainstTheArenaAndNotTheCell() throws {
+        // The same two cells and the same order on an arena twice as wide: the nearer
+        // one is still worth more, and nothing depends on the grid.
+        var narrow = try arena(String(repeating: ".", count: 40))
+        narrow.arenaSpan = 20
+        narrow.orderedPart = at(39, 0)
+        var wide = try arena(String(repeating: ".", count: 40))
+        wide.arenaSpan = 40
+        wide.orderedPart = at(39, 0)
+        let soldier = try bot(.assault, at: 1, 0)
+        let near = NavigationGraph.Node(floor: 0, x: 30, z: 0)
+        let far = NavigationGraph.Node(floor: 0, x: 5, z: 0)
+
+        XCTAssertGreaterThan(Deliberation.worth(of: near, for: soldier, in: narrow),
+                             Deliberation.worth(of: far, for: soldier, in: narrow))
+        XCTAssertGreaterThan(Deliberation.worth(of: near, for: soldier, in: wide),
+                             Deliberation.worth(of: far, for: soldier, in: wide))
+        // The wider arena spreads the same slope over more ground, so one cell's step
+        // towards the place is worth less of it.
+        let steepness = Deliberation.worth(of: near, for: soldier, in: narrow)
+            - Deliberation.worth(of: far, for: soldier, in: narrow)
+        let gentler = Deliberation.worth(of: near, for: soldier, in: wide)
+            - Deliberation.worth(of: far, for: soldier, in: wide)
+        XCTAssertGreaterThan(steepness, gentler)
+    }
+
+    func testCoverIsStillChosenByWhatIsHiddenAndNotOnlyByWhereTheOrderPoints() throws {
+        // The point of the whole design: the order leans on the choice, the bot still
+        // makes it. The only hidden cell within reach lies away from where the
+        // commander pointed, and it is still what the bot is given.
+        var situation = try arena("..........",
+                                  ".#........")
+        situation.snake = [at(9, 0)]
+        situation.inView = situation.snake  // seen now, as these tests pose it (FR-BOT-220)
+        situation.arenaSpan = 20
+        situation.orderedPart = at(9, 0)
+        let exposed = try bot(.assault, at: 1, 0)
+
+        let found = try XCTUnwrap(Deliberation.cover(for: exposed, from: situation.snake,
+                                                    enemies: situation.enemies, in: situation))
+        XCTAssertLessThan(Deliberation.centre(of: found.node, in: situation).x, at(5, 0).x,
+                          "the order pulled the bot out of the only cover it had")
     }
 
     // MARK: a bot in cover stays in it (FR-BOT-119)
