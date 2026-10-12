@@ -275,3 +275,19 @@ What remains is what a decision inside the repository cannot close.
 - **Why it could not be seen before.** Until FR-BOT-119 the quiet motives were unreachable in play: something always scored above zero, so no bot ever advanced or explored in a match. This is not new behaviour, it is behaviour that was never reached.
 - **Where it belongs.** The state it happens in should not last: one squad is gone, and the match goes on because FR-SCORE-150 ends it only when no bot is left at all. And the alternation is the shape ADR-0059 chose — a quiet motive consulted only where nothing scores flips as soon as what scores flickers around zero. Scoring the two beside the rest is the answer that was weighed and left out on 2026-10-12, and this entry is the case that would reopen it.
 - **Still needed:** the slot-by-slot reading, and then the maintainer's word on whether the pacing is worth the reversal of ADR-0059 — or whether it is FR-SCORE-150 that should have ended the match before anybody could pace.
+
+### Q-630 — The roles the model hands out are free text, and no utility can be keyed to them
+
+- **Found:** on 2026-10-12, running the bench over the game's own schema to pay FR-TOOL-170's debt for the new state, and reading what came back.
+- **What is wrong.** FR-CMD-050 obliges the game to assign each bot the role the response names — "holding a stair, covering, distracting" — and its rationale says a role is a bias in that bot's utility, the mechanism being tuning. IF-CMD-020 asks for "a role or none per bot" and names no vocabulary, so the field is free text, and the model treats it as free text.
+- **What nine calls returned**, under the shipping instructions and the game's own schema, three scenarios, three calls each:
+
+  | scenario | the roles named |
+  |---|---|
+  | game-calm | leader, scout, blocker, distractor; leader, spy, shield, runner; leader, scout, builder, shield |
+  | game-pressed | hold, cover the door; hold the stair, cover the door; hold, cover |
+  | game-last-stand | none, flank; none, none; alert, none |
+
+  Fifteen distinct words and phrases in nine calls, of which two — "hold the stair" and "cover the door" — are the ones the prompt itself had just shown the model under `jobs you gave:`. Left to itself it invents: `builder`, `spy`, `runner`, `shield`, `alert`, and `flank`, which is an order and not a role.
+- **Therefore.** A utility bias keyed on this text would fire for a minority of calls and would be silently wrong for the rest: a bot named `builder` or `spy` would be read as having no role, and a bot named `flank` would be read as having a role when the model meant an order. The role is therefore left doing what it does today — written on the bot, and read back into the next call's state, which is the one use it serves honestly.
+- **Still needed:** the maintainer's choice between two ways. Close the vocabulary in IF-CMD-020 — a role from a named set, as the threat and the order already are, which costs nothing in tokens and makes the field tunable; or leave it open and accept that a role is something the commander says to itself between calls and never a mechanism. The first is a change to IF-CMD-020 and FR-CMD-050 and voids the prompt measurement again (FR-TOOL-170); the second is a sentence in FR-CMD-050's rationale and nothing else.

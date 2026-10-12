@@ -149,7 +149,7 @@ When a commander's response arrives, the system **shall** assign each bot of the
 **Rationale.** Concept §9.1: who holds the stair, who covers, who distracts.
 A role is a bias in that bot's utility, the mechanism being tuning.
 Built on 2026-10-12 (ADR-0079). A soldier the answer passes over keeps the role it had, which is IF-CMD-020's refusal to repair read on this side of the crossing: a role cleared because the model forgot to mention it is an order nobody gave.
-What a role does to a bot's utility is still nothing: the bias is tuning and no interface carries it yet.
+What a role does to a bot's utility is still nothing, and on 2026-10-12 that stopped being a gap waiting to be filled: nine calls under the game's own schema named fifteen different roles, inventing `builder`, `spy`, `shield` and `alert` and once answering `flank`, which is an order. A bias keyed on free text would fire for a minority of calls and be silently wrong for the rest, so the role is left doing the one thing it does honestly — written on the bot, and read back into the next call's state. Q-630 holds the choice: a closed vocabulary in IF-CMD-020, or a role that is something a commander says to itself.
 
 ### FR-CMD-060 — The commander sets personality weights
 

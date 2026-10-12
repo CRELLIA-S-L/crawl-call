@@ -46,6 +46,15 @@ A quiet seven seconds still produces the five lines the bench measured, so the c
 
 The words are the measured ones and are checked against the same blocked list the rest of the state is: `gone missing`, `took a hit`, `ran out`, `the snake came near`, `saw the snake take one of ours`. The last of those began as "somebody" and was changed, because the project's own test reads the word `body` inside it — a crude check, and cheaper to satisfy than to argue with.
 
-The state is bigger, which is the cheap direction: ADR-0078 measured the frames going to generated tokens, and these are input. The bench has not been re-run over the new state, and until it is, the prompt measurements cover a configuration the game no longer sends (FR-TOOL-170) — the one thing this change owes.
+The state is bigger, which is the cheap direction: ADR-0078 measured the frames going to generated tokens, and these are input.
+
+**Measured the same day, which is what FR-TOOL-170 asks of a changed vocabulary.** The bench's two game states were rewritten in the words `SquadHappenings` renders and run under the shipping instructions on the Mac, with the control in both runs:
+
+| schema | calls | blocked | input tokens | output tokens | median latency |
+|---|---|---|---|---|---|
+| the bench's own | 12 | 0 | 624–685 | 43–53 | 1710 ms |
+| the game's (IF-CMD-020) | 9 | 0 | 762–823 | 159–283 | 4399 ms |
+
+The control `v4-provocative` was blocked in 12 of 12 and 9 of 9, so neither run is void. The events cost about six input tokens in the bench's smallest state and about fifty in the game's fullest, against a budget of a thousand, and nothing in the new vocabulary was blocked once.
 
 What the commander is told remains what its squad met. Nothing here reads the arena, so a commander still cannot be told what its soldiers did not see.
