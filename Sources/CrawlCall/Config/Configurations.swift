@@ -321,6 +321,10 @@ struct BotConfiguration: Decodable, Equatable {
         /// How much a position gains for lying near the part of the arena the squad's
         /// commander pointed at (FR-BOT-116).
         let ordered: Double
+        /// Throwing a grenade, against `attack` for firing (FR-BOT-470). Below
+        /// `attack`, or a bot would throw its two grenades in the first seconds of
+        /// every firefight: at half of it a bot throws once its magazine is half gone.
+        let blast: Double
     }
     let utilityTermWeights: UtilityTermWeights
     /// How tall a bot's figure is drawn, in metres, at its tallest (FR-VIEW-070).
@@ -398,6 +402,7 @@ struct BotConfiguration: Decodable, Equatable {
             "attack": .value, "threat": .value, "wounded": .value,
             "obedience": .value, "mercy": .value, "empty": .value,
             "height": .value, "snakePath": .value, "together": .value, "ordered": .value,
+            "blast": .value,
         ]),
         "figureHeight": .value,
         "eyeHeight": .value,

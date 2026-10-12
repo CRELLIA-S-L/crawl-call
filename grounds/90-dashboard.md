@@ -149,6 +149,7 @@ requirements link to them, plus how many files their `code` field names.
 | FR-MAP-270 | 1 | 10 | 11 |
 | FR-TOOL-230 | 3 | 8 | 11 |
 | FR-BOT-010 | 9 | 1 | 10 |
+| FR-BOT-470 | 3 | 7 | 10 |
 | FR-SNAKE-110 | 10 | 0 | 10 |
 | FR-TOOL-020 | 4 | 6 | 10 |
 | FR-TOOL-200 | 0 | 10 | 10 |
@@ -167,6 +168,7 @@ requirements link to them, plus how many files their `code` field names.
 | FR-BOT-200 | 5 | 2 | 7 |
 | FR-BOT-320 | 2 | 5 | 7 |
 | FR-BOT-450 | 1 | 6 | 7 |
+| FR-BOT-480 | 5 | 2 | 7 |
 | FR-MAP-100 | 3 | 4 | 7 |
 | FR-MAP-220 | 2 | 5 | 7 |
 | FR-SNAKE-270 | 3 | 4 | 7 |
@@ -202,7 +204,6 @@ requirements link to them, plus how many files their `code` field names.
 | FR-BOT-290 | 1 | 4 | 5 |
 | FR-BOT-310 | 0 | 5 | 5 |
 | FR-BOT-330 | 2 | 3 | 5 |
-| FR-BOT-480 | 5 | 0 | 5 |
 | FR-MAP-130 | 1 | 4 | 5 |
 | FR-MAP-180 | 1 | 4 | 5 |
 | FR-MAP-210 | 1 | 4 | 5 |
@@ -242,7 +243,6 @@ requirements link to them, plus how many files their `code` field names.
 | FR-BOT-380 | 0 | 3 | 3 |
 | FR-BOT-405 | 0 | 3 | 3 |
 | FR-BOT-425 | 0 | 3 | 3 |
-| FR-BOT-470 | 3 | 0 | 3 |
 | FR-GREENHOLM-050 | 0 | 3 | 3 |
 | FR-MAP-160 | 0 | 3 | 3 |
 | FR-TOOL-210 | 2 | 1 | 3 |
@@ -258,6 +258,7 @@ requirements link to them, plus how many files their `code` field names.
 | FR-BOT-120 | 1 | 1 | 2 |
 | FR-BOT-210 | 0 | 2 | 2 |
 | FR-BOT-460 | 0 | 2 | 2 |
+| FR-BOT-490 | 0 | 2 | 2 |
 | FR-BOT-510 | 2 | 0 | 2 |
 | FR-MAP-190 | 0 | 2 | 2 |
 | FR-SCORE-140 | 1 | 1 | 2 |
@@ -282,6 +283,7 @@ requirements link to them, plus how many files their `code` field names.
 | FR-BOT-300 | 0 | 1 | 1 |
 | FR-BOT-350 | 0 | 1 | 1 |
 | FR-BOT-410 | 0 | 1 | 1 |
+| FR-BOT-500 | 0 | 1 | 1 |
 | FR-MAP-050 | 1 | 0 | 1 |
 | FR-MAP-060 | 1 | 0 | 1 |
 | FR-SNAKE-080 | 1 | 0 | 1 |
@@ -303,8 +305,6 @@ requirements link to them, plus how many files their `code` field names.
 | CON-PUB-110 | 0 | 0 | 0 |
 | CON-PUB-120 | 0 | 0 | 0 |
 | FR-BOT-105 | 0 | 0 | 0 |
-| FR-BOT-490 | 0 | 0 | 0 |
-| FR-BOT-500 | 0 | 0 | 0 |
 | FR-BOT-520 | 0 | 0 | 0 |
 | FR-MAP-040 | 0 | 0 | 0 |
 | FR-MAP-110 | 0 | 0 | 0 |

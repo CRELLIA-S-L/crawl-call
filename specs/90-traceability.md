@@ -8,9 +8,9 @@ Total requirements: 281.
 | Status | Requirements |
 |---|---|
 | `draft` | 4 |
-| `deferred` | 91 |
+| `deferred` | 87 |
 | `partial` | 10 |
-| `implemented` | 168 |
+| `implemented` | 172 |
 | `superseded` | 6 |
 | `withdrawn` | 2 |
 
@@ -87,10 +87,10 @@ Total requirements: 281.
 | **FR-BOT-440** What a bot carries | `implemented` | T | `Sources/CrawlCall/Bot/Arms.swift`<br>`Sources/CrawlCall/Bot/Bot.swift`<br>`Sources/CrawlCall/Config/Configurations.swift`<br>`config/bot.json` | `Tests/CrawlCallTests/ArmsTests.swift` |
 | **FR-BOT-450** A shot's numbers are the weapon's | `implemented` | T | `Sources/CrawlCall/Bot/Arms.swift`<br>`Sources/CrawlCall/Bot/Execution.swift`<br>`Sources/CrawlCall/Bot/Deliberation.swift`<br>`Sources/CrawlCall/Config/Utility.swift`<br>`Sources/CrawlCall/Config/Configurations.swift`<br>`config/bot.json` | `Tests/CrawlCallTests/ArmsTests.swift`<br>`Tests/CrawlCallTests/ExecutionTests.swift`<br>`Tests/CrawlCallTests/InterruptTests.swift` |
 | **FR-BOT-460** Each weapon that reaches is an action of its own | `implemented` | T | `Sources/CrawlCall/Bot/Deliberation.swift`<br>`Sources/CrawlCall/Bot/Action.swift` | `Tests/CrawlCallTests/ArmsTests.swift` |
-| **FR-BOT-470** A thrown grenade flies no further than its throw and waits out its fuse | `deferred` | T | — | — |
-| **FR-BOT-480** An explosion strikes every body within its blast | `deferred` | T | — | — |
-| **FR-BOT-490** An explosion that covers more of the snake hurts it more | `deferred` | T | — | — |
-| **FR-BOT-500** A bot does not throw where it would catch a squadmate | `deferred` | T | — | — |
+| **FR-BOT-470** A thrown grenade flies no further than its throw and waits out its fuse | `implemented` | T | `Sources/CrawlCall/Bot/Blast.swift`<br>`Sources/CrawlCall/Bot/Execution.swift`<br>`Sources/CrawlCall/Bot/Deliberation.swift`<br>`Sources/CrawlCall/Bot/Arms.swift`<br>`Sources/CrawlCall/Bot/Action.swift`<br>`Sources/CrawlCall/Game.swift`<br>`config/bot.json` | `Tests/CrawlCallTests/GrenadeTests.swift` |
+| **FR-BOT-480** An explosion strikes every body within its blast | `implemented` | T | `Sources/CrawlCall/Bot/Blast.swift`<br>`Sources/CrawlCall/Game.swift` | `Tests/CrawlCallTests/GrenadeTests.swift` |
+| **FR-BOT-490** An explosion that covers more of the snake hurts it more | `implemented` | T | `Sources/CrawlCall/Bot/Blast.swift`<br>`Sources/CrawlCall/Game.swift` | `Tests/CrawlCallTests/GrenadeTests.swift` |
+| **FR-BOT-500** A bot does not throw where it would catch a squadmate | `implemented` | T | `Sources/CrawlCall/Bot/Deliberation.swift` | `Tests/CrawlCallTests/GrenadeTests.swift` |
 | **FR-BOT-510** A knife strikes what is within its reach | `deferred` | T | — | — |
 | **FR-BOT-520** A thrown knife leaves the bot | `deferred` | T | — | — |
 | **FR-CMD-010** One commander per squad | `implemented` | T | `Sources/CrawlCall/Commander/CommanderDesk.swift`<br>`Sources/CrawlCall/Game.swift`<br>`Sources/CrawlCall/CrawlCallApp.swift` | `Tests/CrawlCallTests/CommanderCallTests.swift` |
@@ -468,7 +468,7 @@ Verified by means other than testing — or the check has not been set up yet.
 
 ## Code files outside the specification
 
-No requirement references them: 4 of 112.
+No requirement references them: 4 of 113.
 
 - `scripts/arch-edges-selftest.sh`
 - `scripts/prompt-bench-selftest.sh`

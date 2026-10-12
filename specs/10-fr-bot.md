@@ -304,14 +304,14 @@ This widens the floor FR-BOT-200 sets: the set a test can enumerate gains an ent
 ### FR-BOT-470 — A thrown grenade flies no further than its throw and waits out its fuse
 
 ```yaml
-status: deferred
+status: implemented
 verification: T
 derives_from: [FR-BOT-440]
 depends_on: [IF-BOT-010]
 refines: []
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Bot/Blast.swift, Sources/CrawlCall/Bot/Execution.swift, Sources/CrawlCall/Bot/Deliberation.swift, Sources/CrawlCall/Bot/Arms.swift, Sources/CrawlCall/Bot/Action.swift, Sources/CrawlCall/Game.swift, config/bot.json]
+tests: [Tests/CrawlCallTests/GrenadeTests.swift]
 created: 2026-10-11
 ```
 
@@ -324,14 +324,14 @@ The path it takes is not fixed here: that a thrown thing rises and falls is draw
 ### FR-BOT-480 — An explosion strikes every body within its blast
 
 ```yaml
-status: deferred
+status: implemented
 verification: T
 derives_from: [FR-BOT-470]
 depends_on: [FR-BOT-470, IF-BOT-010]
 refines: []
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Bot/Blast.swift, Sources/CrawlCall/Game.swift]
+tests: [Tests/CrawlCallTests/GrenadeTests.swift]
 created: 2026-10-11
 ```
 
@@ -344,14 +344,14 @@ What the blast does to a destructible module is FR-BOT-070's; what it does to a 
 ### FR-BOT-490 — An explosion that covers more of the snake hurts it more
 
 ```yaml
-status: deferred
+status: implemented
 verification: T
 derives_from: [FR-BOT-480]
 depends_on: [FR-BOT-480, FR-SNAKE-070, IF-BOT-010]
 refines: [FR-BOT-480]
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Bot/Blast.swift, Sources/CrawlCall/Game.swift]
+tests: [Tests/CrawlCallTests/GrenadeTests.swift]
 created: 2026-10-11
 ```
 
@@ -366,14 +366,14 @@ The share is tuning and lives in the bot configuration, where the grenade's othe
 ### FR-BOT-500 — A bot does not throw where it would catch a squadmate
 
 ```yaml
-status: deferred
+status: implemented
 verification: T
 derives_from: [FR-BOT-480]
 depends_on: [FR-BOT-480, FR-BOT-220]
 refines: []
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Bot/Deliberation.swift]
+tests: [Tests/CrawlCallTests/GrenadeTests.swift]
 created: 2026-10-11
 ```
 

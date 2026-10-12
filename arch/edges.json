@@ -2,12 +2,12 @@
   {
     "from": "Sources/CrawlCall/Bot/Action.swift",
     "to": "Sources/CrawlCall/Map/NavigationGraph.swift",
-    "via": "NavigationGraph:21 — one witness of 130 reference(s) from 11 file(s)"
+    "via": "NavigationGraph:24 — one witness of 131 reference(s) from 11 file(s)"
   },
   {
     "from": "Sources/CrawlCall/Bot/Arms.swift",
     "to": "Sources/CrawlCall/Config/Configurations.swift",
-    "via": "BotConfiguration:25 — one witness of 113 reference(s) from 11 file(s)"
+    "via": "BotConfiguration:25 — one witness of 117 reference(s) from 12 file(s)"
   },
   {
     "from": "Sources/CrawlCall/CrawlCallApp.swift",
@@ -47,17 +47,17 @@
   {
     "from": "Sources/CrawlCall/Game.swift",
     "to": "Sources/CrawlCall/Bot/Bot.swift",
-    "via": "Bot:27 — one witness of 25 reference(s) from 1 file(s)"
+    "via": "Bot:27 — one witness of 27 reference(s) from 1 file(s)"
   },
   {
     "from": "Sources/CrawlCall/Game.swift",
     "to": "Sources/CrawlCall/Config/Motion.swift",
-    "via": "Motion:119 — one witness of 49 reference(s) from 4 file(s)"
+    "via": "Motion:121 — one witness of 49 reference(s) from 4 file(s)"
   },
   {
     "from": "Sources/CrawlCall/Game.swift",
     "to": "Sources/CrawlCall/Input/Intent.swift",
-    "via": "Intent:124 — one witness of 2 reference(s) from 2 file(s)"
+    "via": "Intent:126 — one witness of 2 reference(s) from 2 file(s)"
   },
   {
     "from": "Sources/CrawlCall/Game.swift",

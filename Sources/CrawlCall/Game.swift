@@ -5,7 +5,7 @@
 // or a key: the schemes produce intents (FR-VIEW-050), the logic consumes them, and
 // neither knows about the other.
 //
-// file implements: IF-CMD-010, FR-BOT-167, FR-CMD-010, FR-CMD-020, FR-SNAKE-270, FR-SNAKE-280, FR-SNAKE-285, FR-SNAKE-055, FR-SNAKE-056, FR-SNAKE-016, FR-VIEW-160, FR-BOT-060, FR-BOT-320, FR-BOT-050, FR-BOT-220, FR-BOT-230, FR-BOT-240, FR-BOT-260, FR-BOT-310, FR-VIEW-030, FR-VIEW-170, FR-VIEW-190, FR-SNAKE-010, FR-SNAKE-030, FR-SNAKE-290, FR-BOT-020, FR-BOT-150, FR-BOT-170, FR-BOT-380, FR-SCORE-130, FR-SCORE-070, FR-BOT-180, FR-SNAKE-060, FR-SNAKE-070, FR-SNAKE-090, FR-SCORE-140, FR-SCORE-150, INV-BOT-010, FR-VIEW-230, FR-TOOL-230, FR-MAP-150, FR-MAP-180, FR-MAP-170, FR-SNAKE-220, FR-BOT-400, FR-CMD-030, FR-CMD-040, FR-CMD-120, FR-CMD-125, FR-CMD-130
+// file implements: IF-CMD-010, FR-BOT-470, FR-BOT-480, FR-BOT-490, FR-BOT-167, FR-CMD-010, FR-CMD-020, FR-SNAKE-270, FR-SNAKE-280, FR-SNAKE-285, FR-SNAKE-055, FR-SNAKE-056, FR-SNAKE-016, FR-VIEW-160, FR-BOT-060, FR-BOT-320, FR-BOT-050, FR-BOT-220, FR-BOT-230, FR-BOT-240, FR-BOT-260, FR-BOT-310, FR-VIEW-030, FR-VIEW-170, FR-VIEW-190, FR-SNAKE-010, FR-SNAKE-030, FR-SNAKE-290, FR-BOT-020, FR-BOT-150, FR-BOT-170, FR-BOT-380, FR-SCORE-130, FR-SCORE-070, FR-BOT-180, FR-SNAKE-060, FR-SNAKE-070, FR-SNAKE-090, FR-SCORE-140, FR-SCORE-150, INV-BOT-010, FR-VIEW-230, FR-TOOL-230, FR-MAP-150, FR-MAP-180, FR-MAP-170, FR-SNAKE-220, FR-BOT-400, FR-CMD-030, FR-CMD-040, FR-CMD-120, FR-CMD-125, FR-CMD-130
 import Foundation
 
 struct Game {
@@ -76,6 +76,8 @@ struct Game {
     private(set) var landedAt: Double?
     /// The rounds in flight (FR-BOT-060), drawn where they are (FR-VIEW-170).
     private(set) var rounds: [Round] = []
+    /// The grenades thrown and not yet gone off (FR-BOT-470).
+    private(set) var grenades: [Thrown] = []
 
     /// How the match ended, or nil while it is still being played.
     private(set) var outcome: Outcome?
@@ -378,9 +380,14 @@ struct Game {
         learn(snake: body)
         // The rounds already in flight go on, and strike what is in their way now: the
         // snake where it has moved to, the bots where they stood (FR-BOT-400, FR-BOT-405).
-        let struck = Flight.fly(&rounds, seconds: seconds, bots: &bots, snake: body, plan: world.plan,
+        var struck = Flight.fly(&rounds, seconds: seconds, bots: &bots, snake: body, plan: world.plan,
                                 configuration: world.configurations.bot,
                                 bodyRadius: world.configurations.tuning.bodyRadius)
+        // And every fuse burns down with them; the grenades whose fuses run out in this
+        // frame go off where they lie (FR-BOT-470, FR-BOT-480, FR-BOT-490).
+        let blast = Blast.burn(&grenades, seconds: seconds, bots: &bots, snake: body)
+        struck.damage += blast.damage
+        struck.hits += blast.hits
         if struck.damage > .zero {
             report.hits += struck.hits
             snake.take(damage: struck.damage, perSegment: world.configurations.snake.damagePerSegment)
@@ -417,6 +424,7 @@ struct Game {
             report.deliberationTime += clock.now - deciding
             report.deliberations += holders.count
             rounds += volley.rounds
+            grenades += volley.grenades
         }
         // Whatever is being eaten, or coiled round to be (FR-SNAKE-280), stays where it
         // is: it resists by shooting, not by walking out of the snake's mouth.

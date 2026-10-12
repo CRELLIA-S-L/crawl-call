@@ -10,7 +10,7 @@
 // slot is aimed through the slots it has to wait out. Until 2026-10-12 the period was
 // the cadence, because no requirement gave a weapon a rate of fire.
 //
-// file implements: FR-BOT-450, FR-BOT-167, FR-BOT-060, FR-BOT-110, FR-BOT-115, FR-BOT-170, FR-BOT-360, FR-BOT-370, FR-BOT-380, FR-BOT-180, FR-BOT-190, INV-BOT-020, INV-BOT-010, FR-BOT-165, FR-MAP-150, FR-BOT-270, FR-BOT-280, FR-BOT-290, FR-BOT-300, FR-BOT-220, FR-BOT-310, FR-BOT-320, FR-BOT-330, FR-BOT-340, FR-BOT-420, FR-BOT-425, FR-BOT-430, FR-CMD-030, FR-CMD-040
+// file implements: FR-BOT-450, FR-BOT-470, FR-BOT-167, FR-BOT-060, FR-BOT-110, FR-BOT-115, FR-BOT-170, FR-BOT-360, FR-BOT-370, FR-BOT-380, FR-BOT-180, FR-BOT-190, INV-BOT-020, INV-BOT-010, FR-BOT-165, FR-MAP-150, FR-BOT-270, FR-BOT-280, FR-BOT-290, FR-BOT-300, FR-BOT-220, FR-BOT-310, FR-BOT-320, FR-BOT-330, FR-BOT-340, FR-BOT-420, FR-BOT-425, FR-BOT-430, FR-CMD-030, FR-CMD-040
 import Foundation
 
 enum Execution {
@@ -18,6 +18,9 @@ enum Execution {
     /// on (FR-BOT-060).
     struct Volley: Equatable {
         var rounds: [Round] = []
+        /// The grenades thrown in it, to burn their fuses down from the next frame on
+        /// (FR-BOT-470).
+        var grenades: [Thrown] = []
     }
 
     /// One deliberation step: the bots holding a slot choose, and a bot whose choice
@@ -168,6 +171,38 @@ enum Execution {
                                      towards: aim, damage: firearm.numbers.damage) {
                     volley.rounds.append(round)
                 }
+            case .throwGrenade(let target):
+                // Thrown at what it sees, as a round is sent at what it sees
+                // (FR-BOT-060): the grenade lies where it was thrown and goes off when
+                // its fuse has run out (FR-BOT-470). Where it may be thrown at all was
+                // settled when the action was scored (FR-BOT-500).
+                let seen: Bool
+                let sighted: SIMD3<Double>
+                switch target {
+                case .snake(let point):
+                    sighted = point
+                    seen = situation.inView.contains(point)
+                case .bot(let enemy):
+                    guard let other = bots.firstIndex(where: { $0.id == enemy }), bots[other].isAlive else { continue }
+                    sighted = bots[other].eye
+                    seen = situation.enemiesInView.contains { $0.id == enemy }
+                }
+                guard let where_ = Deliberation.aim(at: target, from: bots[index], in: situation) else { continue }
+                // A throw is an act like a shot and costs the slot: a bot given one
+                // ahead of the queue does not get an extra grenade out of it
+                // (FR-BOT-170, ADR-0057).
+                guard seen, bots[index].arms.grenades.left > .zero,
+                      !interrupted.contains(id)
+                        || now - bots[index].lastShot >= world.configurations.bot.deliberationPeriod,
+                      Sight.isClear(from: bots[index].eye, to: sighted, through: world.plan) else { break }
+                bots[index].arms.grenades.left -= 1
+                bots[index].lastShot = now
+                volley.grenades.append(Thrown(thrower: bots[index].id, squad: bots[index].squad,
+                                              position: where_, numbers: bots[index].arms.grenades.numbers,
+                                              fuse: bots[index].arms.grenades.numbers.fuseTime))
+                bots[index].post = nil
+                bots[index].refuge = nil
+                bots[index].postTarget = nil
             case .reload:
                 // Behind the cover it fired from beside, where it has one: it goes into
                 // the hidden cell and reloads there (FR-BOT-425).
@@ -404,7 +439,7 @@ enum Execution {
              .advance(let node), .explore(let node): return node
         case .fire: return bot.post
         case .reload: return bot.post == nil ? nil : bot.refuge
-        case .heal, .none: return nil
+        case .throwGrenade, .heal, .none: return nil
         }
     }
 
@@ -413,7 +448,7 @@ enum Execution {
     static func travels(_ action: Action?) -> Bool {
         switch action {
         case .takeCover, .moveToOrderedZone, .flee, .advance, .explore: return true
-        case .fire, .reload, .heal, .none: return false
+        case .fire, .throwGrenade, .reload, .heal, .none: return false
         }
     }
 
@@ -533,8 +568,14 @@ enum Execution {
         for index in bots.indices where bots[index].id != held && bots[index].isAlive {
             let bot = bots[index]
             var wanted: Double?
-            if case .fire(let target, _) = bot.action {
-                switch target {
+            // What it is shooting at or throwing at is what it faces.
+            var aimedAt: Target?
+            switch bot.action {
+            case .fire(let target, _), .throwGrenade(let target): aimedAt = target
+            default: aimedAt = nil
+            }
+            if let aimedAt {
+                switch aimedAt {
                 case .snake(let point): wanted = Turning.angle(from: bot.position, to: point)
                 case .bot(let id): wanted = bot.knowledge.enemies[id].flatMap { Turning.angle(from: bot.position, to: $0.point) }
                 }

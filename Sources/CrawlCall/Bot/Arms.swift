@@ -9,7 +9,7 @@
 // carries; a weapon its archetype names and the catalogue does not know is a
 // configuration error there and then, the same as an archetype with no entry at all.
 //
-// file implements: FR-BOT-440, FR-BOT-450
+// file implements: FR-BOT-440, FR-BOT-450, FR-BOT-470
 import Foundation
 
 struct Arms: Equatable {
@@ -30,6 +30,9 @@ struct Arms: Equatable {
     struct Grenades: Equatable {
         let name: String
         let numbers: BotConfiguration.Grenade
+        /// How many it was given, which is what the share still in its pouch is
+        /// measured against, and how many are left.
+        let carried: Int
         var left: Int
     }
 
@@ -55,7 +58,8 @@ struct Arms: Equatable {
               let knife = weapons.knives[arms.knife] else { return nil }
         self.primary = Firearm(name: arms.primary, numbers: primary, rounds: primary.magazine)
         self.sidearm = Firearm(name: arms.sidearm, numbers: sidearm, rounds: sidearm.magazine)
-        self.grenades = Grenades(name: arms.grenade, numbers: grenade, left: arms.grenadesCarried)
+        self.grenades = Grenades(name: arms.grenade, numbers: grenade,
+                                 carried: arms.grenadesCarried, left: arms.grenadesCarried)
         self.knife = Knife(name: arms.knife, numbers: knife)
     }
 

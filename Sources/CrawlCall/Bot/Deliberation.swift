@@ -14,7 +14,7 @@
 // configuration (IF-BOT-010), as is how much an unhurt bot fears the snake
 // (FR-BOT-210). What shapes each term — a share, a whole — is in `Utility`.
 //
-// file implements: FR-BOT-167, FR-BOT-116, FR-BOT-460, FR-BOT-450, FR-BOT-080, FR-BOT-090, FR-BOT-110, FR-BOT-115, FR-BOT-118, FR-BOT-119, FR-BOT-360, FR-BOT-370, FR-BOT-120, FR-BOT-180, FR-BOT-190, FR-BOT-200, FR-BOT-210, FR-MAP-150, FR-BOT-220, FR-BOT-060, FR-BOT-140, FR-BOT-330, FR-BOT-410, FR-BOT-420, FR-BOT-425, FR-BOT-130, FR-CMD-030
+// file implements: FR-BOT-167, FR-BOT-116, FR-BOT-460, FR-BOT-450, FR-BOT-470, FR-BOT-500, FR-BOT-080, FR-BOT-090, FR-BOT-110, FR-BOT-115, FR-BOT-118, FR-BOT-119, FR-BOT-360, FR-BOT-370, FR-BOT-120, FR-BOT-180, FR-BOT-190, FR-BOT-200, FR-BOT-210, FR-MAP-150, FR-BOT-220, FR-BOT-060, FR-BOT-140, FR-BOT-330, FR-BOT-410, FR-BOT-420, FR-BOT-425, FR-BOT-130, FR-CMD-030
 import Foundation
 
 enum Deliberation {
@@ -136,6 +136,32 @@ enum Deliberation {
                 // knows is no target.
                 scored.append((.fire(at: known.target, with: slot),
                                worth(Perception.metres(bot.position, known.point))))
+            }
+        }
+
+        // The grenade is a weapon like the others and is scored like one: one left to
+        // throw and a target inside the throw range (FR-BOT-460, FR-BOT-470). What it
+        // is worth falls with the pouch rather than with a magazine, since a bot is
+        // given one, two or three of them for the whole match.
+        //
+        // Where it would catch a squadmate it can see, or itself, it is not offered at
+        // all (FR-BOT-500): an action the bot must never take is one it never scores.
+        let pouch = bot.arms.grenades
+        if pouch.left > .zero, pouch.carried > .zero {
+            let left = Double(pouch.left) / Double(pouch.carried)
+            if let throwing = target(for: bot, in: situation, within: pouch.numbers.throwRange, worth: { metres in
+                   term.blast * nearness(metres, within: entry.detectionRange) * left
+                       * bot.weights.aggression * bot.weights.courage
+               }),
+               let where_ = aim(at: throwing.target, from: bot, in: situation),
+               clear(for: bot, of: where_, within: pouch.numbers.blastRadius, in: situation) {
+                // Worth more the more bodies it would catch, and by the same share the
+                // damage grows by (FR-BOT-490), so that one number in the configuration
+                // moves both. A grenade on a single enemy is worth less than a shot
+                // from a loaded primary; one on a knot of three is worth more.
+                let bodies = caught(by: bot, at: where_, within: pouch.numbers.blastRadius, in: situation)
+                let more = Fraction.whole + (bodies - Fraction.whole) * pouch.numbers.furtherPartShare
+                scored.append((.throwGrenade(at: throwing.target), throwing.utility * more))
             }
         }
 
@@ -336,6 +362,40 @@ enum Deliberation {
         let top = max(radius, situation.configuration.figureHeight - radius)
         return Flight.contact(from: from, to: aim, axis: mate.position + SIMD3(.zero, radius, .zero),
                               mate.position + SIMD3(.zero, top, .zero), radius: radius) != nil
+    }
+
+    /// How many bodies of the other side a blast at `point` would catch, as the bot
+    /// sees it: each enemy bot in view standing within the radius, and the snake
+    /// counted once however much of it lies there.
+    ///
+    /// The damage does grow with every part of the snake covered (FR-BOT-490); what a
+    /// bot weighs is bodies, because a snake lying along a blast would otherwise be
+    /// worth ten of anything and a bot would stand in front of it throwing.
+    static func caught(by bot: Bot, at point: SIMD3<Double>, within radius: Double,
+                       in situation: Situation) -> Double {
+        var bodies = situation.enemiesInView.filter { Perception.metres($0.point, point) <= radius }.count
+        if situation.inView.contains(where: { Perception.metres($0, point) <= radius }) { bodies += 1 }
+        return Double(max(bodies, 1))
+    }
+
+    /// Whether a bot may throw at a point: nobody of its own within the blast —
+    /// neither a squadmate it can see (FR-BOT-500) nor itself.
+    ///
+    /// A squadmate it cannot see is one it cannot know to be there, which is what
+    /// FR-BOT-220 obliges and what makes the occasional throw onto one's own squad
+    /// correct rather than a fault. The thrower's own place is refused here rather
+    /// than left to its score, as ADR-0075 expected: the blast takes the thrower
+    /// (FR-BOT-480) and no term in this file yet prices what a bot does to itself.
+    static func clear(for bot: Bot, of point: SIMD3<Double>, within radius: Double,
+                      in situation: Situation) -> Bool {
+        guard Perception.metres(bot.position, point) > radius else { return false }
+        let range = situation.configuration.archetypes[bot.archetype.rawValue]?.detectionRange ?? .zero
+        return !situation.allies.contains { mate in
+            mate.id != bot.id && mate.squad == bot.squad && mate.isAlive
+                && Perception.metres(mate.position, point) <= radius
+                && Perception.sees(mate.eye, from: bot, within: range, plan: situation.plan,
+                                   configuration: situation.configuration)
+        }
     }
 
     /// Whether two targets are one: both the snake, wherever it was aimed at, or both
