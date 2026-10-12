@@ -151,6 +151,51 @@ final class IdleTests: XCTestCase {
         XCTAssertLessThan(apart(), before)
     }
 
+    func testOnceTheSquadsHaveMetSomebodyIsStillGoingSomewhere() throws {
+        // The shipped arena, nobody steering, from the first of its starting cells so
+        // that the run is the same every time. The first minute is the approach — the
+        // squads walk out, find each other and close to about four metres. The second
+        // minute is the one this test reads: somebody walks somewhere in it, and
+        // somebody ends it more than two metres from where it began.
+        //
+        // The arena is the shipped one on purpose. The standstill needs cover to exist:
+        // on a bare strip no cell is hidden, the cover action is never on the list, and
+        // the squads keep walking about whatever is wrong with the scoring.
+        //
+        // The match as it was measured on 2026-10-12 fails both assertions. Over the
+        // second minute the furthest any bot got from where it stood was 0.00 m in every
+        // ten-second window, nobody held a route for a single frame, and from the
+        // eightieth second nobody even fired: each slot chose to take cover in the cell
+        // the bot already stood in, the route came back empty, and the action was spent
+        // and cleared inside the same frame (Q-600).
+        var game = Game(world: shipped, start: try XCTUnwrap(Game.firstStart(in: shipped)))
+        let step = 1.0 / 60
+        for _ in 0..<(60 * 60) { game.advance(seconds: step) }
+        XCTAssertTrue(game.bots.contains { !$0.knowledge.enemies.isEmpty || !$0.knowledge.fallen.isEmpty },
+                      "in a minute no bot saw anybody of the other squad")
+
+        // Where everybody stands as the second minute opens, and whether anybody walks in it.
+        var opened: [Int: SIMD3<Double>] = [:]
+        for bot in game.bots where bot.isAlive { opened[bot.id] = bot.position }
+        var walking = 0
+        for _ in 0..<(60 * 60) {
+            game.advance(seconds: step)
+            if game.bots.contains(where: { $0.isAlive && !$0.path.isEmpty }) { walking += 1 }
+        }
+        let alive = game.bots.filter(\.isAlive)
+        try XCTSkipIf(alive.count < 2, "the match was over before the minute this test reads")
+        let moved = alive
+            .compactMap { bot in opened[bot.id].map { Perception.metres($0, bot.position) } }
+            .max() ?? .zero
+
+        // Two metres is under a second of running and many times the strafing a bot does
+        // around the spot it fires from, so it is going somewhere and not jitter. A
+        // second's worth of frames with a route in hand is the same sort of floor: a
+        // squad that is doing anything at all clears it, and a frozen one scores zero.
+        XCTAssertGreaterThan(walking, 60, "in a minute of firefight nobody walked anywhere for a whole second")
+        XCTAssertGreaterThan(moved, 2, "in a minute of firefight no bot got two metres from where it stood")
+    }
+
     // MARK: looking round (FR-BOT-380)
 
     func testABotStandingIdleLooksRoundOnceAnIntervalTowardsAThreatFirst() throws {
