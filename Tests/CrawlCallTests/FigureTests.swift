@@ -104,6 +104,30 @@ final class FigureTests: XCTestCase {
         XCTAssertFalse(knife.isEnabled, "a thrown knife is still drawn")
     }
 
+    @MainActor
+    func testAStowedPrimaryLiesAcrossTheBackAndNotAlongIt() throws {
+        // What a quarter turn about the vertical comes to on the screen, read off the
+        // entity rather than off the part: the heavy's tube is long front to back in
+        // its hands and long side to side on its back. Which of the two rotations the
+        // SDK applies first is not something to remember — this is the observation.
+        let world = try Launch.world().get()
+        var bot = try XCTUnwrap(Bot(id: 0, squad: .red, archetype: .heavy, at: .zero, floor: 0,
+                                    configuration: world.configurations.bot))
+        let entity = BotEntity.make(for: [bot], height: height)
+        let figure = try XCTUnwrap(entity.children.first)
+        let tube = try XCTUnwrap(figure.children.first { $0.name == EntityName.weapon(Figure.Carried.primary.rawValue) })
+        bot.action = .fire(at: .bot(id: 1), with: .primary)
+        BotEntity.update(entity, from: [bot], height: height)
+        let held = tube.visualBounds(relativeTo: figure).extents
+        XCTAssertGreaterThan(held.z, 3 * held.x, "the tube is not pointing forward in its hands")
+
+        bot.action = .fire(at: .bot(id: 1), with: .sidearm)
+        BotEntity.update(entity, from: [bot], height: height)
+        let slung = tube.visualBounds(relativeTo: figure).extents
+        XCTAssertGreaterThan(slung.x, 3 * slung.z, "the tube is not lying across the back")
+        XCTAssertLessThan(tube.position.z, 0, "the tube is not behind the figure")
+    }
+
     func testEveryArchetypeHasHeadgearAndAWeapon() {
         for archetype in Archetype.allCases {
             let parts = Figure.parts(for: archetype, height: height)
