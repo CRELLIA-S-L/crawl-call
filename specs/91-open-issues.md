@@ -228,7 +228,7 @@ What remains is what a decision inside the repository cannot close.
 
 ### Q-590 — A session per call throws away the cache and reloads the model forty times a run
 
-- **Found:** on 2026-10-11, profiling the game on the phone with Instruments' **Foundation Models** template — the instrument WWDC26 session 243 names for this, and the one the project had never used. It asks for consent before recording, because it captures the prompts and responses themselves, and waits on standard input until it gets it; a run started without an answer on that input hangs rather than records.
+- **Found:** on 2026-10-11, profiling the game on the phone with Instruments' **Foundation Models** template — the instrument WWDC26 session 243 names for this, and the one the project had never used. It asks for consent before recording, because it captures the prompts and responses themselves, and waits on standard input until it gets it; a run started without an answer on that input hangs rather than records, and `--no-prompt` is what a recording from a script passes instead (`specs/50-verification.md`).
 - **What it shows.** Ninety seconds of the shipping build, fifteen real inferences:
 
   | | median | range |
