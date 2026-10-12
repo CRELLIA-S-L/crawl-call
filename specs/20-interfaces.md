@@ -94,7 +94,7 @@ A weapon's damage, range and magazine left the archetype on 2026-10-11, when a b
 ### IF-CMD-010 — Commander input
 
 ```yaml
-status: implemented
+status: partial
 verification: T
 derives_from: []
 depends_on: [FR-SCORE-130]
@@ -115,6 +115,7 @@ Measured (ADR-0017): the same situation written as wounds and bodies was blocked
 Built on 2026-10-11 (ADR-0077): three bands for what is left of a soldier, two for a pouch, a quarter of the arena for where it stands, and the bench's own six names — every word of it read from the role-holder's knowledge and none from the arena.
 `partial` until there is a call to pass it to (FR-CMD-020).
 Measured the same day with the shipped instructions: 12 calls on the game's own states, none blocked, 624 to 679 input tokens, while the control was blocked 12 times in 12.
+`partial` again from 2026-10-12, on the maintainer's word: every field above is passed but the events, and `Game.dueCalls` builds each call with none — the clause is written and unbuilt (Q-610).
 
 ### IF-CMD-020 — Commander output
 
