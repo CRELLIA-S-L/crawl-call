@@ -4,7 +4,7 @@
 // The arena is built here rather than loaded, so that what is in the way, where the
 // cover is and how far the snake stands are all known quantities.
 //
-// file verifies: FR-BOT-080, FR-BOT-090, FR-BOT-118, FR-BOT-200, FR-BOT-210, IF-BOT-010, FR-BOT-220
+// file verifies: FR-BOT-080, FR-BOT-090, FR-BOT-118, FR-BOT-119, FR-BOT-200, FR-BOT-210, IF-BOT-010, FR-BOT-220
 import XCTest
 @testable import CrawlCall
 
@@ -184,6 +184,86 @@ final class DeliberationTests: XCTestCase {
         let handy = try XCTUnwrap(utility(of: isCover, for: bot, in: near))
         let distant = try XCTUnwrap(utility(of: isCover, for: bot, in: far))
         XCTAssertGreaterThan(handy, distant)
+    }
+
+    // MARK: a bot in cover stays in it (FR-BOT-119)
+
+    func testABotTheSnakeCannotSeeWhereItStandsHasNoCoverToTake() throws {
+        // A wall between the bot and the snake, on the bot's own cell's line: it is in
+        // cover, so taking cover is not among the actions it scores at all.
+        var hidden = try arena("...#......")
+        hidden.snake = [at(7, 0)]
+        hidden.inView = hidden.snake  // seen now, as these tests pose it (FR-BOT-220)
+        let sheltered = try bot(.assault, at: 1, 0)
+
+        XCTAssertNil(Deliberation.cover(for: sheltered, from: hidden.snake, enemies: hidden.enemies, in: hidden),
+                     "a bot already hidden was handed a cover cell")
+        XCTAssertNil(utility(of: isCover, for: sheltered, in: hidden), "taking cover is on the list of a bot in cover")
+    }
+
+    func testABotInTheOpenTakesCoverSomewhereOtherThanWhereItStands() throws {
+        // The other side of the rule: the snake has a clear line to the cell the bot
+        // stands in, there is a hidden cell within reach, and that is what it is given.
+        var open = try arena("..........",
+                             ".#........")
+        open.snake = [at(9, 0)]
+        open.inView = open.snake  // seen now, as these tests pose it (FR-BOT-220)
+        let exposed = try bot(.assault, at: 1, 0)
+
+        let found = try XCTUnwrap(Deliberation.cover(for: exposed, from: open.snake, enemies: open.enemies, in: open),
+                                  "a bot in the open was given no cover")
+        XCTAssertNotEqual(found.node, NavigationGraph.Node(floor: 0, x: 1, z: 0),
+                          "the cover it was given is the cell it already stands in")
+        XCTAssertNotNil(utility(of: isCover, for: exposed, in: open))
+    }
+
+    func testABotInTheOpenWithNowhereHiddenWithinReachHasNoCoverEither() throws {
+        // Both halves answer nil, and for opposite reasons: here the bot is seen and
+        // every cell it can reach is seen with it.
+        var bare = try arena("..........")
+        bare.snake = [at(9, 0)]
+        bare.inView = bare.snake  // seen now, as these tests pose it (FR-BOT-220)
+        let exposed = try bot(.assault, at: 1, 0)
+
+        XCTAssertNil(Deliberation.cover(for: exposed, from: bare.snake, enemies: bare.enemies, in: bare))
+    }
+
+    func testTheRuleReadsAnEnemyAsItReadsTheSnake() throws {
+        // A crate at (2,0), with a way round it along the second row. The crate is a
+        // metre tall against eyes 0.875 m up, so it stops a line an enemy sees along
+        // where a 0.8 m wall would not (config/kit/blockout/legend.json).
+        //
+        // Hidden from the enemy behind that crate, the bot is in cover and has none to
+        // take; with the enemy on its own side of it, the bot is seen where it stands
+        // and the cell the crate hides is what it is given (FR-BOT-330).
+        var behind = try arena("..o.......",
+                               "..........")
+        behind.enemies = [at(7, 0)]
+        var beside = try arena("..o.......",
+                               "..........")
+        beside.enemies = [at(0, 0)]
+        let bot = try bot(.assault, at: 1, 0)
+
+        XCTAssertNil(Deliberation.cover(for: bot, from: behind.snake, enemies: behind.enemies, in: behind),
+                     "a bot the enemy cannot see was handed a cover cell")
+        let found = try XCTUnwrap(Deliberation.cover(for: bot, from: beside.snake, enemies: beside.enemies, in: beside),
+                                  "a bot the enemy can see was given no cover")
+        XCTAssertNotEqual(found.node, NavigationGraph.Node(floor: 0, x: 1, z: 0),
+                          "the cover it was given is the cell it already stands in")
+    }
+
+    func testABotInCoverUnderAnOrderStillScoresTheOrderedZone() throws {
+        // What moves a bot out of cover is not a better wall: it is an order
+        // (FR-BOT-130) or a danger that reaches it.
+        var hidden = try arena("...#......")
+        hidden.snake = [at(7, 0)]
+        hidden.inView = hidden.snake  // seen now, as these tests pose it (FR-BOT-220)
+        hidden.orderedZone = NavigationGraph.Node(floor: 0, x: 2, z: 0)
+        let sheltered = try bot(.assault, at: 1, 0)
+
+        let actions = Deliberation.scores(for: sheltered, in: hidden).map(\.action)
+        XCTAssertFalse(actions.contains(where: isCover), "taking cover is on the list of a bot in cover")
+        XCTAssertTrue(actions.contains(where: isZone), "a bot in cover was given no order to obey")
     }
 
     // MARK: where a flight goes (FR-BOT-118)

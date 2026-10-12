@@ -8,9 +8,9 @@ Total requirements: 280.
 | Status | Requirements |
 |---|---|
 | `draft` | 4 |
-| `deferred` | 97 |
+| `deferred` | 96 |
 | `partial` | 12 |
-| `implemented` | 161 |
+| `implemented` | 162 |
 | `superseded` | 6 |
 | `withdrawn` | 0 |
 
@@ -47,7 +47,7 @@ Total requirements: 280.
 | **FR-BOT-110** Height advantage enters position scoring | `implemented` | T | `Sources/CrawlCall/Bot/Deliberation.swift`<br>`Sources/CrawlCall/Bot/Execution.swift` | `Tests/CrawlCallTests/PositionTests.swift` |
 | **FR-BOT-115** Distance along the snake's path enters position scoring | `implemented` | T | `Sources/CrawlCall/Bot/Deliberation.swift`<br>`Sources/CrawlCall/Bot/Execution.swift` | `Tests/CrawlCallTests/PositionTests.swift` |
 | **FR-BOT-118** A bot flees to somewhere it can get to | `implemented` | T | `Sources/CrawlCall/Bot/Deliberation.swift`<br>`Sources/CrawlCall/Map/PieceIndex.swift` | `Tests/CrawlCallTests/DeliberationTests.swift`<br>`Tests/CrawlCallTests/PieceIndexTests.swift` |
-| **FR-BOT-119** A bot in cover stays in it | `deferred` | T | — | — |
+| **FR-BOT-119** A bot in cover stays in it | `implemented` | T | `Sources/CrawlCall/Bot/Deliberation.swift` | `Tests/CrawlCallTests/DeliberationTests.swift`<br>`Tests/CrawlCallTests/IdleTests.swift` |
 | **FR-BOT-120** Nearby snake overrides the commander's priority | `implemented` | T | `Sources/CrawlCall/Bot/Deliberation.swift` | `Tests/CrawlCallTests/SquadStateTests.swift`<br>`Tests/CrawlCallTests/CommanderOrdersTests.swift` |
 | **FR-BOT-130** Discipline decides how far an order is kept | `implemented` | T | `Sources/CrawlCall/Bot/Deliberation.swift` | `Tests/CrawlCallTests/CommanderOrdersTests.swift` |
 | **FR-BOT-140** Target choice has hysteresis | `implemented` | T | `Sources/CrawlCall/Bot/Deliberation.swift` | `Tests/CrawlCallTests/WarTests.swift` |

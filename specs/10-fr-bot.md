@@ -580,14 +580,14 @@ This is not FR-BOT-167, which says what to do when a target turns out to be unre
 ### FR-BOT-119 — A bot in cover stays in it
 
 ```yaml
-status: deferred
+status: implemented
 verification: T
 derives_from: [FR-BOT-200]
 depends_on: [FR-BOT-330]
 refines: [FR-BOT-200]
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Bot/Deliberation.swift]
+tests: [Tests/CrawlCallTests/DeliberationTests.swift, Tests/CrawlCallTests/IdleTests.swift]
 created: 2026-10-12
 ```
 
@@ -597,7 +597,8 @@ While nothing a bot knows of watches the cell it stands in, the system **shall**
 It is also the way out of a standstill that was measured, not argued: the search walks outwards from the bot's own cell and that cell ranks first by nearness, so five bots of eight spent a whole match choosing to take cover where they already stood, at utilities of 0.072 to 0.167, which outscored nothing-at-all and so kept every other motive out of reach (Q-600).
 "Somewhere else" would have been the wrong rule twice over — a bot trading a wall that holds for a wall that holds is the signature stupidity concept §9.2 names, and the search already skips a cell an enemy or the snake watches (FR-BOT-330), so a bot whose own cell is watched never gets that cell as the answer anyway. One rule covers both.
 What still moves a bot out of cover is a threat or an order, neither of which this statement touches: flight is its own action, holding ground falls as the danger closes (FR-BOT-090, ADR-0074), and an ordered zone is scored by the obedience term whatever cover the bot is in (FR-BOT-130).
-Not built.
+Built the same day (ADR-0081): the search asks of the bot's own cell the question it asks of every candidate and answers nothing where nothing watches it, so one rule serves both halves — no action where the bot is hidden, and a watched cell skipped as any other.
+Measured from both ends: three tests in `DeliberationTests` pin the rule, and the second minute of a shipped-arena match went from 0 frames of walking and 0.0 m of movement to a squad that walks (`IdleTests`, Q-600). Removing the rule turns all four red.
 
 ### FR-BOT-120 — Nearby snake overrides the commander's priority
 

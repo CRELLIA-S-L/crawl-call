@@ -13,7 +13,7 @@
 // configuration (IF-BOT-010), as is how much an unhurt bot fears the snake
 // (FR-BOT-210). What shapes each term — a share, a whole — is in `Utility`.
 //
-// file implements: FR-BOT-080, FR-BOT-090, FR-BOT-110, FR-BOT-115, FR-BOT-118, FR-BOT-360, FR-BOT-370, FR-BOT-120, FR-BOT-180, FR-BOT-190, FR-BOT-200, FR-BOT-210, FR-MAP-150, FR-BOT-220, FR-BOT-060, FR-BOT-140, FR-BOT-330, FR-BOT-410, FR-BOT-420, FR-BOT-425, FR-BOT-130, FR-CMD-030
+// file implements: FR-BOT-080, FR-BOT-090, FR-BOT-110, FR-BOT-115, FR-BOT-118, FR-BOT-119, FR-BOT-360, FR-BOT-370, FR-BOT-120, FR-BOT-180, FR-BOT-190, FR-BOT-200, FR-BOT-210, FR-MAP-150, FR-BOT-220, FR-BOT-060, FR-BOT-140, FR-BOT-330, FR-BOT-410, FR-BOT-420, FR-BOT-425, FR-BOT-130, FR-CMD-030
 import Foundation
 
 enum Deliberation {
@@ -429,6 +429,11 @@ enum Deliberation {
     /// within the search distance: the nearest, raised by what the position is worth
     /// (FR-BOT-110, FR-BOT-115, FR-BOT-190).
     ///
+    /// Nil where the bot is already hidden in the cell it stands in: it is in cover and
+    /// has no cover to take (FR-BOT-119). Trading a wall that holds for another wall is
+    /// the standing still concept §9.2 calls the signature stupidity, and a bot that
+    /// scores it instead of nothing never gets as far as anything else (ADR-0081).
+    ///
     /// The cells are those the bot can walk to within reach, on any floor (`walk`),
     /// ranked before sight is asked about, and asked about best first (ADR-0058).
     ///
@@ -452,6 +457,17 @@ enum Deliberation {
         // is known after one or two sight tests rather than after the whole tail. Which
         // part sees it does not change whether one does (ADR-0028).
         let byNearness = snake.sorted { Perception.metres(bot.position, $0) < Perception.metres(bot.position, $1) }
+        // Whether what this search hides from can see into a cell: a part of the snake
+        // with a line to its ground, or an enemy whose eyes have a line to where the
+        // bot's eyes would be, standing in it (FR-BOT-330, ADR-0022). The bot's own cell
+        // and every candidate are asked in the same words, so the two cannot drift apart.
+        func watched(_ node: NavigationGraph.Node) -> Bool {
+            let there = centre(of: node, in: situation)
+            return byNearness.contains { Sight.isClear(from: $0, to: there, through: situation.plan) }
+                || shooters.contains { Sight.isClear(from: $0, to: there + rise, through: situation.plan) }
+        }
+        // Already in cover: nothing to do about cover (FR-BOT-119).
+        guard watched(here) else { return nil }
 
         // Every cell it knows within reach, ranked by what hiding there would be worth
         // before anything is asked about sight — nearness raised by the position's
@@ -466,11 +482,8 @@ enum Deliberation {
             .enumerated()
             .sorted { $0.element.rank != $1.element.rank ? $0.element.rank > $1.element.rank : $0.offset < $1.offset }
             .map(\.element.cell)
-        for cell in ranked {
-            let there = centre(of: cell.node, in: situation)
-            let watched = byNearness.contains { Sight.isClear(from: $0, to: there, through: situation.plan) }
-                || shooters.contains { Sight.isClear(from: $0, to: there + rise, through: situation.plan) }
-            if !watched { return (node: cell.node, metres: cell.metres) }
+        for cell in ranked where !watched(cell.node) {
+            return (node: cell.node, metres: cell.metres)
         }
         return nil
     }
