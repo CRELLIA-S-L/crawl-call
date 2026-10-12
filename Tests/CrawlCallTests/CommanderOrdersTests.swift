@@ -356,6 +356,33 @@ final class CommandedMatchTests: XCTestCase {
         XCTAssertEqual(davis.weights, began.weights, "an answer rewrote a soldier's character")
     }
 
+    func testASquadToldToPressEastEndsUpFurtherEastThanOneToldNothing() throws {
+        // The whole chain in one test, with nothing stubbed but the answerer: a place
+        // becomes a point, the point becomes a term in what a position is worth, and
+        // the bots — choosing their own cells by their own cover, height and
+        // squadmates — end up where they were pointed.
+        func centre(of game: Game, after seconds: Double) -> Double {
+            var game = game
+            let frame = 1.0 / 60
+            for _ in 0..<Int(seconds / frame) { game.advance(seconds: frame) }
+            let red = game.bots.filter { $0.squad == .red && $0.isAlive }.map(\.position.x)
+            return red.isEmpty ? .nan : red.reduce(0, +) / Double(red.count)
+        }
+        let world = try Launch.world().get()
+        let start = try XCTUnwrap(Game.firstStart(in: world))
+        let east = Places.middle(of: .east, in: world.plan.bounds).x
+        let west = Places.middle(of: .west, in: world.plan.bounds).x
+        XCTAssertGreaterThan(east, west, "the arena's east is not east of its west")
+
+        let told = centre(of: Game(world: world, start: start,
+                                   commander: ScriptedCommander([.decision(decision(.press, place: .east))])),
+                          after: 40)
+        let silent = centre(of: Game(world: world, start: start), after: 40)
+        XCTAssertFalse(told.isNaN || silent.isNaN, "red was wiped out before the forty seconds were up")
+        XCTAssertGreaterThan(told, silent,
+                             "a squad told to press east ended up no further east than one told nothing")
+    }
+
     func testARefusedCallLeavesTheSquadUnderTheOrderItHad() async throws {
         // CON-CMD-020 where it bites: the squad keeps the order, which is why a
         // refusal is a missed cycle rather than a squad without a commander.

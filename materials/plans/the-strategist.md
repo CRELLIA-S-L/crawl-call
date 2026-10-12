@@ -4,6 +4,16 @@ A plan written on 2026-10-12 at the maintainer's request, who said it in one lin
 
 It is written so that an agent with no memory of the conversation can take it up. What it rests on is in this file or named from it, and every number in it was measured on 2026-10-12 with the command beside it.
 
+## Where this stands, 2026-10-12
+
+**Built, and on the phone.** All seven steps are done: FR-BOT-116 carries the order into what a position is worth; the answer lost the crew and gained a place; FR-CMD-050 and FR-CMD-060 are withdrawn and FR-CMD-125 narrowed; `Orders.swift` and `orderReach` are gone; the instructions, the state and the bench's copy of the schema moved with them. ADR-0085 is the decision, and it supersedes ADR-0079 and ADR-0084. 808 tests, and taking the new term out turns six of them red across three classes.
+
+**Measured against the real model**, on the Mac, the three states the game builds, control blocked in every run: 620–673 input tokens and at most 60 output at 1915 ms median, against 762–823 and 283 at 4399 ms. The model answers in the measured vocabulary — "press west side", "flank middle" — so multi-word places survive the generator.
+
+**On the phone**, two 45-second runs, thermal `nominal` in both: the commander went from 2 answers at 17.6 and 13.8 seconds to 10 answers at 3.5 to 4.7 seconds, which is inside its interval for the first time. The frame rate did not move — 43.8 against 43.7 — and this plan predicted it would. Why it did not is in ADR-0085: a call is not started while the last is out, so the device generated for about 31 seconds of 45 before and about 40 now. The saving went into answering five times as often, and the lever left on the frame rate is `commanderInterval`.
+
+**What is open:** the interval, and the two questions this work did not touch — Q-570's frame-rate half and Q-620.
+
 **This plan changes the specification in five places and withdraws two requirements.** Nothing goes into `specs/` before the maintainer has said so; a number this plan proposes and the specification does not carry is marked as a proposal.
 
 Under ART-030 of `specs/constitution.md`, amended 2026-10-11, the suite is run when a change is finished and the build goes on the phone where one is connected, neither asked for nor waited for.

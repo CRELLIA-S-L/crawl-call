@@ -44,6 +44,20 @@ Option 3 is the smaller change and the wrong one. A closed set of roles would be
 
 The commander is cheaper by four fifths of its answer, which is the only lever ADR-0078 found on the frame rate. Measured on the Mac on 2026-10-12, over the three states the game builds, with the control blocked in every run: the answer as it was ran 762–823 input and up to 283 output tokens at 4399 ms; the shapes this one sits between ran 516–601 input and 43–59 output at 1771–2059 ms. Q-570's first option is taken, and not as a performance trade: it is what the rule asks for anyway.
 
+**On the phone, the saving went somewhere nobody predicted, and it is worth knowing where.** Two 45-second runs, thermal `nominal` in both, the same arena and nobody steering:
+
+| | before | after |
+|---|---|---|
+| calls started / answers taken | 4 / 2 | 12 / 10 |
+| how long an answer took | 17.6 and 13.8 s | 3.5 to 4.7 s |
+| frames a second | 43.7 | 43.8 |
+| the app's own work, median / 95th | 1.60 / 3.28 ms | 1.52 / 2.98 ms |
+| deliberation in a deliberating frame, 95th / worst | 2.04 / 4.72 ms | 0.95 / 1.36 ms |
+
+The commander answers five times as often and inside its own interval for the first time — 3.5 to 4.7 seconds against the 5 to 10 NFR-PERF-040 allows — and the frame rate did not move. The plan expected it to, and the reason it did not is in the first row: a call is not started while the last one is still out, so the device was generating for about 31 of the 45 seconds before and about 40 of them now. The answer got four times cheaper and the clock spent the saving on more answers.
+
+So the lever on the frame rate is now the interval and not the answer: `commanderInterval` is 7 seconds in `config/match.json`, and a squad that is told something useful every seven seconds may not need to be. That is a tuning number and the maintainer's (ART-070), and it is the only one left — the work asked of the model is as small as this design makes it.
+
 Q-640 is settled by deletion. The fifteen-metre walk per bot per slot that cost a deliberating frame 0.484 ms is gone; a bot scores the cells it was already scoring.
 
 Q-630 is settled by withdrawal: there are no roles, so there is nothing to close a vocabulary for.
