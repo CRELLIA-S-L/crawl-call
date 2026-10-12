@@ -10,9 +10,11 @@
 // reading of an order the game cannot carry out yet.
 //
 // Every cell named here is one the bot knows (FR-BOT-220) and can walk to within the
-// distance a squad stays together over (IF-BOT-010), so a destination is reachable by
+// order reach of the bot configuration (IF-BOT-010), so a destination is reachable by
 // construction rather than by a check afterwards — the same rule cover and flight are
-// found by (FR-BOT-118, ADR-0058).
+// found by (FR-BOT-118, ADR-0058). That reach is an order's own and is three times the
+// distance a squad stays together over: an order that could name no cell further off
+// than a step aside moved a squad nowhere (ADR-0084).
 //
 // file implements: FR-CMD-040
 import Foundation
@@ -78,7 +80,7 @@ enum Orders {
         let danger = (situation.snake + situation.enemies)
             .min { Perception.metres(bot.position, $0) < Perception.metres(bot.position, $1) }
         guard let danger else { return nil }
-        return Deliberation.away(from: danger, for: bot, in: situation)
+        return Deliberation.away(from: danger, for: bot, in: situation, within: reach(situation))
     }
 
     /// Spread out: of the cells the bot can reach, the one furthest from its nearest
@@ -101,10 +103,12 @@ enum Orders {
         return best?.node
     }
 
-    /// How far a bot goes to carry out an order: the distance over which a squad is
-    /// still one group (IF-BOT-010), the same reach cover and flight are looked for
-    /// within. An order is not a march across the arena; it is where to stand next.
+    /// How far a bot goes to carry out an order: the order reach of the bot
+    /// configuration (IF-BOT-010), which is its own distance and not the one cover and
+    /// flight are looked for within. An order that reaches no further than a step
+    /// aside can move a squad nowhere, which is what fifteen metres against five is
+    /// for (ADR-0084).
     private static func reach(_ situation: Deliberation.Situation) -> Double {
-        Deliberation.coverSearch(situation.configuration)
+        situation.configuration.orderReach
     }
 }

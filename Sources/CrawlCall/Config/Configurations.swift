@@ -238,6 +238,11 @@ struct BotConfiguration: Decodable, Equatable {
     let overrideDistance: Double
     let interruptDistance: Double
     let groupingDistance: Double
+    /// How far a bot goes to carry out its commander's order (FR-CMD-040): the reach
+    /// of an order, which is not the reach of a step aside. Three times the distance a
+    /// squad stays together over, so that an order can name the next room and not only
+    /// the next wall (ADR-0084).
+    let orderReach: Double
     let hysteresisMargin: Double
     let deliberationPeriod: Double
     let perFrameSlotMaximum: Int
@@ -320,6 +325,7 @@ struct BotConfiguration: Decodable, Equatable {
         "overrideDistance": .value,
         "interruptDistance": .value,
         "groupingDistance": .value,
+        "orderReach": .value,
         "hysteresisMargin": .value,
         "deliberationPeriod": .value,
         "perFrameSlotMaximum": .value,

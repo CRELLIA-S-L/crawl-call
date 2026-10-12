@@ -241,6 +241,38 @@ final class OrdersZoneTests: XCTestCase {
         XCTAssertNil(Orders.zone(for: soldier, under: .disperse, in: situation))
     }
 
+    func testAnOrderReachesFurtherThanAStepAside() throws {
+        // The reach of an order is its own distance and three times the one a squad
+        // stays together over (ADR-0084): a withdrawal names a cell beyond anywhere
+        // cover or flight would have looked, and never beyond the reach itself.
+        var situation = try arena(String(repeating: ".", count: 80))
+        situation.snake = [at(1, 0)]
+        let soldier = try bot(at: 3, 0)
+        let zone = try XCTUnwrap(Orders.zone(for: soldier, under: .withdrawToZone, in: situation))
+        let gone = Perception.metres(soldier.position, Deliberation.centre(of: zone, in: situation))
+
+        XCTAssertGreaterThan(configuration.orderReach, Deliberation.coverSearch(configuration),
+                             "an order reaches no further than cover does, so this test proves nothing")
+        XCTAssertGreaterThan(gone, Deliberation.coverSearch(configuration),
+                             "the order sent the bot no further than cover would have")
+        XCTAssertLessThanOrEqual(gone, configuration.orderReach, "the order sent the bot beyond its reach")
+    }
+
+    func testEveryOrderKeepsInsideTheReach() throws {
+        // The same bound on each of the three that name a cell, in one arena.
+        var situation = try arena(String(repeating: ".", count: 80), String(repeating: ".", count: 80))
+        situation.snake = [at(1, 0)]
+        situation.enemyBelief = at(70, 0)
+        let soldier = try bot(at: 20, 0)
+        situation.allies = [soldier, try bot(at: 21, 0, id: 1)]
+        for order in [CommanderDecision.Order.flank, .withdrawToZone, .disperse] {
+            let zone = try XCTUnwrap(Orders.zone(for: soldier, under: order, in: situation),
+                                     "\(order) named no cell at all")
+            XCTAssertLessThanOrEqual(Perception.metres(soldier.position, Deliberation.centre(of: zone, in: situation)),
+                                     configuration.orderReach, "\(order) went beyond the order reach")
+        }
+    }
+
     func testNoOrderEverNamesACellTheBotDoesNotKnow() throws {
         // FR-BOT-220 reaches the orders too: a bot acts on what it knows, and a
         // destination it has never seen is one it would set off for and stop.

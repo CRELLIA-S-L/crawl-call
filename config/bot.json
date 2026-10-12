@@ -220,6 +220,7 @@
   "overrideDistance": 5.0,
   "interruptDistance": 8.0,
   "groupingDistance": 5.0,
+  "orderReach": 15.0,
   "hysteresisMargin": 0.1,
   "deliberationPeriod": 0.2,
   "perFrameSlotMaximum": 2,

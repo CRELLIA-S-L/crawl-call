@@ -128,6 +128,7 @@ When a commander's response arrives, the system **shall** set the squad's curren
 **Rationale.** Concept §9.1 lists these five orders.
 Setting the order is the "new order" event of FR-BOT-170; how much a bot obeys is FR-BOT-130.
 Built on 2026-10-12 (ADR-0079). Four of the five orders become one cell for each bot to be in — the hook the deliberation has always had and that nothing set in play — and the fifth, destroying the enemy's cover, names none until a bot can wreck a wall (FR-BOT-070).
+The cell is searched for within the order reach of the bot configuration, which is three times the distance a squad stays together over: at the grouping distance it had first, an order could name no cell a squad would notice moving to (ADR-0084, Q-610).
 
 ### FR-CMD-050 — The commander assigns roles
 

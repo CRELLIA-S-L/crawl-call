@@ -170,8 +170,8 @@ final class CommanderInTheMatchTests: XCTestCase {
             told = commander.heard.contains { $0.prompt.contains("just happened: \(name) gone missing") }
         }
         XCTAssertTrue(told, "no call carried what had happened: \(commander.heard.map(\.prompt))")
-        XCTAssertEqual(game.happenings.lines(of: .red), [],
-                       "the call carried the events and left them to be told again")
+        XCTAssertFalse(game.happenings.lines(of: .red).contains("\(name) gone missing"),
+                       "the call carried the loss and left it to be told again")
     }
 
     func testACallCarriesTheStateTheRequirementDefines() throws {

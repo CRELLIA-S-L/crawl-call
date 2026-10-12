@@ -585,8 +585,11 @@ enum Deliberation {
     /// stupidity. Walking the graph makes the answer reachable by construction rather
     /// than by a second test afterwards.
     static func away(from danger: SIMD3<Double>, for bot: Bot,
-                     in situation: Situation) -> NavigationGraph.Node? {
-        let reach = coverSearch(situation.configuration)
+                     in situation: Situation, within asked: Double? = nil) -> NavigationGraph.Node? {
+        // As far as cover is looked for, unless somebody asks for further: a withdrawal
+        // ordered by a commander is given the order's own reach (FR-CMD-040, ADR-0084),
+        // and flight from the snake is not (FR-BOT-118).
+        let reach = asked ?? coverSearch(situation.configuration)
         let here = NavigationGraph.Node(floor: bot.floor,
                                         x: Int((bot.position.x / situation.cellSize).rounded()),
                                         z: Int((bot.position.z / situation.cellSize).rounded()))
