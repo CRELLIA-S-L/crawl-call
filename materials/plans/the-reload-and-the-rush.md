@@ -78,6 +78,8 @@ grep -rn "walk(from:" Sources               # 4 on 2026-10-13, the cell searches
 
 Four passes. Each is finished — suite green, build on the phone, loop closed — before the next begins. Under ART-030 of `specs/constitution.md`, amended 2026-10-11, the suite runs when a change is finished and the build goes on the phone when one is connected, neither asked for nor waited for.
 
+**Only one order is forced.** Pass C picks a cell to rush to and so wants pass A's exclusions already in place; everything else is independent, and D — the grenade and the blast — can be taken first by anybody who would rather see something on the screen before the squads change again. The order below is by what each pass costs the next one, not by what was asked for first.
+
 **Passes C and D end differently from the others.** Pass C changes how the squads behave in a way only an eye at the camera's distance can judge, and pass D changes what is drawn; the maintainer's standing instruction for visual work is one change at a time, installed and then looked at before the next. So those two stop at the device and wait for a word, where A and B report and go on.
 
 ### Pass A — Nobody walks into anybody (ask 6)
