@@ -597,6 +597,34 @@ enum Deliberation {
         return cells
     }
 
+    /// Where an order sends a bot (FR-BOT-116): of the cells it knows within the cover
+    /// search distance and other than the one it stands in, the one worth the most.
+    ///
+    /// Nil where no order names a place, and nil where nothing within reach is worth
+    /// more than where the bot already stands — which is the same shape cover has since
+    /// FR-BOT-119: an action with nothing to gain is not on the list rather than on it
+    /// at nothing.
+    ///
+    /// The cell is the bot's own best and not a cell the order named: a commander says
+    /// which part of the arena matters, and which cell of it a bot takes is the bot's
+    /// business — its cover, its height, its squadmates, all of them already in `worth`
+    /// (ADR-0085).
+    static func ordered(for bot: Bot, in situation: Situation) -> NavigationGraph.Node? {
+        guard situation.orderedPart != nil else { return nil }
+        let here = NavigationGraph.Node(floor: bot.floor,
+                                        x: Int((bot.position.x / situation.cellSize).rounded()),
+                                        z: Int((bot.position.z / situation.cellSize).rounded()))
+        guard situation.graph.isWalkable(here) else { return nil }
+        var best: (node: NavigationGraph.Node, value: Double)?
+        let standing = worth(of: here, for: bot, in: situation)
+        for cell in walk(from: here, within: coverSearch(situation.configuration), for: bot, in: situation)
+        where cell.node != here && situation.knows(cell.node) {
+            let value = worth(of: cell.node, for: bot, in: situation)
+            if value > (best?.value ?? standing) { best = (cell.node, value) }
+        }
+        return best?.node
+    }
+
     /// The cell within the search distance that puts the most ground between the bot
     /// and what it is running from, raised by what the position is worth against the
     /// snake (FR-BOT-110, FR-BOT-115), out of those it can actually get to.

@@ -1,16 +1,20 @@
-// What a commander's answer does to a match: the squad's threat and order, each
-// soldier's role and weights, where an order sends a bot, and how far its discipline
-// lets the order beat its own reading of the danger.
+// What a commander's answer does to a match: the squad's threat, its order and the part
+// of the arena that order names, which cell a bot picks for itself under one, and how
+// far its discipline lets the order beat its own reading of the danger.
+//
+// Nothing a commander says reaches a soldier any more (ADR-0085), and one test here is
+// about that: an answer changes what a squad is trying to do and nothing about who its
+// soldiers are.
 //
 // No model anywhere. Every answer here is written out in the test, which is what the
 // seam is for (ADR-0077): the shape of IF-CMD-020 is the contract, and a decision made
 // up by hand exercises what it causes exactly as one from the model would.
 //
-// file verifies: FR-CMD-030, FR-CMD-040, FR-CMD-050, FR-CMD-060, FR-BOT-120, FR-BOT-130
+// file verifies: FR-CMD-030, FR-CMD-040, FR-BOT-116, FR-BOT-120, FR-BOT-130
 import XCTest
 @testable import CrawlCall
 
-/// What one answer leaves behind (FR-CMD-030, FR-CMD-040, FR-CMD-050, FR-CMD-060).
+/// What one answer leaves behind (FR-CMD-030, FR-CMD-040).
 final class SquadCommandTests: XCTestCase {
     private var configuration: BotConfiguration!
 
@@ -19,18 +23,10 @@ final class SquadCommandTests: XCTestCase {
         configuration = try Launch.world().get().configurations.bot
     }
 
-    private func lean(_ name: String, role: String? = nil, panic: Double = 0.5,
-                      courage: Double = 0.5, discipline: Double = 0.5,
-                      aggression: Double = 0.5, selfSacrifice: Double = 0.5) -> CommanderDecision.Lean {
-        CommanderDecision.Lean(name: name, role: role, panic: panic, courage: courage,
-                               discipline: discipline, aggression: aggression,
-                               selfSacrifice: selfSacrifice)
-    }
-
     private func decision(threat: CommanderDecision.Threat = .snake,
                           order: CommanderDecision.Order = .flank,
-                          crew: [CommanderDecision.Lean] = []) -> CommanderDecision {
-        CommanderDecision(threat: threat, order: order, crew: crew, truce: .none, line: nil)
+                          place: Places.Part? = .east) -> CommanderDecision {
+        CommanderDecision(threat: threat, order: order, place: place, truce: .none, line: nil)
     }
 
     private func bot(_ kind: Archetype, squad: Squad = .red, id: Int = 0) throws -> Bot {
@@ -40,112 +36,45 @@ final class SquadCommandTests: XCTestCase {
 
     // MARK: the squad's own (FR-CMD-030, FR-CMD-040)
 
-    func testTheThreatAndTheOrderLandOnTheSquadThatWasAsked() throws {
-        var bots = [try bot(.assault, squad: .red), try bot(.assault, squad: .blue, id: 1)]
+    func testTheThreatTheOrderAndThePlaceLandOnTheSquadThatWasAsked() throws {
         var commands = SquadCommands()
         XCTAssertNil(commands.of(.red), "a squad nobody has spoken to stands under nothing")
 
-        commands.apply(decision(threat: .withdraw, order: .disperse), to: .red,
-                       among: &bots, configuration: configuration)
-        XCTAssertEqual(commands.of(.red), SquadCommand(threat: .withdraw, order: .disperse))
+        commands.apply(decision(threat: .withdraw, order: .withdraw, place: .northWest), to: .red)
+        XCTAssertEqual(commands.of(.red),
+                       SquadCommand(threat: .withdraw, order: .withdraw, place: .northWest))
         XCTAssertNil(commands.of(.blue), "one squad's order reached the other")
     }
 
+    func testAnOrderMayNameNoPlaceAtAll() throws {
+        var commands = SquadCommands()
+        commands.apply(decision(order: .hold, place: nil), to: .red)
+        XCTAssertEqual(commands.of(.red), SquadCommand(threat: .snake, order: .hold, place: nil))
+    }
+
     func testALaterAnswerReplacesTheOrderTheSquadStoodUnder() throws {
-        var bots = [try bot(.assault)]
         var commands = SquadCommands()
-        commands.apply(decision(threat: .snake, order: .hold), to: .red,
-                       among: &bots, configuration: configuration)
-        commands.apply(decision(threat: .enemy, order: .flank), to: .red,
-                       among: &bots, configuration: configuration)
-        XCTAssertEqual(commands.of(.red), SquadCommand(threat: .enemy, order: .flank))
+        commands.apply(decision(threat: .snake, order: .hold, place: .middle), to: .red)
+        commands.apply(decision(threat: .enemy, order: .press, place: .south), to: .red)
+        XCTAssertEqual(commands.of(.red), SquadCommand(threat: .enemy, order: .press, place: .south))
     }
 
-    // MARK: the roles (FR-CMD-050)
-
-    func testEachSoldierTakesTheRoleTheAnswerNamesForItByName() throws {
-        var bots = [try bot(.assault, id: 0), try bot(.heavy, id: 1)]
+    func testAnAnswerChangesNothingAboutTheSoldiersThemselves() throws {
+        // The rule of ADR-0085, asserted where it would be broken: what a bot is stays
+        // the bot's, and an answer moves only what its squad is trying to do.
+        var soldier = try bot(.assault)
+        soldier.weights = BotConfiguration.Weights(panic: 0.1, discipline: 0.2, aggression: 0.3,
+                                                   selfSacrifice: 0.4, courage: 0.5)
+        let before = soldier
         var commands = SquadCommands()
-        commands.apply(decision(crew: [lean("Davis", role: "hold the stair"),
-                                       lean("Pike", role: "cover Davis")]),
-                       to: .red, among: &bots, configuration: configuration)
-        XCTAssertEqual(try element(0, of: bots).role, "hold the stair")
-        XCTAssertEqual(try element(1, of: bots).role, "cover Davis")
-    }
-
-    func testARoleOfNoneTakesTheRoleAway() throws {
-        var bots = [try bot(.assault)]
-        bots[try checkedIndex(0, of: bots)].role = "hold the stair"
-        var commands = SquadCommands()
-        commands.apply(decision(crew: [lean("Davis", role: nil)]), to: .red,
-                       among: &bots, configuration: configuration)
-        XCTAssertNil(try element(0, of: bots).role, "a role the commander took away stayed on the soldier")
-    }
-
-    func testASoldierTheAnswerPassesOverKeepsWhatItHad() throws {
-        // The other half of IF-CMD-020's refusal to repair: a crew member the model
-        // forgot is not a soldier whose orders were taken away.
-        var bots = [try bot(.assault, id: 0), try bot(.heavy, id: 1)]
-        bots[try checkedIndex(1, of: bots)].role = "cover Davis"
-        let before = try element(1, of: bots).weights
-        var commands = SquadCommands()
-        commands.apply(decision(crew: [lean("Davis", role: "hold the stair", panic: 0.9)]),
-                       to: .red, among: &bots, configuration: configuration)
-        XCTAssertEqual(try element(1, of: bots).role, "cover Davis")
-        XCTAssertEqual(try element(1, of: bots).weights, before)
-    }
-
-    // MARK: the weights (FR-CMD-060)
-
-    func testTheWeightsAreReplacedByWhatTheCommanderNamed() throws {
-        var bots = [try bot(.assault)]
-        XCTAssertNotEqual(try element(0, of: bots).weights.panic, 0.1)
-        var commands = SquadCommands()
-        commands.apply(decision(crew: [lean("Davis", panic: 0.1, courage: 0.2, discipline: 0.3,
-                                            aggression: 0.4, selfSacrifice: 0.6)]),
-                       to: .red, among: &bots, configuration: configuration)
-        XCTAssertEqual(try element(0, of: bots).weights, BotConfiguration.Weights(panic: 0.1, discipline: 0.3,
-                                                                 aggression: 0.4, selfSacrifice: 0.6,
-                                                                 courage: 0.2))
-    }
-
-    func testAWeightOutsideTheArchetypesRangeIsHeldToIt() throws {
-        // The clamp of FR-CMD-060, against a configuration whose range is narrower
-        // than the whole: every range in the shipped file runs 0 to 1 today, so a
-        // shipped-file test could not tell clamping from doing nothing.
-        let narrow = try configuration(panicOfAssault: 0.3, to: 0.6)
-        let high = SquadCommands.weights(from: lean("Davis", panic: 0.95), for: .assault,
-                                         configuration: narrow)
-        let low = SquadCommands.weights(from: lean("Davis", panic: 0.05), for: .assault,
-                                        configuration: narrow)
-        XCTAssertEqual(high.panic, 0.6)
-        XCTAssertEqual(low.panic, 0.3)
-        // And a weight inside the range is left exactly where the commander put it.
-        XCTAssertEqual(SquadCommands.weights(from: lean("Davis", panic: 0.45), for: .assault,
-                                             configuration: narrow).panic, 0.45)
-        // A range belongs to one archetype: the heavy's is untouched by the assault's.
-        XCTAssertEqual(SquadCommands.weights(from: lean("Pike", panic: 0.95), for: .heavy,
-                                             configuration: narrow).panic, 0.95)
-    }
-
-    /// The shipped bot configuration with one archetype's panic range narrowed.
-    private func configuration(panicOfAssault lowest: Double, to highest: Double) throws -> BotConfiguration {
-        let url = try XCTUnwrap(Bundle.main.url(forResource: "bot", withExtension: "json", subdirectory: "config"))
-        var json = try XCTUnwrap(JSONSerialization.jsonObject(with: Data(contentsOf: url)) as? [String: Any])
-        var archetypes = try XCTUnwrap(json["archetypes"] as? [String: Any])
-        var assault = try XCTUnwrap(archetypes["assault"] as? [String: Any])
-        var ranges = try XCTUnwrap(assault["allowedRanges"] as? [String: Any])
-        ranges["panic"] = ["lowest": lowest, "highest": highest]
-        assault["allowedRanges"] = ranges
-        archetypes["assault"] = assault
-        json["archetypes"] = archetypes
-        return try Configurations.decode(BotConfiguration.self, named: "bot", schema: BotConfiguration.schema,
-                                         from: JSONSerialization.data(withJSONObject: json))
+        commands.apply(decision(), to: .red)
+        XCTAssertEqual(soldier, before, "an answer reached inside a soldier")
     }
 }
 
-/// Where an order sends a bot (FR-CMD-040).
-final class OrdersZoneTests: XCTestCase {
+/// Which cell a bot takes under an order (FR-BOT-116): its own best, not one the order
+/// named.
+final class OrderedCellTests: XCTestCase {
     private var kit: Kit!
     private var configuration: BotConfiguration!
     private let cell = 0.5
@@ -159,138 +88,83 @@ final class OrdersZoneTests: XCTestCase {
     private func arena(_ rows: String...) throws -> Deliberation.Situation {
         let map = try MapParser.parse("kit blockout\nsetting greenholm\nfloor 0\n"
                                       + rows.joined(separator: "\n") + "\n", kit: kit)
-        return Deliberation.Situation(plan: ScenePlan.make(map: map, kit: kit, cellSize: cell),
-                                      graph: NavigationGraph.derive(from: map, stepHeight: ShippedTuning.stepHeight),
-                                      configuration: configuration,
-                                      cellSize: cell)
+        var situation = Deliberation.Situation(plan: ScenePlan.make(map: map, kit: kit, cellSize: cell),
+                                               graph: NavigationGraph.derive(from: map, stepHeight: ShippedTuning.stepHeight),
+                                               configuration: configuration,
+                                               cellSize: cell)
+        situation.arenaSpan = 20
+        return situation
     }
 
     private func at(_ x: Int, _ z: Int) -> SIMD3<Double> { SIMD3(Double(x) * cell, 0, Double(z) * cell) }
 
-    private func bot(at x: Int, _ z: Int, id: Int = 0) throws -> Bot {
-        try XCTUnwrap(Bot(id: id, squad: .red, archetype: .assault, at: at(x, z), floor: 0,
+    private func bot(at x: Int, _ z: Int, id: Int = 0, squad: Squad = .red) throws -> Bot {
+        try XCTUnwrap(Bot(id: id, squad: squad, archetype: .assault, at: at(x, z), floor: 0,
                           configuration: configuration))
     }
 
-    private func metres(_ node: NavigationGraph.Node, to point: SIMD3<Double>,
-                        in situation: Deliberation.Situation) -> Double {
-        Perception.metres(Deliberation.centre(of: node, in: situation), point)
+    func testWithNoPlaceNamedThereIsNoCellToGoTo() throws {
+        let situation = try arena(String(repeating: ".", count: 40))
+        XCTAssertNil(Deliberation.ordered(for: try bot(at: 2, 0), in: situation),
+                     "a bot was sent somewhere by an order that named nowhere")
     }
 
-    func testHoldIsWhereTheBotAlreadyStands() throws {
-        let situation = try arena("..........", "..........")
-        let soldier = try bot(at: 3, 0)
-        XCTAssertEqual(Orders.zone(for: soldier, under: .hold, in: situation),
-                       NavigationGraph.Node(floor: 0, x: 3, z: 0))
-    }
-
-    func testDestroyingCoverNamesNoCellBecauseNothingCanWreckAWallYet() throws {
-        // FR-BOT-070 is not built, so the fifth order has no cell to name. The
-        // deliberation is then exactly what it was with no commander at all.
-        let situation = try arena("..........")
-        XCTAssertNil(Orders.zone(for: try bot(at: 3, 0), under: .destroyCover, in: situation))
-    }
-
-    func testFlankingGoesOffTheLineToTheEnemyWithoutGivingGround() throws {
-        var situation = try arena("..........", "..........")
-        situation.enemyBelief = at(9, 0)
-        let soldier = try bot(at: 1, 0)
-        let zone = try XCTUnwrap(Orders.zone(for: soldier, under: .flank, in: situation))
-        XCTAssertEqual(zone.z, 1, "the flank stayed on the straight line to the enemy")
-        XCTAssertLessThanOrEqual(metres(zone, to: at(9, 0), in: situation),
-                                 Perception.metres(soldier.position, at(9, 0)),
-                                 "the flank gave ground")
-    }
-
-    func testFlankingNamesNothingWhereNobodyHasSeenTheEnemy() throws {
-        let situation = try arena("..........", "..........")
-        XCTAssertNil(Orders.zone(for: try bot(at: 1, 0), under: .flank, in: situation),
-                     "a crew nobody has seen was flanked")
-    }
-
-    func testWithdrawingPutsGroundBetweenTheBotAndWhatItIsAfraidOf() throws {
-        var situation = try arena("..........")
-        situation.snake = [at(1, 0)]
-        let soldier = try bot(at: 5, 0)
-        let zone = try XCTUnwrap(Orders.zone(for: soldier, under: .withdrawToZone, in: situation))
-        XCTAssertGreaterThan(metres(zone, to: at(1, 0), in: situation),
-                             Perception.metres(soldier.position, at(1, 0)),
-                             "withdrawing moved towards the snake")
-    }
-
-    func testWithdrawingNamesNothingWhereTheSquadKnowsOfNoDanger() throws {
-        let situation = try arena("..........")
-        XCTAssertNil(Orders.zone(for: try bot(at: 5, 0), under: .withdrawToZone, in: situation))
-    }
-
-    func testDispersingPutsGroundBetweenTheBotAndItsNearestSquadmate() throws {
-        var situation = try arena("..........")
+    func testTheCellIsTheOneWorthMostWithinReachAndItLiesTowardsThePlace() throws {
+        var situation = try arena(String(repeating: ".", count: 40))
+        situation.orderedPart = at(39, 0)
         let soldier = try bot(at: 2, 0)
-        let mate = try bot(at: 1, 0, id: 1)
-        situation.allies = [soldier, mate]
-        let zone = try XCTUnwrap(Orders.zone(for: soldier, under: .disperse, in: situation))
-        XCTAssertGreaterThan(metres(zone, to: mate.position, in: situation),
-                             Perception.metres(soldier.position, mate.position),
-                             "dispersing left the bot no further from its squadmate")
+
+        let zone = try XCTUnwrap(Deliberation.ordered(for: soldier, in: situation))
+        XCTAssertGreaterThan(Deliberation.centre(of: zone, in: situation).x, soldier.position.x,
+                             "the order sent the bot away from the part it named")
+        XCTAssertLessThanOrEqual(Perception.metres(soldier.position, Deliberation.centre(of: zone, in: situation)),
+                                 Deliberation.coverSearch(configuration),
+                                 "one step of an order is further than a bot looks for cover")
     }
 
-    func testASquadOfOneIsAlreadyDispersed() throws {
-        var situation = try arena("..........")
+    func testStandingOnTheBestCellThereIsNothingToGoTo() throws {
+        // The shape FR-BOT-119 gave cover: an action with nothing to gain is off the
+        // list rather than on it at nothing.
+        var situation = try arena(String(repeating: ".", count: 40))
         let soldier = try bot(at: 2, 0)
-        situation.allies = [soldier]
-        XCTAssertNil(Orders.zone(for: soldier, under: .disperse, in: situation))
+        situation.orderedPart = soldier.position
+
+        XCTAssertNil(Deliberation.ordered(for: soldier, in: situation),
+                     "a bot already where the order points was sent somewhere else")
     }
 
-    func testAnOrderReachesFurtherThanAStepAside() throws {
-        // The reach of an order is its own distance and three times the one a squad
-        // stays together over (ADR-0084): a withdrawal names a cell beyond anywhere
-        // cover or flight would have looked, and never beyond the reach itself.
-        var situation = try arena(String(repeating: ".", count: 80))
-        situation.snake = [at(1, 0)]
-        let soldier = try bot(at: 3, 0)
-        let zone = try XCTUnwrap(Orders.zone(for: soldier, under: .withdrawToZone, in: situation))
-        let gone = Perception.metres(soldier.position, Deliberation.centre(of: zone, in: situation))
+    func testNoCellTheBotDoesNotKnowIsEverNamed() throws {
+        // FR-BOT-220 reaches the order too: a destination it has never seen is one it
+        // would set off for and stop.
+        var situation = try arena(String(repeating: ".", count: 40))
+        situation.orderedPart = at(39, 0)
+        situation.knows = { $0.x <= 2 }
+        let soldier = try bot(at: 2, 0)
 
-        XCTAssertGreaterThan(configuration.orderReach, Deliberation.coverSearch(configuration),
-                             "an order reaches no further than cover does, so this test proves nothing")
-        XCTAssertGreaterThan(gone, Deliberation.coverSearch(configuration),
-                             "the order sent the bot no further than cover would have")
-        XCTAssertLessThanOrEqual(gone, configuration.orderReach, "the order sent the bot beyond its reach")
+        let zone = Deliberation.ordered(for: soldier, in: situation)
+        XCTAssertNil(zone, "the order named a cell the bot has never seen: \(String(describing: zone))")
     }
 
-    func testEveryOrderKeepsInsideTheReach() throws {
-        // The same bound on each of the three that name a cell, in one arena.
-        var situation = try arena(String(repeating: ".", count: 80), String(repeating: ".", count: 80))
-        situation.snake = [at(1, 0)]
-        situation.enemyBelief = at(70, 0)
-        let soldier = try bot(at: 20, 0)
-        situation.allies = [soldier, try bot(at: 21, 0, id: 1)]
-        for order in [CommanderDecision.Order.flank, .withdrawToZone, .disperse] {
-            let zone = try XCTUnwrap(Orders.zone(for: soldier, under: order, in: situation),
-                                     "\(order) named no cell at all")
-            XCTAssertLessThanOrEqual(Perception.metres(soldier.position, Deliberation.centre(of: zone, in: situation)),
-                                     configuration.orderReach, "\(order) went beyond the order reach")
-        }
-    }
-
-    func testNoOrderEverNamesACellTheBotDoesNotKnow() throws {
-        // FR-BOT-220 reaches the orders too: a bot acts on what it knows, and a
-        // destination it has never seen is one it would set off for and stop.
-        var situation = try arena("..........", "..........")
-        situation.knows = { _ in false }
-        situation.enemyBelief = at(9, 0)
-        situation.snake = [at(1, 0)]
-        let soldier = try bot(at: 5, 0)
-        let mate = try bot(at: 4, 0, id: 1)
+    func testTheBotPicksItsOwnCellAndNotTheNearestOneToThePlace() throws {
+        // The whole point of the rule. An alarmed squad keeps together (FR-BOT-190), so
+        // of two cells the same distance from the bot the one beside its squadmate is
+        // worth more — and that is the one it takes, although the other lies nearer to
+        // where the commander pointed.
+        var situation = try arena(String(repeating: ".", count: 40),
+                                  String(repeating: ".", count: 40))
+        situation.orderedPart = at(39, 0)
+        situation.awareness = .alarm
+        let soldier = try bot(at: 2, 0)
+        let mate = try bot(at: 6, 1, id: 1)
         situation.allies = [soldier, mate]
-        XCTAssertNil(Orders.zone(for: soldier, under: .flank, in: situation))
-        XCTAssertNil(Orders.zone(for: soldier, under: .withdrawToZone, in: situation))
-        XCTAssertNil(Orders.zone(for: soldier, under: .disperse, in: situation))
+
+        let zone = try XCTUnwrap(Deliberation.ordered(for: soldier, in: situation))
+        XCTAssertLessThanOrEqual(Perception.metres(Deliberation.centre(of: zone, in: situation), mate.position),
+                                 configuration.groupingDistance,
+                                 "the bot went for the place and left its squadmate behind")
     }
 }
 
-/// What the threat priority and the order do inside a deliberation (FR-CMD-030,
-/// FR-BOT-120, FR-BOT-130).
 final class OrderedDeliberationTests: XCTestCase {
     private var kit: Kit!
     private var configuration: BotConfiguration!
@@ -451,12 +325,9 @@ final class OrderedDeliberationTests: XCTestCase {
 /// The whole way through: a match takes an answer and the squads stand under it.
 final class CommandedMatchTests: XCTestCase {
     private func decision(_ order: CommanderDecision.Order,
-                          threat: CommanderDecision.Threat = .enemy) -> CommanderDecision {
-        CommanderDecision(threat: threat, order: order,
-                          crew: [CommanderDecision.Lean(name: "Davis", role: "hold the stair",
-                                                        panic: 0.1, courage: 0.9, discipline: 0.8,
-                                                        aggression: 0.7, selfSacrifice: 0.2)],
-                          truce: .none, line: nil)
+                          threat: CommanderDecision.Threat = .enemy,
+                          place: Places.Part? = .east) -> CommanderDecision {
+        CommanderDecision(threat: threat, order: order, place: place, truce: .none, line: nil)
     }
 
     private func match(_ script: [ScriptedCommander.Reply]) throws -> Game {
@@ -465,8 +336,8 @@ final class CommandedMatchTests: XCTestCase {
         return Game(world: world, start: start, commander: ScriptedCommander(script))
     }
 
-    func testAnAnswerTakenByAFrameSetsTheSquadsOrderAndItsSoldiers() async throws {
-        let game = try match([.decision(decision(.disperse))])
+    func testAnAnswerTakenByAFrameSetsTheSquadsOrderAndLeavesItsSoldiersAlone() async throws {
+        let game = try match([.decision(decision(.press, place: .east))])
         let desk = try XCTUnwrap(game.desk)
         let first = try XCTUnwrap(game.dueCalls().first)
         XCTAssertEqual(first.squad, .red)
@@ -475,15 +346,14 @@ final class CommandedMatchTests: XCTestCase {
         var later = game
         XCTAssertNil(later.commands.of(.red), "the order arrived before a frame took it")
         _ = later.advance(seconds: 0.1)
-        XCTAssertEqual(later.commands.of(.red), SquadCommand(threat: .enemy, order: .disperse))
+        XCTAssertEqual(later.commands.of(.red),
+                       SquadCommand(threat: .enemy, order: .press, place: .east))
         XCTAssertNil(later.commands.of(.blue), "blue was never called and stands under nothing")
 
+        // And the soldiers are the soldiers the match started with (ADR-0085).
         let davis = try XCTUnwrap(later.bots.first { $0.squad == .red && $0.archetype == .assault })
-        XCTAssertEqual(davis.role, "hold the stair")
-        XCTAssertEqual(davis.weights.courage, 0.9)
-        XCTAssertEqual(davis.weights.discipline, 0.8)
-        let other = try XCTUnwrap(later.bots.first { $0.squad == .blue && $0.archetype == .assault })
-        XCTAssertNil(other.role, "the other squad took red's roles")
+        let began = try XCTUnwrap(game.bots.first { $0.squad == .red && $0.archetype == .assault })
+        XCTAssertEqual(davis.weights, began.weights, "an answer rewrote a soldier's character")
     }
 
     func testARefusedCallLeavesTheSquadUnderTheOrderItHad() async throws {

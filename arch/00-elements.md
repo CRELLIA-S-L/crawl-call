@@ -263,7 +263,7 @@ It leans on the match for what to show, on the input contract for the intents a 
 ```yaml
 status: proposed
 carries: [Sources/CrawlCall/Commander, config/commander.json]
-requirements: [FR-CMD-010, FR-CMD-020, FR-CMD-025, FR-CMD-027, FR-CMD-030, FR-CMD-040, FR-CMD-050, FR-CMD-060, FR-CMD-070, FR-CMD-080, FR-CMD-090, FR-CMD-100, FR-CMD-105, FR-CMD-110, FR-CMD-120, FR-CMD-125, FR-CMD-130, FR-CMD-140, FR-CMD-150, FR-CMD-160, FR-CMD-165, IF-CMD-010, IF-CMD-020, IF-CMD-030, IF-CMD-040, IF-CMD-050, IF-CMD-060, CON-CMD-010, CON-CMD-020, CON-PUB-080, NFR-PERF-030, NFR-PERF-040, NFR-PERF-055, NFR-PERF-060, NFR-PERF-070, NFR-PERF-080]
+requirements: [FR-CMD-010, FR-CMD-020, FR-CMD-025, FR-CMD-027, FR-CMD-030, FR-CMD-040, FR-CMD-070, FR-CMD-080, FR-CMD-090, FR-CMD-100, FR-CMD-105, FR-CMD-110, FR-CMD-120, FR-CMD-125, FR-CMD-130, FR-CMD-140, FR-CMD-150, FR-CMD-160, FR-CMD-165, IF-CMD-010, IF-CMD-020, IF-CMD-030, IF-CMD-040, IF-CMD-050, IF-CMD-060, CON-CMD-010, CON-CMD-020, CON-PUB-080, NFR-PERF-030, NFR-PERF-040, NFR-PERF-055, NFR-PERF-060, NFR-PERF-070, NFR-PERF-080]
 depends_on: [E-020, E-090]
 interface: what a squad knows, on an interval, in; a threat priority, an order, roles, personality weights, a truce offer and a line to speak out — never a frame of execution
 protects: [CON-CMD-020, NFR-PERF-030]

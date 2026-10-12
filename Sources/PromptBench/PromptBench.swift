@@ -75,23 +75,24 @@ enum SchemaFlavour: String, CaseIterable {
 @Generable
 struct BenchOrderGame {
     @Generable enum Threat: String { case enemy, snake, withdraw }
-    @Generable enum Order: String { case hold, flank, withdrawToZone, disperse, destroyCover }
-    @Generable enum Truce: String { case none, propose, accept, reject }
-
-    @Generable
-    struct Soldier {
-        var name: String
-        var job: String
-        @Guide(.range(0...1)) var panic: Double
-        @Guide(.range(0...1)) var courage: Double
-        @Guide(.range(0...1)) var discipline: Double
-        @Guide(.range(0...1)) var aggression: Double
-        @Guide(.range(0...1)) var selfSacrifice: Double
+    @Generable enum Order: String { case hold, press, flank, withdraw }
+    @Generable enum Place: String {
+        case nowhere
+        case middle
+        case north = "north side"
+        case south = "south side"
+        case east = "east side"
+        case west = "west side"
+        case northEast = "north-east"
+        case northWest = "north-west"
+        case southEast = "south-east"
+        case southWest = "south-west"
     }
+    @Generable enum Truce: String { case none, propose, accept, reject }
 
     var threat: Threat
     var order: Order
-    var crew: [Soldier]
+    var place: Place
     var truce: Truce
     var speaker: String
     var line: String
@@ -189,9 +190,10 @@ enum PromptBench {
         // instrument and must keep running without the game (E-150's rationale).
         // The `just happened:` lines are what the game renders since 2026-10-12
         // (ADR-0083); a reading taken before that covers a state the game no longer
-        // sends (FR-TOOL-170).
+        // sends (FR-TOOL-170). The `jobs you gave:` line went the same day, with the
+        // roles themselves (ADR-0085).
         ("game-calm", "crew: Davis, Pike, Marsh and Otto up, west side\nrival crew: not seen\nsnake: not seen\nawareness: calm\nyour last call: none"),
-        ("game-pressed", "crew: Davis and Pike up, north-east, upstairs; Marsh up but wobbly, running low, middle; Otto gone missing\nrival crew: 3 seen, east side and middle\nsnake: 4 metres away, middle\nawareness: there is a snake and it takes people\nyour last call: flank\njobs you gave: Davis hold the stair, Pike cover the door\njust happened: Otto gone missing; Davis took a hit; Pike ran out"),
+        ("game-pressed", "crew: Davis and Pike up, north-east, upstairs; Marsh up but wobbly, running low, middle; Otto gone missing\nrival crew: 3 seen, east side and middle\nsnake: 4 metres away, middle\nawareness: there is a snake and it takes people\nyour last call: flank\njust happened: Otto gone missing; Davis took a hit; Pike ran out"),
         ("game-last-stand", "crew: Davis up but wobbly, pouch empty, south-west\nrival crew: not seen\nsnake: 2 metres away, south-west\nawareness: there is a snake and it takes people\nyour last call: withdrawToZone\ntruce: they are shouting at us to stop shooting\njust happened: Pike, Marsh and Kit gone missing; the snake came near; Davis saw the snake take one of ours"),
     ]
 
@@ -251,13 +253,10 @@ enum PromptBench {
                         case .game:
                             let r = try await session.respond(to: prompt, generating: BenchOrderGame.self, includeSchemaInPrompt: includeSchema, options: opts)
                             ins = r.usage.input.totalTokenCount; outs = r.usage.output.totalTokenCount
-                            // What the crew came back as is the thing this flavour is
-                            // for: an answer with no soldiers in it is an answer that
-                            // leaves FR-CMD-050 and FR-CMD-060 with nothing to apply.
-                            let jobs = r.content.crew.map { "\($0.name)/\($0.job)/p\(String(format: "%.1f", $0.panic))" }
-                            line = "\(r.content.speaker): \(r.content.line) | crew \(r.content.crew.count): \(jobs.joined(separator: " "))"
+                            // The place is the thing this flavour is for since
+                            // ADR-0085: an order that names none moves nobody.
+                            line = "\(r.content.speaker): \(r.content.line) | \(r.content.order.rawValue) \(r.content.place.rawValue)"
                             threat = r.content.threat.rawValue; order = r.content.order.rawValue
-                            panic = r.content.crew.first?.panic ?? -1
                         case .minimal:
                             let r = try await session.respond(to: prompt, generating: BenchOrderMinimal.self, includeSchemaInPrompt: includeSchema, options: opts)
                             ins = r.usage.input.totalTokenCount; outs = r.usage.output.totalTokenCount

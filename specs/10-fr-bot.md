@@ -567,7 +567,7 @@ depends_on: [FR-BOT-080]
 refines: []
 conflicts_with: []
 code: [Sources/CrawlCall/Bot/Deliberation.swift]
-tests: [Tests/CrawlCallTests/DeliberationTests.swift]
+tests: [Tests/CrawlCallTests/DeliberationTests.swift, Tests/CrawlCallTests/CommanderOrdersTests.swift]
 created: 2026-10-12
 ```
 

@@ -10,9 +10,9 @@ Total requirements: 281.
 | `draft` | 4 |
 | `deferred` | 95 |
 | `partial` | 11 |
-| `implemented` | 165 |
+| `implemented` | 163 |
 | `superseded` | 6 |
-| `withdrawn` | 0 |
+| `withdrawn` | 2 |
 
 ## Requirement → code → verification
 
@@ -46,7 +46,7 @@ Total requirements: 281.
 | **FR-BOT-105** Cover is worth less against a wrecking weapon | `deferred` | T | — | — |
 | **FR-BOT-110** Height advantage enters position scoring | `implemented` | T | `Sources/CrawlCall/Bot/Deliberation.swift`<br>`Sources/CrawlCall/Bot/Execution.swift` | `Tests/CrawlCallTests/PositionTests.swift` |
 | **FR-BOT-115** Distance along the snake's path enters position scoring | `implemented` | T | `Sources/CrawlCall/Bot/Deliberation.swift`<br>`Sources/CrawlCall/Bot/Execution.swift` | `Tests/CrawlCallTests/PositionTests.swift` |
-| **FR-BOT-116** An order's part of the arena raises what a position is worth | `implemented` | T | `Sources/CrawlCall/Bot/Deliberation.swift` | `Tests/CrawlCallTests/DeliberationTests.swift` |
+| **FR-BOT-116** An order's part of the arena raises what a position is worth | `implemented` | T | `Sources/CrawlCall/Bot/Deliberation.swift` | `Tests/CrawlCallTests/DeliberationTests.swift`<br>`Tests/CrawlCallTests/CommanderOrdersTests.swift` |
 | **FR-BOT-118** A bot flees to somewhere it can get to | `implemented` | T | `Sources/CrawlCall/Bot/Deliberation.swift`<br>`Sources/CrawlCall/Map/PieceIndex.swift` | `Tests/CrawlCallTests/DeliberationTests.swift`<br>`Tests/CrawlCallTests/PieceIndexTests.swift` |
 | **FR-BOT-119** A bot in cover stays in it | `implemented` | T | `Sources/CrawlCall/Bot/Deliberation.swift` | `Tests/CrawlCallTests/DeliberationTests.swift`<br>`Tests/CrawlCallTests/IdleTests.swift` |
 | **FR-BOT-120** Nearby snake overrides the commander's priority | `implemented` | T | `Sources/CrawlCall/Bot/Deliberation.swift` | `Tests/CrawlCallTests/SquadStateTests.swift`<br>`Tests/CrawlCallTests/CommanderOrdersTests.swift` |
@@ -98,9 +98,9 @@ Total requirements: 281.
 | **FR-CMD-025** Each commander call is its own session | `implemented` | T | `Sources/CrawlCall/Commander/SystemModelCommander.swift`<br>`Sources/CrawlCall/Commander/CommanderDesk.swift` | `Tests/CrawlCallTests/CommanderCallTests.swift` |
 | **FR-CMD-027** Every generation carries a response ceiling | `implemented` | T | `Sources/CrawlCall/Commander/SystemModelCommander.swift`<br>`Sources/CrawlCall/CrawlCallApp.swift`<br>`config/match.json` | `Tests/CrawlCallTests/CommanderCallTests.swift` |
 | **FR-CMD-030** The commander sets the threat priority | `implemented` | T | `Sources/CrawlCall/Commander/SquadCommand.swift`<br>`Sources/CrawlCall/Game.swift`<br>`Sources/CrawlCall/Bot/Execution.swift`<br>`Sources/CrawlCall/Bot/Deliberation.swift` | `Tests/CrawlCallTests/CommanderOrdersTests.swift` |
-| **FR-CMD-040** The commander issues an order | `implemented` | T | `Sources/CrawlCall/Commander/SquadCommand.swift`<br>`Sources/CrawlCall/Commander/Orders.swift`<br>`Sources/CrawlCall/Game.swift`<br>`Sources/CrawlCall/Bot/Execution.swift` | `Tests/CrawlCallTests/CommanderOrdersTests.swift` |
-| **FR-CMD-050** The commander assigns roles | `implemented` | T | `Sources/CrawlCall/Commander/SquadCommand.swift`<br>`Sources/CrawlCall/Game.swift` | `Tests/CrawlCallTests/CommanderOrdersTests.swift` |
-| **FR-CMD-060** The commander sets personality weights | `implemented` | T | `Sources/CrawlCall/Commander/SquadCommand.swift`<br>`Sources/CrawlCall/Game.swift` | `Tests/CrawlCallTests/CommanderOrdersTests.swift` |
+| **FR-CMD-040** The commander issues an order | `implemented` | T | `Sources/CrawlCall/Commander/SquadCommand.swift`<br>`Sources/CrawlCall/Commander/Places.swift`<br>`Sources/CrawlCall/Game.swift`<br>`Sources/CrawlCall/Bot/Execution.swift` | `Tests/CrawlCallTests/CommanderOrdersTests.swift` |
+| **FR-CMD-050** The commander assigns roles | `withdrawn` | T | — | — |
+| **FR-CMD-060** The commander sets personality weights | `withdrawn` | T | — | — |
 | **FR-CMD-070** Awareness gates what the commander is told | `implemented` | T | `Sources/CrawlCall/Commander/SquadView.swift` | `Tests/CrawlCallTests/CommanderCallTests.swift`<br>`Tests/CrawlCallTests/CommanderContractTests.swift` |
 | **FR-CMD-080** The two commanders run out of phase | `implemented` | T | `Sources/CrawlCall/Commander/CommanderDesk.swift` | `Tests/CrawlCallTests/CommanderCallTests.swift` |
 | **FR-CMD-090** A commander may propose a truce | `deferred` | T | — | — |
@@ -108,7 +108,7 @@ Total requirements: 281.
 | **FR-CMD-105** A truce turns both squads on the snake | `deferred` | T | — | — |
 | **FR-CMD-110** A truce is fragile | `deferred` | T | — | — |
 | **FR-CMD-120** Losing the role-holder silences the commander | `implemented` | T | `Sources/CrawlCall/Commander/SquadCommand.swift`<br>`Sources/CrawlCall/Game.swift` | `Tests/CrawlCallTests/CommanderCollapseTests.swift` |
-| **FR-CMD-125** Losing the role-holder voids orders and roles | `implemented` | T | `Sources/CrawlCall/Commander/SquadCommand.swift`<br>`Sources/CrawlCall/Game.swift` | `Tests/CrawlCallTests/CommanderCollapseTests.swift` |
+| **FR-CMD-125** Losing the role-holder voids the squad's order | `implemented` | T | `Sources/CrawlCall/Commander/SquadCommand.swift`<br>`Sources/CrawlCall/Game.swift` | `Tests/CrawlCallTests/CommanderCollapseTests.swift` |
 | **FR-CMD-130** Collapsed bots keep their last weights, with more panic | `implemented` | T | `Sources/CrawlCall/Commander/SquadCommand.swift`<br>`Sources/CrawlCall/Game.swift` | `Tests/CrawlCallTests/CommanderCollapseTests.swift` |
 | **FR-CMD-140** Bots speak on events | `deferred` | D | — | — |
 | **FR-CMD-150** Speech is rate-limited and queued | `deferred` | T | — | — |
@@ -352,7 +352,6 @@ Who links to each requirement. Computed; not stored in the requirements themselv
 | **FR-CMD-025** | FR-CMD-027 (derives_from) |
 | **FR-CMD-030** | FR-BOT-120 (depends_on), FR-CMD-105 (depends_on) |
 | **FR-CMD-040** | FR-BOT-116 (derives_from), FR-BOT-130 (depends_on), FR-CMD-125 (depends_on) |
-| **FR-CMD-050** | FR-CMD-125 (depends_on) |
 | **FR-CMD-090** | FR-CMD-100 (derives_from), FR-CMD-105 (derives_from) |
 | **FR-CMD-100** | FR-CMD-105 (depends_on), FR-CMD-110 (derives_from) |
 | **FR-CMD-120** | FR-CMD-125 (derives_from), FR-CMD-130 (derives_from) |

@@ -40,11 +40,6 @@ struct Bot: Equatable {
     /// inputs (FR-BOT-080), and both start from the archetype's entry (IF-BOT-010).
     var health: Double
     var ammunition: Int
-    /// What its commander last gave this bot to do — holding a stair, covering,
-    /// distracting — or nil for none (FR-CMD-050). A squad with no commander left
-    /// carries none (FR-CMD-125), and the commander is told what it gave out last
-    /// time (IF-CMD-010).
-    var role: String?
 
     /// Whether this bot speaks for its squad (FR-BOT-040). Nothing draws it: the
     /// role-holder is found by listening to who gives the orders, not by looking

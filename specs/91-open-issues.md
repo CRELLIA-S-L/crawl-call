@@ -21,6 +21,7 @@ Q-530 — nine references running against the order the parts imply, and the thi
 Q-310 — what a bot has to fight with beyond a magazine — was opened on 2026-09-25 and settled on 2026-10-11 by the maintainer, in ADR-0075: a bot carries a primary weapon, a sidearm, grenades and a knife, each with its own numbers in a catalogue the bot configuration holds. Ten requirements came out of it, FR-BOT-440 through FR-BOT-520, with INV-BOT-040 over the table and FR-VIEW-340 for what a bot is drawn holding; FR-BOT-070 widened to let a grenade weaken a wall, and IF-BOT-010 went to `partial`, the keys being written before they are read.
 Q-600 — the bots standing still, because the cover they chose was the cell they already stood in — was opened and settled on 2026-10-12, by FR-BOT-119 and ADR-0081: a bot nothing watches where it stands is in cover and has no cover to take, so the action is off its list rather than scored at nothing. FR-BOT-167 was built beside it (ADR-0082). The entry's second way out — scoring the quiet motives beside the rest rather than after them — was weighed against the measurement that followed and **not** taken: the same arena, the same starting cell and nobody steering now gives a firefight that advances, takes cover, fires, reloads and finishes, with a squad wiped out by the eighty-fifth second, where before it gave 0.00 m of movement and nothing but standing. What is left of that question is Q-620.
 Q-610 — the commander never told how the fight is going — was opened and settled on 2026-10-12 by ADR-0083: a call now carries what its own soldiers reacted to since the last one, from the interrupts the frame already finds, said once each and spent by the call that carries it. IF-CMD-010 went to `partial` for the hours between the finding and the fix and is `implemented` again. Two of the entry's three questions were decided with it — what a call carries, and that the order vocabulary of FR-CMD-040 stays five words — and the third, what an order's reach is, is the step after.
+Q-630 and Q-640 — the roles coming back as free text, and what an order's fifteen-metre reach cost the deliberation — were opened on 2026-10-12 and settled the same day by ADR-0085, both by deletion. There are no roles to close a vocabulary for: FR-CMD-050 and FR-CMD-060 are withdrawn, and a commander no longer writes anything on a soldier. And there is no walk to pay for: an order names a part of the arena, every position is scored against it (FR-BOT-116), and the cell a bot takes is the best its own `worth` finds within the distance it already looks for cover.
 What remains is what a decision inside the repository cannot close.
 
 ### Q-120 — The name is chosen; the search that clears it is not done
@@ -276,37 +277,3 @@ What remains is what a decision inside the repository cannot close.
 - **Where it belongs.** The state it happens in should not last: one squad is gone, and the match goes on because FR-SCORE-150 ends it only when no bot is left at all. And the alternation is the shape ADR-0059 chose — a quiet motive consulted only where nothing scores flips as soon as what scores flickers around zero. Scoring the two beside the rest is the answer that was weighed and left out on 2026-10-12, and this entry is the case that would reopen it.
 - **Still needed:** the slot-by-slot reading, and then the maintainer's word on whether the pacing is worth the reversal of ADR-0059 — or whether it is FR-SCORE-150 that should have ended the match before anybody could pace.
 
-### Q-630 — The roles the model hands out are free text, and no utility can be keyed to them
-
-- **Found:** on 2026-10-12, running the bench over the game's own schema to pay FR-TOOL-170's debt for the new state, and reading what came back.
-- **What is wrong.** FR-CMD-050 obliges the game to assign each bot the role the response names — "holding a stair, covering, distracting" — and its rationale says a role is a bias in that bot's utility, the mechanism being tuning. IF-CMD-020 asks for "a role or none per bot" and names no vocabulary, so the field is free text, and the model treats it as free text.
-- **What nine calls returned**, under the shipping instructions and the game's own schema, three scenarios, three calls each:
-
-  | scenario | the roles named |
-  |---|---|
-  | game-calm | leader, scout, blocker, distractor; leader, spy, shield, runner; leader, scout, builder, shield |
-  | game-pressed | hold, cover the door; hold the stair, cover the door; hold, cover |
-  | game-last-stand | none, flank; none, none; alert, none |
-
-  Fifteen distinct words and phrases in nine calls, of which two — "hold the stair" and "cover the door" — are the ones the prompt itself had just shown the model under `jobs you gave:`. Left to itself it invents: `builder`, `spy`, `runner`, `shield`, `alert`, and `flank`, which is an order and not a role.
-- **Therefore.** A utility bias keyed on this text would fire for a minority of calls and would be silently wrong for the rest: a bot named `builder` or `spy` would be read as having no role, and a bot named `flank` would be read as having a role when the model meant an order. The role is therefore left doing what it does today — written on the bot, and read back into the next call's state, which is the one use it serves honestly.
-- **Still needed:** the maintainer's choice between two ways. Close the vocabulary in IF-CMD-020 — a role from a named set, as the threat and the order already are, which costs nothing in tokens and makes the field tunable; or leave it open and accept that a role is something the commander says to itself between calls and never a mechanism. The first is a change to IF-CMD-020 and FR-CMD-050 and voids the prompt measurement again (FR-TOOL-170); the second is a sentence in FR-CMD-050's rationale and nothing else.
-
-### Q-640 — An order that reaches the next room costs the deliberation its budget
-
-- **Found:** on 2026-10-12, on the phone, measuring the build that gave an order its own reach (ADR-0084).
-- **What the runs show.** Two 45-second runs, the same build but for the order reach, nobody steering, thermal `nominal` in both, the frame record reading the deliberation's own time.
-
-  | | reach 5 m | reach 15 m |
-  |---|---|---|
-  | frames in which the deliberation ran | 340 of 2086 | 372 of 2010 |
-  | its time in such a frame, median | 0.214 ms | 0.484 ms |
-  | the same, 95th | 0.488 ms | 2.042 ms |
-  | the worst frame | 0.716 ms | 4.723 ms |
-  | the app's own work over the whole frame, median / 95th | 1.36 / 2.38 ms | 1.60 / 3.28 ms |
-
-- **Why.** `Deliberation.walk` walks every cell within the reach over a grid of half a metre: about 314 cells at five metres and about 2800 at fifteen. `Orders.zone` runs it for every bot at every slot while a squad carries an order, which is five times a second each.
-- **What it is measured against.** NFR-PERF-020 asks the deliberation for at most 0.5 ms in a frame. The median is now at that line and the 95th is four times over it. The requirement is `deferred` and its method is an unattended run along a fixed route, which the game has no autopilot for (Q-570), so this is a price comparison between two builds measured the same way and not a verdict.
-- **What it is not.** Not the frame rate: 43.7 frames a second against 45.1, with the commander's inference where ADR-0078 measured the frames going. The spikes carry no `commander_answered` event, so they are ordinary two-slot frames.
-- **Three ways out, and the maintainer's to choose.** Narrow the reach — ten metres is four times five metres' area rather than nine. Cheapen the walk — the same cells are walked again at every slot while a bot carries one order, and a bot standing still walks them for nothing. Or accept it and say so in NFR-PERF-020, whose 0.5 ms was written before an order could reach anywhere.
-- **Still needed:** that choice. Nothing waits on it: the orders work and the frame rate is the model's.

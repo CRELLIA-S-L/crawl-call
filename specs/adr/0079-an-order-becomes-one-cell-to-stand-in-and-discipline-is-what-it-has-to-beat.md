@@ -1,8 +1,12 @@
 # ADR-0079 — An order becomes one cell to stand in, and discipline is what the order has to beat
 
-- **Status:** accepted
+- **Status:** superseded by ADR-0085
 - **Date:** 2026-10-12
 - **Related requirements:** FR-CMD-030, FR-CMD-040, FR-CMD-050, FR-CMD-060, FR-BOT-120, FR-BOT-130
+
+## Superseded
+
+By ADR-0085 on 2026-10-12. The order no longer becomes a cell: a commander names a part of the arena, and which cell of it a bot takes is the bot's own, by the same `worth` that already weighed cover, height and squadmates. What this decision got right and ADR-0085 keeps: the one hook the deliberation has for an order is `Situation.orderedZone`, scored by the obedience term and weighed against the bot's own reading by its discipline (FR-BOT-130).
 
 ## Context and problem statement
 

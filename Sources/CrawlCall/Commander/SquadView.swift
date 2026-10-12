@@ -79,8 +79,7 @@ enum SquadView {
                 name: name,
                 standing: standing(of: bot, whole: entry?.health ?? .zero),
                 pouch: pouch(of: bot, magazine: entry?.magazine ?? .zero),
-                place: place(of: bot.position, floor: bot.floor, in: bounds),
-                role: bot.role))
+                place: place(of: bot.position, floor: bot.floor, in: bounds)))
         }
         return (crew, gone)
     }

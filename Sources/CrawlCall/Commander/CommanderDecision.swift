@@ -14,29 +14,29 @@ struct CommanderDecision: Equatable {
     /// What the squad should worry about most (FR-CMD-030).
     enum Threat: String, CaseIterable, Equatable { case enemy, snake, withdraw }
 
-    /// What the squad does next (FR-CMD-040). `destroyCover` is the fifth the
-    /// requirement names; nothing acts on it until bots can wreck a wall (FR-BOT-070).
+    /// What the squad does next (FR-CMD-040). Four words, and each of them is about a
+    /// part of the arena: hold it, press into it, come round into it, pull back to it.
+    ///
+    /// `press` and `flank` say where the enemy is and the other two where to be, which
+    /// is the whole of the difference the deliberation reads (ADR-0085); between those
+    /// two the difference is what the squad shouts, and that is reason enough to keep
+    /// both — a commander that can only say "press" describes half the fights it sees.
     enum Order: String, CaseIterable, Equatable {
-        case hold, flank, withdrawToZone, disperse, destroyCover
+        case hold, press, flank, withdraw
+
+        /// Whether the part the order names is where the enemy is, rather than where
+        /// the squad is to be: what a bot with no sighting of its own may believe
+        /// (FR-BOT-360).
+        var namesTheEnemy: Bool {
+            switch self {
+            case .press, .flank: return true
+            case .hold, .withdraw: return false
+            }
+        }
     }
 
     /// Whether to offer the other crew a truce, take one, or turn one down (FR-CMD-090).
     enum Truce: String, CaseIterable, Equatable { case none, propose, accept, reject }
-
-    /// What one soldier is told to be and to do. The weights are clamped to the
-    /// archetype's allowed range when they are applied, not here (FR-CMD-060): this
-    /// type holds what the commander said, and the squad decides what it may do.
-    struct Lean: Equatable {
-        /// The figure's name, as the state gave it (`SquadView.names`).
-        let name: String
-        /// Holding a stair, covering, distracting — or nil for none (FR-CMD-050).
-        let role: String?
-        let panic: Double
-        let courage: Double
-        let discipline: Double
-        let aggression: Double
-        let selfSacrifice: Double
-    }
 
     /// One shout, by one named soldier (FR-CMD-140). Nil where the call was not asked
     /// for a line.
@@ -47,12 +47,10 @@ struct CommanderDecision: Equatable {
 
     let threat: Threat
     let order: Order
-    let crew: [Lean]
+    /// The part of the arena the order names, or nil where the commander named none.
+    let place: Places.Part?
     let truce: Truce
     let line: Line?
-
-    /// A soldier's lean by name, or nil where the commander said nothing about it.
-    func lean(for name: String) -> Lean? { crew.first { $0.name == name } }
 }
 
 /// Why a call produced no decision. Every one of these is survivable and none is an

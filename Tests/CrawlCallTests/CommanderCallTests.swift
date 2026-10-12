@@ -7,11 +7,8 @@ import XCTest
 @testable import CrawlCall
 
 final class CommanderDeskTests: XCTestCase {
-    private let lean = CommanderDecision.Lean(name: "Davis", role: "hold the stair", panic: 0.5,
-                                              courage: 0.5, discipline: 0.5, aggression: 0.5,
-                                              selfSacrifice: 0.5)
     private func decision(_ order: CommanderDecision.Order = .hold) -> CommanderDecision {
-        CommanderDecision(threat: .snake, order: order, crew: [lean], truce: .none, line: nil)
+        CommanderDecision(threat: .snake, order: order, place: .east, truce: .none, line: nil)
     }
     private let state = CommanderInput(crew: [], gone: [], rivals: "not seen", snake: "not seen",
                                        awareness: "calm", lastCall: "none", truce: nil, events: [])
@@ -104,19 +101,17 @@ final class CommanderDeskTests: XCTestCase {
     func testEachSquadKeepsItsOwnLastDecision() async {
         // FR-CMD-010: one commander per squad is a matter of state, and this is the
         // state — neither squad is ever handed the other's decision.
-        let (desk, _) = desk([.decision(decision(.flank)), .decision(decision(.disperse))])
+        let (desk, _) = desk([.decision(decision(.flank)), .decision(decision(.withdraw))])
         await desk.call(.red, with: state, at: 0)
         await desk.call(.blue, with: state, at: 3.5)
         XCTAssertEqual(desk.lastDecision(of: .red)?.order, .flank)
-        XCTAssertEqual(desk.lastDecision(of: .blue)?.order, .disperse)
+        XCTAssertEqual(desk.lastDecision(of: .blue)?.order, .withdraw)
     }
 }
 
 final class CommanderInTheMatchTests: XCTestCase {
-    private let lean = CommanderDecision.Lean(name: "Davis", role: nil, panic: 0.5, courage: 0.5,
-                                              discipline: 0.5, aggression: 0.5, selfSacrifice: 0.5)
     private var decision: CommanderDecision {
-        CommanderDecision(threat: .snake, order: .flank, crew: [lean], truce: .none, line: nil)
+        CommanderDecision(threat: .snake, order: .flank, place: .east, truce: .none, line: nil)
     }
 
     private func match(_ script: [ScriptedCommander.Reply]? = nil) throws -> (Game, ScriptedCommander?) {

@@ -24,11 +24,7 @@ final class SquadCollapseTests: XCTestCase {
     }
 
     private func decision(_ order: CommanderDecision.Order = .flank) -> CommanderDecision {
-        CommanderDecision(threat: .enemy, order: order,
-                          crew: [CommanderDecision.Lean(name: "Davis", role: "hold the stair", panic: 0.4,
-                                                        courage: 0.6, discipline: 0.7, aggression: 0.8,
-                                                        selfSacrifice: 0.3)],
-                          truce: .none, line: nil)
+        CommanderDecision(threat: .enemy, order: order, place: .east, truce: .none, line: nil)
     }
 
     // MARK: when a squad is counted as fallen
@@ -63,25 +59,21 @@ final class SquadCollapseTests: XCTestCase {
 
     // MARK: what the collapse does (FR-CMD-120, FR-CMD-125, FR-CMD-130)
 
-    func testTheOrderAndEveryRoleAreVoided() throws {
+    func testTheOrderIsVoided() throws {
         var bots = [try bot(id: 0, commander: true, alive: false), try bot(.heavy, id: 1)]
         var commands = SquadCommands()
-        commands.apply(decision(), to: .red, among: &bots, configuration: configuration)
-        let heavy = try checkedIndex(1, of: bots)
-        bots[heavy].role = "cover Davis"
+        commands.apply(decision(), to: .red)
         XCTAssertNotNil(commands.of(.red))
 
         commands.collapse(.red, among: &bots, configuration: configuration)
         XCTAssertNil(commands.of(.red), "a squad with no commander still stood under an order")
         XCTAssertTrue(commands.hasCollapsed(.red))
-        XCTAssertNil(try element(1, of: bots).role)
-        XCTAssertNil(try element(0, of: bots).role, "the body kept the role it was given")
     }
 
     func testTheSurvivorsKeepTheirWeightsWithMorePanic() throws {
         var bots = [try bot(id: 0, commander: true, alive: false), try bot(.heavy, id: 1)]
         var commands = SquadCommands()
-        commands.apply(decision(), to: .red, among: &bots, configuration: configuration)
+        commands.apply(decision(), to: .red)
         let before = try element(1, of: bots).weights
 
         commands.collapse(.red, among: &bots, configuration: configuration)
@@ -128,7 +120,7 @@ final class SquadCollapseTests: XCTestCase {
         var bots = [try bot(id: 0, commander: true, alive: false),
                     try bot(squad: .blue, id: 1, commander: true)]
         var commands = SquadCommands()
-        commands.apply(decision(.hold), to: .blue, among: &bots, configuration: configuration)
+        commands.apply(decision(.hold), to: .blue)
         let before = try element(1, of: bots).weights
 
         commands.collapse(.red, among: &bots, configuration: configuration)
@@ -142,11 +134,7 @@ final class SquadCollapseTests: XCTestCase {
 /// squad falls apart (concept §9.4 — the player's main lever on the war).
 final class CollapsedMatchTests: XCTestCase {
     private func decision() -> CommanderDecision {
-        CommanderDecision(threat: .enemy, order: .hold,
-                          crew: [CommanderDecision.Lean(name: "Davis", role: "hold the stair", panic: 0.4,
-                                                        courage: 0.6, discipline: 0.7, aggression: 0.8,
-                                                        selfSacrifice: 0.3)],
-                          truce: .none, line: nil)
+        CommanderDecision(threat: .enemy, order: .hold, place: .east, truce: .none, line: nil)
     }
 
     private func match() throws -> Game {
@@ -174,7 +162,6 @@ final class CollapsedMatchTests: XCTestCase {
 
         XCTAssertTrue(game.commands.hasCollapsed(.red))
         XCTAssertNil(game.commands.of(.red))
-        XCTAssertFalse(game.bots.contains { $0.squad == .red && $0.role != nil })
         // FR-CMD-120: never called again, however long the match runs.
         for _ in 0..<Int(20 / frame) { game.advance(seconds: frame) }
         XCTAssertFalse(game.dueCalls().contains { $0.squad == .red },

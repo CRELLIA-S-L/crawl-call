@@ -118,14 +118,15 @@ derives_from: [FR-CMD-020]
 depends_on: [IF-CMD-020]
 refines: []
 conflicts_with: []
-code: [Sources/CrawlCall/Commander/SquadCommand.swift, Sources/CrawlCall/Commander/Orders.swift, Sources/CrawlCall/Game.swift, Sources/CrawlCall/Bot/Execution.swift]
+code: [Sources/CrawlCall/Commander/SquadCommand.swift, Sources/CrawlCall/Commander/Places.swift, Sources/CrawlCall/Game.swift, Sources/CrawlCall/Bot/Execution.swift]
 tests: [Tests/CrawlCallTests/CommanderOrdersTests.swift]
 created: 2026-09-21
 ```
 
-When a commander's response arrives, the system **shall** set the squad's current order to the one the response names — hold, flank, withdraw to a zone, disperse, or destroy the enemy's cover.
+When a commander's response arrives, the system **shall** set the squad's current order to the one the response names — hold, press, flank or withdraw — together with the part of the arena the response names with it.
 
-**Rationale.** Concept §9.1 lists these five orders.
+**Rationale.** Concept §9.1 lists five orders; four of them remain and one, destroying the enemy's cover, left the vocabulary with the per-bot weights on 2026-10-12 (ADR-0085) — it named no cell and nothing acted on it, and it comes back with FR-BOT-070.
+An order carries a place because without one it says nothing a squad can act on: "flank" with no quarter named is a gesture, and the maintainer's rule is that a commander says what matters and *where*.
 Setting the order is the "new order" event of FR-BOT-170; how much a bot obeys is FR-BOT-130.
 Built on 2026-10-12 (ADR-0079). Four of the five orders become one cell for each bot to be in — the hook the deliberation has always had and that nothing set in play — and the fifth, destroying the enemy's cover, names none until a bot can wreck a wall (FR-BOT-070).
 The cell is searched for within the order reach of the bot configuration, which is three times the distance a squad stays together over: at the grouping distance it had first, an order could name no cell a squad would notice moving to (ADR-0084, Q-610).
@@ -133,14 +134,14 @@ The cell is searched for within the order reach of the bot configuration, which 
 ### FR-CMD-050 — The commander assigns roles
 
 ```yaml
-status: implemented
+status: withdrawn
 verification: T
 derives_from: [FR-CMD-020]
 depends_on: [IF-CMD-020]
 refines: []
 conflicts_with: []
-code: [Sources/CrawlCall/Commander/SquadCommand.swift, Sources/CrawlCall/Game.swift]
-tests: [Tests/CrawlCallTests/CommanderOrdersTests.swift]
+code: []
+tests: []
 created: 2026-09-21
 ```
 
@@ -148,20 +149,21 @@ When a commander's response arrives, the system **shall** assign each bot of the
 
 **Rationale.** Concept §9.1: who holds the stair, who covers, who distracts.
 A role is a bias in that bot's utility, the mechanism being tuning.
+**Withdrawn on 2026-10-12** (ADR-0085), on the maintainer's rule that a commander is a strategist and the bots work out the tactics. A role was the commander telling one soldier what its job is, which is the squad's own business; it was also free text the model invented a new vocabulary for at every call (Q-630), so nothing could have read it. The number stays dead.
 Built on 2026-10-12 (ADR-0079). A soldier the answer passes over keeps the role it had, which is IF-CMD-020's refusal to repair read on this side of the crossing: a role cleared because the model forgot to mention it is an order nobody gave.
 What a role does to a bot's utility is still nothing, and on 2026-10-12 that stopped being a gap waiting to be filled: nine calls under the game's own schema named fifteen different roles, inventing `builder`, `spy`, `shield` and `alert` and once answering `flank`, which is an order. A bias keyed on free text would fire for a minority of calls and be silently wrong for the rest, so the role is left doing the one thing it does honestly — written on the bot, and read back into the next call's state. Q-630 holds the choice: a closed vocabulary in IF-CMD-020, or a role that is something a commander says to itself.
 
 ### FR-CMD-060 — The commander sets personality weights
 
 ```yaml
-status: implemented
+status: withdrawn
 verification: T
 derives_from: [FR-CMD-020]
 depends_on: [IF-CMD-020, FR-BOT-030]
 refines: []
 conflicts_with: []
-code: [Sources/CrawlCall/Commander/SquadCommand.swift, Sources/CrawlCall/Game.swift]
-tests: [Tests/CrawlCallTests/CommanderOrdersTests.swift]
+code: []
+tests: []
 created: 2026-09-21
 ```
 
@@ -170,6 +172,7 @@ When a commander's response arrives, the system **shall** replace each bot's per
 **Rationale.** Concept §9.1: the weights are the most important part — through them the LLM shapes behaviour without taking per-frame decisions.
 Clamping keeps a commander from turning a heavy into a coward outright; the range is per archetype so that the silhouette keeps meaning what it looks like.
 Built on 2026-10-12 (ADR-0079). The clamp reads `allowedRanges` of the bot configuration, which nothing had ever read; every range in the shipped file runs 0 to 1, so the clamp holds nothing back today, and the numbers that would make it bite are the maintainer's to set in the file (ART-070).
+**Withdrawn on 2026-10-12** (ADR-0085). Replacing a soldier's character from outside is the furthest thing from the strategic command the maintainer's rule describes, and it was the bulk of what the model had to generate — five numbers a soldier, four soldiers a squad, measured at up to 283 output tokens against 43 for an answer without them. Concept §9.1 calls the weights the most important part, and that sentence is what this withdrawal reverses; the intent it served — the model shapes behaviour and takes no per-frame decisions — is served by the order and its place instead. A bot's weights are its archetype's (FR-BOT-030) and nobody else's, until its squad's commander is eaten and its panic rises (FR-CMD-130). The number stays dead.
 
 ### FR-CMD-070 — Awareness gates what the commander is told
 
@@ -308,13 +311,13 @@ When the bot holding a squad's commander role is consumed or killed, the system 
 A free consequence of the architecture and the player's main lever on the balance of the war.
 Built on 2026-10-12 (ADR-0080). The match asks on every frame whether anybody living still holds the role, and a squad that has lost it is skipped where the calls are decided — said there rather than left to follow from the state being unbuildable, so that the rule is a rule.
 
-### FR-CMD-125 — Losing the role-holder voids orders and roles
+### FR-CMD-125 — Losing the role-holder voids the squad's order
 
 ```yaml
 status: implemented
 verification: T
 derives_from: [FR-CMD-120]
-depends_on: [FR-CMD-040, FR-CMD-050]
+depends_on: [FR-CMD-040]
 refines: []
 conflicts_with: []
 code: [Sources/CrawlCall/Commander/SquadCommand.swift, Sources/CrawlCall/Game.swift]
@@ -322,10 +325,11 @@ tests: [Tests/CrawlCallTests/CommanderCollapseTests.swift]
 created: 2026-09-21
 ```
 
-When the bot holding a squad's commander role is consumed or killed, the system **shall** clear the squad's current order and every bot's role.
+When the bot holding a squad's commander role is consumed or killed, the system **shall** clear the squad's current order.
 
 **Rationale.** Concept §9.4: coordination disappears.
 Split from FR-CMD-120 because a squad could stop receiving new orders and still act on the old one, and that is a different squad from one with none.
+Narrowed on 2026-10-12 (ADR-0085), when roles were withdrawn with FR-CMD-050: there is nothing left to void but the order, which is also the only thing a commander ever gave the squad as a whole.
 Built on 2026-10-12 (ADR-0080). The order goes and every role goes with it, the body's included; what the bots keep is their weights, which is FR-CMD-130.
 
 ### FR-CMD-130 — Collapsed bots keep their last weights, with more panic

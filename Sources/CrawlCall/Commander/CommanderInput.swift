@@ -34,8 +34,6 @@ struct CommanderInput: Equatable, Sendable {
         let pouch: String?
         /// Which part of the arena, in the coarse words the bench measured.
         let place: String
-        /// What its commander last gave it to do, or nil (FR-CMD-050).
-        let role: String?
     }
 
     let crew: [Soldier]
@@ -56,7 +54,7 @@ struct CommanderInput: Equatable, Sendable {
 
     /// The state as the model reads it.
     ///
-    /// The five lines a calm squad with no roles, no truce and no events produces are
+    /// The five lines a calm squad with no truce and no events produces are
     /// the shape the bench measured, line for line; everything beyond them is written
     /// only when there is something to write, so that the common call stays the call
     /// that was measured. Any change to this rendering is a change to one of the four
@@ -68,8 +66,6 @@ struct CommanderInput: Equatable, Sendable {
         lines.append("snake: " + snake)
         lines.append("awareness: " + awareness)
         lines.append("your last call: " + lastCall)
-        let roles = crew.compactMap { soldier in soldier.role.map { "\(soldier.name) \($0)" } }
-        if !roles.isEmpty { lines.append("jobs you gave: " + roles.joined(separator: ", ")) }
         if let truce { lines.append("truce: " + truce) }
         if !events.isEmpty { lines.append("just happened: " + events.joined(separator: "; ")) }
         return lines.joined(separator: "\n")

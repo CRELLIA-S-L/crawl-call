@@ -8,9 +8,8 @@ import XCTest
 
 final class CommanderInputTests: XCTestCase {
     private func soldier(_ name: String, standing: String = "up",
-                         pouch: String? = nil, place: String = "west side",
-                         role: String? = nil) -> CommanderInput.Soldier {
-        CommanderInput.Soldier(name: name, standing: standing, pouch: pouch, place: place, role: role)
+                         pouch: String? = nil, place: String = "west side") -> CommanderInput.Soldier {
+        CommanderInput.Soldier(name: name, standing: standing, pouch: pouch, place: place)
     }
 
     private func input(crew: [CommanderInput.Soldier] = [], gone: [String] = [],
@@ -39,25 +38,25 @@ final class CommanderInputTests: XCTestCase {
     }
 
     func testWhatThereIsNothingToSayAboutIsNotSaid() {
-        // Roles, a truce and events each add a line only when there is one, so the
-        // common call stays the call the bench measured. Four soldiers with nothing
-        // the commander gave them cost four names and no clause.
+        // A truce and the events each add a line only when there is one, so the common
+        // call stays the call the bench measured. Since 2026-10-12 there is no third
+        // line to add: the jobs went with the roles (ADR-0085).
         let bare = input(crew: [soldier("Davis"), soldier("Pike")])
         XCTAssertEqual(bare.prompt.split(separator: "\n").count, 5)
-        let full = input(crew: [soldier("Davis", role: "hold the stair"), soldier("Pike")],
+        let full = input(crew: [soldier("Davis"), soldier("Pike")],
                          truce: "they are asking us to stop shooting",
-                         events: ["Otto went missing"])
-        XCTAssertEqual(full.prompt.split(separator: "\n").count, 8)
-        XCTAssertTrue(full.prompt.contains("jobs you gave: Davis hold the stair"))
+                         events: ["Otto gone missing"])
+        XCTAssertEqual(full.prompt.split(separator: "\n").count, 7)
+        XCTAssertFalse(full.prompt.contains("jobs you gave"), "the state still hands out jobs")
         XCTAssertTrue(full.prompt.contains("truce: they are asking us to stop shooting"))
-        XCTAssertTrue(full.prompt.contains("just happened: Otto went missing"))
+        XCTAssertTrue(full.prompt.contains("just happened: Otto gone missing"))
     }
 
     // MARK: every field IF-CMD-010 names
 
     func testTheStateCarriesEveryFieldTheRequirementNames() {
         let state = input(crew: [soldier("Davis", standing: "up but wobbly", pouch: "running low",
-                                          place: "east side, upstairs", role: "cover the door")],
+                                          place: "east side, upstairs")],
                           gone: ["Kit"],
                           rivals: "3 seen, west side", snake: "4 metres away, middle",
                           awareness: "Kit vanished with no trace", lastCall: "flank",
@@ -66,7 +65,6 @@ final class CommanderInputTests: XCTestCase {
         XCTAssertTrue(prompt.contains("up but wobbly"), "health")
         XCTAssertTrue(prompt.contains("running low"), "ammunition")
         XCTAssertTrue(prompt.contains("east side, upstairs"), "position")
-        XCTAssertTrue(prompt.contains("cover the door"), "role")
         XCTAssertTrue(prompt.contains("3 seen, west side"), "the enemy")
         XCTAssertTrue(prompt.contains("Kit vanished with no trace"), "awareness")
         XCTAssertTrue(prompt.contains("4 metres away"), "the snake")
@@ -157,13 +155,12 @@ final class CommanderInputTests: XCTestCase {
         let budget = try Launch.world().get().configurations.match.stateTokenBudget
         let names = ["Davis", "Pike", "Marsh", "Otto", "Beans", "Kit"]
         let crew = names.map { soldier($0, standing: "up but wobbly", pouch: "running low",
-                                       place: "north-east, upstairs",
-                                       role: "hold the stair by the crates") }
+                                       place: "north-east, upstairs") }
         let state = input(crew: crew, gone: names,
                           rivals: "6 seen, west side, east side and middle",
                           snake: "4 metres away, north-east, upstairs",
                           awareness: "there is a snake and it takes people",
-                          lastCall: "withdrawToZone",
+                          lastCall: "withdraw",
                           truce: "they are shouting at us to stop shooting",
                           events: names.map { "\($0) went missing by the crates" })
         XCTAssertLessThan(state.estimatedTokens, budget,
@@ -356,27 +353,24 @@ final class CommanderDecisionTests: XCTestCase {
         XCTAssertEqual(Set(CommanderDecision.Threat.allCases.map(\.rawValue)),
                        ["enemy", "snake", "withdraw"])
         XCTAssertEqual(Set(CommanderDecision.Order.allCases.map(\.rawValue)),
-                       ["hold", "flank", "withdrawToZone", "disperse", "destroyCover"])
+                       ["hold", "press", "flank", "withdraw"])
         XCTAssertEqual(Set(CommanderDecision.Truce.allCases.map(\.rawValue)),
                        ["none", "propose", "accept", "reject"])
+        XCTAssertEqual(Set(Places.Part.allCases.map(\.rawValue)),
+                       ["middle", "north side", "south side", "east side", "west side",
+                        "north-east", "north-west", "south-east", "south-west"])
     }
 
-    func testNoJobIsTheWordNoneInAnyCasing() {
-        XCTAssertNil(SystemModelCommander.job("none"))
-        XCTAssertNil(SystemModelCommander.job("None"))
-        XCTAssertNil(SystemModelCommander.job("  NONE  "))
-        XCTAssertNil(SystemModelCommander.job(""))
-        XCTAssertNil(SystemModelCommander.job("   "))
-        XCTAssertEqual(SystemModelCommander.job(" hold the stair "), "hold the stair")
-    }
-
-    func testALeanIsFoundByName() {
-        let lean = CommanderDecision.Lean(name: "Davis", role: nil, panic: 0.5, courage: 0.5,
-                                          discipline: 0.5, aggression: 0.5, selfSacrifice: 0.5)
-        let decision = CommanderDecision(threat: .snake, order: .hold, crew: [lean],
-                                         truce: .none, line: nil)
-        XCTAssertEqual(decision.lean(for: "Davis"), lean)
-        XCTAssertNil(decision.lean(for: "Pike"))
+    func testAPlaceIsReadBackAsTheWordTheStateWouldHaveWritten() throws {
+        // The answer's vocabulary is the state's, read the other way (ADR-0085): every
+        // part a commander can name is a word `SquadView.place` writes, and the middle
+        // of that part is somewhere that word would be written again.
+        let bounds = try Launch.world().get().plan.bounds
+        for part in Places.Part.allCases {
+            let middle = Places.middle(of: part, in: bounds)
+            XCTAssertEqual(SquadView.place(of: middle, floor: 0, in: bounds), part.rawValue,
+                           "the middle of \(part.rawValue) is not in \(part.rawValue)")
+        }
     }
 }
 
@@ -407,10 +401,10 @@ final class CommanderInstructionsTests: XCTestCase {
         for order in CommanderDecision.Order.allCases {
             XCTAssertTrue(text.contains(order.rawValue), "the order \(order.rawValue)")
         }
-        for weight in ["panic", "courage", "discipline", "aggression", "selfSacrifice"] {
-            XCTAssertTrue(text.contains(weight), "the weight \(weight)")
+        for place in Places.Part.allCases {
+            XCTAssertTrue(text.contains(place.rawValue), "the place \(place.rawValue)")
         }
-        XCTAssertTrue(text.contains("0 to 1"), "the range of the weights")
+        XCTAssertTrue(text.contains("nowhere"), "the word for an order that names no place")
         XCTAssertTrue(text.contains("truce"), "the truce action")
         XCTAssertTrue(text.contains("line"), "the line")
     }
@@ -432,10 +426,8 @@ final class CommanderInstructionsTests: XCTestCase {
 }
 
 final class SeamTests: XCTestCase {
-    private let lean = CommanderDecision.Lean(name: "Davis", role: nil, panic: 0.5, courage: 0.5,
-                                              discipline: 0.5, aggression: 0.5, selfSacrifice: 0.5)
     private var decision: CommanderDecision {
-        CommanderDecision(threat: .snake, order: .hold, crew: [lean], truce: .none, line: nil)
+        CommanderDecision(threat: .snake, order: .hold, place: .middle, truce: .none, line: nil)
     }
     private let state = CommanderInput(crew: [], gone: [], rivals: "not seen", snake: "not seen",
                                        awareness: "calm", lastCall: "none", truce: nil, events: [])

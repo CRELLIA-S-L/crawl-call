@@ -99,14 +99,24 @@ enum Execution {
             }
 
             // What its commander last told the squad, if it has one: what to worry about,
-            // which ranks what it fires at (FR-CMD-030), and what to do, which becomes
-            // the one cell this bot is to be in (FR-CMD-040). The order is turned into
-            // a cell here, per bot and per step, rather than kept with the command: it
-            // depends on where the bot stands and on what it knows, and both change
-            // between one call and the next.
+            // which ranks what it fires at (FR-CMD-030), and which part of the arena the
+            // order names, which every position is then scored against (FR-BOT-116).
+            //
+            // An order that says where the enemy is tells a bot that has seen none: being
+            // told is one of the two ways FR-BOT-360 says a bot comes to believe
+            // anything, and a bot with a sighting of its own keeps it, because its own
+            // eyes are nearer the truth than a word from seven seconds ago.
             if let standing = command(bots[index].squad) {
                 situation.priority = standing.threat
-                situation.orderedZone = Orders.zone(for: bots[index], under: standing.order, in: situation)
+                situation.arenaSpan = Perception.metres(world.plan.bounds.lowest, world.plan.bounds.highest)
+                if let part = standing.place {
+                    let middle = Places.middle(of: part, in: world.plan.bounds)
+                    situation.orderedPart = middle
+                    if standing.order.namesTheEnemy, knowledge.enemies.isEmpty {
+                        situation.enemyBelief = middle
+                    }
+                }
+                situation.orderedZone = Deliberation.ordered(for: bots[index], in: situation)
             }
 
             let chosen = Deliberation.choose(for: bots[index], in: situation)

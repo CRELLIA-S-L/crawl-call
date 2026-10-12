@@ -383,7 +383,7 @@ FR-CMD-040 — The commander issues an order — is worth building only if H-040
 ### B-320 — FR-CMD-050 stands on the commander making a visible difference
 
 ```yaml
-status: active
+status: retired
 requirement: FR-CMD-050
 all_of: [H-040]
 ```
@@ -391,11 +391,12 @@ all_of: [H-040]
 FR-CMD-050 — The commander assigns roles — is worth building only if H-040 holds.
 
 **Rationale.** Concept §16.2 H4: a refutation removes all LLM tactics, leaving utility AI — a saving, not a loss.
+Retired on 2026-10-12: FR-CMD-050 was withdrawn with ADR-0085, and a bet on a requirement nobody will build decides nothing.
 
 ### B-330 — FR-CMD-060 stands on the commander making a visible difference
 
 ```yaml
-status: active
+status: retired
 requirement: FR-CMD-060
 all_of: [H-040]
 ```
@@ -403,6 +404,7 @@ all_of: [H-040]
 FR-CMD-060 — The commander sets personality weights — is worth building only if H-040 holds.
 
 **Rationale.** Concept §16.2 H4: a refutation removes all LLM tactics, leaving utility AI — a saving, not a loss.
+Retired on 2026-10-12: FR-CMD-060 was withdrawn with ADR-0085, and a bet on a requirement nobody will build decides nothing.
 
 ### B-340 — FR-CMD-070 stands on the commander making a visible difference
 

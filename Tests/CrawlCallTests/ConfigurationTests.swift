@@ -28,14 +28,6 @@ final class ConfigurationTests: XCTestCase {
         XCTAssertLessThanOrEqual(view.cameraPitch, 60)
     }
 
-    func testAnOrderReachesFurtherThanASquadStaysTogetherOver() throws {
-        // IF-BOT-010 reads both, and they are not the same distance: an order that
-        // reached no further than the grouping distance could name the next wall and
-        // never the next room (ADR-0084).
-        let bot = try Launch.world().get().configurations.bot
-        XCTAssertGreaterThan(bot.orderReach, bot.groupingDistance)
-    }
-
     func testTheSnakeIsSlowerThanEveryArchetypeThatRuns() throws {
         // INV-SNAKE-020, read off the files the game ships with.
         let all = try Configurations.load(from: shipped)

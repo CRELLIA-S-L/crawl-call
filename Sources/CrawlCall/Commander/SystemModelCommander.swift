@@ -30,26 +30,27 @@ import FoundationModels
 @Generable
 struct GeneratedDecision {
     @Generable enum Threat: String { case enemy, snake, withdraw }
-    @Generable enum Order: String { case hold, flank, withdrawToZone, disperse, destroyCover }
-    @Generable enum Truce: String { case none, propose, accept, reject }
-
-    /// One of the crew. An array of one described type, rather than a field per
-    /// soldier, so the schema costs what one soldier costs however many there are.
-    @Generable
-    struct Soldier {
-        var name: String
-        /// A job or `none`: the generator has no optional, so the word carries it.
-        var job: String
-        @Guide(.range(0...1)) var panic: Double
-        @Guide(.range(0...1)) var courage: Double
-        @Guide(.range(0...1)) var discipline: Double
-        @Guide(.range(0...1)) var aggression: Double
-        @Guide(.range(0...1)) var selfSacrifice: Double
+    @Generable enum Order: String { case hold, press, flank, withdraw }
+    /// The part of the arena the order names, in the words the state uses for a place
+    /// (IF-CMD-010), with `nowhere` for an order that names none: the generator has no
+    /// optional, so the word carries it.
+    @Generable enum Place: String {
+        case nowhere
+        case middle
+        case north = "north side"
+        case south = "south side"
+        case east = "east side"
+        case west = "west side"
+        case northEast = "north-east"
+        case northWest = "north-west"
+        case southEast = "south-east"
+        case southWest = "south-west"
     }
+    @Generable enum Truce: String { case none, propose, accept, reject }
 
     var threat: Threat
     var order: Order
-    var crew: [Soldier]
+    var place: Place
     var truce: Truce
     var speaker: String
     var line: String
@@ -134,9 +135,10 @@ final class SystemModelCommander: Commander, @unchecked Sendable {
 
     /// The crossing: a generated answer becomes the game's decision, or it is rejected.
     ///
-    /// Rejection and not repair (IF-CMD-020). The one liberty taken is the word `none`
-    /// for a job, which is how an absent role is carried through a generator that has
-    /// no optional, and it is part of the shape rather than a repair of it.
+    /// Rejection and not repair (IF-CMD-020). The one liberty taken is the word
+    /// `nowhere` for a place, which is how an order that names none is carried through
+    /// a generator with no optional, and it is part of the shape rather than a repair
+    /// of it.
     static func read(_ generated: GeneratedDecision) -> Result<CommanderDecision, CommanderFailure> {
         guard let threat = CommanderDecision.Threat(rawValue: generated.threat.rawValue) else {
             return .failure(.malformed("threat: \(generated.threat.rawValue)"))
@@ -147,26 +149,16 @@ final class SystemModelCommander: Commander, @unchecked Sendable {
         guard let truce = CommanderDecision.Truce(rawValue: generated.truce.rawValue) else {
             return .failure(.malformed("truce: \(generated.truce.rawValue)"))
         }
-        let crew = generated.crew.map { soldier in
-            CommanderDecision.Lean(
-                name: soldier.name,
-                role: SystemModelCommander.job(soldier.job),
-                panic: soldier.panic, courage: soldier.courage,
-                discipline: soldier.discipline, aggression: soldier.aggression,
-                selfSacrifice: soldier.selfSacrifice)
+        let place = generated.place == .nowhere ? nil : Places.Part(rawValue: generated.place.rawValue)
+        if generated.place != .nowhere && place == nil {
+            return .failure(.malformed("place: \(generated.place.rawValue)"))
         }
         let speaker = generated.speaker.trimmingCharacters(in: .whitespacesAndNewlines)
         let said = generated.line.trimmingCharacters(in: .whitespacesAndNewlines)
         let line = speaker.isEmpty || said.isEmpty
             ? nil : CommanderDecision.Line(speaker: speaker, line: said)
-        return .success(CommanderDecision(threat: threat, order: order, crew: crew,
+        return .success(CommanderDecision(threat: threat, order: order, place: place,
                                           truce: truce, line: line))
     }
 
-    /// `none`, in any case and with any spacing, is no job.
-    static func job(_ said: String) -> String? {
-        let job = said.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !job.isEmpty, job.lowercased() != "none" else { return nil }
-        return job
-    }
 }

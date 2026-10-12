@@ -40,7 +40,7 @@ No verdicts are recorded.
 
 ## The debt
 
-Of 70 requirements carrying a bet, 70 rest on hypotheses that are
+Of 68 requirements carrying a bet, 68 rest on hypotheses that are
 `refuted`, `expired` or `assumed` — 100%.
 
 | Requirement | Decided by | Status |
@@ -59,8 +59,6 @@ Of 70 requirements carrying a bet, 70 rest on hypotheses that are
 | FR-CMD-027 | H-050 | assumed |
 | FR-CMD-030 | H-040 | assumed |
 | FR-CMD-040 | H-040 | assumed |
-| FR-CMD-050 | H-040 | assumed |
-| FR-CMD-060 | H-040 | assumed |
 | FR-CMD-070 | H-040 | assumed |
 | FR-CMD-080 | H-040 | assumed |
 | FR-CMD-090 | H-040 | assumed |
@@ -127,7 +125,7 @@ Counted by quarter, which is what `period` says in the register's configuration.
 
 ## Requirements resting on no hypothesis
 
-205 of 275 requirements. Weight is what stands on them: how many
+205 of 273 requirements. Weight is what stands on them: how many
 requirements link to them, plus how many files their `code` field names.
 
 | Requirement | Incoming | Code files | Weight |
@@ -179,7 +177,6 @@ requirements link to them, plus how many files their `code` field names.
 | FR-VIEW-260 | 2 | 5 | 7 |
 | FR-VIEW-320 | 0 | 7 | 7 |
 | IF-VIEW-010 | 5 | 2 | 7 |
-| FR-BOT-030 | 4 | 2 | 6 |
 | FR-BOT-150 | 3 | 3 | 6 |
 | FR-BOT-160 | 4 | 2 | 6 |
 | FR-BOT-220 | 2 | 4 | 6 |
@@ -199,6 +196,7 @@ requirements link to them, plus how many files their `code` field names.
 | FR-VIEW-200 | 1 | 5 | 6 |
 | FR-VIEW-210 | 2 | 4 | 6 |
 | FR-VIEW-290 | 0 | 6 | 6 |
+| FR-BOT-030 | 3 | 2 | 5 |
 | FR-BOT-250 | 3 | 2 | 5 |
 | FR-BOT-290 | 1 | 4 | 5 |
 | FR-BOT-310 | 0 | 5 | 5 |

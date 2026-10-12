@@ -1,8 +1,12 @@
 # ADR-0084 — An order reaches three times as far as a step aside, and the reach is its own number
 
-- **Status:** accepted
+- **Status:** superseded by ADR-0085
 - **Date:** 2026-10-12
 - **Related requirements:** FR-CMD-040, IF-BOT-010, FR-BOT-130, FR-BOT-190, FR-BOT-118
+
+## Superseded
+
+On the same day, 2026-10-12. The maintainer's rule — a commander names what matters and where, and the bots work out the tactics — took the per-bot cell away from an order altogether, and with it the walk this decision was about: an order now names a part of the arena, every position is scored against it, and the cell a bot takes is the one its own `worth` likes best within the distance it looks for cover. `orderReach` is gone from `config/bot.json`, and the 0.484 ms a deliberating frame cost under it (Q-640) goes with it. What this decision got right and ADR-0085 keeps: an order that reaches no further than a step aside moves a squad nowhere.
 
 ## Context and problem statement
 
