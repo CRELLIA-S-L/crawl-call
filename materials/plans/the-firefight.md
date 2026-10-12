@@ -8,6 +8,12 @@ It is written so that an agent with no memory of the conversation can take it up
 
 Under ART-030 of `specs/constitution.md`, amended 2026-10-11, the suite is run when a change is finished and the build goes on the phone where one is connected, neither asked for nor waited for. No step is marked "requires confirmation": the standing confirmation is the article.
 
+## Where this stands, 2026-10-12
+
+Steps 1 to 4 are done and committed. Step 5 was weighed on step 4's numbers and **not taken**; what is left of it is Q-620 of `specs/91-open-issues.md`. Steps 6 to 9 are the commander's and follow.
+
+The same arena, the same starting cell and nobody steering, before and after: the squads went from 0.00 m of movement and no action but firing and reloading, to a firefight that advances, takes cover, fires, reloads and finishes — one squad wiped out by the eighty-fifth second. On the phone, 2086 frames at 45.1 a second with the commander running, thermal `nominal`, the app's own work 1.36 ms median and 2.38 ms at the 95th, deliberation 0.27 ms at the 95th and 0.72 ms at its worst.
+
 ## What is actually wrong
 
 Four mechanisms, three of them in the bot and one in the commander. They are independent, and the first three each on its own is enough to produce the standstill the maintainer saw.
@@ -64,13 +70,15 @@ Tests in `Tests/CrawlCallTests/DeliberationTests.swift`: a bot standing in an un
 
 The decision goes to `specs/adr/`: cover becomes an action about going somewhere better rather than about being somewhere good, and being somewhere good is then worth nothing in the scores, which is what makes the other actions reachable.
 
-### Step 3 — A goal under the bot's feet is excluded, not cleared
+### Step 3 — An action the graph cannot route to is excluded, not merely cleared
 
 Build FR-BOT-167, which is approved and unbuilt. It `depends_on` FR-SNAKE-040 — Tail blocks bots (specs/10-fr-snake.md, deferred); that dependency is the motivating case and not a condition — a route that comes back empty already happens without a tail across a passage, which is why `Execution.swift:288` has the branch — so this step is not blocked by it, and the step says so in its report.
 
 The behaviour: when the route to a chosen action's goal is empty, the bot gets a slot at once with **that action** left out of the scoring, until its next slot after. `Sources/CrawlCall/Bot/Slots.swift` is where a slot is granted and `Sources/CrawlCall/Bot/Interrupts.swift` is where a reason for one is named, so the exclusion is a one-slot memory on the bot, read by `Deliberation.scores` and cleared when the slot after it is taken.
 
-This is the one change that makes the standstill impossible by construction rather than by arithmetic: a goal that resolves to the cell the bot occupies is a route of no steps, whichever action proposed it — cover after step 2 cannot, but `hold` from a commander's order (`Sources/CrawlCall/Commander/Orders.swift`) returns exactly that cell, and flight, flanking and dispersal can each land on it, because every one of them compares a cell's centre against the bot's exact position and the two differ by a fraction of a cell.
+**Corrected on building it.** A bot standing on the cell its action names has not been cut off: the graph holds a route of no steps, and the branch that spends such an action is about arriving, not about being unreachable. The comment there claimed FR-BOT-167 and was wrong, and now says what the branch is. This matters for an order to hold, which names the cell the bot stands in by design (ADR-0079): holding ground is obedience, and re-choosing it is not a loop.
+
+So this step does not make the standstill impossible by construction — step 2 is what removes it — and it does not fire in a connected arena at all, since everything else a bot makes for is walked out over the graph. It is built because it is approved, because the comment already claimed it, and because the advance is found over the whole graph and can name a cell on the other side of a wall. Its test works on two rooms with no door between them and says so.
 
 Tests in `Tests/CrawlCallTests/InterruptTests.swift` and `DeliberationTests.swift`: a bot whose only cover is cut off chooses something else on the very next slot and the cover again on the slot after; a bot under a `hold` order does not spend every slot on a route of no steps; and the negation.
 
@@ -82,9 +90,11 @@ No code. Run the suite, run the scratch reading of step 1 on the shipped arena, 
 
 Then report, with the numbers beside the ones in Q-600: whether the squads move after contact, whether anybody advances, whether a match ends. And ask the question step 5 waits on, which cannot be answered before this: steps 2 and 3 remove the standstill, and the maintainer wanted a squad that looks like it is trying to win. Those are not the same thing, and Q-600 says so.
 
-### Step 5 — Advance and explore are scored beside the rest *(waits on decision 3)*
+### Step 5 — Advance and explore are scored beside the rest *(weighed on 2026-10-12 and not taken)*
 
-**Changes the specification**, and reverses a decision: ADR-0059 chose its option 2 deliberately. A new ADR supersedes it, and its context is what the old one could not know — that a scored action can mean standing still, so "a threat is something that scores" did not hold.
+**Not done.** Step 4's numbers answered it: with steps 2 and 3 the squads advance, take cover, fire and finish each other, which is what this step was for. What survived the measurement is Q-620 — the two survivors of a won match pacing, walking every frame and getting nowhere, which is the flip-flop a fallback produces — and that entry is the case that would reopen this step. The rest of this section is left as it was written, as the plan of record for the day it is reopened.
+
+**It would change the specification**, and reverse a decision: ADR-0059 chose its option 2 deliberately. A new ADR supersedes it, and its context is what the old one could not know — that a scored action can mean standing still, so "a threat is something that scores" did not hold.
 
 Three statements change. The links they already carry stay as they are — FR-BOT-250 — What a bot knows at the start (specs/10-fr-bot.md, implemented) for the enemy's starting area, and FR-BOT-230 — A bot remembers the map it has seen (specs/10-fr-bot.md, implemented) for the cells a bot does not know. The wording this plan proposes is:
 
