@@ -287,6 +287,13 @@ What remains is what a decision inside the repository cannot close.
 - **Why it matters.** A test that fails one run in some number of runs is not a test of what it says it tests, and the next agent to see it red will go looking for a fault in whatever it was building.
 - **Still needed:** either the test reads the rule without the clock — the desk's `isDue` directly, as `testASquadWithNoLivingRoleHolderHasNoStateToSend` reads the state directly — or the match is advanced in frames until blue is due, with a bound. Both are the maintainer's to choose between; neither changes the game.
 
+### Q-670 — FR-BOT-300 says every bot and the code keeps the living apart
+
+- **Found:** on 2026-10-13, planning the cells a bot may walk to (`materials/plans/the-reload-and-the-rush.md`).
+- **What diverges.** FR-BOT-300 obliges the system to keep "any two bots on the same floor at least two body radii apart". `Execution.separate` passes over a bot with no health left before it compares anything — "a body lies on the floor and is stepped over, not pushed (FR-BOT-320)" — so two living bots are kept apart and a body is not. The code's reading is deliberate and says why; the statement does not carry it, and a reader checking conformance finds the code narrower than the words.
+- **Why it matters a little and not a lot.** Nothing in play goes wrong: a body that a bot stands inside is drawn lying down and does nothing (FR-BOT-320). It matters because the next thing to read these words will be the rule about which cells a bot may walk to, and "any two bots" would have a body holding a cell.
+- **Still needed:** the maintainer's word on which side is right. Either FR-BOT-300's statement gains the word "living", which is a rewording and no code at all, or bodies begin to push, which is a change to the game nobody has asked for.
+
 ### Q-660 — FR-BOT-170 is `partial` for a reason that has gone
 
 - **Found:** on 2026-10-12, reading the interrupts while building the arms.
