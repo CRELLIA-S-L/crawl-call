@@ -79,7 +79,8 @@ final class FigureTests: XCTestCase {
         XCTAssertEqual(Figure.using(.throwKnife(at: .bot(id: 1))), .knife)
         // Walking, reloading, doing nothing: the primary, which is what a bot carries
         // about in its hands.
-        XCTAssertEqual(Figure.using(.reload), .primary)
+        XCTAssertEqual(Figure.using(.reload(.primary)), .primary)
+        XCTAssertEqual(Figure.using(.reload(.sidearm)), .sidearm)
         XCTAssertEqual(Figure.using(nil), .primary)
     }
 

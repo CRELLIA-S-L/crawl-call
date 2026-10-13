@@ -2,7 +2,7 @@
 // catalogue: an archetype may add to it, and nothing may quietly drop out of it
 // (FR-BOT-200).
 //
-// file implements: FR-BOT-200, FR-BOT-460, FR-BOT-470, FR-BOT-510, FR-BOT-520, FR-BOT-360, FR-BOT-370
+// file implements: FR-BOT-200, FR-BOT-540, FR-BOT-460, FR-BOT-470, FR-BOT-510, FR-BOT-520, FR-BOT-360, FR-BOT-370
 import Foundation
 
 /// What a shot is aimed at. The snake is named by the point that is being shot at —
@@ -28,7 +28,9 @@ enum Action: Equatable {
     case takeCover(at: NavigationGraph.Node)
     case moveToOrderedZone(NavigationGraph.Node)
     case flee(to: NavigationGraph.Node)
-    case reload
+    /// Filling one firearm's magazine: each that is not full and has a spare left is
+    /// an action of its own (FR-BOT-540), as firing each is (FR-BOT-460).
+    case reload(Arms.Slot)
     case heal(ally: Int)
     /// With nothing else worth doing: towards where the bot believes the enemy squad
     /// is (FR-BOT-360), or to a cell it has not seen (FR-BOT-370).

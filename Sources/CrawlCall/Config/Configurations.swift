@@ -258,12 +258,15 @@ struct BotConfiguration: Decodable, Equatable {
 
     /// What one shot of a firearm is (FR-BOT-450): what it deals to what it strikes,
     /// how far it reaches, how long before it may be fired again, and how many rounds
-    /// it holds between reloads.
+    /// it holds between reloads — with how long filling it again takes (FR-BOT-550)
+    /// and how many spare magazines a bot carries for it (FR-BOT-560).
     struct Firearm: Decodable, Equatable {
         let damage: Double
         let range: Double
         let timeBetweenShots: Double
         let magazine: Int
+        let reloadTime: Double
+        let spareMagazines: Int
     }
 
     /// What a grenade is (FR-BOT-470, FR-BOT-480, FR-BOT-490): what the blast deals,
@@ -387,6 +390,7 @@ struct BotConfiguration: Decodable, Equatable {
         "weapons": .object([
             "firearms": .named(of: .object([
                 "damage": .value, "range": .value, "timeBetweenShots": .value, "magazine": .value,
+                "reloadTime": .value, "spareMagazines": .value,
             ])),
             "grenades": .named(of: .object([
                 "damage": .value, "throwRange": .value, "fuseTime": .value,

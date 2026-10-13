@@ -8,9 +8,9 @@ Total requirements: 290.
 | Status | Requirements |
 |---|---|
 | `draft` | 4 |
-| `deferred` | 92 |
+| `deferred` | 89 |
 | `partial` | 9 |
-| `implemented` | 177 |
+| `implemented` | 180 |
 | `superseded` | 6 |
 | `withdrawn` | 2 |
 
@@ -41,7 +41,7 @@ Total requirements: 290.
 | **FR-BOT-060** A bot fires at its target | `implemented` | T | `Sources/CrawlCall/Bot/Execution.swift`<br>`Sources/CrawlCall/Bot/Deliberation.swift`<br>`Sources/CrawlCall/Bot/Bot.swift`<br>`Sources/CrawlCall/Bot/Round.swift`<br>`Sources/CrawlCall/Config/Utility.swift`<br>`Sources/CrawlCall/Game.swift` | `Tests/CrawlCallTests/ExecutionTests.swift`<br>`Tests/CrawlCallTests/ShotTests.swift`<br>`Tests/CrawlCallTests/WarTests.swift`<br>`Tests/CrawlCallTests/RoundTests.swift` |
 | **FR-BOT-070** Heavy and sapper weapons destroy cover | `deferred` | T | — | — |
 | **FR-BOT-080** Action chosen by maximum utility | `implemented` | T | `Sources/CrawlCall/Bot/Arms.swift`<br>`Sources/CrawlCall/Bot/Blast.swift`<br>`Sources/CrawlCall/Bot/Deliberation.swift`<br>`Sources/CrawlCall/Config/Utility.swift`<br>`Sources/CrawlCall/Config/Geometry.swift` | `Tests/CrawlCallTests/ArmsTests.swift`<br>`Tests/CrawlCallTests/GrenadeTests.swift`<br>`Tests/CrawlCallTests/KnifeTests.swift`<br>`Tests/CrawlCallTests/DeliberationTests.swift` |
-| **FR-BOT-090** Personality weights multiply utility | `implemented` | T | `Sources/CrawlCall/Bot/Deliberation.swift`<br>`Sources/CrawlCall/Config/Utility.swift` | `Tests/CrawlCallTests/DeliberationTests.swift` |
+| **FR-BOT-090** Personality weights multiply utility | `implemented` | T | `Sources/CrawlCall/Bot/Deliberation.swift`<br>`Sources/CrawlCall/Config/Utility.swift` | `Tests/CrawlCallTests/DeliberationTests.swift`<br>`Tests/CrawlCallTests/ReloadTests.swift` |
 | **FR-BOT-100** Cover is valued by what is left of it | `deferred` | T | — | — |
 | **FR-BOT-105** Cover is worth less against a wrecking weapon | `deferred` | T | — | — |
 | **FR-BOT-110** Height advantage enters position scoring | `implemented` | T | `Sources/CrawlCall/Bot/Deliberation.swift`<br>`Sources/CrawlCall/Bot/Execution.swift` | `Tests/CrawlCallTests/PositionTests.swift` |
@@ -94,9 +94,9 @@ Total requirements: 290.
 | **FR-BOT-510** A knife strikes what is within its reach | `implemented` | T | `Sources/CrawlCall/Bot/Execution.swift`<br>`Sources/CrawlCall/Bot/Deliberation.swift`<br>`Sources/CrawlCall/Bot/Action.swift`<br>`Sources/CrawlCall/Bot/Arms.swift`<br>`config/bot.json`<br>`Sources/CrawlCall/Game.swift` | `Tests/CrawlCallTests/KnifeTests.swift` |
 | **FR-BOT-520** A thrown knife leaves the bot | `implemented` | T | `Sources/CrawlCall/Bot/Execution.swift`<br>`Sources/CrawlCall/Bot/Deliberation.swift`<br>`Sources/CrawlCall/Bot/Action.swift`<br>`Sources/CrawlCall/Bot/Arms.swift`<br>`config/bot.json` | `Tests/CrawlCallTests/KnifeTests.swift`<br>`Tests/CrawlCallTests/FigureTests.swift` |
 | **FR-BOT-530** A bot does not set out for a cell another bot holds or is making for | `implemented` | T | `Sources/CrawlCall/Bot/Deliberation.swift` | `Tests/CrawlCallTests/CellClaimTests.swift` |
-| **FR-BOT-540** Each firearm that is not full is a reload of its own | `deferred` | T | — | — |
-| **FR-BOT-550** A reload takes the weapon's own time | `deferred` | T | — | — |
-| **FR-BOT-560** A bot carries a limited number of spare magazines | `deferred` | T | — | — |
+| **FR-BOT-540** Each firearm that is not full is a reload of its own | `implemented` | T | `Sources/CrawlCall/Bot/Deliberation.swift`<br>`Sources/CrawlCall/Bot/Arms.swift`<br>`Sources/CrawlCall/Bot/Action.swift`<br>`Sources/CrawlCall/Config/Utility.swift`<br>`config/bot.json` | `Tests/CrawlCallTests/ReloadTests.swift`<br>`Tests/CrawlCallTests/DeliberationTests.swift` |
+| **FR-BOT-550** A reload takes the weapon's own time | `implemented` | T | `Sources/CrawlCall/Bot/Execution.swift`<br>`Sources/CrawlCall/Bot/Bot.swift`<br>`Sources/CrawlCall/Bot/Arms.swift`<br>`Sources/CrawlCall/Game.swift`<br>`config/bot.json` | `Tests/CrawlCallTests/ReloadTests.swift`<br>`Tests/CrawlCallTests/SkirmishTests.swift`<br>`Tests/CrawlCallTests/ExecutionTests.swift` |
+| **FR-BOT-560** A bot carries a limited number of spare magazines | `implemented` | T | `Sources/CrawlCall/Bot/Arms.swift`<br>`Sources/CrawlCall/Bot/Execution.swift`<br>`config/bot.json` | `Tests/CrawlCallTests/ReloadTests.swift` |
 | **FR-BOT-570** A bot closes with what its weapon does not reach | `deferred` | T | — | — |
 | **FR-BOT-580** A thrown grenade flies the arc of a thrown thing | `deferred` | T | — | — |
 | **FR-BOT-590** A thrown grenade bounces off what it meets | `deferred` | T | — | — |

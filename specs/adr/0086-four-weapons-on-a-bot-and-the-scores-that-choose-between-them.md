@@ -1,6 +1,6 @@
 # ADR-0086 — Four weapons on a bot, and the scores that choose between them
 
-- **Status:** accepted
+- **Status:** accepted, and superseded in part by ADR-0090: one reload no longer fills everything a bot carries, since each weapon takes its own time to fill.
 - **Date:** 2026-10-12
 - **Related requirements:** FR-BOT-440, FR-BOT-450, FR-BOT-460, INV-BOT-040, IF-BOT-010, FR-BOT-080, FR-BOT-170, FR-BOT-200
 

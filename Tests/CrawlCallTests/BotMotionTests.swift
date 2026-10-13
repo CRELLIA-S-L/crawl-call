@@ -64,7 +64,7 @@ final class BotMotionTests: XCTestCase {
     func testABotWithNowhereToWalkStands() throws {
         var standing = try bot(at: NavigationGraph.Node(floor: 0, x: 10, z: 10))
         standing.speed = 3
-        standing.action = .reload
+        standing.action = .reload(.primary)
         var bots = [standing]
         let was = standing.position
         Execution.walk(&bots, seconds: frame, world: world)

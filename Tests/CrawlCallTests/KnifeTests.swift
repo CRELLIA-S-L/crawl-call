@@ -104,14 +104,13 @@ final class KnifeTests: XCTestCase {
     // MARK: thrown and gone (FR-BOT-520)
 
     func testAThrownKnifeLeavesTheBotWhateverItStruck() throws {
-        // Everything else spent and no reload to be had — the state FR-BOT-167 leaves a
-        // bot in when it cannot reach the cell it would reload in — so that the knife
-        // is the last thing the bot has to throw.
+        // Everything else spent and no spare magazine left to reload with (FR-BOT-540,
+        // FR-BOT-560), so that the knife is the last thing the bot has to throw.
         var bots = try pair(apart: 3, rounds: 0)
         let index = try checkedIndex(0, of: bots)
         bots[index].arms.sidearm.rounds = .zero
         bots[index].arms.grenades.left = .zero
-        bots[index].unreachable = .reload
+        bots[index].spendEverySpare()
         let numbers = try knife(of: try element(0, of: bots))
         let volley = Execution.deliberate(&bots, slots: [0], world: world, now: now)
         XCTAssertEqual(try element(0, of: bots).action, .throwKnife(at: .bot(id: 1)), "it did not throw the knife")

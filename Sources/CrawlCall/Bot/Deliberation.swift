@@ -14,7 +14,7 @@
 // configuration (IF-BOT-010), as is how much an unhurt bot fears the snake
 // (FR-BOT-210). What shapes each term — a share, a whole — is in `Utility`.
 //
-// file implements: FR-BOT-530, FR-BOT-167, FR-BOT-116, FR-BOT-460, FR-BOT-450, FR-BOT-470, FR-BOT-500, FR-BOT-510, FR-BOT-520, FR-BOT-080, FR-BOT-090, FR-BOT-110, FR-BOT-115, FR-BOT-118, FR-BOT-119, FR-BOT-360, FR-BOT-370, FR-BOT-120, FR-BOT-180, FR-BOT-190, FR-BOT-200, FR-BOT-210, FR-MAP-150, FR-BOT-220, FR-BOT-060, FR-BOT-140, FR-BOT-330, FR-BOT-410, FR-BOT-420, FR-BOT-425, FR-BOT-130, FR-CMD-030
+// file implements: FR-BOT-530, FR-BOT-540, FR-BOT-167, FR-BOT-116, FR-BOT-460, FR-BOT-450, FR-BOT-470, FR-BOT-500, FR-BOT-510, FR-BOT-520, FR-BOT-080, FR-BOT-090, FR-BOT-110, FR-BOT-115, FR-BOT-118, FR-BOT-119, FR-BOT-360, FR-BOT-370, FR-BOT-120, FR-BOT-180, FR-BOT-190, FR-BOT-200, FR-BOT-210, FR-MAP-150, FR-BOT-220, FR-BOT-060, FR-BOT-140, FR-BOT-330, FR-BOT-410, FR-BOT-420, FR-BOT-425, FR-BOT-130, FR-CMD-030
 import Foundation
 
 enum Deliberation {
@@ -220,21 +220,27 @@ enum Deliberation {
                                * holding(against: danger, for: bot, within: entry.detectionRange)))
         }
 
-        // Reload: one action for the weapons it carries, because one reload is one act
-        // (FR-BOT-200) and a bot that stops to reload reloads what it has. What it is
-        // worth is the emptiest magazine of them and not the sum of the two: a bot
-        // whose primary is dry wants it filled whatever is still in the sidearm, which
-        // is also what the single magazine of before was worth (ADR-0086).
-        if bot.arms.rounds < bot.arms.magazines {
+        // Reload: one action for each firearm that is not full and has a spare magazine
+        // left (FR-BOT-540), as firing each is one of its own (FR-BOT-460). A bot with a
+        // dry rifle and a full pistol has one reload to score and not two, and which
+        // magazine it fills is the score's business rather than a rule's.
+        //
+        // One per weapon rather than one for everything, because each takes its own
+        // time (FR-BOT-550) and a single act cannot take two lengths; ADR-0090
+        // supersedes that part of ADR-0086.
+        for slot in bot.arms.reloadable {
             // Squared, so that the term stays flat while there is a magazine to
             // spend and climbs only as it runs out: a bot that reloaded after every
             // shot would spend a firefight looking at its hands.
-            let spent = Arms.Slot.allCases.map { slot -> Double in
-                let firearm = bot.arms[slot]
-                guard firearm.numbers.magazine > .zero else { return .zero }
-                return Fraction.whole - Double(firearm.rounds) / Double(firearm.numbers.magazine)
-            }.max() ?? .zero
-            scored.append((.reload, term.empty * spent * spent))
+            let spent = bot.arms[slot].spent
+            // And less the braver the bot is: stepping out of danger to fill a magazine
+            // is the term courage pulls down (FR-BOT-090), which is what makes a brave
+            // bot draw what it has and close with the enemy instead (FR-BOT-570).
+            let daring = Fraction.whole - bot.weights.courage * Utility.reloadCourageShare
+            // And by what the weapon is worth filling, the same share firing it is
+            // scored by (FR-BOT-450, ADR-0086): an empty pistol is as empty as an empty
+            // rifle and matters half as much, so a bot with both dry fills the rifle.
+            scored.append((.reload(slot), term.empty * spent * spent * bot.arms.strength(of: slot) * daring))
         }
 
         // Only a medic heals, and only somebody who needs it and is within the

@@ -2,13 +2,17 @@
 // tuning (ART-070); the weight of each term against the others is tuning, and is in
 // the bot configuration (IF-BOT-010).
 //
-// file implements: FR-BOT-450, FR-BOT-340, FR-BOT-080, FR-BOT-090, FR-BOT-210, FR-BOT-150, FR-BOT-160, FR-BOT-060, FR-BOT-270, FR-BOT-280, FR-BOT-050, FR-BOT-230, FR-BOT-400, FR-BOT-430
+// file implements: FR-BOT-540, FR-BOT-450, FR-BOT-340, FR-BOT-080, FR-BOT-090, FR-BOT-210, FR-BOT-150, FR-BOT-160, FR-BOT-060, FR-BOT-270, FR-BOT-280, FR-BOT-050, FR-BOT-230, FR-BOT-400, FR-BOT-430
 import Foundation
 
 enum Utility {
     /// The share of its remaining health that takes from a bot's wish for cover: a
     /// whole bot still wants cover half as much as a bot on its last legs.
     static let coverHealthShare = 0.5
+    /// The share of its courage that takes from a bot's wish to reload: a fearless bot
+    /// still fills a magazine when there is nothing better to do, and a timid one
+    /// wants it twice as much as a brave one (FR-BOT-090, FR-BOT-540).
+    static let reloadCourageShare = 0.5
 }
 
 /// Numbers of who deliberates when (FR-BOT-150, FR-BOT-160).

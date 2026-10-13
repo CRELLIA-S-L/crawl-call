@@ -253,43 +253,57 @@
         "damage": 2.0,
         "range": 12.0,
         "timeBetweenShots": 0.2,
-        "magazine": 30
+        "magazine": 30,
+      "reloadTime": 2.0,
+      "spareMagazines": 3
       },
       "shoulderGun": {
         "damage": 4.0,
         "range": 12.0,
         "timeBetweenShots": 0.4,
-        "magazine": 20
+        "magazine": 20,
+      "reloadTime": 2.0,
+      "spareMagazines": 3
       },
       "carbine": {
         "damage": 2.5,
         "range": 14.0,
         "timeBetweenShots": 0.25,
-        "magazine": 24
+        "magazine": 24,
+      "reloadTime": 2.0,
+      "spareMagazines": 3
       },
       "automaticRifle": {
         "damage": 2.0,
         "range": 14.0,
         "timeBetweenShots": 0.2,
-        "magazine": 30
+        "magazine": 30,
+      "reloadTime": 2.0,
+      "spareMagazines": 3
       },
       "longRifle": {
         "damage": 10.0,
         "range": 20.0,
         "timeBetweenShots": 1.0,
-        "magazine": 5
+        "magazine": 5,
+      "reloadTime": 2.0,
+      "spareMagazines": 3
       },
       "submachineGun": {
         "damage": 1.5,
         "range": 10.0,
         "timeBetweenShots": 0.15,
-        "magazine": 25
+        "magazine": 25,
+      "reloadTime": 2.0,
+      "spareMagazines": 3
       },
       "pistol": {
         "damage": 1.0,
         "range": 6.0,
         "timeBetweenShots": 0.2,
-        "magazine": 12
+        "magazine": 12,
+      "reloadTime": 1.0,
+      "spareMagazines": 2
       }
     },
     "grenades": {

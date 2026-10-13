@@ -10,7 +10,7 @@
 // slot is aimed through the slots it has to wait out. Until 2026-10-12 the period was
 // the cadence, because no requirement gave a weapon a rate of fire.
 //
-// file implements: FR-BOT-450, FR-BOT-470, FR-BOT-510, FR-BOT-520, FR-BOT-167, FR-BOT-060, FR-BOT-110, FR-BOT-115, FR-BOT-170, FR-BOT-360, FR-BOT-370, FR-BOT-380, FR-BOT-180, FR-BOT-190, INV-BOT-020, INV-BOT-010, FR-BOT-165, FR-MAP-150, FR-BOT-270, FR-BOT-280, FR-BOT-290, FR-BOT-300, FR-BOT-220, FR-BOT-310, FR-BOT-320, FR-BOT-330, FR-BOT-340, FR-BOT-420, FR-BOT-425, FR-BOT-430, FR-CMD-030, FR-CMD-040
+// file implements: FR-BOT-550, FR-BOT-560, FR-BOT-450, FR-BOT-470, FR-BOT-510, FR-BOT-520, FR-BOT-167, FR-BOT-060, FR-BOT-110, FR-BOT-115, FR-BOT-170, FR-BOT-360, FR-BOT-370, FR-BOT-380, FR-BOT-180, FR-BOT-190, INV-BOT-020, INV-BOT-010, FR-BOT-165, FR-MAP-150, FR-BOT-270, FR-BOT-280, FR-BOT-290, FR-BOT-300, FR-BOT-220, FR-BOT-310, FR-BOT-320, FR-BOT-330, FR-BOT-340, FR-BOT-420, FR-BOT-425, FR-BOT-430, FR-CMD-030, FR-CMD-040
 import Foundation
 
 enum Execution {
@@ -133,6 +133,13 @@ enum Execution {
             let chosen = Deliberation.choose(for: bots[index], in: situation)
             let before = bots[index].action
             bots[index].action = chosen
+            // Anything but the reload it was in the middle of loses it, and starting
+            // again starts from the beginning (FR-BOT-550): a bot that could duck out,
+            // fire and duck back without losing the reload is a bot for which reloading
+            // costs nothing again.
+            if case .reload(let slot) = chosen, bots[index].reloading?.slot == slot {} else {
+                bots[index].reloading = nil
+            }
             // The slot the failed route earned has been taken, and the exclusion is
             // spent with it: the next slot after scores that action again (FR-BOT-167).
             bots[index].unreachable = nil
@@ -254,20 +261,20 @@ enum Execution {
                                      towards: flight, damage: knife.numbers.damage) {
                     volley.rounds.append(round)
                 }
-            case .reload:
+            case .reload(let slot):
+                // The clock starts when the reload is chosen and runs while nothing else
+                // is chosen (FR-BOT-550); choosing the same reload again at the next slot
+                // keeps the one already running, and the magazine is filled by the frame
+                // that finds the time up.
+                if bots[index].reloading?.slot != slot {
+                    bots[index].reloading = Reload(slot: slot,
+                                                   due: now + bots[index].arms[slot].numbers.reloadTime)
+                }
                 // Behind the cover it fired from beside, where it has one: it goes into
                 // the hidden cell and reloads there (FR-BOT-425).
-                if bots[index].post != nil, let refuge = bots[index].refuge {
-                    // Already in it, it reloads there, and keeps where it fires from to
-                    // come out to again (ADR-0063); on the way, it goes on.
-                    if cell(of: bots[index], world: world) == refuge {
-                        bots[index].arms.reload()
-                        bots[index].path = []
-                    } else if before != .reload {
-                        bots[index].path = []
-                    }
+                if bots[index].post != nil, bots[index].refuge != nil {
+                    if case .reload = before {} else { bots[index].path = [] }
                 } else {
-                    bots[index].arms.reload()
                     bots[index].post = nil
                     bots[index].refuge = nil
                     bots[index].postTarget = nil
@@ -368,13 +375,14 @@ enum Execution {
                 continue
             }
             // Already where it fires from, or where it reloads (FR-BOT-420, FR-BOT-425); a
-            // bot already where it was going has arrived, which spends the action, and
-            // the next slot chooses again. Arriving is not being cut off: the graph holds
-            // a route of no steps, and nothing is excluded for it (FR-BOT-167).
+            // bot already where it was going has arrived, which spends an action that
+            // travels, and the next slot chooses again. A reload does not travel: it
+            // stands in the cell it ducked into until its own time is up (FR-BOT-550).
+            // Arriving is not being cut off: the graph holds a route of no steps, and
+            // nothing is excluded for it (FR-BOT-167).
             if bots[index].path.isEmpty, Execution.cell(of: bots[index], world: world) == goal {
                 bots[index].speed = .zero
                 if travels(bots[index].action) { bots[index].action = nil }
-                arrive(&bots[index], world: world)
                 continue
             }
             // Its way's end taken by another bot, and it up against that bot: it is as near
@@ -385,7 +393,6 @@ enum Execution {
                 bots[index].path = []
                 bots[index].speed = .zero
                 if travels(bots[index].action) { bots[index].action = nil }
-                arrive(&bots[index], world: world)
                 continue
             }
             if bots[index].path.isEmpty {
@@ -415,10 +422,7 @@ enum Execution {
             bots[index].speed = min(max(wanted, bots[index].speed - change), bots[index].speed + change)
             advance(&bots[index], by: bots[index].speed * seconds, over: world.graph, cellSize: cell,
                     floorHeight: world.kit.floorHeight, radius: world.configurations.tuning.bodyRadius)
-            if bots[index].path.isEmpty {
-                bots[index].speed = .zero
-                arrive(&bots[index], world: world)
-            }
+            if bots[index].path.isEmpty { bots[index].speed = .zero }
         }
     }
 
@@ -437,12 +441,23 @@ enum Execution {
         }
     }
 
-    /// A bot come to the end of its way: one that went behind cover to reload reloads
-    /// there (FR-BOT-425).
-    private static func arrive(_ bot: inout Bot, world: World) {
-        guard bot.action == .reload else { return }
-        bot.arms.reload()
-        bot.action = nil
+    /// Every bot whose reload is due: the magazine is filled, a spare magazine is spent
+    /// for it (FR-BOT-550, FR-BOT-560), and the act is over, so the next slot chooses
+    /// afresh. Run every frame, because a reload ends where its own time ends and not
+    /// at the deliberation step that happens to follow.
+    static func fill(_ bots: inout [Bot], now: Double) {
+        for index in bots.indices {
+            guard let reloading = bots[index].reloading else { continue }
+            guard bots[index].isAlive else { bots[index].reloading = nil; continue }
+            guard case .reload(let slot) = bots[index].action, slot == reloading.slot else {
+                bots[index].reloading = nil
+                continue
+            }
+            guard now >= reloading.due else { continue }
+            bots[index].arms.fill(slot)
+            bots[index].reloading = nil
+            bots[index].action = nil
+        }
     }
 
     /// Moves a bot that fires with no cell beside cover across its line of fire, at the

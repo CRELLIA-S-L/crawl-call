@@ -192,17 +192,16 @@ final class ArmsTests: XCTestCase {
     }
 
     func testWithNoReloadToBeHadABotWithADryPrimaryFiresItsSidearm() throws {
-        // The state FR-BOT-167 leaves a bot in when the hidden cell it would reload in
-        // cannot be routed to: reloading is off its list for this slot, and what it has
-        // left is the sidearm. It is also the one case in which the sidearm is what the
-        // scores choose (ADR-0086).
+        // A bot with every spare magazine spent: reloading is not on its list at all
+        // (FR-BOT-540, FR-BOT-560), and what it has left is the sidearm. It is also the
+        // one case in which the sidearm is what the scores choose (ADR-0086).
         // Three metres: inside the pistol and outside the knife. With the pouch empty
         // as well, the sidearm is the only thing the bot has left to do.
         var bots = try pair(.assault, apart: 3)
         let index = try checkedIndex(0, of: bots)
         bots[index].arms.primary.rounds = .zero
         bots[index].arms.grenades.left = .zero
-        bots[index].unreachable = .reload
+        bots[index].spendEverySpare()
         XCTAssertLessThan(try XCTUnwrap(try element(0, of: bots).arms.knife).numbers.reach, 3)
         let volley = Execution.deliberate(&bots, slots: [0], world: world, now: now)
         XCTAssertEqual(try element(0, of: bots).action, .fire(at: .bot(id: 1), with: .sidearm))

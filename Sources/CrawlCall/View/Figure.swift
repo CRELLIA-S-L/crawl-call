@@ -253,10 +253,10 @@ enum Figure {
     /// a bot walks about holding.
     static func using(_ action: Action?) -> Carried {
         switch action {
-        case .fire(_, .sidearm): return .sidearm
+        case .fire(_, .sidearm), .reload(.sidearm): return .sidearm
         case .throwGrenade: return .grenade
         case .strike, .throwKnife: return .knife
-        case .fire, .takeCover, .moveToOrderedZone, .flee, .reload, .heal, .advance, .explore, .none:
+        case .fire, .reload, .takeCover, .moveToOrderedZone, .flee, .heal, .advance, .explore, .none:
             return .primary
         }
     }

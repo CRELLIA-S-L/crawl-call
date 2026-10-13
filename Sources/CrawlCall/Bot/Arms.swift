@@ -9,7 +9,7 @@
 // carries; a weapon its archetype names and the catalogue does not know is a
 // configuration error there and then, the same as an archetype with no entry at all.
 //
-// file implements: FR-BOT-080, FR-BOT-440, FR-BOT-450, FR-BOT-470, FR-BOT-510, FR-BOT-520
+// file implements: FR-BOT-540, FR-BOT-550, FR-BOT-560, FR-BOT-080, FR-BOT-440, FR-BOT-450, FR-BOT-470, FR-BOT-510, FR-BOT-520
 import Foundation
 
 struct Arms: Equatable {
@@ -19,11 +19,21 @@ struct Arms: Equatable {
     enum Slot: CaseIterable, Equatable { case primary, sidearm }
 
     /// One firearm as a bot carries it: the name the catalogue knows it by, its
-    /// numbers, and what is left in the magazine.
+    /// numbers, what is left in the magazine, and how many spare magazines are left
+    /// for it (FR-BOT-560).
     struct Firearm: Equatable {
         let name: String
         let numbers: BotConfiguration.Firearm
         var rounds: Int
+        var spares: Int
+        /// Whether filling this magazine is something the bot can do: there is room in
+        /// it and a spare to fill it from (FR-BOT-540).
+        var isReloadable: Bool { rounds < numbers.magazine && spares > .zero }
+        /// How much of the magazine has been fired, as a share (FR-BOT-540).
+        var spent: Double {
+            guard numbers.magazine > .zero else { return .zero }
+            return Fraction.whole - Double(rounds) / Double(numbers.magazine)
+        }
     }
 
     /// The grenades it set out with, and how many it still has (FR-BOT-440).
@@ -56,8 +66,10 @@ struct Arms: Equatable {
               let sidearm = weapons.firearms[arms.sidearm],
               let grenade = weapons.grenades[arms.grenade],
               let knife = weapons.knives[arms.knife] else { return nil }
-        self.primary = Firearm(name: arms.primary, numbers: primary, rounds: primary.magazine)
-        self.sidearm = Firearm(name: arms.sidearm, numbers: sidearm, rounds: sidearm.magazine)
+        self.primary = Firearm(name: arms.primary, numbers: primary, rounds: primary.magazine,
+                               spares: primary.spareMagazines)
+        self.sidearm = Firearm(name: arms.sidearm, numbers: sidearm, rounds: sidearm.magazine,
+                               spares: sidearm.spareMagazines)
         self.grenades = Grenades(name: arms.grenade, numbers: grenade,
                                  carried: arms.grenadesCarried, left: arms.grenadesCarried)
         self.knife = Knife(name: arms.knife, numbers: knife)
@@ -93,9 +105,19 @@ struct Arms: Equatable {
         self[slot].rounds = max(.zero, self[slot].rounds - Firing.roundsPerShot)
     }
 
-    /// Every firearm full again: one reload is one action (FR-BOT-200), and a bot that
-    /// stops to reload reloads what it carries rather than one weapon of the two.
-    mutating func reload() {
-        for slot in Slot.allCases { self[slot].rounds = self[slot].numbers.magazine }
+    /// One magazine full again, at the cost of one of the spares carried for it
+    /// (FR-BOT-550, FR-BOT-560). A firearm with no spare left stays as it is, which is
+    /// also why it is never offered as an action (FR-BOT-540).
+    ///
+    /// One weapon and not both: each takes its own time (FR-BOT-550), and a single act
+    /// cannot take two lengths — which is what ADR-0086's one reload for everything
+    /// was, and ADR-0090 supersedes.
+    mutating func fill(_ slot: Slot) {
+        guard self[slot].spares > .zero else { return }
+        self[slot].spares -= 1
+        self[slot].rounds = self[slot].numbers.magazine
     }
+
+    /// Which firearms could be filled now: each is an action of its own (FR-BOT-540).
+    var reloadable: [Slot] { Slot.allCases.filter { self[$0].isReloadable } }
 }

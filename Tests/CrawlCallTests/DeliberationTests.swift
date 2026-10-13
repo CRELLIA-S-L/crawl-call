@@ -4,7 +4,7 @@
 // The arena is built here rather than loaded, so that what is in the way, where the
 // cover is and how far the snake stands are all known quantities.
 //
-// file verifies: FR-BOT-080, FR-BOT-090, FR-BOT-116, FR-BOT-118, FR-BOT-119, FR-BOT-200, FR-BOT-210, IF-BOT-010, FR-BOT-220
+// file verifies: FR-BOT-540, FR-BOT-080, FR-BOT-090, FR-BOT-116, FR-BOT-118, FR-BOT-119, FR-BOT-200, FR-BOT-210, IF-BOT-010, FR-BOT-220
 import XCTest
 @testable import CrawlCall
 
@@ -77,7 +77,8 @@ final class DeliberationTests: XCTestCase {
         XCTAssertTrue(actions.contains(where: isCover), "taking cover is not on the list")
         XCTAssertTrue(actions.contains(where: isZone), "the ordered zone is not on the list")
         XCTAssertTrue(actions.contains(where: isFlight), "fleeing is not on the list")
-        XCTAssertTrue(actions.contains(.reload), "reloading is not on the list")
+        XCTAssertTrue(actions.contains(.reload(.primary)), "reloading the primary is not on the list")
+        XCTAssertTrue(actions.contains(.reload(.sidearm)), "reloading the sidearm is not on the list")
         XCTAssertTrue(actions.contains(where: isHeal), "healing is not on the list")
     }
 
@@ -117,7 +118,7 @@ final class DeliberationTests: XCTestCase {
 
         var empty = armed
         empty.emptyEveryFirearm()
-        XCTAssertEqual(Deliberation.choose(for: empty, in: situation), .reload)
+        XCTAssertEqual(Deliberation.choose(for: empty, in: situation), .reload(.primary))
         XCTAssertNil(utility(of: isFire, for: empty, in: situation), "an empty bot still offered to fire")
     }
 

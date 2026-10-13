@@ -258,7 +258,7 @@ final class IdleTests: XCTestCase {
     func testABotWithSomethingToDoDoesNotLookRound() throws {
         let world = try world(strip)
         var busy = try bot(at: 20)
-        busy.action = .reload
+        busy.action = .reload(.primary)
         busy.facing = 1
         busy.knowledge.outline = world.graph.nodes
         busy.knowledge.enemyStart = Knowledge.Area(centre: at(2, 1), radius: 1)

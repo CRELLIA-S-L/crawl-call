@@ -3,7 +3,7 @@
 // bot moving every frame (INV-BOT-010), a shot costing a round and dealing its
 // damage (FR-BOT-060), and the snake paying for it out of its tail (FR-SNAKE-070).
 //
-// file verifies: FR-BOT-450, FR-BOT-060, FR-BOT-150, FR-BOT-160, FR-BOT-165, FR-SNAKE-070, INV-BOT-010
+// file verifies: FR-BOT-550, FR-BOT-450, FR-BOT-060, FR-BOT-150, FR-BOT-160, FR-BOT-165, FR-SNAKE-070, INV-BOT-010
 import XCTest
 @testable import CrawlCall
 
@@ -229,10 +229,26 @@ final class ExecutionTests: XCTestCase {
         var bots = [try bot(0, at: here, in: world)]
         bots[try checkedIndex(0, of: bots)].knowledge.snake = [0: .init(point: .zero, time: 0)]
         bots[try checkedIndex(0, of: bots)].emptyEveryFirearm()
-        let target = SIMD3(Double(here.x) * cell + cell, 0, Double(here.z) * cell)
+        // Three metres off: inside what a firearm reaches and outside the knife's, so
+        // that what an empty bot does instead of firing is reloading and not closing
+        // with it (FR-BOT-510, FR-BOT-540).
+        let target = SIMD3(Double(here.x) * cell + 6 * cell, 0, Double(here.z) * cell)
         XCTAssertTrue(Execution.deliberate(&bots, slots: [0], snake: [target], world: world).rounds.isEmpty)
-        XCTAssertEqual(try element(0, of: bots).action, .reload)
-        XCTAssertEqual(try element(0, of: bots).arms.rounds, try element(0, of: bots).arms.magazines)
+        XCTAssertEqual(try element(0, of: bots).action, .reload(.primary))
+        // And the magazine fills when the weapon's own time is up and not before
+        // (FR-BOT-550), at the cost of one of the spares carried for it (FR-BOT-560).
+        let primary = try element(0, of: bots).arms.primary
+        XCTAssertEqual(primary.rounds, .zero, "the magazine filled the moment it was chosen")
+        Execution.frames(1, of: &bots, world: world, from: primary.numbers.reloadTime / 2)
+        XCTAssertEqual(try element(0, of: bots).arms.primary.rounds, .zero,
+                       "the magazine filled halfway through the reload")
+        Execution.frames(1, of: &bots, world: world, from: primary.numbers.reloadTime)
+        XCTAssertEqual(try element(0, of: bots).arms.primary.rounds, primary.numbers.magazine,
+                       "the magazine never filled")
+        XCTAssertEqual(try element(0, of: bots).arms.primary.spares, primary.spares - 1,
+                       "filling it cost something other than one spare magazine")
+        XCTAssertEqual(try element(0, of: bots).arms.sidearm.rounds, .zero,
+                       "reloading one firearm filled the other as well")
     }
 }
 

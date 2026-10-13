@@ -1,6 +1,6 @@
 # ADR-0063 — A round flies at where its target was, and a bot fires from beside cover or on the move
 
-- **Status:** accepted
+- **Status:** accepted, and superseded in part by ADR-0090: since 2026-10-13 a reload takes the weapon's own time, so the magazine is no longer full the moment the bot stands in the hidden cell.
 - **Date:** 2026-09-30
 - **Related requirements:** FR-BOT-060, FR-BOT-400, FR-BOT-405, FR-BOT-410, FR-BOT-420, FR-BOT-425, FR-BOT-430, FR-VIEW-170, IF-BOT-010, FR-BOT-330, FR-BOT-320
 

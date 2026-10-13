@@ -426,14 +426,14 @@ Nothing picks it up again: there is no gathering in this game, and a thrown knif
 ### FR-BOT-540 — Each firearm that is not full is a reload of its own
 
 ```yaml
-status: deferred
+status: implemented
 verification: T
 derives_from: [FR-BOT-425]
 depends_on: [FR-BOT-440, FR-BOT-460, IF-BOT-010]
 refines: []
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Bot/Deliberation.swift, Sources/CrawlCall/Bot/Arms.swift, Sources/CrawlCall/Bot/Action.swift, Sources/CrawlCall/Config/Utility.swift, config/bot.json]
+tests: [Tests/CrawlCallTests/ReloadTests.swift, Tests/CrawlCallTests/DeliberationTests.swift]
 created: 2026-10-13
 ```
 
@@ -446,14 +446,14 @@ That a firearm with no spare magazine left is not offered at all belongs here ra
 ### FR-BOT-550 — A reload takes the weapon's own time
 
 ```yaml
-status: deferred
+status: implemented
 verification: T
 derives_from: [FR-BOT-540]
 depends_on: [FR-BOT-540, IF-BOT-010]
 refines: []
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Bot/Execution.swift, Sources/CrawlCall/Bot/Bot.swift, Sources/CrawlCall/Bot/Arms.swift, Sources/CrawlCall/Game.swift, config/bot.json]
+tests: [Tests/CrawlCallTests/ReloadTests.swift, Tests/CrawlCallTests/SkirmishTests.swift, Tests/CrawlCallTests/ExecutionTests.swift]
 created: 2026-10-13
 ```
 
@@ -467,14 +467,14 @@ It does not hold the bot where it stands, as eating holds the snake: a bot can w
 ### FR-BOT-560 — A bot carries a limited number of spare magazines
 
 ```yaml
-status: deferred
+status: implemented
 verification: T
 derives_from: [FR-BOT-540]
 depends_on: [FR-BOT-550, IF-BOT-010]
 refines: []
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Bot/Arms.swift, Sources/CrawlCall/Bot/Execution.swift, config/bot.json]
+tests: [Tests/CrawlCallTests/ReloadTests.swift]
 created: 2026-10-13
 ```
 
@@ -588,14 +588,14 @@ depends_on: [FR-BOT-030]
 refines: [FR-BOT-080]
 conflicts_with: []
 code: [Sources/CrawlCall/Bot/Deliberation.swift, Sources/CrawlCall/Config/Utility.swift]
-tests: [Tests/CrawlCallTests/DeliberationTests.swift]
+tests: [Tests/CrawlCallTests/DeliberationTests.swift, Tests/CrawlCallTests/ReloadTests.swift]
 created: 2026-09-21
 ```
 
 When computing a bot's utility scores, the system **shall** apply the bot's personality weights as multipliers:
 
 - panic, scaling threat terms up;
-- courage, scaling the terms for facing danger — firing at it, holding ground under it — up;
+- courage, scaling the terms for facing danger — firing at it, holding ground under it — up, and the term for stepping out of it to reload down;
 - discipline, scaling hold-position terms up;
 - aggression, scaling attack terms up;
 - self-sacrifice, scaling protect-ally terms up.
@@ -604,6 +604,7 @@ When computing a bot's utility scores, the system **shall** apply the bot's pers
 This is the only channel through which the commander's LLM output reaches per-frame behaviour.
 Courage was added by the maintainer on 2026-09-25 as a weight of its own, not as the other side of panic: a bot can be frightened and stand its ground anyway, and the two pull on different terms — panic on the fear that sends it away, courage on the terms that keep it facing the danger.
 It multiplies firing, every target a bot has being something that can kill it, and the order's term by how near the danger has come — with nothing near, holding a position is obedience and discipline's alone (ADR-0074).
+The maintainer added the reload on 2026-10-13, asking that the choice between hiding to fill a magazine and drawing what is left to run in should turn on how brave a bot is: it is the one term courage pulls *down*, and a share of it rather than the whole, so that a bot of whole courage still reloads when there is nothing better to do (FR-BOT-540, ADR-0090).
 
 ### FR-BOT-100 — Cover is valued by what is left of it
 
@@ -1320,7 +1321,9 @@ created: 2026-09-30
 
 When a bot firing from beside cover reloads, the system **shall** move it into the hidden cell next to where it fired from.
 
-**Rationale.** The maintainer, 2026-09-30, choosing cover, and movement where there is none: a bot fires from the edge of the cover and ducks behind it to reload. The magazine is full once the bot is in the hidden cell; a reload takes no time of its own, and one done before the step behind would leave nothing to step behind for (ADR-0063).
+**Rationale.** The maintainer, 2026-09-30, choosing cover, and movement where there is none: a bot fires from the edge of the cover and ducks behind it to reload.
+Until 2026-10-13 the magazine was full the moment the bot stood in the hidden cell, because a reload took no time of its own and one done before the step behind would have left nothing to step behind for (ADR-0063).
+A reload now takes the weapon's own time (FR-BOT-550), so the cell is where the bot waits it out rather than where the filling happens, and what this requirement asks for is the move and nothing about the moment: ADR-0090 supersedes that part of ADR-0063.
 
 ### FR-BOT-430 — A bot with no cover beside it fires on the move
 

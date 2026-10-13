@@ -52,6 +52,25 @@ extension Bot {
     mutating func spendHalfOfEveryFirearm() {
         for slot in Arms.Slot.allCases { arms[slot].rounds = arms[slot].numbers.magazine / 2 }
     }
+
+    /// No spare magazine for anything it carries: a bot with no reload left to choose
+    /// (FR-BOT-540, FR-BOT-560).
+    mutating func spendEverySpare() {
+        for slot in Arms.Slot.allCases { arms[slot].spares = .zero }
+    }
+}
+
+extension Execution {
+    /// The frames of a match with nobody deliberating, in the order `Game.advance` runs
+    /// them: a reload that comes due is filled (FR-BOT-550), then everybody walks.
+    static func frames(_ count: Int, of bots: inout [Bot], world: World, from now: Double) {
+        let frame = 1.0 / 60
+        for step in Int.zero..<count {
+            let at = now + Double(step) * frame
+            fill(&bots, now: at)
+            walk(&bots, seconds: frame, world: world, now: at)
+        }
+    }
 }
 
 extension Execution {

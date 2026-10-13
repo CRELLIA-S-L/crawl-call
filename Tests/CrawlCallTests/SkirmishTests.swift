@@ -2,7 +2,7 @@
 // cover (FR-BOT-420), steps behind it to reload (FR-BOT-425), and with no cover near
 // keeps moving across the line of fire (FR-BOT-430).
 //
-// file verifies: FR-BOT-420, FR-BOT-425, FR-BOT-430
+// file verifies: FR-BOT-550, FR-BOT-420, FR-BOT-425, FR-BOT-430
 import XCTest
 @testable import CrawlCall
 
@@ -155,15 +155,15 @@ final class SkirmishTests: XCTestCase {
         bots[first].position = SIMD3(Double(post.x) * size, 0, Double(post.z) * size)
         bots[first].path = []
         bots[first].emptyEveryFirearm()
-        let rounds = try element(0, of: bots).arms.magazines
+        let magazine = try element(0, of: bots).arms.primary.numbers.magazine
         _ = Execution.deliberate(&bots, slots: [0], world: floor, now: 1)
-        XCTAssertEqual(try element(0, of: bots).action, .reload)
+        XCTAssertEqual(try element(0, of: bots).action, .reload(.primary))
         XCTAssertEqual(try element(0, of: bots).arms.rounds, 0, "it reloaded out in the open")
-        for _ in 0..<120 {
-            Execution.walk(&bots, seconds: frame, world: floor, now: 1)
-            if try element(0, of: bots).arms.rounds > 0 { break }
-        }
-        XCTAssertEqual(try element(0, of: bots).arms.rounds, rounds, "it never reloaded")
+        // Two seconds of frames: it walks into the hidden cell and the magazine fills
+        // there, when the weapon's own time is up (FR-BOT-550).
+        let seconds = try element(0, of: bots).arms.primary.numbers.reloadTime
+        Execution.frames(Int(seconds * 60) + 1, of: &bots, world: floor, from: 1)
+        XCTAssertEqual(try element(0, of: bots).arms.primary.rounds, magazine, "it never reloaded")
         XCTAssertEqual(Execution.cell(of: try element(0, of: bots), world: floor), refuge,
                        "it reloaded somewhere other than the hidden cell")
     }
@@ -235,14 +235,19 @@ final class SkirmishTests: XCTestCase {
         let first = try checkedIndex(0, of: bots)
         bots[first].position = SIMD3(Double(refuge.x) * size, 0, Double(refuge.z) * size)
         bots[first].path = []
-        bots[first].emptyEveryFirearm()
+        // Its rifle run dry and the pistol untouched, so that filling the rifle leaves
+        // it nothing else to fill and it comes out again (FR-BOT-540).
+        bots[first].arms.primary.rounds = .zero
         _ = Execution.deliberate(&bots, slots: [0], world: floor, now: 1)
-        XCTAssertEqual(try element(0, of: bots).action, .reload)
-        XCTAssertEqual(try element(0, of: bots).arms.rounds, try element(0, of: bots).arms.magazines)
+        XCTAssertEqual(try element(0, of: bots).action, .reload(.primary))
+        let magazine = try element(0, of: bots).arms.primary.numbers.magazine
+        Execution.frames(Int(try element(0, of: bots).arms.primary.numbers.reloadTime * 60) + 1,
+                         of: &bots, world: floor, from: 1)
+        XCTAssertEqual(try element(0, of: bots).arms.primary.rounds, magazine, "it never reloaded")
         XCTAssertEqual(try element(0, of: bots).post, post, "it forgot where it fires from")
         // Out of sight of the enemy, it goes back out to fire.
         bots[first].action = nil
-        _ = Execution.deliberate(&bots, slots: [0], world: floor, now: 2)
+        _ = Execution.deliberate(&bots, slots: [0], world: floor, now: 4)
         XCTAssertEqual(try element(0, of: bots).action, .fire(at: .bot(id: 1), with: .primary), "it stays behind the cover")
     }
 
@@ -254,8 +259,14 @@ final class SkirmishTests: XCTestCase {
         shooter.emptyEveryFirearm()
         var bots = [shooter, try bot(1, .blue, at: 12, 1, in: floor, facing: -east)]
         _ = Execution.deliberate(&bots, slots: [0], world: floor, now: 0)
-        XCTAssertEqual(try element(0, of: bots).action, .reload)
-        XCTAssertEqual(try element(0, of: bots).arms.rounds, try element(0, of: bots).arms.magazines)
+        XCTAssertEqual(try element(0, of: bots).action, .reload(.primary))
+        let magazine = try element(0, of: bots).arms.primary.numbers.magazine
+        let stood = Execution.cell(of: try element(0, of: bots), world: floor)
+        Execution.frames(Int(try element(0, of: bots).arms.primary.numbers.reloadTime * 60) + 1,
+                         of: &bots, world: floor, from: 0)
+        XCTAssertEqual(try element(0, of: bots).arms.primary.rounds, magazine, "it never reloaded")
+        XCTAssertEqual(Execution.cell(of: try element(0, of: bots), world: floor), stood,
+                       "with no cover beside it, it went somewhere to reload")
     }
 
     // MARK: on the move (FR-BOT-430)

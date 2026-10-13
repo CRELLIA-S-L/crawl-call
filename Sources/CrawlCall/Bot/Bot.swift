@@ -2,8 +2,15 @@
 // personality its archetype gave it. No RealityKit here — this is the part a test
 // can read, the same split as `Snake`.
 //
-// file implements: FR-BOT-167, FR-BOT-440, FR-BOT-030, FR-BOT-040, FR-BOT-050, FR-BOT-060, FR-BOT-280, FR-BOT-290, FR-BOT-320, FR-BOT-340, FR-BOT-380, FR-BOT-420, FR-BOT-425, FR-BOT-430
+// file implements: FR-BOT-550, FR-BOT-167, FR-BOT-440, FR-BOT-030, FR-BOT-040, FR-BOT-050, FR-BOT-060, FR-BOT-280, FR-BOT-290, FR-BOT-320, FR-BOT-340, FR-BOT-380, FR-BOT-420, FR-BOT-425, FR-BOT-430
 import Foundation
+
+/// A reload under way: the firearm being filled and when the filling is due
+/// (FR-BOT-550).
+struct Reload: Equatable {
+    let slot: Arms.Slot
+    let due: Double
+}
 
 /// The two sides. Which one the player is nearer to is never a property of a squad:
 /// both are prey.
@@ -80,6 +87,12 @@ struct Bot: Equatable {
     /// When it last turned to look round, standing with nothing to do (FR-BOT-380), in
     /// seconds of the match.
     var lastLookRound = -Double.infinity
+    /// The reload it is in the middle of, if it is in the middle of one: which firearm
+    /// is being filled, and the second of the match the filling is due (FR-BOT-550).
+    /// Set when the reload is first chosen and cleared by any other action, so that a
+    /// bot which ducks out, fires and ducks back starts again from the beginning.
+    var reloading: Reload?
+
     /// Where it fires from beside cover, and the hidden cell next to it it reloads in
     /// (FR-BOT-420, FR-BOT-425). Nil while it fires with none, and once it does
     /// anything but fire and reload.
