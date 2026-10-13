@@ -487,23 +487,24 @@ Nothing picks a magazine up again, for the reason a thrown knife is gone for the
 ### FR-BOT-570 — A bot closes with what its weapon does not reach
 
 ```yaml
-status: deferred
+status: implemented
 verification: T
 derives_from: [FR-BOT-460]
 depends_on: [FR-BOT-440, FR-BOT-530, FR-BOT-090]
 refines: []
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Bot/Deliberation.swift, Sources/CrawlCall/Bot/Action.swift, Sources/CrawlCall/Bot/Execution.swift]
+tests: [Tests/CrawlCallTests/RushTests.swift]
 created: 2026-10-13
 ```
 
-When a bot carries a weapon with ammunition whose range does not cover its target, and a cell it can reach would bring that target within that weapon's range, the system **shall** score moving to that cell as an action of its own.
+When nothing a bot carries reaches a target it sees from where it stands, and a cell it can reach would bring that target within the range of a weapon it can still use, the system **shall** score moving to that cell as an action of its own.
 
 **Rationale.** The maintainer, 2026-10-13: the choice between hiding to reload and drawing the pistol or the knife to run in should depend on the bot's courage.
 This is the second half of that choice, and it is shaped like FR-BOT-460 rather than like an order to charge: each weapon that reaches is already an action of its own, and this is each weapon that *would* reach, scored by the same chooser.
 A bot with a loaded primary is not a candidate, since its weapon reaches already, so this never turns a firefight at range into a rush. The bot it describes is the one with a dry rifle, a pistol good for six metres and an enemy at eight — and whether it goes depends on how brave it is (FR-BOT-090) and on what else there is to do.
 The cell is subject to FR-BOT-530 like any other, so a bot never rushes to where a squadmate is already going.
+The statement said "a weapon whose range does not cover its target" when it was written on 2026-10-13 and was narrowed to "nothing it carries reaches" the same day, while it was being built: a knife reaches an arm's length, so the looser words obliged a bot with a loaded rifle and an enemy three metres off to score running at it with a knife — and it chose to, which twelve tests of the firefight said at once. What the maintainer asked for is the bot that has nothing left, and that is what the words now say (ADR-0091).
 
 ### FR-BOT-580 — A thrown grenade flies the arc of a thrown thing
 

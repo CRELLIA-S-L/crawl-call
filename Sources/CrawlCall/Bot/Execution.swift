@@ -10,7 +10,7 @@
 // slot is aimed through the slots it has to wait out. Until 2026-10-12 the period was
 // the cadence, because no requirement gave a weapon a rate of fire.
 //
-// file implements: FR-BOT-550, FR-BOT-560, FR-BOT-450, FR-BOT-470, FR-BOT-510, FR-BOT-520, FR-BOT-167, FR-BOT-060, FR-BOT-110, FR-BOT-115, FR-BOT-170, FR-BOT-360, FR-BOT-370, FR-BOT-380, FR-BOT-180, FR-BOT-190, INV-BOT-020, INV-BOT-010, FR-BOT-165, FR-MAP-150, FR-BOT-270, FR-BOT-280, FR-BOT-290, FR-BOT-300, FR-BOT-220, FR-BOT-310, FR-BOT-320, FR-BOT-330, FR-BOT-340, FR-BOT-420, FR-BOT-425, FR-BOT-430, FR-CMD-030, FR-CMD-040
+// file implements: FR-BOT-550, FR-BOT-560, FR-BOT-570, FR-BOT-450, FR-BOT-470, FR-BOT-510, FR-BOT-520, FR-BOT-167, FR-BOT-060, FR-BOT-110, FR-BOT-115, FR-BOT-170, FR-BOT-360, FR-BOT-370, FR-BOT-380, FR-BOT-180, FR-BOT-190, INV-BOT-020, INV-BOT-010, FR-BOT-165, FR-MAP-150, FR-BOT-270, FR-BOT-280, FR-BOT-290, FR-BOT-300, FR-BOT-220, FR-BOT-310, FR-BOT-320, FR-BOT-330, FR-BOT-340, FR-BOT-420, FR-BOT-425, FR-BOT-430, FR-CMD-030, FR-CMD-040
 import Foundation
 
 enum Execution {
@@ -279,7 +279,7 @@ enum Execution {
                     bots[index].refuge = nil
                     bots[index].postTarget = nil
                 }
-            case .takeCover, .flee, .moveToOrderedZone, .advance, .explore:
+            case .takeCover, .flee, .moveToOrderedZone, .advance, .explore, .close:
                 // The route is the frame's business, and only one is computed per
                 // frame (FR-BOT-165).
                 bots[index].path = []
@@ -502,7 +502,7 @@ enum Execution {
     static func destination(of bot: Bot) -> NavigationGraph.Node? {
         switch bot.action {
         case .takeCover(let node), .moveToOrderedZone(let node), .flee(let node),
-             .advance(let node), .explore(let node): return node
+             .advance(let node), .explore(let node), .close(_, let node): return node
         case .fire: return bot.post
         case .reload: return bot.post == nil ? nil : bot.refuge
         case .throwGrenade, .strike, .throwKnife, .heal, .none: return nil
@@ -513,7 +513,7 @@ enum Execution {
     /// firing from somewhere and reloading behind cover are not.
     static func travels(_ action: Action?) -> Bool {
         switch action {
-        case .takeCover, .moveToOrderedZone, .flee, .advance, .explore: return true
+        case .takeCover, .moveToOrderedZone, .flee, .advance, .explore, .close: return true
         case .fire, .throwGrenade, .strike, .throwKnife, .reload, .heal, .none: return false
         }
     }

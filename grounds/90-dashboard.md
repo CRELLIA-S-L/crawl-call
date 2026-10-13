@@ -249,6 +249,7 @@ requirements link to them, plus how many files their `code` field names.
 | FR-BOT-370 | 0 | 3 | 3 |
 | FR-BOT-380 | 0 | 3 | 3 |
 | FR-BOT-560 | 0 | 3 | 3 |
+| FR-BOT-570 | 0 | 3 | 3 |
 | FR-BOT-580 | 3 | 0 | 3 |
 | FR-GREENHOLM-050 | 0 | 3 | 3 |
 | FR-MAP-160 | 0 | 3 | 3 |
@@ -312,7 +313,6 @@ requirements link to them, plus how many files their `code` field names.
 | CON-PUB-110 | 0 | 0 | 0 |
 | CON-PUB-120 | 0 | 0 | 0 |
 | FR-BOT-105 | 0 | 0 | 0 |
-| FR-BOT-570 | 0 | 0 | 0 |
 | FR-BOT-590 | 0 | 0 | 0 |
 | FR-MAP-040 | 0 | 0 | 0 |
 | FR-MAP-110 | 0 | 0 | 0 |

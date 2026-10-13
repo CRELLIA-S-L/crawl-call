@@ -8,9 +8,9 @@ Total requirements: 290.
 | Status | Requirements |
 |---|---|
 | `draft` | 4 |
-| `deferred` | 89 |
+| `deferred` | 88 |
 | `partial` | 9 |
-| `implemented` | 180 |
+| `implemented` | 181 |
 | `superseded` | 6 |
 | `withdrawn` | 2 |
 
@@ -97,7 +97,7 @@ Total requirements: 290.
 | **FR-BOT-540** Each firearm that is not full is a reload of its own | `implemented` | T | `Sources/CrawlCall/Bot/Deliberation.swift`<br>`Sources/CrawlCall/Bot/Arms.swift`<br>`Sources/CrawlCall/Bot/Action.swift`<br>`Sources/CrawlCall/Config/Utility.swift`<br>`config/bot.json` | `Tests/CrawlCallTests/ReloadTests.swift`<br>`Tests/CrawlCallTests/DeliberationTests.swift` |
 | **FR-BOT-550** A reload takes the weapon's own time | `implemented` | T | `Sources/CrawlCall/Bot/Execution.swift`<br>`Sources/CrawlCall/Bot/Bot.swift`<br>`Sources/CrawlCall/Bot/Arms.swift`<br>`Sources/CrawlCall/Game.swift`<br>`config/bot.json` | `Tests/CrawlCallTests/ReloadTests.swift`<br>`Tests/CrawlCallTests/SkirmishTests.swift`<br>`Tests/CrawlCallTests/ExecutionTests.swift` |
 | **FR-BOT-560** A bot carries a limited number of spare magazines | `implemented` | T | `Sources/CrawlCall/Bot/Arms.swift`<br>`Sources/CrawlCall/Bot/Execution.swift`<br>`config/bot.json` | `Tests/CrawlCallTests/ReloadTests.swift` |
-| **FR-BOT-570** A bot closes with what its weapon does not reach | `deferred` | T | — | — |
+| **FR-BOT-570** A bot closes with what its weapon does not reach | `implemented` | T | `Sources/CrawlCall/Bot/Deliberation.swift`<br>`Sources/CrawlCall/Bot/Action.swift`<br>`Sources/CrawlCall/Bot/Execution.swift` | `Tests/CrawlCallTests/RushTests.swift` |
 | **FR-BOT-580** A thrown grenade flies the arc of a thrown thing | `deferred` | T | — | — |
 | **FR-BOT-590** A thrown grenade bounces off what it meets | `deferred` | T | — | — |
 | **FR-CMD-010** One commander per squad | `implemented` | T | `Sources/CrawlCall/Commander/CommanderDesk.swift`<br>`Sources/CrawlCall/Game.swift`<br>`Sources/CrawlCall/CrawlCallApp.swift` | `Tests/CrawlCallTests/CommanderCallTests.swift` |

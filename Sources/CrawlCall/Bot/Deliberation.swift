@@ -14,7 +14,7 @@
 // configuration (IF-BOT-010), as is how much an unhurt bot fears the snake
 // (FR-BOT-210). What shapes each term — a share, a whole — is in `Utility`.
 //
-// file implements: FR-BOT-530, FR-BOT-540, FR-BOT-167, FR-BOT-116, FR-BOT-460, FR-BOT-450, FR-BOT-470, FR-BOT-500, FR-BOT-510, FR-BOT-520, FR-BOT-080, FR-BOT-090, FR-BOT-110, FR-BOT-115, FR-BOT-118, FR-BOT-119, FR-BOT-360, FR-BOT-370, FR-BOT-120, FR-BOT-180, FR-BOT-190, FR-BOT-200, FR-BOT-210, FR-MAP-150, FR-BOT-220, FR-BOT-060, FR-BOT-140, FR-BOT-330, FR-BOT-410, FR-BOT-420, FR-BOT-425, FR-BOT-130, FR-CMD-030
+// file implements: FR-BOT-530, FR-BOT-540, FR-BOT-570, FR-BOT-167, FR-BOT-116, FR-BOT-460, FR-BOT-450, FR-BOT-470, FR-BOT-500, FR-BOT-510, FR-BOT-520, FR-BOT-080, FR-BOT-090, FR-BOT-110, FR-BOT-115, FR-BOT-118, FR-BOT-119, FR-BOT-360, FR-BOT-370, FR-BOT-120, FR-BOT-180, FR-BOT-190, FR-BOT-200, FR-BOT-210, FR-MAP-150, FR-BOT-220, FR-BOT-060, FR-BOT-140, FR-BOT-330, FR-BOT-410, FR-BOT-420, FR-BOT-425, FR-BOT-130, FR-CMD-030
 import Foundation
 
 enum Deliberation {
@@ -136,6 +136,54 @@ enum Deliberation {
                 // knows is no target.
                 scored.append((.fire(at: known.target, with: slot),
                                worth(Perception.metres(bot.position, known.point))))
+            }
+        }
+
+        // Closing: a weapon the bot can still use whose range does not cover a target it
+        // sees, and a cell it can walk to from which that weapon would reach (FR-BOT-570).
+        // Shaped like the fire actions above and not like an order to charge — a bot with
+        // a loaded primary is never a candidate, because its weapon reaches already — so
+        // this turns no firefight at range into a rush.
+        //
+        // What it is worth is what firing with that weapon from that cell would be worth,
+        // scaled by how near the cell is: a step costs almost nothing, a cell at the edge
+        // of the search costs most of what it would gain, and courage is in the fire term
+        // it is built from (FR-BOT-090).
+        var marks: [(target: Target, point: SIMD3<Double>)] =
+            situation.enemiesInView.map { (target: Target.bot(id: $0.id), point: $0.point) }
+        if let part = situation.inView.min(by: {
+            Perception.metres(bot.position, $0) < Perception.metres(bot.position, $1)
+        }) {
+            marks.append((target: .snake(at: part), point: part))
+        }
+        let rushing = rushable(for: bot, in: situation)
+        if !marks.isEmpty && !rushing.isEmpty {
+            let search = coverSearch(situation.configuration)
+            // Nothing it carries reaches the target from where it stands: a bot with one
+            // weapon that reaches has a shot to take and no reason to cross the ground,
+            // and a grenade in the pouch reaches whatever a bot can see. So this is the
+            // bot with its rifle dry, its pouch empty and an enemy beyond the pistol —
+            // or beyond the knife, with nothing left but the knife.
+            let reaches = rushing.map(\.range) + (bot.arms.grenades.left > .zero
+                                                      ? [bot.arms.grenades.numbers.throwRange] : [])
+            let out = marks.filter { mark in
+                let metres = Perception.metres(bot.position, mark.point)
+                return !reaches.contains { metres <= $0 }
+            }
+            // The cells are walked once for every rush this slot scores, since the walk
+            // is the costly half and the targets and weapons are few (NFR-PERF-020).
+            let cells = out.isEmpty ? [] : reachable(for: bot, in: situation, within: search)
+            for mark in out {
+                for weapon in rushing {
+                    var best: (node: NavigationGraph.Node, utility: Double)?
+                    for cell in cells {
+                        let from = Perception.metres(centre(of: cell.node, in: situation), mark.point)
+                        guard from <= weapon.range else { continue }
+                        let utility = weapon.worth(from) * nearness(cell.metres, within: search)
+                        if utility > (best?.utility ?? .zero) { best = (cell.node, utility) }
+                    }
+                    if let best { scored.append((.close(on: mark.target, to: best.node), best.utility)) }
+                }
             }
         }
 
@@ -417,8 +465,53 @@ enum Deliberation {
         switch action {
         case .fire(let target, _), .throwGrenade(let target),
              .strike(let target), .throwKnife(let target): return target
+        case .close(let target, _): return target
         case .takeCover, .moveToOrderedZone, .flee, .reload, .heal, .advance, .explore: return nil
         }
+    }
+
+    /// The weapons a bot could use on something it cannot reach from where it stands:
+    /// each firearm with a round left, by its range, and the knife by the reach of an
+    /// arm (FR-BOT-570). Each carries what firing it at a distance would be worth, so
+    /// that the rush is scored by the firing it is for.
+    ///
+    /// A thrown knife and a grenade are left out: both leave the bot's hand and are
+    /// gone, and neither is a reason to cross a room.
+    static func rushable(for bot: Bot, in situation: Situation)
+    -> [(range: Double, worth: (Double) -> Double)] {
+        guard let entry = situation.configuration.archetypes[bot.archetype.rawValue] else { return [] }
+        let term = situation.configuration.utilityTermWeights
+        var weapons: [(range: Double, worth: (Double) -> Double)] = []
+        for slot in Arms.Slot.allCases {
+            let firearm = bot.arms[slot]
+            guard firearm.rounds > .zero, firearm.numbers.magazine > .zero else { continue }
+            let loaded = Double(firearm.rounds) / Double(firearm.numbers.magazine)
+            let strength = bot.arms.strength(of: slot)
+            weapons.append((range: firearm.numbers.range, worth: { metres in
+                term.attack * nearness(metres, within: entry.detectionRange) * loaded * strength
+                    * bot.weights.aggression * bot.weights.courage
+            }))
+        }
+        if let knife = bot.arms.knife {
+            weapons.append((range: knife.numbers.reach, worth: { metres in
+                term.attack * nearness(metres, within: entry.detectionRange)
+                    * bot.weights.aggression * bot.weights.courage
+            }))
+        }
+        return weapons
+    }
+
+    /// Every cell a bot could go to and knows, other than the one it stands in, with how
+    /// far each is: what a rush chooses from (FR-BOT-570). No cell another bot holds or
+    /// is making for is among them, since they come from the walk (FR-BOT-530).
+    static func reachable(for bot: Bot, in situation: Situation,
+                          within reach: Double) -> [(node: NavigationGraph.Node, metres: Double)] {
+        let here = NavigationGraph.Node(floor: bot.floor,
+                                        x: Int((bot.position.x / situation.cellSize).rounded()),
+                                        z: Int((bot.position.z / situation.cellSize).rounded()))
+        guard situation.graph.isWalkable(here) else { return [] }
+        return walk(from: here, within: reach, for: bot, in: situation)
+            .filter { $0.metres > .zero && situation.knows($0.node) }
     }
 
     /// How many bodies of the other side a blast at `point` would catch, as the bot
