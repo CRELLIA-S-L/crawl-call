@@ -171,6 +171,7 @@ final class FreeCameraTests: XCTestCase {
                                                                 segments: game.snake.segments),
                                   botEntities: BotEntity.make(for: game.bots, height: world.configurations.bot.figureHeight),
                                   shotEntities: ShotEntity.make(for: game.bots),
+                                  blastEntities: BlastEntity.make(for: game.bots, configuration: game.world.configurations.bot),
                                   camera: camera, seeThrough: built.seeThrough, distance: 12, fieldOfView: 50)
         XCTAssertNil(session.freeCamera, "a match begins with the camera on the snake")
         let following = camera.position
@@ -215,6 +216,7 @@ final class FreeCameraTests: XCTestCase {
                                                                 segments: game.snake.segments),
                                   botEntities: BotEntity.make(for: game.bots, height: world.configurations.bot.figureHeight),
                                   shotEntities: ShotEntity.make(for: game.bots),
+                                  blastEntities: BlastEntity.make(for: game.bots, configuration: game.world.configurations.bot),
                                   camera: camera, seeThrough: built.seeThrough, distance: 12, fieldOfView: 50)
         return (session, camera)
     }
@@ -297,6 +299,7 @@ final class FreeCameraTests: XCTestCase {
                                                               segments: game.snake.segments),
                                 botEntities: BotEntity.make(for: game.bots, height: world.configurations.bot.figureHeight),
                                 shotEntities: ShotEntity.make(for: game.bots),
+                                blastEntities: BlastEntity.make(for: game.bots, configuration: game.world.configurations.bot),
                                 camera: camera, seeThrough: built.seeThrough, distance: 12, fieldOfView: 50)
             return (s, camera)
         }

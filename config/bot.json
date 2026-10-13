@@ -312,7 +312,8 @@
         "throwRange": 10.0,
         "fuseTime": 2.0,
         "blastRadius": 2.5,
-        "furtherPartShare": 0.18
+        "furtherPartShare": 0.18,
+      "restitution": 0.35
       }
     },
     "knives": {

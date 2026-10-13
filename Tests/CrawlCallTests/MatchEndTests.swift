@@ -217,6 +217,7 @@ final class RestartOnScreenTests: XCTestCase {
                                                                 segments: game.snake.segments),
                                   botEntities: squads,
                                   shotEntities: ShotEntity.make(for: game.bots),
+                                  blastEntities: BlastEntity.make(for: game.bots, configuration: game.world.configurations.bot),
                                   camera: camera, seeThrough: built.seeThrough,
                                   distance: 12, fieldOfView: 50)
 

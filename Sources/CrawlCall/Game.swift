@@ -5,7 +5,7 @@
 // or a key: the schemes produce intents (FR-VIEW-050), the logic consumes them, and
 // neither knows about the other.
 //
-// file implements: IF-CMD-010, FR-BOT-550, FR-BOT-470, FR-BOT-510, FR-BOT-480, FR-BOT-490, FR-BOT-167, FR-CMD-010, FR-CMD-020, FR-SNAKE-270, FR-SNAKE-280, FR-SNAKE-285, FR-SNAKE-055, FR-SNAKE-056, FR-SNAKE-016, FR-VIEW-160, FR-BOT-060, FR-BOT-320, FR-BOT-050, FR-BOT-220, FR-BOT-230, FR-BOT-240, FR-BOT-260, FR-BOT-310, FR-VIEW-030, FR-VIEW-170, FR-VIEW-190, FR-SNAKE-010, FR-SNAKE-030, FR-SNAKE-290, FR-BOT-020, FR-BOT-150, FR-BOT-170, FR-BOT-380, FR-SCORE-130, FR-SCORE-070, FR-BOT-180, FR-SNAKE-060, FR-SNAKE-070, FR-SNAKE-090, FR-SCORE-140, FR-SCORE-150, INV-BOT-010, FR-VIEW-230, FR-TOOL-230, FR-MAP-150, FR-MAP-180, FR-MAP-170, FR-SNAKE-220, FR-BOT-400, FR-CMD-030, FR-CMD-040, FR-CMD-120, FR-CMD-125, FR-CMD-130
+// file implements: IF-CMD-010, FR-BOT-550, FR-BOT-580, FR-BOT-590, FR-VIEW-360, FR-BOT-470, FR-BOT-510, FR-BOT-480, FR-BOT-490, FR-BOT-167, FR-CMD-010, FR-CMD-020, FR-SNAKE-270, FR-SNAKE-280, FR-SNAKE-285, FR-SNAKE-055, FR-SNAKE-056, FR-SNAKE-016, FR-VIEW-160, FR-BOT-060, FR-BOT-320, FR-BOT-050, FR-BOT-220, FR-BOT-230, FR-BOT-240, FR-BOT-260, FR-BOT-310, FR-VIEW-030, FR-VIEW-170, FR-VIEW-190, FR-SNAKE-010, FR-SNAKE-030, FR-SNAKE-290, FR-BOT-020, FR-BOT-150, FR-BOT-170, FR-BOT-380, FR-SCORE-130, FR-SCORE-070, FR-BOT-180, FR-SNAKE-060, FR-SNAKE-070, FR-SNAKE-090, FR-SCORE-140, FR-SCORE-150, INV-BOT-010, FR-VIEW-230, FR-TOOL-230, FR-MAP-150, FR-MAP-180, FR-MAP-170, FR-SNAKE-220, FR-BOT-400, FR-CMD-030, FR-CMD-040, FR-CMD-120, FR-CMD-125, FR-CMD-130
 import Foundation
 
 struct Game {
@@ -78,6 +78,10 @@ struct Game {
     private(set) var rounds: [Round] = []
     /// The grenades thrown and not yet gone off (FR-BOT-470).
     private(set) var grenades: [Thrown] = []
+    /// The blasts that have gone off and are still being drawn (FR-VIEW-360): a value
+    /// of the match with a life the frame counts down, so that what is on screen stays
+    /// a function of the match and the view keeps no clock of its own.
+    private(set) var blasts: [Flash] = []
 
     /// How the match ended, or nil while it is still being played.
     private(set) var outcome: Outcome?
@@ -383,11 +387,18 @@ struct Game {
         var struck = Flight.fly(&rounds, seconds: seconds, bots: &bots, snake: body, plan: world.plan,
                                 configuration: world.configurations.bot,
                                 bodyRadius: world.configurations.tuning.bodyRadius)
-        // And every fuse burns down with them; the grenades whose fuses run out in this
-        // frame go off where they lie (FR-BOT-470, FR-BOT-480, FR-BOT-490).
-        let blast = Blast.burn(&grenades, seconds: seconds, bots: &bots, snake: body)
-        struck.damage += blast.damage
-        struck.hits += blast.hits
+        // And every grenade flies its frame under the tuning's gravity, bouncing off what
+        // it meets (FR-BOT-580, FR-BOT-590), while its fuse burns down; the ones whose
+        // fuses run out in this frame go off where they have got to, and leave a blast to
+        // draw (FR-BOT-470, FR-BOT-480, FR-BOT-490, FR-VIEW-360).
+        for index in blasts.indices { blasts[index].left -= max(seconds, .zero) }
+        blasts.removeAll { $0.left <= .zero }
+        let going = Blast.burn(&grenades, seconds: seconds, bots: &bots, snake: body, plan: world.plan,
+                               gravity: world.configurations.tuning.dropGravity,
+                               flashFor: world.configurations.view.blastFlashSeconds)
+        blasts += going.flashes
+        struck.damage += going.struck.damage
+        struck.hits += going.struck.hits
         if struck.damage > .zero {
             report.hits += struck.hits
             snake.take(damage: struck.damage, perSegment: world.configurations.snake.damagePerSegment)

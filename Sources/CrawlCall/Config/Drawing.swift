@@ -2,7 +2,7 @@
 // rather than the look (ART-070). What the models themselves look like — sizes,
 // colours, materials — waits for their rework (Q-280).
 //
-// file implements: FR-VIEW-170, FR-MAP-210, FR-VIEW-240, FR-VIEW-250, FR-VIEW-260, FR-VIEW-270, FR-VIEW-280, FR-VIEW-290, FR-VIEW-300, FR-VIEW-310, FR-VIEW-320
+// file implements: FR-VIEW-350, FR-VIEW-360, FR-VIEW-170, FR-MAP-210, FR-VIEW-240, FR-VIEW-250, FR-VIEW-260, FR-VIEW-270, FR-VIEW-280, FR-VIEW-290, FR-VIEW-300, FR-VIEW-310, FR-VIEW-320
 import Foundation
 
 /// How a module drawn as a figure fills its box (ADR-0034). Only the drawing: for sight
@@ -169,6 +169,36 @@ enum SnakeEyes {
 }
 
 /// The pool of tracer bars the rounds are drawn with (FR-VIEW-170).
+/// Numbers of the grenades and blasts on screen (FR-VIEW-350, FR-VIEW-360).
+enum Blasts {
+    /// How big a grenade is drawn, in metres: a ball an eye can follow across a room
+    /// and smaller than the hand that threw it.
+    static let grenadeRadius = 0.09
+    /// How many can be in the air at once: every bot's whole pouch, and one over for the
+    /// frame in which one is thrown as another goes off.
+    static func grenades(for bots: [Bot], configuration: BotConfiguration) -> Int {
+        let carried = bots.compactMap { configuration.archetypes[$0.archetype.rawValue]?.arms.grenadesCarried }
+        return max(least, carried.reduce(.zero, +) + oneMore)
+    }
+    /// How many blasts can be on screen at once: the pouches cannot all go off in one
+    /// moment, and this is room for a knot of them that nearly does.
+    static let flashes = 8
+    /// A pool is never empty, so that a match with no bots still has somewhere to put
+    /// a grenade.
+    static let least = 1
+    static let oneMore = 1
+    /// A blast's ball is made one metre across and scaled to what it has grown to.
+    static let unitRadius: Float = 1
+    /// The smallest a blast is drawn, in metres, so that the frame it goes off in is
+    /// something rather than nothing.
+    static let smallest = 0.05
+    /// What they are painted: a dark ball for the grenade, and a pale cloud for the
+    /// blast, see-through so that what it covers is not lost behind it.
+    static let grenadeColour = SIMD3(0.18, 0.2, 0.22)
+    static let flashColour = SIMD3(1.0, 0.86, 0.45)
+    static let flashOpacity = 0.55
+}
+
 enum Tracers {
     /// How many rounds one bot can have in flight at once: a round flies the round
     /// range at the round speed, and a bot sends one a deliberation period at most

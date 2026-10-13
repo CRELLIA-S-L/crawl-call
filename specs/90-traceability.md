@@ -8,9 +8,9 @@ Total requirements: 290.
 | Status | Requirements |
 |---|---|
 | `draft` | 4 |
-| `deferred` | 88 |
+| `deferred` | 84 |
 | `partial` | 9 |
-| `implemented` | 181 |
+| `implemented` | 185 |
 | `superseded` | 6 |
 | `withdrawn` | 2 |
 
@@ -98,8 +98,8 @@ Total requirements: 290.
 | **FR-BOT-550** A reload takes the weapon's own time | `implemented` | T | `Sources/CrawlCall/Bot/Execution.swift`<br>`Sources/CrawlCall/Bot/Bot.swift`<br>`Sources/CrawlCall/Bot/Arms.swift`<br>`Sources/CrawlCall/Game.swift`<br>`config/bot.json` | `Tests/CrawlCallTests/ReloadTests.swift`<br>`Tests/CrawlCallTests/SkirmishTests.swift`<br>`Tests/CrawlCallTests/ExecutionTests.swift` |
 | **FR-BOT-560** A bot carries a limited number of spare magazines | `implemented` | T | `Sources/CrawlCall/Bot/Arms.swift`<br>`Sources/CrawlCall/Bot/Execution.swift`<br>`config/bot.json` | `Tests/CrawlCallTests/ReloadTests.swift` |
 | **FR-BOT-570** A bot closes with what its weapon does not reach | `implemented` | T | `Sources/CrawlCall/Bot/Deliberation.swift`<br>`Sources/CrawlCall/Bot/Action.swift`<br>`Sources/CrawlCall/Bot/Execution.swift` | `Tests/CrawlCallTests/RushTests.swift` |
-| **FR-BOT-580** A thrown grenade flies the arc of a thrown thing | `deferred` | T | — | — |
-| **FR-BOT-590** A thrown grenade bounces off what it meets | `deferred` | T | — | — |
+| **FR-BOT-580** A thrown grenade flies the arc of a thrown thing | `implemented` | T | `Sources/CrawlCall/Bot/Blast.swift`<br>`Sources/CrawlCall/Bot/Execution.swift`<br>`Sources/CrawlCall/Game.swift`<br>`Sources/CrawlCall/Config/Geometry.swift` | `Tests/CrawlCallTests/FlightOfAGrenadeTests.swift` |
+| **FR-BOT-590** A thrown grenade bounces off what it meets | `implemented` | T | `Sources/CrawlCall/Bot/Blast.swift`<br>`Sources/CrawlCall/Game.swift`<br>`config/bot.json` | `Tests/CrawlCallTests/FlightOfAGrenadeTests.swift` |
 | **FR-CMD-010** One commander per squad | `implemented` | T | `Sources/CrawlCall/Commander/CommanderDesk.swift`<br>`Sources/CrawlCall/Game.swift`<br>`Sources/CrawlCall/CrawlCallApp.swift` | `Tests/CrawlCallTests/CommanderCallTests.swift` |
 | **FR-CMD-020** The commander is called on an interval | `implemented` | T | `Sources/CrawlCall/Commander/CommanderDesk.swift`<br>`Sources/CrawlCall/Game.swift`<br>`Sources/CrawlCall/Commander/SquadView.swift` | `Tests/CrawlCallTests/CommanderCallTests.swift` |
 | **FR-CMD-025** Each commander call is its own session | `implemented` | T | `Sources/CrawlCall/Commander/SystemModelCommander.swift`<br>`Sources/CrawlCall/Commander/CommanderDesk.swift` | `Tests/CrawlCallTests/CommanderCallTests.swift` |
@@ -272,8 +272,8 @@ Total requirements: 290.
 | **FR-VIEW-320** A living bot is swallowed from the top down | `implemented` | D | `Sources/CrawlCall/View/SwallowPose.swift`<br>`Sources/CrawlCall/View/SnakeEntity.swift`<br>`Sources/CrawlCall/View/BotEntity.swift`<br>`Sources/CrawlCall/View/BotCut.metal`<br>`Sources/CrawlCall/GameSession.swift`<br>`Sources/CrawlCall/Config/Drawing.swift`<br>`Sources/CrawlCall/Config/Resource.swift` | `Tests/CrawlCallTests/SwallowTests.swift`<br>`Tests/CrawlCallTests/MatchEndTests.swift` |
 | **FR-VIEW-330** The snake slithers | `implemented` | T | `Sources/CrawlCall/View/SnakeBody.swift`<br>`Sources/CrawlCall/View/SnakeEntity.swift`<br>`Sources/CrawlCall/Snake/Snake.swift`<br>`Sources/CrawlCall/GameSession.swift`<br>`Sources/CrawlCall/Config/Configurations.swift` | `Tests/CrawlCallTests/SlitherTests.swift` |
 | **FR-VIEW-340** A bot holds the weapon it is using | `implemented` | T | `Sources/CrawlCall/View/Figure.swift`<br>`Sources/CrawlCall/View/BotEntity.swift`<br>`Sources/CrawlCall/Config/EntityName.swift` | `Tests/CrawlCallTests/FigureTests.swift` |
-| **FR-VIEW-350** A thrown grenade is drawn where it is | `deferred` | T | — | — |
-| **FR-VIEW-360** A blast is drawn where it went off | `deferred` | T | — | — |
+| **FR-VIEW-350** A thrown grenade is drawn where it is | `implemented` | T | `Sources/CrawlCall/View/BlastEntity.swift`<br>`Sources/CrawlCall/GameSession.swift`<br>`Sources/CrawlCall/CrawlCallApp.swift`<br>`Sources/CrawlCall/Config/Drawing.swift`<br>`Sources/CrawlCall/Config/EntityName.swift` | `Tests/CrawlCallTests/FlightOfAGrenadeTests.swift` |
+| **FR-VIEW-360** A blast is drawn where it went off | `implemented` | T | `Sources/CrawlCall/View/BlastEntity.swift`<br>`Sources/CrawlCall/GameSession.swift`<br>`Sources/CrawlCall/CrawlCallApp.swift`<br>`Sources/CrawlCall/Bot/Blast.swift`<br>`Sources/CrawlCall/Game.swift`<br>`Sources/CrawlCall/Config/Drawing.swift`<br>`Sources/CrawlCall/Config/EntityName.swift`<br>`config/view.json` | `Tests/CrawlCallTests/FlightOfAGrenadeTests.swift` |
 | **IF-BOT-010** Bot and match configuration | `implemented` | T | `Sources/CrawlCall/Config/Configurations.swift`<br>`Sources/CrawlCall/Config/Configurations+Load.swift`<br>`Sources/CrawlCall/Config/Schema.swift`<br>`Sources/CrawlCall/Launch.swift`<br>`Sources/CrawlCall/CrawlCallApp.swift`<br>`Sources/CrawlCall/Config/Resource.swift` | `Tests/CrawlCallTests/ArmsTests.swift`<br>`Tests/CrawlCallTests/ConfigurationTests.swift`<br>`Tests/CrawlCallTests/LaunchTests.swift`<br>`Tests/CrawlCallTests/SchemaTests.swift`<br>`Tests/CrawlCallTests/DeliberationTests.swift`<br>`Tests/CrawlCallTests/KnowledgeTests.swift` |
 | **IF-CMD-010** Commander input | `implemented` | T | `Sources/CrawlCall/Commander/CommanderInput.swift`<br>`Sources/CrawlCall/Commander/SquadView.swift`<br>`Sources/CrawlCall/Commander/SquadHappenings.swift`<br>`Sources/CrawlCall/Game.swift` | `Tests/CrawlCallTests/CommanderContractTests.swift` |
 | **IF-CMD-020** Commander output | `implemented` | T | `Sources/CrawlCall/Commander/CommanderDecision.swift`<br>`Sources/CrawlCall/Commander/SystemModelCommander.swift`<br>`Sources/CrawlCall/Commander/Commander.swift` | `Tests/CrawlCallTests/CommanderContractTests.swift` |
@@ -485,7 +485,7 @@ Verified by means other than testing — or the check has not been set up yet.
 
 ## Code files outside the specification
 
-No requirement references them: 4 of 113.
+No requirement references them: 4 of 114.
 
 - `scripts/arch-edges-selftest.sh`
 - `scripts/prompt-bench-selftest.sh`

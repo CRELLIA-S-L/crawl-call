@@ -2,12 +2,16 @@
 // would tune (ART-070): halves, the ends of a segment, which side of a box a point is
 // on, and how close two numbers must be to count as the same.
 //
-// file implements: FR-VIEW-150, FR-BOT-050, FR-TOOL-020, FR-MAP-090, FR-SNAKE-010, FR-VIEW-020, FR-VIEW-100, FR-BOT-080, FR-MAP-270
+// file implements: FR-BOT-580, FR-VIEW-150, FR-BOT-050, FR-TOOL-020, FR-MAP-090, FR-SNAKE-010, FR-VIEW-020, FR-VIEW-100, FR-BOT-080, FR-MAP-270
 import Foundation
 
 enum Geometry {
     /// A box's centre is half its size from each face.
     static let half = 0.5
+    /// The cosine and the sine of half a right angle, which are the same number: what a
+    /// throw at forty-five degrees puts along the ground and what it puts upwards
+    /// (FR-BOT-580).
+    static let halfRight = 0.7071067811865476
 
     /// A segment `eye + direction · t` runs from t = start to t = end.
     static let segmentStart = 0.0

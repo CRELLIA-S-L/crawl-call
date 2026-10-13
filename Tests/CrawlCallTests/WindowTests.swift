@@ -23,6 +23,7 @@ final class WindowTests: XCTestCase {
                                                          segments: game.snake.segments),
                            botEntities: BotEntity.make(for: game.bots, height: world.configurations.bot.figureHeight),
                            shotEntities: ShotEntity.make(for: game.bots),
+                           blastEntities: BlastEntity.make(for: game.bots, configuration: game.world.configurations.bot),
                            camera: camera, seeThrough: built.seeThrough,
                            distance: 12, fieldOfView: 50)
     }

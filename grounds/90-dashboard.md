@@ -168,10 +168,12 @@ requirements link to them, plus how many files their `code` field names.
 | FR-VIEW-010 | 7 | 1 | 8 |
 | FR-VIEW-170 | 1 | 7 | 8 |
 | FR-VIEW-190 | 1 | 7 | 8 |
+| FR-VIEW-360 | 0 | 8 | 8 |
 | FR-BOT-200 | 5 | 2 | 7 |
 | FR-BOT-220 | 3 | 4 | 7 |
 | FR-BOT-320 | 2 | 5 | 7 |
 | FR-BOT-450 | 1 | 6 | 7 |
+| FR-BOT-580 | 3 | 4 | 7 |
 | FR-MAP-100 | 3 | 4 | 7 |
 | FR-MAP-220 | 2 | 5 | 7 |
 | FR-SNAKE-270 | 3 | 4 | 7 |
@@ -223,6 +225,7 @@ requirements link to them, plus how many files their `code` field names.
 | FR-VIEW-270 | 0 | 5 | 5 |
 | FR-VIEW-280 | 0 | 5 | 5 |
 | FR-VIEW-330 | 0 | 5 | 5 |
+| FR-VIEW-350 | 0 | 5 | 5 |
 | NFR-PERF-010 | 5 | 0 | 5 |
 | CON-PUB-010 | 4 | 0 | 4 |
 | FR-BOT-040 | 2 | 2 | 4 |
@@ -250,7 +253,7 @@ requirements link to them, plus how many files their `code` field names.
 | FR-BOT-380 | 0 | 3 | 3 |
 | FR-BOT-560 | 0 | 3 | 3 |
 | FR-BOT-570 | 0 | 3 | 3 |
-| FR-BOT-580 | 3 | 0 | 3 |
+| FR-BOT-590 | 0 | 3 | 3 |
 | FR-GREENHOLM-050 | 0 | 3 | 3 |
 | FR-MAP-160 | 0 | 3 | 3 |
 | FR-TOOL-210 | 2 | 1 | 3 |
@@ -313,7 +316,6 @@ requirements link to them, plus how many files their `code` field names.
 | CON-PUB-110 | 0 | 0 | 0 |
 | CON-PUB-120 | 0 | 0 | 0 |
 | FR-BOT-105 | 0 | 0 | 0 |
-| FR-BOT-590 | 0 | 0 | 0 |
 | FR-MAP-040 | 0 | 0 | 0 |
 | FR-MAP-110 | 0 | 0 | 0 |
 | FR-SCORE-020 | 0 | 0 | 0 |
@@ -338,8 +340,6 @@ requirements link to them, plus how many files their `code` field names.
 | FR-VIEW-080 | 0 | 0 | 0 |
 | FR-VIEW-090 | 0 | 0 | 0 |
 | FR-VIEW-110 | 0 | 0 | 0 |
-| FR-VIEW-350 | 0 | 0 | 0 |
-| FR-VIEW-360 | 0 | 0 | 0 |
 | INV-SCORE-010 | 0 | 0 | 0 |
 | INV-SCORE-020 | 0 | 0 | 0 |
 | INV-SNAKE-010 | 0 | 0 | 0 |

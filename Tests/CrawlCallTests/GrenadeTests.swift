@@ -28,6 +28,7 @@ final class GrenadeTests: XCTestCase {
     }
 
     private var configuration: BotConfiguration { world.configurations.bot }
+    private var gravity: Double { world.configurations.tuning.dropGravity }
 
     private func bot(_ id: Int, _ squad: Squad = .red, at x: Double, _ archetype: Archetype = .assault) throws -> Bot {
         var bot = try XCTUnwrap(Bot(id: id, squad: squad, archetype: archetype, at: SIMD3(x, 0, 0.5), floor: 0,
@@ -83,11 +84,11 @@ final class GrenadeTests: XCTestCase {
         // A frame short of the fuse: nothing has happened to anybody.
         let frames = Int((thrown.fuse / frame).rounded(.down))
         for _ in 0..<(frames - 1) {
-            _ = Blast.burn(&flying, seconds: frame, bots: &bots, snake: [])
+            _ = Blast.burn(&flying, seconds: frame, bots: &bots, snake: [], plan: world.plan, gravity: gravity)
         }
         XCTAssertEqual(bots.map(\.health), whole, "the grenade went off before its fuse had run out")
         XCTAssertEqual(flying.count, 1, "the grenade is already gone")
-        for _ in 0..<2 { _ = Blast.burn(&flying, seconds: frame, bots: &bots, snake: []) }
+        for _ in 0..<2 { _ = Blast.burn(&flying, seconds: frame, bots: &bots, snake: [], plan: world.plan, gravity: gravity) }
         XCTAssertTrue(flying.isEmpty, "the grenade never went off")
         XCTAssertLessThan(try element(1, of: bots).health, try element(1, of: whole),
                           "the blast left the enemy it was thrown at whole")

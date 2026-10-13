@@ -738,14 +738,14 @@ A test can read the figure's description and say which weapon is in the hands; w
 ### FR-VIEW-350 — A thrown grenade is drawn where it is
 
 ```yaml
-status: deferred
+status: implemented
 verification: T
 derives_from: [FR-BOT-470]
 depends_on: [FR-BOT-580, IF-VIEW-020]
 refines: []
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/View/BlastEntity.swift, Sources/CrawlCall/GameSession.swift, Sources/CrawlCall/CrawlCallApp.swift, Sources/CrawlCall/Config/Drawing.swift, Sources/CrawlCall/Config/EntityName.swift]
+tests: [Tests/CrawlCallTests/FlightOfAGrenadeTests.swift]
 created: 2026-10-13
 ```
 
@@ -758,14 +758,14 @@ Drawn where it is, so that a grenade in its arc (FR-BOT-580) reads as a thing to
 ### FR-VIEW-360 — A blast is drawn where it went off
 
 ```yaml
-status: deferred
+status: implemented
 verification: T
 derives_from: [FR-BOT-480]
 depends_on: [FR-BOT-480, IF-VIEW-020]
 refines: []
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/View/BlastEntity.swift, Sources/CrawlCall/GameSession.swift, Sources/CrawlCall/CrawlCallApp.swift, Sources/CrawlCall/Bot/Blast.swift, Sources/CrawlCall/Game.swift, Sources/CrawlCall/Config/Drawing.swift, Sources/CrawlCall/Config/EntityName.swift, config/view.json]
+tests: [Tests/CrawlCallTests/FlightOfAGrenadeTests.swift]
 created: 2026-10-13
 ```
 

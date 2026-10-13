@@ -377,11 +377,13 @@ tests: [Tests/CrawlCallTests/GrenadeTests.swift]
 created: 2026-10-11
 ```
 
-If a squadmate the bot sees stands within the blast radius of where it would throw, the system **shall not** have the bot throw there.
+If a squadmate the bot sees stands within the blast radius of the place a bot aims a grenade at, the system **shall not** have the bot throw it.
 
 **Rationale.** The other side of FR-BOT-480: once an explosion hits its own, a squad that fights as a group (FR-BOT-190) would take itself apart in the first firefight.
 The same shape as FR-BOT-410 for a round, and the same reading of what a bot may act on — a squadmate it does not see is one it cannot know to be there (FR-BOT-220).
 The thrower itself needs no rule: a place within its own blast is a place its own score already refuses, since the damage falls on it like anybody else.
+It was "where it would throw" until 2026-10-13, when a grenade came to fly and bounce (FR-BOT-580, FR-BOT-590) and the place it is aimed at stopped being the place it goes off at. The aim is what it refuses, because the aim is what a bot can know: to refuse the landing it would have to fly every throw it scores before it makes it — a hundred and twenty steps of a sixtieth of a second, each asking the scene what it meets, against a deliberation budget of half a millisecond for everything (NFR-PERF-020).
+So a grenade can bounce back onto a squadmate, which is of a piece with every other weapon in the game hitting whoever is in the way (ADR-0075, ADR-0092).
 
 ### FR-BOT-510 — A knife strikes what is within its reach
 
@@ -509,14 +511,14 @@ The statement said "a weapon whose range does not cover its target" when it was 
 ### FR-BOT-580 — A thrown grenade flies the arc of a thrown thing
 
 ```yaml
-status: deferred
+status: implemented
 verification: T
 derives_from: [FR-BOT-470]
 depends_on: [FR-BOT-470, IF-MAP-020]
 refines: []
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Bot/Blast.swift, Sources/CrawlCall/Bot/Execution.swift, Sources/CrawlCall/Game.swift, Sources/CrawlCall/Config/Geometry.swift]
+tests: [Tests/CrawlCallTests/FlightOfAGrenadeTests.swift]
 created: 2026-10-13
 ```
 
@@ -530,14 +532,14 @@ The gravity is the one a falling thing is already given (IF-MAP-020), the same t
 ### FR-BOT-590 — A thrown grenade bounces off what it meets
 
 ```yaml
-status: deferred
+status: implemented
 verification: T
 derives_from: [FR-BOT-580]
 depends_on: [FR-BOT-580, FR-BOT-405, IF-BOT-010]
 refines: []
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Bot/Blast.swift, Sources/CrawlCall/Game.swift, config/bot.json]
+tests: [Tests/CrawlCallTests/FlightOfAGrenadeTests.swift]
 created: 2026-10-13
 ```
 

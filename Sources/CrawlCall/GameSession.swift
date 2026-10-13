@@ -5,7 +5,7 @@
 // measured with — `specs/50-verification.md` says why, and the two are different
 // questions asked of the same number.
 //
-// file implements: FR-TOOL-070, FR-VIEW-020, FR-VIEW-030, FR-VIEW-060, FR-VIEW-100, FR-VIEW-140, FR-VIEW-150, FR-VIEW-155, FR-VIEW-160, FR-VIEW-170, FR-VIEW-250, FR-VIEW-190, FR-VIEW-230, FR-VIEW-210, FR-TOOL-230, FR-TOOL-240, FR-GREENHOLM-030, FR-TOOL-260, FR-TOOL-270, FR-SNAKE-220, FR-VIEW-280, FR-VIEW-290, FR-VIEW-310, FR-VIEW-320, FR-VIEW-330
+// file implements: FR-VIEW-350, FR-VIEW-360, FR-TOOL-070, FR-VIEW-020, FR-VIEW-030, FR-VIEW-060, FR-VIEW-100, FR-VIEW-140, FR-VIEW-150, FR-VIEW-155, FR-VIEW-160, FR-VIEW-170, FR-VIEW-250, FR-VIEW-190, FR-VIEW-230, FR-VIEW-210, FR-TOOL-230, FR-TOOL-240, FR-GREENHOLM-030, FR-TOOL-260, FR-TOOL-270, FR-SNAKE-220, FR-VIEW-280, FR-VIEW-290, FR-VIEW-310, FR-VIEW-320, FR-VIEW-330
 import Foundation
 import Observation
 import RealityKit
@@ -20,6 +20,7 @@ final class GameSession {
     private let snakeEntity: Entity
     private let botEntities: Entity
     private let shotEntities: Entity
+    private let blastEntities: Entity
     private let camera: Entity
     private var seeThrough: SeeThrough
     /// Where the match camera looks (FR-VIEW-020); read by the scenery, whose birds
@@ -41,11 +42,13 @@ final class GameSession {
     var seeThroughSwitches = SeeThrough.Switches(line: SeeThroughAtStart.line, window: SeeThroughAtStart.headWindow)
 
     init(game: Game, snakeEntity: Entity, botEntities: Entity, shotEntities: Entity,
-         camera: Entity, seeThrough: SeeThrough, distance: Double, fieldOfView: Double) {
+         blastEntities: Entity, camera: Entity, seeThrough: SeeThrough, distance: Double,
+         fieldOfView: Double) {
         self.game = game
         self.snakeEntity = snakeEntity
         self.botEntities = botEntities
         self.shotEntities = shotEntities
+        self.blastEntities = blastEntities
         self.camera = camera
         self.seeThrough = seeThrough
         self.distance = distance
@@ -252,8 +255,11 @@ final class GameSession {
                                                 crawled: game.snake.crawled))
         BotEntity.update(botEntities, from: game.bots, gaits: gaits, eaten: game.eating?.prey,
                          height: game.world.configurations.bot.figureHeight)
-        // Every round in flight is drawn where it is (FR-VIEW-170).
+        // Every round in flight is drawn where it is (FR-VIEW-170), every grenade where
+        // it is while its fuse burns (FR-VIEW-350), and every blast where it went off
+        // for the moment it is drawn for (FR-VIEW-360).
         ShotEntity.update(shotEntities, from: game.rounds)
+        BlastEntity.update(blastEntities, grenades: game.grenades, blasts: game.blasts)
         // A meal under way is drawn going in (FR-VIEW-100). What is left of the prey
         // is measured by whatever ends that meal: live prey by the health it has
         // left, a body by the time it has left. Live prey is cut away at the mouth of the

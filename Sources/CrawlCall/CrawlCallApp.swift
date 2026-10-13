@@ -6,7 +6,7 @@
 // the window no smaller than the controls (FR-VIEW-210) and hears when the lock comes
 // or goes (FR-VIEW-230), and SwiftUI's own `App` offers none of the three (ADR-0027).
 //
-// file implements: FR-CMD-010, FR-CMD-027, IF-SNAKE-010, IF-MAP-020, IF-VIEW-020, IF-BOT-010, FR-TOOL-070, FR-VIEW-050, FR-VIEW-060, FR-VIEW-160, FR-VIEW-190, FR-VIEW-210, FR-VIEW-220, FR-VIEW-230, FR-TOOL-230, FR-TOOL-240, FR-MAP-140, FR-GREENHOLM-010, FR-GREENHOLM-020, FR-GREENHOLM-030, FR-VIEW-170
+// file implements: FR-VIEW-350, FR-VIEW-360, FR-CMD-010, FR-CMD-027, IF-SNAKE-010, IF-MAP-020, IF-VIEW-020, IF-BOT-010, FR-TOOL-070, FR-VIEW-050, FR-VIEW-060, FR-VIEW-160, FR-VIEW-190, FR-VIEW-210, FR-VIEW-220, FR-VIEW-230, FR-TOOL-230, FR-TOOL-240, FR-MAP-140, FR-GREENHOLM-010, FR-GREENHOLM-020, FR-GREENHOLM-030, FR-VIEW-170
 import RealityKit
 import SwiftUI
 import UIKit
@@ -172,8 +172,16 @@ struct MatchView: View {
             }
             map.addChild(shots)
 
+            // The grenades and the blasts go on the map beside them, lit by the same
+            // light (FR-VIEW-350, FR-VIEW-360).
+            let blasts = BlastEntity.make(for: game.bots, configuration: world.configurations.bot)
+            for ball in blasts.children {
+                ball.components.set(ImageBasedLightReceiverComponent(imageBasedLight: ambient))
+            }
+            map.addChild(blasts)
+
             let session = GameSession(game: game, snakeEntity: snake, botEntities: squads,
-                                      shotEntities: shots,
+                                      shotEntities: shots, blastEntities: blasts,
                                       camera: camera, seeThrough: seeThrough,
                                       distance: SceneView.distance(framing: world.plan,
                                                                    view: world.configurations.view),

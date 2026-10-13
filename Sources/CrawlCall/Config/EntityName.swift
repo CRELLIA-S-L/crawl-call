@@ -2,7 +2,7 @@
 // part of the scene finds another — the match looks the camera up by it — so it is
 // declared once and not spelled at each end.
 //
-// file implements: FR-VIEW-340, FR-TOOL-020, FR-VIEW-020, FR-VIEW-100, FR-VIEW-170, FR-MAP-130, FR-GREENHOLM-030, FR-VIEW-260, FR-VIEW-290
+// file implements: FR-VIEW-350, FR-VIEW-360, FR-VIEW-340, FR-TOOL-020, FR-VIEW-020, FR-VIEW-100, FR-VIEW-170, FR-MAP-130, FR-GREENHOLM-030, FR-VIEW-260, FR-VIEW-290
 import Foundation
 
 enum EntityName {
@@ -24,6 +24,10 @@ enum EntityName {
     static let bot = "bot"
     static let shots = "shots"
     static let shot = "shot"
+    /// The grenades in the air and the blasts they leave (FR-VIEW-350, FR-VIEW-360).
+    static let blasts = "blasts"
+    static let grenade = "grenade"
+    static let flash = "flash"
     /// What a setting draws around the arena (FR-MAP-130, ADR-0031).
     static let scenery = "scenery"
     static let sceneryPart = "sceneryPart"

@@ -10,7 +10,7 @@
 // slot is aimed through the slots it has to wait out. Until 2026-10-12 the period was
 // the cadence, because no requirement gave a weapon a rate of fire.
 //
-// file implements: FR-BOT-550, FR-BOT-560, FR-BOT-570, FR-BOT-450, FR-BOT-470, FR-BOT-510, FR-BOT-520, FR-BOT-167, FR-BOT-060, FR-BOT-110, FR-BOT-115, FR-BOT-170, FR-BOT-360, FR-BOT-370, FR-BOT-380, FR-BOT-180, FR-BOT-190, INV-BOT-020, INV-BOT-010, FR-BOT-165, FR-MAP-150, FR-BOT-270, FR-BOT-280, FR-BOT-290, FR-BOT-300, FR-BOT-220, FR-BOT-310, FR-BOT-320, FR-BOT-330, FR-BOT-340, FR-BOT-420, FR-BOT-425, FR-BOT-430, FR-CMD-030, FR-CMD-040
+// file implements: FR-BOT-550, FR-BOT-560, FR-BOT-570, FR-BOT-580, FR-BOT-450, FR-BOT-470, FR-BOT-510, FR-BOT-520, FR-BOT-167, FR-BOT-060, FR-BOT-110, FR-BOT-115, FR-BOT-170, FR-BOT-360, FR-BOT-370, FR-BOT-380, FR-BOT-180, FR-BOT-190, INV-BOT-020, INV-BOT-010, FR-BOT-165, FR-MAP-150, FR-BOT-270, FR-BOT-280, FR-BOT-290, FR-BOT-300, FR-BOT-220, FR-BOT-310, FR-BOT-320, FR-BOT-330, FR-BOT-340, FR-BOT-420, FR-BOT-425, FR-BOT-430, FR-CMD-030, FR-CMD-040
 import Foundation
 
 enum Execution {
@@ -208,9 +208,15 @@ enum Execution {
                       Sight.isClear(from: bots[index].eye, to: sighted, through: world.plan) else { break }
                 bots[index].arms.grenades.left -= 1
                 bots[index].lastShot = now
-                volley.grenades.append(Thrown(thrower: bots[index].id, squad: bots[index].squad,
-                                              position: where_, numbers: bots[index].arms.grenades.numbers,
-                                              fuse: bots[index].arms.grenades.numbers.fuseTime))
+                // It leaves the hand along an arc that would land it where it was aimed
+                // (FR-BOT-580) rather than lying there from the first frame.
+                let numbers = bots[index].arms.grenades.numbers
+                volley.grenades.append(
+                    Thrown(thrower: bots[index].id, squad: bots[index].squad,
+                           position: bots[index].eye,
+                           velocity: Blast.throwing(from: bots[index].eye, at: where_, range: numbers.throwRange,
+                                                    gravity: world.configurations.tuning.dropGravity),
+                           numbers: numbers, fuse: numbers.fuseTime))
                 bots[index].post = nil
                 bots[index].refuge = nil
                 bots[index].postTarget = nil

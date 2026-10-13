@@ -154,6 +154,9 @@ struct ViewConfiguration: Decodable, Equatable {
     /// (FR-VIEW-020).
     let cameraFollowLag: Double
     let slither: Slither
+    /// How long a blast stays on screen after the grenade went off, in seconds
+    /// (FR-VIEW-360): long enough for an eye to catch what was one instant of the match.
+    let blastFlashSeconds: Double
     /// Metres beyond the body itself at which a module stops hiding the snake and
     /// starts being drawn through (FR-VIEW-150).
     let seeThroughMargin: Double
@@ -184,6 +187,7 @@ struct ViewConfiguration: Decodable, Equatable {
         "centralRegion": .object(["width": .value, "height": .value]),
         "cameraFollowLag": .value,
         "slither": .object(["amplitude": .value, "wavelength": .value]),
+        "blastFlashSeconds": .value,
         "seeThroughMargin": .value,
         "visibilityRadius": .value,
         "stragglerDistance": .value,
@@ -271,13 +275,15 @@ struct BotConfiguration: Decodable, Equatable {
 
     /// What a grenade is (FR-BOT-470, FR-BOT-480, FR-BOT-490): what the blast deals,
     /// how far it may be thrown, how long it waits before it goes off, how wide the
-    /// blast is, and how much every part of the snake beyond the first within it adds.
+    /// blast is, how much every part of the snake beyond the first within it adds, and
+    /// the share of its speed it keeps off a surface it meets (FR-BOT-590).
     struct Grenade: Decodable, Equatable {
         let damage: Double
         let throwRange: Double
         let fuseTime: Double
         let blastRadius: Double
         let furtherPartShare: Double
+        let restitution: Double
     }
 
     /// What a knife is (FR-BOT-510, FR-BOT-520): what it deals, how far an arm with
@@ -394,7 +400,7 @@ struct BotConfiguration: Decodable, Equatable {
             ])),
             "grenades": .named(of: .object([
                 "damage": .value, "throwRange": .value, "fuseTime": .value,
-                "blastRadius": .value, "furtherPartShare": .value,
+                "blastRadius": .value, "furtherPartShare": .value, "restitution": .value,
             ])),
             "knives": .named(of: .object([
                 "damage": .value, "reach": .value, "timeBetweenStrikes": .value, "throwRange": .value,
