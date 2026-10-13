@@ -808,14 +808,14 @@ Built on 2026-09-26 with fire at an enemy (FR-BOT-060), the first time a bot had
 ### FR-BOT-530 — A bot does not set out for a cell another bot holds or is making for
 
 ```yaml
-status: deferred
+status: implemented
 verification: T
 derives_from: [FR-BOT-080]
 depends_on: [FR-BOT-220, FR-BOT-300]
 refines: []
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Bot/Deliberation.swift]
+tests: [Tests/CrawlCallTests/CellClaimTests.swift]
 created: 2026-10-13
 ```
 

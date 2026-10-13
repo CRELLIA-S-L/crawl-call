@@ -2,7 +2,7 @@
   {
     "from": "Sources/CrawlCall/Bot/Action.swift",
     "to": "Sources/CrawlCall/Map/NavigationGraph.swift",
-    "via": "NavigationGraph:28 — one witness of 131 reference(s) from 11 file(s)"
+    "via": "NavigationGraph:28 — one witness of 134 reference(s) from 11 file(s)"
   },
   {
     "from": "Sources/CrawlCall/Bot/Arms.swift",

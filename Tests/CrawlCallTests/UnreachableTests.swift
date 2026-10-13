@@ -131,13 +131,15 @@ final class UnreachableTests: XCTestCase {
         func walk() { Execution.walk(&bots, seconds: step, world: world, routeOrder: [], holding: nil, now: now) }
 
         slot()
-        XCTAssertEqual(try element(0, of: bots).action, .advance(to: node(20, 1)), "it did not try the other room")
+        let first = try XCTUnwrap(try element(0, of: bots).action, "the first slot chose nothing")
+        guard case .advance(let goal) = first else { return XCTFail("it did not try the other room, it chose \(first)") }
+        XCTAssertGreaterThan(goal.x, 11, "it did not try the other room, it advanced to \(goal)")
         walk()
         XCTAssertNotNil(try element(0, of: bots).unreachable)
 
         slot()
         let second = try XCTUnwrap(try element(0, of: bots).action, "the slot it earned chose nothing")
-        XCTAssertNotEqual(second, .advance(to: node(20, 1)), "it asked for the route it cannot have")
+        XCTAssertNotEqual(second, .advance(to: goal), "it asked for the route it cannot have")
         XCTAssertNil(try element(0, of: bots).unreachable, "the exclusion outlived the slot it was for")
     }
 

@@ -356,17 +356,29 @@ final class CommandedMatchTests: XCTestCase {
         XCTAssertEqual(davis.weights, began.weights, "an answer rewrote a soldier's character")
     }
 
-    func testASquadToldToPressEastEndsUpFurtherEastThanOneToldNothing() throws {
+    func testASquadToldToPressEastSpendsItsMatchFurtherEastThanOneToldNothing() throws {
         // The whole chain in one test, with nothing stubbed but the answerer: a place
         // becomes a point, the point becomes a term in what a position is worth, and
         // the bots — choosing their own cells by their own cover, height and
         // squadmates — end up where they were pointed.
-        func centre(of game: Game, after seconds: Double) -> Double {
+        //
+        // Where the squad was over the match it lived and not where it stood at the
+        // end: since the arms were built a firefight is decided inside half a minute
+        // (ADR-0086, ADR-0087, ADR-0088), and a squad that pressed east and was shot
+        // there has no position at the fortieth second at all. A squad wiped out in the
+        // first frame still reads as nothing, which is a failure and not a pass.
+        func averageEast(of game: Game, over seconds: Double) -> Double {
             var game = game
             let frame = 1.0 / 60
-            for _ in 0..<Int(seconds / frame) { game.advance(seconds: frame) }
-            let red = game.bots.filter { $0.squad == .red && $0.isAlive }.map(\.position.x)
-            return red.isEmpty ? .nan : red.reduce(0, +) / Double(red.count)
+            var total = Double.zero, frames = Int.zero
+            for _ in 0..<Int(seconds / frame) {
+                game.advance(seconds: frame)
+                let red = game.bots.filter { $0.squad == .red && $0.isAlive }.map(\.position.x)
+                guard !red.isEmpty else { continue }
+                total += red.reduce(0, +) / Double(red.count)
+                frames += 1
+            }
+            return frames == .zero ? .nan : total / Double(frames)
         }
         let world = try Launch.world().get()
         let start = try XCTUnwrap(Game.firstStart(in: world))
@@ -374,13 +386,13 @@ final class CommandedMatchTests: XCTestCase {
         let west = Places.middle(of: .west, in: world.plan.bounds).x
         XCTAssertGreaterThan(east, west, "the arena's east is not east of its west")
 
-        let told = centre(of: Game(world: world, start: start,
-                                   commander: ScriptedCommander([.decision(decision(.press, place: .east))])),
-                          after: 40)
-        let silent = centre(of: Game(world: world, start: start), after: 40)
-        XCTAssertFalse(told.isNaN || silent.isNaN, "red was wiped out before the forty seconds were up")
+        let told = averageEast(of: Game(world: world, start: start,
+                                        commander: ScriptedCommander([.decision(decision(.press, place: .east))])),
+                               over: 40)
+        let silent = averageEast(of: Game(world: world, start: start), over: 40)
+        XCTAssertFalse(told.isNaN || silent.isNaN, "red was wiped out before it had moved at all")
         XCTAssertGreaterThan(told, silent,
-                             "a squad told to press east ended up no further east than one told nothing")
+                             "a squad told to press east spent its match no further east than one told nothing")
     }
 
     func testARefusedCallLeavesTheSquadUnderTheOrderItHad() async throws {

@@ -8,9 +8,9 @@ Total requirements: 290.
 | Status | Requirements |
 |---|---|
 | `draft` | 4 |
-| `deferred` | 93 |
+| `deferred` | 92 |
 | `partial` | 9 |
-| `implemented` | 176 |
+| `implemented` | 177 |
 | `superseded` | 6 |
 | `withdrawn` | 2 |
 
@@ -93,7 +93,7 @@ Total requirements: 290.
 | **FR-BOT-500** A bot does not throw where it would catch a squadmate | `implemented` | T | `Sources/CrawlCall/Bot/Deliberation.swift` | `Tests/CrawlCallTests/GrenadeTests.swift` |
 | **FR-BOT-510** A knife strikes what is within its reach | `implemented` | T | `Sources/CrawlCall/Bot/Execution.swift`<br>`Sources/CrawlCall/Bot/Deliberation.swift`<br>`Sources/CrawlCall/Bot/Action.swift`<br>`Sources/CrawlCall/Bot/Arms.swift`<br>`config/bot.json`<br>`Sources/CrawlCall/Game.swift` | `Tests/CrawlCallTests/KnifeTests.swift` |
 | **FR-BOT-520** A thrown knife leaves the bot | `implemented` | T | `Sources/CrawlCall/Bot/Execution.swift`<br>`Sources/CrawlCall/Bot/Deliberation.swift`<br>`Sources/CrawlCall/Bot/Action.swift`<br>`Sources/CrawlCall/Bot/Arms.swift`<br>`config/bot.json` | `Tests/CrawlCallTests/KnifeTests.swift`<br>`Tests/CrawlCallTests/FigureTests.swift` |
-| **FR-BOT-530** A bot does not set out for a cell another bot holds or is making for | `deferred` | T | — | — |
+| **FR-BOT-530** A bot does not set out for a cell another bot holds or is making for | `implemented` | T | `Sources/CrawlCall/Bot/Deliberation.swift` | `Tests/CrawlCallTests/CellClaimTests.swift` |
 | **FR-BOT-540** Each firearm that is not full is a reload of its own | `deferred` | T | — | — |
 | **FR-BOT-550** A reload takes the weapon's own time | `deferred` | T | — | — |
 | **FR-BOT-560** A bot carries a limited number of spare magazines | `deferred` | T | — | — |

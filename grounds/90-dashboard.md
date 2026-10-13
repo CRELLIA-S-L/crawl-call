@@ -265,6 +265,7 @@ requirements link to them, plus how many files their `code` field names.
 | FR-BOT-210 | 0 | 2 | 2 |
 | FR-BOT-300 | 1 | 1 | 2 |
 | FR-BOT-490 | 0 | 2 | 2 |
+| FR-BOT-530 | 1 | 1 | 2 |
 | FR-MAP-190 | 0 | 2 | 2 |
 | FR-SCORE-140 | 1 | 1 | 2 |
 | FR-SCORE-150 | 1 | 1 | 2 |
@@ -288,7 +289,6 @@ requirements link to them, plus how many files their `code` field names.
 | FR-BOT-350 | 0 | 1 | 1 |
 | FR-BOT-410 | 0 | 1 | 1 |
 | FR-BOT-500 | 0 | 1 | 1 |
-| FR-BOT-530 | 1 | 0 | 1 |
 | FR-BOT-550 | 1 | 0 | 1 |
 | FR-MAP-050 | 1 | 0 | 1 |
 | FR-MAP-060 | 1 | 0 | 1 |

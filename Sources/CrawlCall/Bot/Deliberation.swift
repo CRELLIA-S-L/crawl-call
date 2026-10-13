@@ -14,7 +14,7 @@
 // configuration (IF-BOT-010), as is how much an unhurt bot fears the snake
 // (FR-BOT-210). What shapes each term — a share, a whole — is in `Utility`.
 //
-// file implements: FR-BOT-167, FR-BOT-116, FR-BOT-460, FR-BOT-450, FR-BOT-470, FR-BOT-500, FR-BOT-510, FR-BOT-520, FR-BOT-080, FR-BOT-090, FR-BOT-110, FR-BOT-115, FR-BOT-118, FR-BOT-119, FR-BOT-360, FR-BOT-370, FR-BOT-120, FR-BOT-180, FR-BOT-190, FR-BOT-200, FR-BOT-210, FR-MAP-150, FR-BOT-220, FR-BOT-060, FR-BOT-140, FR-BOT-330, FR-BOT-410, FR-BOT-420, FR-BOT-425, FR-BOT-130, FR-CMD-030
+// file implements: FR-BOT-530, FR-BOT-167, FR-BOT-116, FR-BOT-460, FR-BOT-450, FR-BOT-470, FR-BOT-500, FR-BOT-510, FR-BOT-520, FR-BOT-080, FR-BOT-090, FR-BOT-110, FR-BOT-115, FR-BOT-118, FR-BOT-119, FR-BOT-360, FR-BOT-370, FR-BOT-120, FR-BOT-180, FR-BOT-190, FR-BOT-200, FR-BOT-210, FR-MAP-150, FR-BOT-220, FR-BOT-060, FR-BOT-140, FR-BOT-330, FR-BOT-410, FR-BOT-420, FR-BOT-425, FR-BOT-130, FR-CMD-030
 import Foundation
 
 enum Deliberation {
@@ -490,9 +490,9 @@ enum Deliberation {
         // cannot. So an advance is the motive this exclusion is usually about, and it is
         // asked here rather than in `scores`, which never offers either (FR-BOT-167).
         var advance = situation.enemyBelief
-            .flatMap { nearestCell(to: $0, from: here, in: situation) }
+            .flatMap { nearestCell(to: $0, from: here, for: bot, in: situation) }
             .map { Action.advance(to: $0) }
-        var explore = unseen(from: here, in: situation).map { Action.explore(to: $0) }
+        var explore = unseen(from: here, for: bot, in: situation).map { Action.explore(to: $0) }
         if advance == bot.unreachable { advance = nil }
         if explore == bot.unreachable { explore = nil }
         let aggression = bot.weights.aggression
@@ -508,14 +508,16 @@ enum Deliberation {
     /// The nearest cell, along the walk from where the bot stands and other than the
     /// one it stands in, that it does not know (FR-BOT-370), on any floor the graph
     /// joins.
-    static func unseen(from here: NavigationGraph.Node, in situation: Situation) -> NavigationGraph.Node? {
+    static func unseen(from here: NavigationGraph.Node, for bot: Bot,
+                       in situation: Situation) -> NavigationGraph.Node? {
         var seen: Set<NavigationGraph.Node> = [here]
         var queue = [here]
         var index = queue.startIndex
+        let held = taken(by: bot, in: situation)
         while index < queue.endIndex {
             let node = queue[index]
             queue.formIndex(after: &index)
-            if node != here, !situation.knows(node) { return node }
+            if node != here, !situation.knows(node), !held.contains(node) { return node }
             for next in situation.graph.neighbours(of: node).sorted(by: order) where seen.insert(next).inserted {
                 queue.append(next)
             }
@@ -528,10 +530,11 @@ enum Deliberation {
     /// weighed rather than walked to, which took a tenth of the time on the simulator
     /// (Q-460); a cell the bot cannot get to is spent at routing, as any is
     /// (FR-BOT-167).
-    static func nearestCell(to point: SIMD3<Double>, from here: NavigationGraph.Node,
+    static func nearestCell(to point: SIMD3<Double>, from here: NavigationGraph.Node, for bot: Bot,
                             in situation: Situation) -> NavigationGraph.Node? {
         var best: (node: NavigationGraph.Node, metres: Double)?
-        for node in situation.graph.nodes where node != here {
+        let held = taken(by: bot, in: situation)
+        for node in situation.graph.nodes where node != here && !held.contains(node) {
             let metres = Perception.metres(centre(of: node, in: situation), point)
             if best == nil || metres < best!.metres || (metres == best!.metres && order(node, best!.node)) {
                 best = (node, metres)
@@ -667,8 +670,8 @@ enum Deliberation {
     /// the cover search distance, nearest first, the first from which its eyes have a
     /// line of fire to `aim` and which has a cell next to it that no enemy and no part
     /// of the snake it knows of watches; with that cell, where it steps back to
-    /// (FR-BOT-425). Neither is a cell a squadmate has taken for either. Nil where
-    /// there is none.
+    /// (FR-BOT-425). Neither is a cell another bot holds or is making for
+    /// (FR-BOT-530). Nil where there is none.
     ///
     /// Whether a cell is watched is asked once whatever number of cells it lies next
     /// to, and only of a cell next to one with a line of fire (NFR-PERF-020).
@@ -680,13 +683,12 @@ enum Deliberation {
         guard situation.graph.isWalkable(here) else { return nil }
         let rise = SIMD3(.zero, bot.eyeHeight, .zero)
         var watched: [NavigationGraph.Node: Bool] = [:]
-        // A squadmate's cells are its own: two bots making for one cell push each other
-        // off it for as long as both want it.
-        let claimed = Set(situation.allies
-            .filter { $0.id != bot.id && $0.squad == bot.squad && $0.isAlive }
-            .flatMap { [$0.post, $0.refuge].compactMap { $0 } })
+        // A cell another bot holds or is making for is not one of these, and the walk
+        // has already left it out (FR-BOT-530); the refuge beside the post is chosen
+        // off the graph rather than off the walk, so it is asked here.
+        let held = taken(by: bot, in: situation)
         let cells = walk(from: here, within: coverSearch(situation.configuration), for: bot, in: situation)
-            .filter { situation.knows($0.node) && !claimed.contains($0.node) }
+            .filter { situation.knows($0.node) }
             .enumerated()
             .sorted { $0.element.metres != $1.element.metres ? $0.element.metres < $1.element.metres : $0.offset < $1.offset }
             .map(\.element.node)
@@ -694,7 +696,7 @@ enum Deliberation {
             guard Sight.isClear(from: centre(of: cell, in: situation) + rise, to: aim, through: situation.plan)
             else { continue }
             for next in situation.graph.neighbours(of: cell).sorted(by: order)
-            where situation.knows(next) && !claimed.contains(next) {
+            where situation.knows(next) && !held.contains(next) {
                 if watched[next] == nil { watched[next] = isWatched(next, for: bot, in: situation) }
                 if watched[next] == false { return (post: cell, refuge: next) }
             }
@@ -712,6 +714,41 @@ enum Deliberation {
             || situation.snake.contains { Sight.isClear(from: $0, to: there, through: situation.plan) }
     }
 
+    /// The cells a bot may not set out for: the cells the bots it sees stand in, and
+    /// the cells its own squad is already making for (FR-BOT-530).
+    ///
+    /// Two sets, because a bot acts on what it knows (FR-BOT-220): where a bot stands
+    /// can be seen, so an enemy in view holds its cell as much as a squadmate does,
+    /// while where a bot is going is told to its own squad and to nobody else. An
+    /// enemy it remembers and does not see holds nothing — the memory is of a place it
+    /// was. A body holds nothing either: only the living are pushed apart (FR-BOT-320).
+    ///
+    /// Where its own squad is going is read off each squadmate's last decision
+    /// (`Execution.destination(of:)`), which is the one answer to that question in the
+    /// game, together with the cell it fires from and the cell it reloads in — a bot
+    /// holding a post holds the pair (FR-BOT-420, FR-BOT-425).
+    ///
+    /// The cell the bot itself stands in is not in the set: it is not somewhere it is
+    /// going, and what being there means is FR-BOT-119's.
+    static func taken(by bot: Bot, in situation: Situation) -> Set<NavigationGraph.Node> {
+        var cells: Set<NavigationGraph.Node> = []
+        for mate in situation.allies where mate.id != bot.id && mate.squad == bot.squad && mate.isAlive {
+            cells.insert(NavigationGraph.Node(floor: mate.floor,
+                                              x: Int((mate.position.x / situation.cellSize).rounded()),
+                                              z: Int((mate.position.z / situation.cellSize).rounded())))
+            for node in [Execution.destination(of: mate), mate.post, mate.refuge] {
+                if let node { cells.insert(node) }
+            }
+        }
+        for enemy in situation.enemiesInView {
+            if let node = cell(of: enemy.point, graph: situation.graph, cellSize: situation.cellSize,
+                               floorHeight: situation.plan.floorHeight) {
+                cells.insert(node)
+            }
+        }
+        return cells
+    }
+
     /// The cells a bot can walk to without leaving the search distance, on any floor
     /// the graph joins (FR-BOT-110), nearest along the walk first, each with how far
     /// it is from the bot across the room.
@@ -720,18 +757,25 @@ enum Deliberation {
     /// cell given is one the bot can get to (FR-BOT-118); out of reach is also as far
     /// as the walk goes, since what lies beyond is only approached through cells the
     /// bot would have to cross to get there.
+    ///
+    /// A cell another bot holds or is making for is not given (FR-BOT-530), which is
+    /// what takes it out of every search that chooses a cell to move to — cover, the
+    /// post beside it, the order's place and flight all choose from this walk. The
+    /// walk still goes through such a cell: another bot standing in it is not a wall,
+    /// and a route that crosses it is as good as any (FR-BOT-300).
     static func walk(from here: NavigationGraph.Node, within reach: Double, for bot: Bot,
                      in situation: Situation) -> [(node: NavigationGraph.Node, metres: Double)] {
         var cells: [(node: NavigationGraph.Node, metres: Double)] = []
         var seen: Set<NavigationGraph.Node> = [here]
         var queue = [here]
         var index = queue.startIndex
+        let held = taken(by: bot, in: situation)
         while index < queue.endIndex {
             let node = queue[index]
             queue.formIndex(after: &index)
             let metres = Perception.metres(bot.position, centre(of: node, in: situation))
             guard metres <= reach else { continue }
-            cells.append((node: node, metres: metres))
+            if !held.contains(node) { cells.append((node: node, metres: metres)) }
             for next in situation.graph.neighbours(of: node).sorted(by: order) where seen.insert(next).inserted {
                 queue.append(next)
             }
