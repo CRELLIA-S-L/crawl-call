@@ -423,6 +423,130 @@ When a bot throws its knife, the system **shall** take the knife from what the b
 That is what makes the throw a decision rather than a free extra range — a bot that threw has nothing for the next thing that closes with it, and the score of throwing has to carry that.
 Nothing picks it up again: there is no gathering in this game, and a thrown knife is gone for the match.
 
+### FR-BOT-540 — Each firearm that is not full is a reload of its own
+
+```yaml
+status: deferred
+verification: T
+derives_from: [FR-BOT-425]
+depends_on: [FR-BOT-440, FR-BOT-460, IF-BOT-010]
+refines: []
+conflicts_with: []
+code: []
+tests: []
+created: 2026-10-13
+```
+
+When scoring the actions open to a bot, the system **shall** score reloading each firearm the bot carries that is not full and has a spare magazine left as an action of its own.
+
+**Rationale.** The maintainer, 2026-10-13: a reload is to cost time, and the time is the weapon's own — which a single act that fills everything a bot carries cannot have, since the primary's is to be the longer one.
+So the reload takes the shape fire already has (FR-BOT-460): one action per weapon, and the chooser decides which magazine is worth filling now.
+That a firearm with no spare magazine left is not offered at all belongs here rather than in a second sentence: there is nothing to reload it with, and an action with nothing to act on is not on the list.
+
+### FR-BOT-550 — A reload takes the weapon's own time
+
+```yaml
+status: deferred
+verification: T
+derives_from: [FR-BOT-540]
+depends_on: [FR-BOT-540, IF-BOT-010]
+refines: []
+conflicts_with: []
+code: []
+tests: []
+created: 2026-10-13
+```
+
+When a bot has chosen to reload a firearm and has chosen nothing else since, the system **shall** fill that firearm's magazine once that firearm's reload time has passed.
+
+**Rationale.** The maintainer, 2026-10-13: reloading the primary is to take longer.
+A reload that takes no time is a free choice, and a free choice is no choice at all — the same argument eating stands on (FR-SNAKE-090), and the reason a bot with a dry rifle reloads instead of drawing anything it carries.
+It does not hold the bot where it stands, as eating holds the snake: a bot can walk while it reloads and can be interrupted (FR-BOT-170), and a bot frozen for two seconds while the snake arrives is the standing still the concept calls the signature stupidity.
+"Has chosen nothing else since" is the whole of it: a bot that ducks out, fires and ducks back has gained nothing and starts again, because a reload that survives being abandoned is free again by another road.
+
+### FR-BOT-560 — A bot carries a limited number of spare magazines
+
+```yaml
+status: deferred
+verification: T
+derives_from: [FR-BOT-540]
+depends_on: [FR-BOT-550, IF-BOT-010]
+refines: []
+conflicts_with: []
+code: []
+tests: []
+created: 2026-10-13
+```
+
+When a bot's reload fills a firearm's magazine, the system **shall** take one spare magazine for that firearm from what the bot carries.
+
+**Rationale.** The maintainer, 2026-10-13: the number of spare magazines is to be limited, and three may be enough.
+What it buys is a fight that cannot go on for ever at the same cadence: a bot out of spares has a weapon it can empty once and then nothing but what else it carries (FR-BOT-440).
+Nothing picks a magazine up again, for the reason a thrown knife is gone for the match (FR-BOT-520): there is no gathering in this game.
+
+### FR-BOT-570 — A bot closes with what its weapon does not reach
+
+```yaml
+status: deferred
+verification: T
+derives_from: [FR-BOT-460]
+depends_on: [FR-BOT-440, FR-BOT-530, FR-BOT-090]
+refines: []
+conflicts_with: []
+code: []
+tests: []
+created: 2026-10-13
+```
+
+When a bot carries a weapon with ammunition whose range does not cover its target, and a cell it can reach would bring that target within that weapon's range, the system **shall** score moving to that cell as an action of its own.
+
+**Rationale.** The maintainer, 2026-10-13: the choice between hiding to reload and drawing the pistol or the knife to run in should depend on the bot's courage.
+This is the second half of that choice, and it is shaped like FR-BOT-460 rather than like an order to charge: each weapon that reaches is already an action of its own, and this is each weapon that *would* reach, scored by the same chooser.
+A bot with a loaded primary is not a candidate, since its weapon reaches already, so this never turns a firefight at range into a rush. The bot it describes is the one with a dry rifle, a pistol good for six metres and an enemy at eight — and whether it goes depends on how brave it is (FR-BOT-090) and on what else there is to do.
+The cell is subject to FR-BOT-530 like any other, so a bot never rushes to where a squadmate is already going.
+
+### FR-BOT-580 — A thrown grenade flies the arc of a thrown thing
+
+```yaml
+status: deferred
+verification: T
+derives_from: [FR-BOT-470]
+depends_on: [FR-BOT-470, IF-MAP-020]
+refines: []
+conflicts_with: []
+code: []
+tests: []
+created: 2026-10-13
+```
+
+While a thrown grenade is in the air with fuse left, the system **shall** carry it along a path falling under the tuning's gravity.
+
+**Rationale.** The maintainer, 2026-10-13: a grenade is to be drawn, and it is to have the physics of a thrown thing.
+Until now a grenade lay where it was aimed from the moment it was thrown (FR-BOT-470) and only burned its fuse, which is enough for the damage and nothing for the eye.
+An arc also makes the throw range a real limit rather than a number: a throw leaves the hands at a speed, and a throw aimed further than that speed carries falls short.
+The gravity is the one a falling thing is already given (IF-MAP-020), the same the snake falls under off a ledge (FR-SNAKE-220) — a second gravity in the same arena would be two answers to one question.
+
+### FR-BOT-590 — A thrown grenade bounces off what it meets
+
+```yaml
+status: deferred
+verification: T
+derives_from: [FR-BOT-580]
+depends_on: [FR-BOT-580, FR-BOT-405, IF-BOT-010]
+refines: []
+conflicts_with: []
+code: []
+tests: []
+created: 2026-10-13
+```
+
+When a thrown grenade in the air meets a surface, the system **shall** turn its course back off that surface, keeping the share of its speed the grenade's restitution sets.
+
+**Rationale.** The maintainer, 2026-10-13: bouncing off surfaces would be good.
+A separate requirement from the arc above and not a second clause of it, because each can be built and read on its own: a grenade that falls and stops dead where it lands is a finished behaviour, and so is one that comes back off a wall.
+What the step meets is read the way a round's is (FR-BOT-405), and the arena is a grid of axis-aligned modules, so the surface a step met is the cell boundary it crossed.
+What it keeps of its speed is tuning and goes with the grenade's other numbers (IF-BOT-010); below a crawl the grenade is at rest and only burns fuse, which is what keeps a grenade from shivering in a corner for its whole fuse.
+
 ## Deliberation
 
 ### FR-BOT-080 — Action chosen by maximum utility
@@ -679,9 +803,32 @@ If the utility of a bot's current target and that of the best alternative differ
 
 **Rationale.** Concept §9.2 names the side effect to check on the prototype: a bot caught between two threats must not freeze on close scores, and names hysteresis as the probable fix.
 Written as behaviour — no flapping under a margin — so that a test can show it.
+Built on 2026-09-26 with fire at an enemy (FR-BOT-060), the first time a bot had two targets to be caught between. The snake is one target wherever on it the bot aims, since its nearest part moves as it does; each bot is one target (ADR-0044).
+
+### FR-BOT-530 — A bot does not set out for a cell another bot holds or is making for
+
+```yaml
+status: deferred
+verification: T
+derives_from: [FR-BOT-080]
+depends_on: [FR-BOT-220, FR-BOT-300]
+refines: []
+conflicts_with: []
+code: []
+tests: []
+created: 2026-10-13
+```
+
+When a bot chooses a cell to move to, the system **shall** leave out the cells a bot it sees stands in and the cells its own squad is already making for.
+
+**Rationale.** The maintainer, 2026-10-13, watching what the squads had become: a bot choosing where to go must take account of the cells other bots hold and the cells other bots have already set out for, and not try to get into them.
+Two sets and not one, because a bot acts on what it knows (FR-BOT-220): where a bot stands is something that can be seen, so an enemy in view holds its cell as much as a squadmate does, while where a bot is going is something only its own squad can know. An enemy remembered and not seen holds nothing — the memory is of a place it was.
+One filter over the two cases rather than two requirements: what is claimed is the whole of what a cell search leaves out, and a search that honoured one set and not the other is the same bots walking into each other.
+FR-BOT-300 is the other half of it, after the fact — a bot already walking stops against a bot standing where it is going (ADR-0064) — and this is what keeps it from setting out for that cell at all.
+A body holds nothing: nothing in the game treats one as an obstacle, and only the living are pushed apart (FR-BOT-320).
+Where the exclusions leave no cell at all the action is simply not on the list, as every action with nothing to act on is.
 
 ## Scheduling
-Built on 2026-09-26 with fire at an enemy (FR-BOT-060), the first time a bot had two targets to be caught between. The snake is one target wherever on it the bot aims, since its nearest part moves as it does; each bot is one target (ADR-0044).
 
 ### FR-BOT-150 — Deliberation runs on a fixed step, not per frame
 

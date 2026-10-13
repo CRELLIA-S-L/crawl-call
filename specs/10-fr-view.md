@@ -734,3 +734,43 @@ While a bot is on screen, the system **shall** draw in its hands the weapon it i
 ADR-0022 drew each archetype holding one thing — the scout a pistol, the sapper a sledgehammer — and that table is rewritten by this, since what is in the hands now changes with the action.
 FR-VIEW-070 is not weakened: the archetype stays readable from what is in the hands or across the back, from how big the bot is and from what it wears, and the six silhouettes remain six.
 A test can read the figure's description and say which weapon is in the hands; whether a player can tell the six apart at the camera's distance stays FR-VIEW-070's demonstration.
+
+### FR-VIEW-350 — A thrown grenade is drawn where it is
+
+```yaml
+status: deferred
+verification: T
+derives_from: [FR-BOT-470]
+depends_on: [FR-BOT-580, IF-VIEW-020]
+refines: []
+conflicts_with: []
+code: []
+tests: []
+created: 2026-10-13
+```
+
+While a thrown grenade has fuse left, the system **shall** draw it where it is.
+
+**Rationale.** The maintainer, 2026-10-13: a grenade must certainly be drawn.
+A grenade that is thrown, lies for its fuse and then takes four bots with it is, until that moment, nothing on screen at all — the player sees the explosion and never the warning, which is the same complaint rounds answered when they came to be drawn in flight (FR-VIEW-170).
+Drawn where it is, so that a grenade in its arc (FR-BOT-580) reads as a thing to get away from and a grenade at rest reads as a few seconds to use.
+
+### FR-VIEW-360 — A blast is drawn where it went off
+
+```yaml
+status: deferred
+verification: T
+derives_from: [FR-BOT-480]
+depends_on: [FR-BOT-480, IF-VIEW-020]
+refines: []
+conflicts_with: []
+code: []
+tests: []
+created: 2026-10-13
+```
+
+When a grenade goes off, the system **shall** draw the blast where it went off, out to the blast radius, for a moment after it.
+
+**Rationale.** The maintainer, 2026-10-13: the explosion must be drawn too.
+Out to the blast radius because that radius is the rule the damage follows (FR-BOT-480), and a drawing smaller or larger than it would teach the player the wrong distance to stand at.
+For a moment after it, because the going off is one instant of the match and nothing an eye can catch; how long that moment is belongs with the view's numbers (IF-VIEW-020).
