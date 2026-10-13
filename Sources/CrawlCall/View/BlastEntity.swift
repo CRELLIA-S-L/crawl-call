@@ -21,7 +21,7 @@ enum BlastEntity {
         root.name = EntityName.blasts
         let ball = MeshResource.generateSphere(radius: Float(Blasts.grenadeRadius))
         let cloud = MeshResource.generateSphere(radius: Blasts.unitRadius)
-        for index in Int.zero..<Blasts.grenades(for: bots, configuration: configuration) {
+        for index in Int.zero..<pool(for: bots, configuration: configuration) {
             let thrown = ModelEntity(mesh: ball, materials: [material(Blasts.grenadeColour, opacity: 1)])
             thrown.name = EntityName.numbered(EntityName.grenade, index)
             thrown.isEnabled = false
@@ -35,6 +35,13 @@ enum BlastEntity {
             root.addChild(flash)
         }
         return root
+    }
+
+    /// How many grenades can be in the air at once: every bot's whole pouch, and one
+    /// over for the frame in which one is thrown as another goes off.
+    static func pool(for bots: [Bot], configuration: BotConfiguration) -> Int {
+        let carried = bots.compactMap { configuration.archetypes[$0.archetype.rawValue]?.arms.grenadesCarried }
+        return max(Blasts.least, carried.reduce(.zero, +) + Blasts.oneMore)
     }
 
     /// Every grenade in the air drawn where it is, every blast drawn where it went off at

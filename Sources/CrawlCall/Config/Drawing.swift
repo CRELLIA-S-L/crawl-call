@@ -174,17 +174,13 @@ enum Blasts {
     /// How big a grenade is drawn, in metres: a ball an eye can follow across a room
     /// and smaller than the hand that threw it.
     static let grenadeRadius = 0.09
-    /// How many can be in the air at once: every bot's whole pouch, and one over for the
-    /// frame in which one is thrown as another goes off.
-    static func grenades(for bots: [Bot], configuration: BotConfiguration) -> Int {
-        let carried = bots.compactMap { configuration.archetypes[$0.archetype.rawValue]?.arms.grenadesCarried }
-        return max(least, carried.reduce(.zero, +) + oneMore)
-    }
     /// How many blasts can be on screen at once: the pouches cannot all go off in one
     /// moment, and this is room for a knot of them that nearly does.
     static let flashes = 8
     /// A pool is never empty, so that a match with no bots still has somewhere to put
-    /// a grenade.
+    /// a grenade, and it holds one over what can be thrown, for the frame in which one
+    /// is thrown as another goes off. How many that is, is counted where the bots are
+    /// known (`BlastEntity`): what a figure is made of is not the configuration's.
     static let least = 1
     static let oneMore = 1
     /// A blast's ball is made one metre across and scaled to what it has grown to.
