@@ -550,6 +550,49 @@ A separate requirement from the arc above and not a second clause of it, because
 What the step meets is read the way a round's is (FR-BOT-405), and the arena is a grid of axis-aligned modules, so the surface a step met is the cell boundary it crossed.
 What it keeps of its speed is tuning and goes with the grenade's other numbers (IF-BOT-010); below a crawl the grenade is at rest and only burns fuse, which is what keeps a grenade from shivering in a corner for its whole fuse.
 
+### FR-BOT-610 — Each weapon's time between uses is its own
+
+```yaml
+status: deferred
+verification: T
+derives_from: [FR-BOT-450]
+depends_on: [FR-BOT-440, IF-BOT-010]
+refines: [FR-BOT-450]
+conflicts_with: []
+code: []
+tests: []
+created: 2026-10-13
+```
+
+When a bot uses one of the weapons it carries, the system **shall** count the time until that weapon may be used again from that use alone, and not from the bot's use of any other weapon.
+
+**Rationale.** The maintainer, 2026-10-13, on reading `now - lastShot >= knife.numbers.timeBetweenStrikes`: a bot should be an object with weapon slots, and a weapon an object carrying its own times.
+FR-BOT-450 moved the numbers to the weapon and ADR-0086 said the guard was "the weapon's own time between shots"; the clock those numbers are read against stayed on the bot, one field for everything it carries, so firing the rifle pushed the knife's next strike away and striking pushed the rifle's next shot.
+At a knife of one second that was a few frames; at the five seconds the knife is worth twenty damage for, it is the difference between a weapon and none — a bot that fires between strikes would never strike again.
+It is a requirement and not a repair of one, because what is obliged here is where a clock lives, which no statement said: FR-BOT-450 names the numbers a shot is taken from and is silent about the time it is measured from.
+The slot's own guard is not this clock and stays where it is (FR-BOT-170): one act per deliberation period is a property of deliberation, not of a gun.
+
+### FR-BOT-600 — A weapon whose time has not come is not an action
+
+```yaml
+status: deferred
+verification: T
+derives_from: [FR-BOT-460]
+depends_on: [FR-BOT-610, IF-BOT-010]
+refines: [FR-BOT-460]
+conflicts_with: []
+code: []
+tests: []
+created: 2026-10-13
+```
+
+When scoring the actions open to a bot, the system **shall** leave out using a weapon whose time between uses has not passed since that weapon was last used.
+
+**Rationale.** The maintainer, 2026-10-13: a ban on taking actions that are forbidden is certainly needed.
+Until now a weapon on its own time was offered, chosen and then refused where it is carried out, and the bot stood for that slot: measured over a hundred and fifty seconds of the shipped arena, four strikes in five did nothing, and a bot at the reach of an arm stood in melee instead of firing. Taking the strike off the list instead moved those slots to the pistol — which had never been fired in a whole match — and pushed the first deaths from fifteen seconds to forty-two.
+The project already says this of two other actions, which is why the sentence is one requirement and not a principle: a firearm with no round is not an action (FR-BOT-460), a reload with no spare magazine is not one (FR-BOT-540, "an action with nothing to act on is not on the list"), and a throw that would catch a squadmate is not one (FR-BOT-500). The weapon's time is the third case of the same thing and the only one that needs the match's clock in the score.
+What it does not touch is the rush (FR-BOT-570): crossing the ground to where a weapon would reach is not a use of the weapon, and a knife that is cooling still reaches by the time the bot arrives.
+
 ## Deliberation
 
 ### FR-BOT-080 — Action chosen by maximum utility
