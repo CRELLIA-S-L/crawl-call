@@ -10,7 +10,7 @@
   "centralRegion": { "width": 0.4, "height": 0.4 },
   "cameraFollowLag": 0.3,
   "slither": { "amplitude": 0.035, "wavelength": 1.56 },
-  "blastFlashSeconds": 0.45,
+  "blastFlashSeconds": 0.6,
   "seeThroughMargin": 0.15,
   "visibilityRadius": 1.6,
   "stragglerDistance": 8.0,
