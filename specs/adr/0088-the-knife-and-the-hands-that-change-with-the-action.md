@@ -1,5 +1,7 @@
 # ADR-0088 — The knife, and hands that change with the action
 
+> The knife's time between strikes became five seconds on 2026-10-13 (ADR-0093), at the maintainer's word: twenty damage a second at the reach of an arm was what made a bot stand in melee instead of fighting. What this record decided — that the knife has a time of its own, read from the catalogue — stands; the number is the part that moved.
+
 - **Status:** accepted
 - **Date:** 2026-10-12
 - **Related requirements:** FR-BOT-510, FR-BOT-520, FR-VIEW-340, FR-BOT-080, FR-CMD-030, IF-BOT-010, FR-VIEW-070

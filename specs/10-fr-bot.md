@@ -553,14 +553,14 @@ What it keeps of its speed is tuning and goes with the grenade's other numbers (
 ### FR-BOT-610 — Each weapon's time between uses is its own
 
 ```yaml
-status: deferred
+status: implemented
 verification: T
 derives_from: [FR-BOT-450]
 depends_on: [FR-BOT-440, IF-BOT-010]
 refines: [FR-BOT-450]
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Bot/Arms.swift, Sources/CrawlCall/Bot/Execution.swift, config/bot.json]
+tests: [Tests/CrawlCallTests/WeaponTimeTests.swift, Tests/CrawlCallTests/KnifeTests.swift]
 created: 2026-10-13
 ```
 
@@ -575,14 +575,14 @@ The slot's own guard is not this clock and stays where it is (FR-BOT-170): one a
 ### FR-BOT-600 — A weapon whose time has not come is not an action
 
 ```yaml
-status: deferred
+status: implemented
 verification: T
 derives_from: [FR-BOT-460]
 depends_on: [FR-BOT-610, IF-BOT-010]
 refines: [FR-BOT-460]
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Bot/Deliberation.swift, Sources/CrawlCall/Bot/Arms.swift, Sources/CrawlCall/Bot/Execution.swift]
+tests: [Tests/CrawlCallTests/WeaponTimeTests.swift, Tests/CrawlCallTests/KnifeTests.swift]
 created: 2026-10-13
 ```
 
@@ -592,6 +592,7 @@ When scoring the actions open to a bot, the system **shall** leave out using a w
 Until now a weapon on its own time was offered, chosen and then refused where it is carried out, and the bot stood for that slot: measured over a hundred and fifty seconds of the shipped arena, four strikes in five did nothing, and a bot at the reach of an arm stood in melee instead of firing. Taking the strike off the list instead moved those slots to the pistol — which had never been fired in a whole match — and pushed the first deaths from fifteen seconds to forty-two.
 The project already says this of two other actions, which is why the sentence is one requirement and not a principle: a firearm with no round is not an action (FR-BOT-460), a reload with no spare magazine is not one (FR-BOT-540, "an action with nothing to act on is not on the list"), and a throw that would catch a squadmate is not one (FR-BOT-500). The weapon's time is the third case of the same thing and the only one that needs the match's clock in the score.
 What it does not touch is the rush (FR-BOT-570): crossing the ground to where a weapon would reach is not a use of the weapon, and a knife that is cooling still reaches by the time the bot arrives.
+Built on 2026-10-13, and the throw is where it earned its number: the knife's throw was left out of the score at first and refused in the execution, and a bot in melee then chose the throw and stood for twenty-five slots running — the very fault the statement names, in the one use that had been missed. Every use a bot has is asked the same question now, and both halves of a frame ask it of the same predicate (ADR-0093).
 
 ## Deliberation
 

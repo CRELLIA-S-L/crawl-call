@@ -109,6 +109,9 @@ enum Firing {
     /// (`specs/50-verification.md`). A nanosecond is far below any cadence a weapon
     /// could be given and far above the error a match of any length accumulates.
     static let cadenceSlack = 1e-9
+    /// One grenade out of the pouch, and the one knife a bot carries: what a use of
+    /// either spends, and what is left of one the bot still has (FR-BOT-440).
+    static let oneWeapon = 1
 }
 
 /// How a round in flight is followed (FR-BOT-060, FR-BOT-400).

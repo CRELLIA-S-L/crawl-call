@@ -16,6 +16,29 @@ func element<C: Collection>(_ offset: Int, of collection: C,
     try collection[checkedIndex(offset, of: collection, file: file, line: line)]
 }
 
+/// The shipped world of one map with the squads resized, taken through the same decode
+/// a bundled file goes through, so that a test world is a world and not a second
+/// definition of one. What it is for: a test about the snake and one bot is drowned out
+/// by two full squads shooting, the more so since the weapons wait out their own time
+/// (FR-BOT-600) and the bots spend the slots they used to stand in firing.
+func world(map: String, squadSize: Int,
+           file: StaticString = #filePath, line: UInt = #line) throws -> World {
+    let base = try Launch.world(map: map).get()
+    let url = try XCTUnwrap(Bundle.main.url(forResource: "match", withExtension: "json", subdirectory: "config"),
+                            "the bundle carries no match configuration", file: file, line: line)
+    var json = try XCTUnwrap(JSONSerialization.jsonObject(with: Data(contentsOf: url)) as? [String: Any],
+                             "the match configuration is not an object", file: file, line: line)
+    json["squadSize"] = squadSize
+    let match = try Configurations.decode(MatchConfiguration.self, named: "match",
+                                          schema: MatchConfiguration.schema,
+                                          from: JSONSerialization.data(withJSONObject: json))
+    let one = base.configurations
+    return World(configurations: Configurations(snake: one.snake, tuning: one.tuning, view: one.view,
+                                                bot: one.bot, match: match, scoring: one.scoring,
+                                                commander: one.commander),
+                 kit: base.kit, map: base.map, setting: base.setting, graph: base.graph, plan: base.plan)
+}
+
 /// The index `offset` places from the start of a collection, for a test that changes
 /// the element there, or the test's failure naming the offset and the count.
 func checkedIndex<C: Collection>(_ offset: Int, of collection: C,

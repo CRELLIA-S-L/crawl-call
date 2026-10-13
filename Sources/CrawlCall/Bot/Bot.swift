@@ -62,8 +62,10 @@ struct Bot: Equatable {
     var knowledge = Knowledge()
     /// When it last looked over the map round it, in seconds of the match (FR-BOT-230).
     var lastLook = -Double.infinity
-    /// When it last fired, in seconds of the match: a slot given ahead of the queue
-    /// (FR-BOT-170) lets it decide, not fire faster than once a deliberation period.
+    /// When it last acted with a weapon, in seconds of the match: a slot given ahead
+    /// of the queue (FR-BOT-170) lets it decide, not act faster than once a
+    /// deliberation period. How often one weapon may be used is not this but the
+    /// weapon's own clock, which the arms keep a use at a time (FR-BOT-610).
     var lastShot = -Double.infinity
     /// Whether any part of the snake is in what it knows (FR-BOT-050).
     var knowsSnake: Bool { knowledge.knowsSnake }

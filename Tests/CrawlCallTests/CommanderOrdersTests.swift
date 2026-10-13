@@ -356,7 +356,7 @@ final class CommandedMatchTests: XCTestCase {
         XCTAssertEqual(davis.weights, began.weights, "an answer rewrote a soldier's character")
     }
 
-    func testASquadToldToPressEastSpendsItsMatchFurtherEastThanOneToldNothing() throws {
+    func testASquadToldToPressEastSpendsItsMatchFurtherEastThanOneToldToPressWest() throws {
         // The whole chain in one test, with nothing stubbed but the answerer: a place
         // becomes a point, the point becomes a term in what a position is worth, and
         // the bots — choosing their own cells by their own cover, height and
@@ -367,6 +367,14 @@ final class CommandedMatchTests: XCTestCase {
         // (ADR-0086, ADR-0087, ADR-0088), and a squad that pressed east and was shot
         // there has no position at the fortieth second at all. A squad wiped out in the
         // first frame still reads as nothing, which is a failure and not a pass.
+        //
+        // The other squad is told the opposite rather than told nothing. A squad under
+        // no order advances on the enemy it believes in (FR-BOT-360), and the enemy of
+        // red is east, so the silent squad drifts east by itself: measured on
+        // 2026-10-13, over forty seconds, told east 14.24 m against silent 14.25 m —
+        // no margin at all — while told east against told west is 14.24 m against
+        // 5.04 m, in an arena whose east is 13.38 m and west 2.13 m. The order is what
+        // this measures, so the comparison is between two orders.
         func averageEast(of game: Game, over seconds: Double) -> Double {
             var game = game
             let frame = 1.0 / 60
@@ -386,13 +394,17 @@ final class CommandedMatchTests: XCTestCase {
         let west = Places.middle(of: .west, in: world.plan.bounds).x
         XCTAssertGreaterThan(east, west, "the arena's east is not east of its west")
 
-        let told = averageEast(of: Game(world: world, start: start,
-                                        commander: ScriptedCommander([.decision(decision(.press, place: .east))])),
-                               over: 40)
-        let silent = averageEast(of: Game(world: world, start: start), over: 40)
-        XCTAssertFalse(told.isNaN || silent.isNaN, "red was wiped out before it had moved at all")
-        XCTAssertGreaterThan(told, silent,
-                             "a squad told to press east spent its match no further east than one told nothing")
+        let eastward = averageEast(of: Game(world: world, start: start,
+                                            commander: ScriptedCommander([.decision(decision(.press, place: .east))])),
+                                   over: 40)
+        let westward = averageEast(of: Game(world: world, start: start,
+                                            commander: ScriptedCommander([.decision(decision(.press, place: .west))])),
+                                   over: 40)
+        XCTAssertFalse(eastward.isNaN || westward.isNaN, "red was wiped out before it had moved at all")
+        XCTAssertGreaterThan(eastward, westward,
+                             "a squad told to press east spent its match no further east than one told west")
+        XCTAssertGreaterThan(eastward, east, "a squad told to press east never reached the arena's east")
+        XCTAssertLessThan(westward, east, "a squad told to press west spent its match east of the arena's middle")
     }
 
     func testARefusedCallLeavesTheSquadUnderTheOrderItHad() async throws {

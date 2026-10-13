@@ -10,7 +10,12 @@
 // slot is aimed through the slots it has to wait out. Until 2026-10-12 the period was
 // the cadence, because no requirement gave a weapon a rate of fire.
 //
-// file implements: FR-BOT-550, FR-BOT-560, FR-BOT-570, FR-BOT-580, FR-BOT-450, FR-BOT-470, FR-BOT-510, FR-BOT-520, FR-BOT-167, FR-BOT-060, FR-BOT-110, FR-BOT-115, FR-BOT-170, FR-BOT-360, FR-BOT-370, FR-BOT-380, FR-BOT-180, FR-BOT-190, INV-BOT-020, INV-BOT-010, FR-BOT-165, FR-MAP-150, FR-BOT-270, FR-BOT-280, FR-BOT-290, FR-BOT-300, FR-BOT-220, FR-BOT-310, FR-BOT-320, FR-BOT-330, FR-BOT-340, FR-BOT-420, FR-BOT-425, FR-BOT-430, FR-CMD-030, FR-CMD-040
+// Each weapon counts that time from its own last use and not from the bot's last act
+// (FR-BOT-610): the clock is in the arms, one entry a use, and what is left on the bot
+// is the one act a slot holds it to (FR-BOT-170). Until 2026-10-13 both were one field,
+// and firing pushed the knife's next strike away.
+//
+// file implements: FR-BOT-550, FR-BOT-560, FR-BOT-570, FR-BOT-580, FR-BOT-600, FR-BOT-610, FR-BOT-450, FR-BOT-470, FR-BOT-510, FR-BOT-520, FR-BOT-167, FR-BOT-060, FR-BOT-110, FR-BOT-115, FR-BOT-170, FR-BOT-360, FR-BOT-370, FR-BOT-380, FR-BOT-180, FR-BOT-190, INV-BOT-020, INV-BOT-010, FR-BOT-165, FR-MAP-150, FR-BOT-270, FR-BOT-280, FR-BOT-290, FR-BOT-300, FR-BOT-220, FR-BOT-310, FR-BOT-320, FR-BOT-330, FR-BOT-340, FR-BOT-420, FR-BOT-425, FR-BOT-430, FR-CMD-030, FR-CMD-040
 import Foundation
 
 enum Execution {
@@ -58,6 +63,7 @@ enum Execution {
                                                    graph: world.graph,
                                                    configuration: world.configurations.bot,
                                                    cellSize: world.configurations.tuning.navigationGraphCellSize)
+            situation.now = now
             situation.bodyRadius = world.configurations.tuning.bodyRadius
             // Come to where it last saw an enemy, or into the enemy's starting area, and
             // found nobody there, it knows that much more (FR-BOT-360).
@@ -169,12 +175,11 @@ enum Execution {
                 // still fires no faster than once a period, which is what keeps an
                 // interrupt from being extra shots (FR-BOT-170, ADR-0057).
                 let firearm = bots[index].arms[slot]
-                guard seen, firearm.rounds > .zero,
-                      now - bots[index].lastShot >= firearm.numbers.timeBetweenShots - Firing.cadenceSlack,
+                guard seen, bots[index].arms.ready(.shot(slot), at: now),
                       !interrupted.contains(id)
                         || now - bots[index].lastShot >= world.configurations.bot.deliberationPeriod,
                       Sight.isClear(from: bots[index].eye, to: sighted, through: world.plan) else { break }
-                bots[index].arms.spend(slot)
+                bots[index].arms.spend(.shot(slot), at: now)
                 bots[index].lastShot = now
                 // Sent at the point where the target is now; what it strikes is where
                 // it flies (FR-BOT-060, FR-BOT-400).
@@ -202,11 +207,11 @@ enum Execution {
                 // A throw is an act like a shot and costs the slot: a bot given one
                 // ahead of the queue does not get an extra grenade out of it
                 // (FR-BOT-170, ADR-0057).
-                guard seen, bots[index].arms.grenades.left > .zero,
+                guard seen, bots[index].arms.ready(.throwGrenade, at: now),
                       !interrupted.contains(id)
                         || now - bots[index].lastShot >= world.configurations.bot.deliberationPeriod,
                       Sight.isClear(from: bots[index].eye, to: sighted, through: world.plan) else { break }
-                bots[index].arms.grenades.left -= 1
+                bots[index].arms.spend(.throwGrenade, at: now)
                 bots[index].lastShot = now
                 // It leaves the hand along an arc that would land it where it was aimed
                 // (FR-BOT-580) rather than lying there from the first frame.
@@ -230,9 +235,10 @@ enum Execution {
                 // at every slot, which at the reach of an arm is the deadliest thing in
                 // the game by a factor of ten.
                 guard let knife = bots[index].arms.knife,
-                      now - bots[index].lastShot >= knife.numbers.timeBetweenStrikes - Firing.cadenceSlack,
+                      bots[index].arms.ready(.strike, at: now),
                       !interrupted.contains(id)
                         || now - bots[index].lastShot >= world.configurations.bot.deliberationPeriod else { break }
+                bots[index].arms.spend(.strike, at: now)
                 bots[index].lastShot = now
                 switch target {
                 case .snake(let point):
@@ -258,11 +264,12 @@ enum Execution {
                 case .bot(let enemy): seen = situation.enemiesInView.contains { $0.id == enemy }
                 }
                 guard let knife = bots[index].arms.knife, seen,
+                      bots[index].arms.ready(.throwKnife, at: now),
                       let flight = Deliberation.aim(at: target, from: bots[index], in: situation),
                       !interrupted.contains(id)
                         || now - bots[index].lastShot >= world.configurations.bot.deliberationPeriod else { break }
                 bots[index].lastShot = now
-                bots[index].arms.throwKnife()
+                bots[index].arms.spend(.throwKnife, at: now)
                 if let round = Round(shooter: bots[index].id, squad: bots[index].squad, from: bots[index].eye,
                                      towards: flight, damage: knife.numbers.damage) {
                     volley.rounds.append(round)

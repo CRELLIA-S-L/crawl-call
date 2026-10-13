@@ -8,9 +8,9 @@ Total requirements: 292.
 | Status | Requirements |
 |---|---|
 | `draft` | 4 |
-| `deferred` | 86 |
+| `deferred` | 84 |
 | `partial` | 9 |
-| `implemented` | 185 |
+| `implemented` | 187 |
 | `superseded` | 6 |
 | `withdrawn` | 2 |
 
@@ -100,8 +100,8 @@ Total requirements: 292.
 | **FR-BOT-570** A bot closes with what its weapon does not reach | `implemented` | T | `Sources/CrawlCall/Bot/Deliberation.swift`<br>`Sources/CrawlCall/Bot/Action.swift`<br>`Sources/CrawlCall/Bot/Execution.swift` | `Tests/CrawlCallTests/RushTests.swift` |
 | **FR-BOT-580** A thrown grenade flies the arc of a thrown thing | `implemented` | T | `Sources/CrawlCall/Bot/Blast.swift`<br>`Sources/CrawlCall/Bot/Execution.swift`<br>`Sources/CrawlCall/Game.swift`<br>`Sources/CrawlCall/Config/Geometry.swift` | `Tests/CrawlCallTests/FlightOfAGrenadeTests.swift` |
 | **FR-BOT-590** A thrown grenade bounces off what it meets | `implemented` | T | `Sources/CrawlCall/Bot/Blast.swift`<br>`Sources/CrawlCall/Game.swift`<br>`config/bot.json` | `Tests/CrawlCallTests/FlightOfAGrenadeTests.swift` |
-| **FR-BOT-600** A weapon whose time has not come is not an action | `deferred` | T | — | — |
-| **FR-BOT-610** Each weapon's time between uses is its own | `deferred` | T | — | — |
+| **FR-BOT-600** A weapon whose time has not come is not an action | `implemented` | T | `Sources/CrawlCall/Bot/Deliberation.swift`<br>`Sources/CrawlCall/Bot/Arms.swift`<br>`Sources/CrawlCall/Bot/Execution.swift` | `Tests/CrawlCallTests/WeaponTimeTests.swift`<br>`Tests/CrawlCallTests/KnifeTests.swift` |
+| **FR-BOT-610** Each weapon's time between uses is its own | `implemented` | T | `Sources/CrawlCall/Bot/Arms.swift`<br>`Sources/CrawlCall/Bot/Execution.swift`<br>`config/bot.json` | `Tests/CrawlCallTests/WeaponTimeTests.swift`<br>`Tests/CrawlCallTests/KnifeTests.swift` |
 | **FR-CMD-010** One commander per squad | `implemented` | T | `Sources/CrawlCall/Commander/CommanderDesk.swift`<br>`Sources/CrawlCall/Game.swift`<br>`Sources/CrawlCall/CrawlCallApp.swift` | `Tests/CrawlCallTests/CommanderCallTests.swift` |
 | **FR-CMD-020** The commander is called on an interval | `implemented` | T | `Sources/CrawlCall/Commander/CommanderDesk.swift`<br>`Sources/CrawlCall/Game.swift`<br>`Sources/CrawlCall/Commander/SquadView.swift` | `Tests/CrawlCallTests/CommanderCallTests.swift` |
 | **FR-CMD-025** Each commander call is its own session | `implemented` | T | `Sources/CrawlCall/Commander/SystemModelCommander.swift`<br>`Sources/CrawlCall/Commander/CommanderDesk.swift` | `Tests/CrawlCallTests/CommanderCallTests.swift` |

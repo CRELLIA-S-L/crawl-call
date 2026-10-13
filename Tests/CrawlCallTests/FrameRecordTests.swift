@@ -202,17 +202,11 @@ final class FrameRecordTests: XCTestCase {
 /// A real match with the record on: what it records is what happened in it.
 @MainActor
 final class MatchRecordTests: XCTestCase {
-    private func world(squadSize: Int? = nil) throws -> World {
-        let base = try Launch.world(map: "room").get()
-        guard let squadSize else { return base }
-        let url = try XCTUnwrap(Bundle.main.url(forResource: "match", withExtension: "json", subdirectory: "config"))
-        var json = try XCTUnwrap(JSONSerialization.jsonObject(with: Data(contentsOf: url)) as? [String: Any])
-        json["squadSize"] = squadSize
-        let match = try Configurations.decode(MatchConfiguration.self, named: "match", schema: MatchConfiguration.schema,
-                                              from: JSONSerialization.data(withJSONObject: json))
-        let c = base.configurations
-        return World(configurations: Configurations(snake: c.snake, tuning: c.tuning, view: c.view, bot: c.bot, match: match, scoring: c.scoring, commander: c.commander),
-                     kit: base.kit, map: base.map, setting: base.setting, graph: base.graph, plan: base.plan)
+    /// The room, and the room with the squads resized — the resizing itself is the
+    /// suite's one way of doing it (`TestSupport`).
+    private func room(squadSize: Int? = nil) throws -> World {
+        guard let squadSize else { return try Launch.world(map: "room").get() }
+        return try world(map: "room", squadSize: squadSize)
     }
 
     private func session(in world: World, recording url: URL) throws -> (GameSession, FrameRecorder) {
@@ -236,7 +230,7 @@ final class MatchRecordTests: XCTestCase {
     }
 
     func testEveryFrameIsRecordedWithItsPhasesAndTheFirstBeginsTheMatch() throws {
-        let (session, recorder) = try session(in: try world(), recording: file)
+        let (session, recorder) = try session(in: try room(), recording: file)
         for _ in 0..<30 { session.step(seconds: 1.0 / 60) }
         let frames = recorder.record.frames
         XCTAssertEqual(frames.count, 30)
@@ -253,7 +247,7 @@ final class MatchRecordTests: XCTestCase {
     }
 
     func testBotsDeliberatingAreRecordedInTheFramesTheyDeliberatedIn() throws {
-        let world = try world()
+        let world = try room()
         let (session, recorder) = try session(in: world, recording: file)
         // Half a second at 60 frames is two and a half deliberation periods of 0.2 s.
         for _ in 0..<30 { session.step(seconds: 1.0 / 60) }
@@ -268,7 +262,11 @@ final class MatchRecordTests: XCTestCase {
     }
 
     func testAMealIsRecordedWhereItBeganAndWhereItEnded() throws {
-        let world = try world()
+        // One bot a side, so that the meal this reads the record of happens at all:
+        // with both squads in the arena the snake is shot to pieces first, the more so
+        // since the weapons wait out their own time (FR-BOT-600) and the bots spend
+        // the slots they used to stand in firing.
+        let world = try room(squadSize: 1)
         let (session, recorder) = try session(in: world, recording: file)
         let game = session.game
         let prey = try XCTUnwrap(game.bots.filter { $0.floor == 0 }.first)
@@ -289,7 +287,7 @@ final class MatchRecordTests: XCTestCase {
     func testTheEndOfAMatchIsRecordedAndWritesTheFile() throws {
         // No squads: the arena is empty at the first step, and the match ends there.
         let url = file
-        let (session, recorder) = try session(in: try world(squadSize: 0), recording: url)
+        let (session, recorder) = try session(in: try room(squadSize: 0), recording: url)
         session.step(seconds: 1.0 / 60)
         session.step(seconds: 1.0 / 60)
         XCTAssertEqual(session.game.outcome, .arenaEmpty)
@@ -308,7 +306,7 @@ final class MatchRecordTests: XCTestCase {
     }
 
     func testARestartBeginsAMatchInTheSameRecord() throws {
-        let (session, recorder) = try session(in: try world(), recording: file)
+        let (session, recorder) = try session(in: try room(), recording: file)
         session.step(seconds: 1.0 / 60)
         session.restart()
         session.step(seconds: 1.0 / 60)
@@ -316,7 +314,7 @@ final class MatchRecordTests: XCTestCase {
     }
 
     func testASessionWithoutARecorderRecordsNothingAndStillPlays() throws {
-        let world = try world()
+        let world = try room()
         let game = Game(world: world, start: try XCTUnwrap(Game.firstStart(in: world)))
         let built = SceneBuilder.scene(for: world.plan, view: world.configurations.view)
         let camera = try XCTUnwrap(built.root.children.first { $0.name == "camera" })

@@ -239,6 +239,7 @@ requirements link to them, plus how many files their `code` field names.
 | FR-BOT-405 | 1 | 3 | 4 |
 | FR-BOT-425 | 1 | 3 | 4 |
 | FR-BOT-430 | 0 | 4 | 4 |
+| FR-BOT-610 | 1 | 3 | 4 |
 | FR-GREENHOLM-020 | 0 | 4 | 4 |
 | FR-SNAKE-015 | 2 | 2 | 4 |
 | FR-SNAKE-100 | 3 | 1 | 4 |
@@ -254,6 +255,7 @@ requirements link to them, plus how many files their `code` field names.
 | FR-BOT-560 | 0 | 3 | 3 |
 | FR-BOT-570 | 0 | 3 | 3 |
 | FR-BOT-590 | 0 | 3 | 3 |
+| FR-BOT-600 | 0 | 3 | 3 |
 | FR-GREENHOLM-050 | 0 | 3 | 3 |
 | FR-MAP-160 | 0 | 3 | 3 |
 | FR-TOOL-210 | 2 | 1 | 3 |
@@ -295,7 +297,6 @@ requirements link to them, plus how many files their `code` field names.
 | FR-BOT-350 | 0 | 1 | 1 |
 | FR-BOT-410 | 0 | 1 | 1 |
 | FR-BOT-500 | 0 | 1 | 1 |
-| FR-BOT-610 | 1 | 0 | 1 |
 | FR-MAP-050 | 1 | 0 | 1 |
 | FR-MAP-060 | 1 | 0 | 1 |
 | FR-SNAKE-080 | 1 | 0 | 1 |
@@ -317,7 +318,6 @@ requirements link to them, plus how many files their `code` field names.
 | CON-PUB-110 | 0 | 0 | 0 |
 | CON-PUB-120 | 0 | 0 | 0 |
 | FR-BOT-105 | 0 | 0 | 0 |
-| FR-BOT-600 | 0 | 0 | 0 |
 | FR-MAP-040 | 0 | 0 | 0 |
 | FR-MAP-110 | 0 | 0 | 0 |
 | FR-SCORE-020 | 0 | 0 | 0 |

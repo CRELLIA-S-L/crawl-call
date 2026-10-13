@@ -4,7 +4,7 @@
 // The arena is an open strip, so that what the knife does is not confused with what
 // stands between anybody.
 //
-// file verifies: FR-BOT-080, FR-BOT-510, FR-BOT-520
+// file verifies: FR-BOT-080, FR-BOT-510, FR-BOT-520, FR-BOT-600, FR-BOT-610
 import XCTest
 @testable import CrawlCall
 
@@ -78,27 +78,33 @@ final class KnifeTests: XCTestCase {
     }
 
     func testAStrikeIsSwungOnTheKnifesOwnTimeAndNotAtEverySlot() throws {
-        var bots = try pair(apart: 1, rounds: 15)
+        var bots = try pair(apart: 1, rounds: 20)
         let numbers = try knife(of: try element(0, of: bots))
         XCTAssertGreaterThan(numbers.timeBetweenStrikes, configuration.deliberationPeriod,
                              "the knife is quicker than a slot, and this test proves nothing")
         let whole = try element(1, of: bots).health
-        for step in 0...1 {
-            let at = now + Double(step) * configuration.deliberationPeriod
+        func slot(at: Double) throws {
             let shooter = try checkedIndex(0, of: bots)
             let enemy = try element(1, of: bots)
             bots[shooter].knowledge.enemies[enemy.id] = .init(point: enemy.position, time: at)
             _ = Execution.deliberate(&bots, slots: [0], world: world, now: at)
         }
-        XCTAssertEqual(try element(1, of: bots).health, whole - numbers.damage,
-                       "the knife was swung twice inside its own second")
+        try slot(at: now)
+        XCTAssertEqual(try element(0, of: bots).action, .strike(at: .bot(id: 1)), "it did not strike to begin with")
+        let afterTheStrike = try element(1, of: bots).health
+        XCTAssertEqual(afterTheStrike, whole - numbers.damage, "the first strike dealt something else")
+
+        // The next slot, inside the knife's own time, is not a second strike: the
+        // strike is not on the list at all (FR-BOT-600), and the slot is spent firing.
+        try slot(at: now + configuration.deliberationPeriod)
+        let chosen = try XCTUnwrap(try element(0, of: bots).action)
+        if case .strike = chosen { XCTFail("the knife was swung twice inside its own time") }
+        XCTAssertGreaterThan(try element(1, of: bots).health, afterTheStrike - numbers.damage,
+                             "something dealt the knife's damage inside the knife's own time")
+
         // And once its time has passed it is swung again.
-        let later = now + numbers.timeBetweenStrikes
-        let shooter = try checkedIndex(0, of: bots)
-        let enemy = try element(1, of: bots)
-        bots[shooter].knowledge.enemies[enemy.id] = .init(point: enemy.position, time: later)
-        _ = Execution.deliberate(&bots, slots: [0], world: world, now: later)
-        XCTAssertEqual(try element(1, of: bots).health, whole - 2 * numbers.damage, "it never struck again")
+        try slot(at: now + numbers.timeBetweenStrikes)
+        XCTAssertEqual(try element(0, of: bots).action, .strike(at: .bot(id: 1)), "it never struck again")
     }
 
     // MARK: thrown and gone (FR-BOT-520)

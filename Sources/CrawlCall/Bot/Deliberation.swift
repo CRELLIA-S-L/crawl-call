@@ -8,13 +8,15 @@
 // so that each of them can be varied on its own and the choice watched to move, which
 // is what its rationale asks of a test. The last of them is four weapons rather than
 // one magazine (FR-BOT-440): each firearm that has a round and reaches is scored on
-// its own numbers (FR-BOT-450, FR-BOT-460).
+// its own numbers (FR-BOT-450, FR-BOT-460), and one it cannot use at this moment —
+// an empty magazine, a weapon still on its own time — is not scored at all
+// (FR-BOT-600), so that a slot is never spent on an act the execution will refuse.
 //
 // The weight of one term against another is tuning, and is read from the bot
 // configuration (IF-BOT-010), as is how much an unhurt bot fears the snake
 // (FR-BOT-210). What shapes each term — a share, a whole — is in `Utility`.
 //
-// file implements: FR-BOT-530, FR-BOT-540, FR-BOT-570, FR-BOT-167, FR-BOT-116, FR-BOT-460, FR-BOT-450, FR-BOT-470, FR-BOT-500, FR-BOT-510, FR-BOT-520, FR-BOT-080, FR-BOT-090, FR-BOT-110, FR-BOT-115, FR-BOT-118, FR-BOT-119, FR-BOT-360, FR-BOT-370, FR-BOT-120, FR-BOT-180, FR-BOT-190, FR-BOT-200, FR-BOT-210, FR-MAP-150, FR-BOT-220, FR-BOT-060, FR-BOT-140, FR-BOT-330, FR-BOT-410, FR-BOT-420, FR-BOT-425, FR-BOT-130, FR-CMD-030
+// file implements: FR-BOT-530, FR-BOT-540, FR-BOT-570, FR-BOT-600, FR-BOT-167, FR-BOT-116, FR-BOT-460, FR-BOT-450, FR-BOT-470, FR-BOT-500, FR-BOT-510, FR-BOT-520, FR-BOT-080, FR-BOT-090, FR-BOT-110, FR-BOT-115, FR-BOT-118, FR-BOT-119, FR-BOT-360, FR-BOT-370, FR-BOT-120, FR-BOT-180, FR-BOT-190, FR-BOT-200, FR-BOT-210, FR-MAP-150, FR-BOT-220, FR-BOT-060, FR-BOT-140, FR-BOT-330, FR-BOT-410, FR-BOT-420, FR-BOT-425, FR-BOT-130, FR-CMD-030
 import Foundation
 
 enum Deliberation {
@@ -71,6 +73,12 @@ enum Deliberation {
         /// The radius of a bot's body (the tuning's): how near a line of fire a
         /// squadmate stands in it (FR-BOT-410).
         var bodyRadius: Double = .zero
+        /// The second of the match this slot is being deliberated at (FR-BOT-600):
+        /// what a weapon's own time between uses is measured against, so that a use
+        /// which cannot be taken now is not offered. A situation built without it
+        /// deliberates at the start of a match, where nothing has been used yet and
+        /// every weapon is ready.
+        var now: Double = .zero
         let plan: ScenePlan
         let graph: NavigationGraph
         let configuration: BotConfiguration
@@ -112,7 +120,10 @@ enum Deliberation {
         // (FR-BOT-140).
         for slot in Arms.Slot.allCases {
             let firearm = bot.arms[slot]
-            guard firearm.rounds > .zero else { continue }
+            // Something left in the magazine and the weapon's own time passed since
+            // its last shot: a weapon that cannot be fired at this moment is not an
+            // action (FR-BOT-600), the way one with an empty magazine never was.
+            guard bot.arms.ready(.shot(slot), at: situation.now) else { continue }
             let loaded = firearm.numbers.magazine > .zero
                 ? Double(firearm.rounds) / Double(firearm.numbers.magazine)
                 : .zero
@@ -195,7 +206,7 @@ enum Deliberation {
         // Where it would catch a squadmate it can see, or itself, it is not offered at
         // all (FR-BOT-500): an action the bot must never take is one it never scores.
         let pouch = bot.arms.grenades
-        if pouch.left > .zero, pouch.carried > .zero {
+        if bot.arms.ready(.throwGrenade, at: situation.now), pouch.carried > .zero {
             let left = Double(pouch.left) / Double(pouch.carried)
             if let throwing = target(for: bot, in: situation, within: pouch.numbers.throwRange, worth: { metres in
                    term.blast * nearness(metres, within: entry.detectionRange) * left
@@ -218,13 +229,18 @@ enum Deliberation {
         // Its own weight is what makes a throw cost something, since what a bot gives
         // up is the only knife it has.
         if let knife = bot.arms.knife {
-            if let close = target(for: bot, in: situation, within: knife.numbers.reach, worth: { metres in
+            // Both ways of using it wait out the knife's own time (FR-BOT-600,
+            // FR-BOT-610): one weapon, one clock, so a bot that has just struck
+            // neither strikes again nor throws away what it is about to strike with.
+            if bot.arms.ready(.strike, at: situation.now),
+               let close = target(for: bot, in: situation, within: knife.numbers.reach, worth: { metres in
                    term.attack * nearness(metres, within: entry.detectionRange)
                        * bot.weights.aggression * bot.weights.courage
                }) {
                 scored.append((.strike(at: close.target), close.utility))
             }
-            if let away = target(for: bot, in: situation, within: knife.numbers.throwRange, worth: { metres in
+            if bot.arms.ready(.throwKnife, at: situation.now),
+               let away = target(for: bot, in: situation, within: knife.numbers.throwRange, worth: { metres in
                    term.thrown * nearness(metres, within: entry.detectionRange)
                        * bot.weights.aggression * bot.weights.courage
                }) {

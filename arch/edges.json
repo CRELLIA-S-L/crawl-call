@@ -7,7 +7,7 @@
   {
     "from": "Sources/CrawlCall/Bot/Arms.swift",
     "to": "Sources/CrawlCall/Config/Configurations.swift",
-    "via": "BotConfiguration:26 — one witness of 126 reference(s) from 12 file(s)"
+    "via": "BotConfiguration:31 — one witness of 127 reference(s) from 12 file(s)"
   },
   {
     "from": "Sources/CrawlCall/CrawlCallApp.swift",
