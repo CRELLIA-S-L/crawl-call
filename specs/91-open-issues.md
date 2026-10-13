@@ -282,6 +282,23 @@ What remains is what a decision inside the repository cannot close.
 - **Still needed:** the slot-by-slot reading, and then the maintainer's word on whether the pacing is worth the reversal of ADR-0059 — or whether it is FR-SCORE-150 that should have ended the match before anybody could pace.
 - **Re-read on 2026-10-12, after the arms were built** (FR-BOT-440 and its neighbours, ADR-0086 through ADR-0088): the same shape sooner and with more of them. One squad is gone by the fifty-third second rather than the eighty-sixth, three bots are left rather than two, and from the sixtieth second to the hundred and fiftieth the furthest any of them gets from where it stood in ten seconds is 0.65 to 1.64 m, exploring and fleeing by turns. Nothing about the question changes; the numbers in it do.
 
+- **The slot-by-slot reading this entry asked for, taken on 2026-10-13** (after ADR-0093; the same arena, the same starting cell, nobody steering, the choice recorded for every slot of one bot between the hundredth second and the hundred and tenth). Four bots are left at 150 s, all of one squad, and from the sixtieth second each covers 0.02 to 1.54 m of ground in ten seconds while running at its full 5.5 m a second the whole time. The ground covered repeats on a thirty-second cycle to the centimetre — 0.02, 1.54, 1.52, 0.02, 1.54, 1.52 — so this is a closed loop and not wandering.
+
+  The reading, every slot of bot 3, alternating without exception:
+
+  | at | what it scored | what it chose | where it stood | the snake |
+  |---|---|---|---|---|
+  | 100.0 s | nothing at all — an empty list | `explore` to cell 3,4 | 5.69, 7.47 | not in the situation |
+  | 100.3 s | `flee` 0.174, `cover` 0.065, `fire` 0.045, `grenade` 0.030 | `flee` to cell 17,15 | 5.04, 6.88 | 5.0 m away |
+  | 100.6 s | nothing at all | `explore` to cell 3,7 | 6.05, 7.49 | not in the situation |
+  | 101.0 s | `flee` 0.174, `cover` 0.060, `fire` 0.045, `grenade` 0.030 | `flee` to cell 17,16 | 5.04, 6.88 | 5.0 m away |
+
+  and so on for all thirty-four slots of the window, between three positions less than a metre apart.
+- **The cause, which is not what this entry inferred.** Nothing is forgotten — `snakeForgottenAfter` is nothing, which forgets nothing (FR-BOT-260), and the bot's knowledge holds the snake the whole time. The snake leaves the *situation*, not the memory: the squad is `calm`, and for a calm squad the snake does not exist beyond the override distance of five metres (FR-BOT-180, FR-BOT-120, `Execution.deliberate`). The bot flees at five metres, crosses the five-metre line, and in the next slot there is no snake to flee: nothing scores, the quiet motive takes over (FR-BOT-370), and the cell it has not seen lies back past the snake. It runs back in, the snake exists again at five metres, it flees. The boundary has no hysteresis, where the choice of a target has one (FR-BOT-140).
+
+  The squad is calm at the hundredth second because nothing in this match ever raised it: a squad's state rises on a meal witnessed or a squadmate's body gone from where it fell (FR-SCORE-130), and with nobody steering the snake eats nobody. A bot looking straight at the snake five metres away does not raise it.
+- **Therefore, three choices, and they are different sizes.** A hysteresis on that boundary — the snake kept in a calm bot's situation until some margin beyond the override distance, once it has been inside it — is the narrow answer to what was measured, and it is the shape FR-BOT-140 already uses for targets; it is a requirement and a number in `config/bot.json` (IF-BOT-010). Raising a squad's state when one of its own sees the snake is a larger and different question about FR-SCORE-130, which is written about stealth and not about eyes. Ending a match when one squad is gone is a third, and it is FR-SCORE-150, which is `partial` and ends a match only when nobody at all is left. Weighing the quiet motives against the scored ones — the reversal of ADR-0059 this entry put forward — would now only paper over the boundary: the bot does not lack a way to compare, it is handed a world in which the snake is alternately there and not.
+
 ### Q-650 — A commander test passes or fails on when a detached call finishes
 
 - **Found:** on 2026-10-12, building the arms: `CommanderCallTests.swift:200` failed once with "expected non-nil value of type CommanderInput" and passed on the next run with nothing in the tree changed, and on every run after.
