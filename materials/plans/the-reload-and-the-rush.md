@@ -3,6 +3,8 @@
 A plan written on 2026-10-13, the day after the arms were built (ADR-0086, ADR-0087, ADR-0088), from six things the maintainer asked for after watching what the squads had become.
 It is written so that an agent with no memory of that conversation can take it up: everything it needs is here or pointed to from here.
 
+**Carried out on 2026-10-13.** The nine requirements were authored (the grenade's flight is two of them, not one), and the four passes were built in the order below, a commit each: `239a14d` the requirements, `7b4ed88` pass A, `30537cf` pass B, `7c7d4b2` pass C, `2f58c57` pass D. What was decided while building is in ADR-0089, ADR-0090, ADR-0091 and ADR-0092, and three of the passes' numbers moved: the reload term gained the weapon's strength, the rush was narrowed to a target nothing reaches, and a bounce damps the whole velocity rather than the reflected component alone. The rest of this file is the plan as it was written, kept as it was.
+
 **Nothing here is in the specification yet.** Every `FR-` number below is a proposal and is marked as one; the first step of each pass is the authoring dialog (`srs-new`), and the maintainer decides whether each is written at all. Numbers were taken as the next free ones in their areas on 2026-10-13 — BOT ran to 520 and VIEW to 340 — and a number that turns out to be taken by then is renumbered without anything else changing.
 
 Every number of the shipped tuning below is a proposal too, and the maintainer's to feel out on the phone.
