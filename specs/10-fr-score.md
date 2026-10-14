@@ -296,7 +296,7 @@ created: 2026-09-21
 When the snake dies, the system **shall** end the match with the score accumulated so far as its result.
 
 **Rationale.** ADR-0010: the score is the result, not the goal.
-No timer and no score threshold end a match; the only two ends are this one and FR-SCORE-150.
+No timer and no score threshold end a match; the ends are this one, FR-SCORE-150 and, since the treasure, FR-SCORE-160.
 
 **Partial, and how.** What is built is the end: a snake killed under FR-SNAKE-210 stops the match where it stands, nothing in the arena moves again, and the screen says which end it was (FR-VIEW-190).
 What is not built is the result, because there is no score to carry into it — FR-SCORE-010 and the three multipliers it derives are the next layer, and a zero reported as a result would be a number nobody computed.
@@ -319,6 +319,45 @@ When the last living bot of either squad dies or is consumed, the system **shall
 
 **Rationale.** ADR-0010: prey is finite and there are no reinforcements; a wiped-out squad does not end the match — the other one is still there — and the arena being empty does.
 Living is what is counted, not present: the day a body stays where it fell (INV-SCORE-020), a match with nothing left that can shoot back is still over.
+A squad wiped out still does not end a match, and since FR-SCORE-160 it hands the other squad a treasure to carry off, which does — however the losing squad died, the snake's last meal among the ways.
 
 **Partial, and how.** The same half as FR-SCORE-140: the end is built and the result is not, for want of a score (FR-SCORE-010).
 Today the only way a bot leaves the arena is being eaten, so the two readings of the trigger — the last living one, the last one of any kind — cannot be told apart in play; the code counts the living ones, which is what the statement says.
+
+### FR-SCORE-160 — The match ends when the treasure is carried off
+
+```yaml
+status: deferred
+verification: T
+derives_from: []
+depends_on: [FR-BOT-640, FR-MAP-290]
+refines: []
+conflicts_with: []
+code: []
+tests: []
+created: 2026-10-14
+```
+
+When the bot carrying the treasure reaches the evacuation point the map names, the system **shall** end the match with the score accumulated so far as its result.
+
+**Rationale.** Concept §6.4: the third of three ends, beside the snake dying (FR-SCORE-140) and nothing being left alive (FR-SCORE-150). Without it a match that one squad has won hangs on survivors with nowhere to go — measured on 2026-10-13 on the shipped arena, four of them spent a hundred and ten seconds between three points a metre apart — and that is a game with no goal rather than a defect in the behaviour.
+The snake is not obliged to defend the treasure and never loses points for it; what it loses is a multiplier over the whole match (FR-SCORE-170).
+
+### FR-SCORE-170 — A treasure carried off costs the match its multiplier
+
+```yaml
+status: deferred
+verification: T
+derives_from: []
+depends_on: [FR-SCORE-010, FR-SCORE-160, IF-SCORE-010]
+refines: []
+conflicts_with: []
+code: []
+tests: []
+created: 2026-10-14
+```
+
+When a match ended with the treasure carried to the evacuation point, the system **shall** multiply its score by the treasure-lost multiplier of the scoring configuration, which is less than one.
+
+**Rationale.** Concept §6.4: the score is not rewritten but built on. Points still come from eating, with the same three axes (FR-SCORE-010); a treasure carried off adds nothing and takes nothing away, it removes a multiplier from the whole match. The player never has to defend it — it simply costs them the result.
+Deferred with the score it multiplies: FR-SCORE-010 and its three axes are the layer under this one, and a multiplier over a number nobody computes is not worth building first.

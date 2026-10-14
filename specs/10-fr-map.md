@@ -600,3 +600,41 @@ Where a map's setting ends its ground in water, the system **shall** draw the wa
 Judged on the phone, and measured there in frames, because the water now blends with what is under it across most of the frame. How the opacity reaches the water's shader is ADR-0039.
 No shadow since 2026-09-29, the maintainer's call on the phone: the floor is seen through the water, and the water's own shadow on it showed through as a toothed edge along the foam and darkened the shallows (ADR-0050).
 The water beyond the island's grid, laid out as slabs, is drawn by its tops alone: a slab's sides show through water one can see through, as a line wherever two slabs meet.
+
+### FR-MAP-290 — The treasure lies where the map says
+
+```yaml
+status: deferred
+verification: T
+derives_from: []
+depends_on: [IF-MAP-010]
+refines: []
+conflicts_with: []
+code: []
+tests: []
+created: 2026-10-14
+```
+
+When a match starts, the system **shall** place the treasure in the cell the map names for it.
+
+**Rationale.** Concept §6.4: one treasure for both squads, lying in a cell the map names. §11 says why the map and not the configuration: how long the second act runs is the distance from the treasure to the evacuation point, and whether the snake can get back in time is where it is born with respect to the treasure — three numbers a map is designed around, and tuning them anywhere but on the map tunes every map at once.
+Where the snake is born needs nothing new for the same reason: FR-MAP-180 already puts it at a spawn point the map names, and "near the treasure but not on it" is where the map's author puts those spawn points.
+
+### FR-MAP-300 — A map that does not name a treasure and an evacuation point is refused
+
+```yaml
+status: deferred
+verification: T
+derives_from: []
+depends_on: [FR-MAP-290]
+refines: []
+conflicts_with: []
+code: []
+tests: []
+created: 2026-10-14
+```
+
+If a map names no cell for the treasure or none for the evacuation point, or names one on a cell nothing can stand in — neither a surface nor a module that stops no movement — the system **shall** refuse the map, naming the refused cell's line where it has one.
+
+**Rationale.** The same reasoning as FR-MAP-190, which refuses a map the snake cannot be born in: a match whose second act cannot happen is a match that ends on the timer, and saying so where the map is written is cheaper than finding it on the phone.
+Asked of a map to be played, at launch, as the spawn points are; a map read for another purpose — a test of the parser, a tool — need name neither cell.

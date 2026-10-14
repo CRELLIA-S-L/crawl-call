@@ -60,7 +60,7 @@ tests: [Tests/CrawlCallTests/AwarenessTests.swift]
 created: 2026-09-21
 ```
 
-When the game starts, the system **shall** read from the scoring configuration — the JSON file `config/scoring.json` (ADR-0012) — the body and live-prey base values; the stealth multipliers for open, hidden and perfect; the balance multiplier; the target-value multipliers for commander, heavy and medic; the witness window, the late-arrival window, the report delay and the inspection distance.
+When the game starts, the system **shall** read from the scoring configuration — the JSON file `config/scoring.json` (ADR-0012) — the body and live-prey base values; the stealth multipliers for open, hidden and perfect; the balance multiplier; the target-value multipliers for commander, heavy and medic; the treasure-lost multiplier; the witness window, the late-arrival window, the report delay and the inspection distance.
 
 **Rationale.** Concept §6: the axes are the design; their weights are tuning.
 `partial` because only the witness window, the late-arrival window, the report delay and the inspection distance are read: the values and multipliers wait for the scoring they set (FR-SCORE-010).
@@ -182,7 +182,7 @@ tests: [Tests/CrawlCallTests/MapParserTests.swift, Tests/CrawlCallTests/FlightTe
 created: 2026-09-21
 ```
 
-A map **shall** be described by one UTF-8 text file holding a header that names the module kit, the setting, the snake's spawn points and the transitions between floors, followed by one character grid per floor in which each cell names a module of the kit, by the kit's legend; a step of a flight of stairs, by an arrow pointing the way the flight rises; or empty space.
+A map **shall** be described by one UTF-8 text file holding a header that names the module kit, the setting, the snake's spawn points, the cell the treasure lies in, the cell of the evacuation point and the transitions between floors, followed by one character grid per floor in which each cell names a module of the kit, by the kit's legend; a step of a flight of stairs, by an arrow pointing the way the flight rises; or empty space.
 
 **Rationale.** Concept §11.2: "translated into a text specification — an ASCII grid per floor"; the map lives in a text file so that iterations are seconds and versions go into git.
 Which characters mean which modules is the kit's own `legend.json` (ADR-0012), so that a map and its kit cannot disagree.

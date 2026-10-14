@@ -415,7 +415,7 @@ Superseded on 2026-09-25 by FR-VIEW-250, when the maintainer had the snake drawn
 ```yaml
 status: implemented
 verification: T
-derives_from: [FR-SCORE-140, FR-SCORE-150]
+derives_from: [FR-SCORE-140, FR-SCORE-150, FR-SCORE-160]
 depends_on: [FR-VIEW-120]
 refines: []
 conflicts_with: []
@@ -424,10 +424,10 @@ tests: [Tests/CrawlCallTests/MatchEndTests.swift]
 created: 2026-09-23
 ```
 
-While the match is over, the system **shall** draw, in place of the steering controls, a plate that names which of the two ends it was and carries one control that begins a new match in the same arena.
+While the match is over, the system **shall** draw, in place of the steering controls, a plate that names which of the ends it was and carries one control that begins a new match in the same arena.
 
-**Rationale.** H-010 is measured by whether a first-time player keeps going past the second minute, and until now a match had no end at all; with FR-SCORE-140 and FR-SCORE-150 it has two, and an end that froze the screen with no way back would end the session along with the match.
-Which of the two, because they are opposite results — the snake was shot down, or the snake ate the arena empty — and a plate saying only that it was over would leave the player to work out which of them they had just reached.
+**Rationale.** H-010 is measured by whether a first-time player keeps going past the second minute, and until now a match had no end at all; with FR-SCORE-140 and FR-SCORE-150 it had two, with FR-SCORE-160 three, and an end that froze the screen with no way back would end the session along with the match.
+Which of them, because they are different results — the snake was shot down, the snake ate the arena empty, or a squad carried the treasure off — and a plate saying only that it was over would leave the player to work out which of them they had just reached.
 The same arena, because stage 1 has one map (concept §13) and a choice of levels is a menu, which the vertical slice does not build.
 In place of the steering controls, because a stick that still answers after the snake is dead says the match is not over.
 "A new match" is the whole of it and not only a new model: played on 2026-09-23, the first restart brought the bots the snake had eaten back the size the last bite had left them, because the drawing kept what the previous match had done to it. Whatever a match changes on screen, starting one puts back.
@@ -774,3 +774,22 @@ When a grenade goes off, the system **shall** draw the blast where it went off, 
 **Rationale.** The maintainer, 2026-10-13: the explosion must be drawn too.
 Out to the blast radius because that radius is the rule the damage follows (FR-BOT-480), and a drawing smaller or larger than it would teach the player the wrong distance to stand at.
 For a moment after it, because the going off is one instant of the match and nothing an eye can catch; how long that moment is belongs with the view's numbers (IF-VIEW-020).
+
+### FR-VIEW-370 — The treasure is drawn where it is
+
+```yaml
+status: deferred
+verification: T
+derives_from: [FR-MAP-290]
+depends_on: [FR-BOT-630, FR-BOT-650, IF-VIEW-020]
+refines: []
+conflicts_with: []
+code: []
+tests: []
+created: 2026-10-14
+```
+
+While a match is running, the system **shall** draw the treasure at the place it is: where it lies, or at the bot carrying it.
+
+**Rationale.** The treasure is what the second act is about, and a prize nobody can see is a cell on a map the player has to be told about. Drawn where it lies, so that the player can be waiting there when the war ends; drawn at the carrier, so that the one bot worth eating out of the survivors can be picked out at a glance (concept §6.4).
+Its own thing on screen rather than a mark on the floor, because it moves: it travels with a bot and falls where that bot falls (FR-BOT-650).

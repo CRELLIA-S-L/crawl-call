@@ -1448,3 +1448,80 @@ While a bot stands with every other action scoring nothing, the system **shall**
 **Rationale.** Q-320: a bot that stands still should not look like a statue; turning changes what its field of view takes in (FR-BOT-050), so looking round is also how a standing bot notices.
 The maintainer added on 2026-09-29 that a bot looking round gives its attention to where, by what it knows, a threat may come from.
 It keeps to the ways with open ground before it, as FR-BOT-340 has a standing bot do (ADR-0059).
+
+### FR-BOT-620 — Only a bot that believes the enemy gone goes for the treasure
+
+```yaml
+status: deferred
+verification: T
+derives_from: [FR-BOT-080]
+depends_on: [FR-BOT-220, FR-BOT-240, FR-BOT-250, FR-MAP-290]
+refines: [FR-BOT-200]
+conflicts_with: []
+code: []
+tests: []
+created: 2026-10-14
+```
+
+When scoring the actions open to a bot, the system **shall** offer going to where the treasure lies only to a bot that knows of no enemy left alive, and only while no bot is carrying it.
+
+**Rationale.** Concept §6.4: the treasure cannot be taken while any enemy is alive, so nobody races for it from the first second — it is the prize for a won war, and the first act is unchanged by it. §9.2 adds that the second act is two motives and not a new layer: taking and carrying are scored by the same formula and the same weights as everything else.
+Checked against what the bot knows and not against the arena (FR-BOT-220), which is what lets a squad be wrong: one that has not found the last survivor goes for the treasure and gets it in the back, and one whose commander is gone may never learn that it won.
+Knowing of no enemy left alive needs no new mechanism. A bot believes the enemy somewhere while it holds a sighting it has not been to, or has not yet been to the enemy's starting area (FR-BOT-250, FR-BOT-360); when both are spent it has nowhere left to believe they are, and that is this condition — the same reading that leaves it with nothing to advance on.
+
+### FR-BOT-630 — A bot that reaches the treasure carries it
+
+```yaml
+status: deferred
+verification: T
+derives_from: []
+depends_on: [FR-BOT-620, FR-MAP-290]
+refines: []
+conflicts_with: []
+code: []
+tests: []
+created: 2026-10-14
+```
+
+When a bot that knows of no enemy left alive stands in the cell the treasure lies in and no bot is carrying it, the system **shall** make that bot the treasure's carrier.
+
+**Rationale.** Concept §6.4: one carries, and the carrier is the natural first target for the snake and for whatever enemy is left. The treasure is picked up where it lies rather than asked for: a bot that walks over it on its way somewhere else and may take it, takes it.
+The condition is the same one FR-BOT-620 puts on wanting it, because the deliberation and the picking up must not disagree: a bot that crosses the cell while it still believes an enemy alive leaves the treasure where it is.
+
+### FR-BOT-640 — The carrier makes for the evacuation point
+
+```yaml
+status: deferred
+verification: T
+derives_from: [FR-BOT-080]
+depends_on: [FR-BOT-630, FR-MAP-290]
+refines: [FR-BOT-200]
+conflicts_with: []
+code: []
+tests: []
+created: 2026-10-14
+```
+
+When scoring the actions open to the bot carrying the treasure, the system **shall** score going to the evacuation point the map names.
+
+**Rationale.** Concept §6.4: the treasure brought to the evacuation point ends the match, and the squad leaves with it. §9.2: a disciplined bot carries it under fire — which is what makes carrying a scored action and not a state the bot is put into, since fear, cover and an order go on being scored beside it.
+Only the carrier, because there is nothing for anybody else to carry.
+
+### FR-BOT-650 — The treasure falls where its carrier falls
+
+```yaml
+status: deferred
+verification: T
+derives_from: []
+depends_on: [FR-BOT-630, FR-BOT-320]
+refines: []
+conflicts_with: []
+code: []
+tests: []
+created: 2026-10-14
+```
+
+When the bot carrying the treasure dies or is consumed, the system **shall** leave the treasure lying where that bot stood when it fell.
+
+**Rationale.** Concept §6.4: the carrier's death does not end the match — were it to, the snake would need to eat one bot and there would be no second act — and the treasure drops on the spot for the next bot that may take it (FR-BOT-630) to pick up.
+Where it stood when it fell, and not where it was going: the drop is what makes killing the carrier worth doing to both the snake and the last enemy, and a treasure that went back to its cell would make it worth nothing.
