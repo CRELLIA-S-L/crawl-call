@@ -15,7 +15,7 @@
 // is the one act a slot holds it to (FR-BOT-170). Until 2026-10-13 both were one field,
 // and firing pushed the knife's next strike away.
 //
-// file implements: FR-BOT-550, FR-BOT-560, FR-BOT-570, FR-BOT-580, FR-BOT-600, FR-BOT-610, FR-BOT-450, FR-BOT-470, FR-BOT-510, FR-BOT-520, FR-BOT-167, FR-BOT-060, FR-BOT-110, FR-BOT-115, FR-BOT-170, FR-BOT-360, FR-BOT-370, FR-BOT-380, FR-BOT-180, FR-BOT-190, INV-BOT-020, INV-BOT-010, FR-BOT-165, FR-MAP-150, FR-BOT-270, FR-BOT-280, FR-BOT-290, FR-BOT-300, FR-BOT-220, FR-BOT-310, FR-BOT-320, FR-BOT-330, FR-BOT-340, FR-BOT-420, FR-BOT-425, FR-BOT-430, FR-BOT-620, FR-BOT-640, FR-BOT-660, FR-CMD-030, FR-CMD-040
+// file implements: FR-BOT-550, FR-BOT-560, FR-BOT-570, FR-BOT-580, FR-BOT-600, FR-BOT-610, FR-BOT-450, FR-BOT-470, FR-BOT-510, FR-BOT-520, FR-BOT-167, FR-BOT-060, FR-BOT-110, FR-BOT-115, FR-BOT-170, FR-BOT-360, FR-BOT-370, FR-BOT-380, FR-BOT-180, FR-BOT-190, INV-BOT-020, INV-BOT-010, FR-BOT-165, FR-MAP-150, FR-BOT-270, FR-BOT-280, FR-BOT-290, FR-BOT-300, FR-BOT-220, FR-BOT-310, FR-BOT-320, FR-BOT-330, FR-BOT-340, FR-BOT-420, FR-BOT-425, FR-BOT-430, FR-BOT-620, FR-BOT-640, FR-BOT-660, FR-CMD-030, FR-CMD-040, FR-BOT-680, FR-BOT-700, FR-BOT-710
 import Foundation
 
 enum Execution {
@@ -47,7 +47,8 @@ enum Execution {
                            interrupted: Set<Int> = [],
                            awareness: (Squad) -> Awareness = { _ in .confirmed },
                            command: (Squad) -> SquadCommand? = { _ in nil },
-                           treasure: Treasure? = nil) -> Volley {
+                           treasure: Treasure? = nil,
+                           alarmed: Set<Squad> = []) -> Volley {
         var volley = Volley()
         // The snake's paths from where each bot takes its head to be, walked once a
         // step for every bot that takes it to be in the same cell (FR-BOT-115).
@@ -66,6 +67,7 @@ enum Execution {
                                                    cellSize: world.configurations.tuning.navigationGraphCellSize)
             situation.now = now
             situation.bodyRadius = world.configurations.tuning.bodyRadius
+            situation.squadSeesAThreat = alarmed.contains(bots[index].squad)
             // Come to where it last saw an enemy, or into the enemy's starting area, and
             // found nobody there, it knows that much more (FR-BOT-360).
             let seenNow = Set(bots[index].knowledge.enemies(seenAt: now).map(\.id))
@@ -89,10 +91,10 @@ enum Execution {
             situation.allies = bots.filter { $0.squad == bots[index].squad && $0.isAlive }
             situation.awareness = awareness(bots[index].squad)
             // The second act (FR-BOT-620, FR-BOT-640): where the treasure lies while it
-            // lies anywhere, where it has to be carried, whether this bot is the one
-            // carrying it, and whether it has anywhere left to believe an enemy is —
-            // which is what it may take the treasure on, and may be wrong.
-            situation.believesEnemyGone = knowledge.believesEnemyGone
+            // lies anywhere, where it has to be carried, and whether this bot is the one
+            // carrying it. Nothing is asked about the enemy: since the maintainer's rule
+            // of 2026-10-14 the prize is what the fight is for, so it is on the list
+            // from the first second and the weights decide when it wins.
             if let treasure {
                 situation.evacuation = treasure.evacuation
                 situation.carriesTreasure = treasure.carrier == bots[index].id
@@ -138,9 +140,12 @@ enum Execution {
             // told is one of the two ways FR-BOT-360 says a bot comes to believe
             // anything, and a bot with a sighting of its own keeps it, because its own
             // eyes are nearer the truth than a word from seven seconds ago.
+            situation.arenaSpan = Perception.metres(world.plan.bounds.lowest, world.plan.bounds.highest)
             if let standing = command(bots[index].squad) {
                 situation.priority = standing.threat
-                situation.arenaSpan = Perception.metres(world.plan.bounds.lowest, world.plan.bounds.highest)
+                // Under an order, and so held in check where the box tempts it
+                // (FR-BOT-710): the squad has a commander and the commander has spoken.
+                situation.underOrders = true
                 if let part = standing.place,
                    Places.part(of: bots[index].position, in: world.plan.bounds) != part {
                     let middle = Places.middle(of: part, in: world.plan.bounds)
@@ -376,7 +381,8 @@ enum Execution {
     /// (FR-BOT-165). Given no order, the bots' own is used, which is what a test
     /// exercising movement alone wants.
     static func walk(_ bots: inout [Bot], seconds: Double, world: World,
-                     routeOrder: [Int] = [], holding held: Int? = nil, now: Double = .zero) {
+                     routeOrder: [Int] = [], holding held: Int? = nil, carrying: Int? = nil,
+                     now: Double = .zero) {
         let cell = world.configurations.tuning.navigationGraphCellSize
         let before = bots.map(\.position)
         defer {
@@ -439,8 +445,13 @@ enum Execution {
                     bots[index].action = nil
                 }
             }
-            guard let top = world.configurations.bot.archetypes[bots[index].archetype.rawValue]?.runSpeed
+            guard let running = world.configurations.bot.archetypes[bots[index].archetype.rawValue]?.runSpeed
             else { continue }
+            // The treasure is heavy, and the bot with it in its arms walks (FR-BOT-680):
+            // its own run speed divided by the carrying slowdown, which is what makes
+            // getting the prize out a thing the rest of the squad has to cover.
+            let slowdown = world.configurations.bot.carryingSlowdown
+            let top = bots[index].id == carrying && slowdown > .zero ? running / slowdown : running
             // Up to the run speed and down to a stop at the route's end, no faster
             // than the acceleration allows either way (FR-BOT-290).
             let acceleration = world.configurations.bot.acceleration
@@ -454,6 +465,22 @@ enum Execution {
                     floorHeight: world.kit.floorHeight, radius: world.configurations.tuning.bodyRadius)
             if bots[index].path.isEmpty { bots[index].speed = .zero }
         }
+    }
+
+    /// The squads with an enemy bot or a part of the snake in the view of any one of
+    /// their living bots this frame (FR-BOT-690, FR-BOT-700).
+    ///
+    /// Each bot's own eyes, not the squad's record: a sighting travels between
+    /// squadmates as news with a delay (FR-BOT-330), and what this answers is what the
+    /// squad is looking at right now.
+    static func squadsSeeingAThreat(among bots: [Bot], now: Double) -> Set<Squad> {
+        var seeing: Set<Squad> = []
+        for bot in bots where bot.isAlive && !seeing.contains(bot.squad) {
+            if !bot.knowledge.enemies(seenAt: now).isEmpty || !bot.knowledge.snake(seenAt: now).isEmpty {
+                seeing.insert(bot.squad)
+            }
+        }
+        return seeing
     }
 
     /// Whether another living bot stands on the cell a bot is making for — within a body

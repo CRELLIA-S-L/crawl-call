@@ -93,6 +93,7 @@ struct SquadCommands: Equatable {
                                         discipline: was.discipline,
                                         aggression: was.aggression,
                                         selfSacrifice: was.selfSacrifice,
-                                        courage: was.courage)
+                                        courage: was.courage,
+                                        greed: was.greed)
     }
 }

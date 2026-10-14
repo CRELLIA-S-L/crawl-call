@@ -2,7 +2,7 @@
 // catalogue: an archetype may add to it, and nothing may quietly drop out of it
 // (FR-BOT-200).
 //
-// file implements: FR-BOT-200, FR-BOT-540, FR-BOT-570, FR-BOT-460, FR-BOT-470, FR-BOT-510, FR-BOT-520, FR-BOT-360, FR-BOT-370, FR-BOT-620, FR-BOT-640
+// file implements: FR-BOT-200, FR-BOT-540, FR-BOT-570, FR-BOT-460, FR-BOT-470, FR-BOT-510, FR-BOT-520, FR-BOT-360, FR-BOT-370, FR-BOT-620, FR-BOT-640, FR-BOT-670
 import Foundation
 
 /// What a shot is aimed at. The snake is named by the point that is being shot at —
@@ -40,8 +40,20 @@ enum Action: Equatable {
     case advance(to: NavigationGraph.Node)
     case explore(to: NavigationGraph.Node)
     /// The second act, which is two motives and not a mode (concept §9.2): going to
-    /// where the treasure lies, open only to a bot that believes the enemy gone
+    /// where the treasure lies, which every bot is offered whatever the fight is doing
     /// (FR-BOT-620), and carrying it to the evacuation point (FR-BOT-640).
     case takeTreasure(at: NavigationGraph.Node)
     case carryTreasure(to: NavigationGraph.Node)
+}
+
+extension Action {
+    /// Whether the action is one a bot needs its hands for (FR-BOT-670): a carrier has
+    /// them full of the treasure, and none of these is offered to it.
+    var usesAWeapon: Bool {
+        switch self {
+        case .fire, .throwGrenade, .throwKnife, .strike, .reload, .close: return true
+        case .takeCover, .moveToOrderedZone, .flee, .advance, .explore, .heal,
+             .takeTreasure, .carryTreasure: return false
+        }
+    }
 }

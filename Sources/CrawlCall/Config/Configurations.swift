@@ -3,7 +3,7 @@
 // a file with an unknown key is rejected at load rather than silently defaulted,
 // which is what `Schema` is for.
 //
-// file implements: FR-BOT-440, FR-BOT-450, IF-CMD-040, IF-SNAKE-010, IF-MAP-020, IF-VIEW-020, IF-BOT-010, IF-SCORE-010, FR-SNAKE-220, FR-BOT-280, FR-BOT-050, FR-BOT-290, FR-BOT-260, FR-BOT-310, FR-SNAKE-270, FR-SNAKE-280, FR-SNAKE-290, FR-VIEW-330, FR-BOT-405, FR-BOT-430, FR-SNAKE-055, FR-SNAKE-016
+// file implements: FR-BOT-440, FR-BOT-450, IF-CMD-040, IF-SNAKE-010, IF-MAP-020, IF-VIEW-020, IF-BOT-010, IF-SCORE-010, FR-SNAKE-220, FR-BOT-280, FR-BOT-050, FR-BOT-290, FR-BOT-260, FR-BOT-310, FR-SNAKE-270, FR-SNAKE-280, FR-SNAKE-290, FR-VIEW-330, FR-BOT-405, FR-BOT-430, FR-SNAKE-055, FR-SNAKE-016, FR-BOT-620, FR-BOT-640, FR-BOT-680
 import Foundation
 
 // MARK: - Snake (IF-SNAKE-010)
@@ -224,6 +224,10 @@ struct BotConfiguration: Decodable, Equatable {
     struct Weights: Decodable, Equatable {
         let panic: Double; let discipline: Double; let aggression: Double; let selfSacrifice: Double
         let courage: Double
+        /// How much a bot wants the prize while its squad is in a fight (FR-BOT-090):
+        /// the weight that now and then sends it after the box instead of the enemy,
+        /// and that a standing order holds down (FR-BOT-710).
+        let greed: Double
     }
     struct Range: Decodable, Equatable { let lowest: Double; let highest: Double }
     struct Archetype: Decodable, Equatable {
@@ -377,6 +381,15 @@ struct BotConfiguration: Decodable, Equatable {
     /// at while it fires, and seconds before it turns back (FR-BOT-430).
     let strafingSpeed: Double
     let strafingInterval: Double
+    /// Seconds a squad goes on counting itself in a fight after the last moment any of
+    /// its bots saw a threat (FR-BOT-690, FR-BOT-700). Without it the prize is picked
+    /// up and put down again every time an enemy steps behind a crate: measured on the
+    /// shipped arena on 2026-10-14, 108 times in five minutes.
+    let alarmAfterLastSighting: Double
+    /// What a bot carrying the treasure moves at: its archetype's run speed divided by
+    /// this (FR-BOT-680). The prize is heavy, and carrying it is what makes a squad
+    /// need the rest of its squad.
+    let carryingSlowdown: Double
     /// Metres a second squared a bot gathers speed and slows at (FR-BOT-290).
     let acceleration: Double
     /// Seconds after which a bot forgets a sighting of the snake, and of an enemy;
@@ -389,7 +402,7 @@ struct BotConfiguration: Decodable, Equatable {
 
     private static let weights = Schema.object([
         "panic": .value, "discipline": .value, "aggression": .value, "selfSacrifice": .value,
-        "courage": .value,
+        "courage": .value, "greed": .value,
     ])
 
     static let schema = Schema.object([
@@ -440,6 +453,8 @@ struct BotConfiguration: Decodable, Equatable {
         "roundRange": .value,
         "strafingSpeed": .value,
         "strafingInterval": .value,
+        "carryingSlowdown": .value,
+        "alarmAfterLastSighting": .value,
         "acceleration": .value,
         "snakeForgottenAfter": .value,
         "enemyForgottenAfter": .value,

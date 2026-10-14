@@ -5,7 +5,7 @@
 // or a key: the schemes produce intents (FR-VIEW-050), the logic consumes them, and
 // neither knows about the other.
 //
-// file implements: IF-CMD-010, FR-BOT-550, FR-BOT-580, FR-BOT-590, FR-VIEW-360, FR-BOT-470, FR-BOT-510, FR-BOT-480, FR-BOT-490, FR-BOT-167, FR-CMD-010, FR-CMD-020, FR-SNAKE-270, FR-SNAKE-280, FR-SNAKE-285, FR-SNAKE-055, FR-SNAKE-056, FR-SNAKE-016, FR-VIEW-160, FR-BOT-060, FR-BOT-320, FR-BOT-050, FR-BOT-220, FR-BOT-230, FR-BOT-240, FR-BOT-260, FR-BOT-310, FR-VIEW-030, FR-VIEW-170, FR-VIEW-190, FR-SNAKE-010, FR-SNAKE-030, FR-SNAKE-290, FR-BOT-020, FR-BOT-150, FR-BOT-170, FR-BOT-380, FR-SCORE-130, FR-SCORE-070, FR-BOT-180, FR-SNAKE-060, FR-SNAKE-070, FR-SNAKE-090, FR-SCORE-140, FR-SCORE-150, INV-BOT-010, FR-VIEW-230, FR-TOOL-230, FR-MAP-150, FR-MAP-180, FR-MAP-170, FR-SNAKE-220, FR-BOT-400, FR-CMD-030, FR-CMD-040, FR-CMD-120, FR-CMD-125, FR-CMD-130, FR-MAP-290, FR-BOT-630, FR-BOT-650, FR-SCORE-160
+// file implements: IF-CMD-010, FR-BOT-550, FR-BOT-580, FR-BOT-590, FR-VIEW-360, FR-BOT-470, FR-BOT-510, FR-BOT-480, FR-BOT-490, FR-BOT-167, FR-CMD-010, FR-CMD-020, FR-SNAKE-270, FR-SNAKE-280, FR-SNAKE-285, FR-SNAKE-055, FR-SNAKE-056, FR-SNAKE-016, FR-VIEW-160, FR-BOT-060, FR-BOT-320, FR-BOT-050, FR-BOT-220, FR-BOT-230, FR-BOT-240, FR-BOT-260, FR-BOT-310, FR-VIEW-030, FR-VIEW-170, FR-VIEW-190, FR-SNAKE-010, FR-SNAKE-030, FR-SNAKE-290, FR-BOT-020, FR-BOT-150, FR-BOT-170, FR-BOT-380, FR-SCORE-130, FR-SCORE-070, FR-BOT-180, FR-SNAKE-060, FR-SNAKE-070, FR-SNAKE-090, FR-SCORE-140, FR-SCORE-150, INV-BOT-010, FR-VIEW-230, FR-TOOL-230, FR-MAP-150, FR-MAP-180, FR-MAP-170, FR-SNAKE-220, FR-BOT-400, FR-CMD-030, FR-CMD-040, FR-CMD-120, FR-CMD-125, FR-CMD-130, FR-MAP-290, FR-BOT-630, FR-BOT-650, FR-SCORE-160, FR-BOT-680, FR-BOT-700, FR-BOT-720
 import Foundation
 
 struct Game {
@@ -105,6 +105,22 @@ struct Game {
     private(set) var commanderAnswers = 0
     private(set) var commanderMisses = 0
 
+    /// When each squad last had a threat in the view of any of its bots (FR-BOT-690).
+    /// A squad counts itself in a fight for the alarm interval after that moment, which
+    /// is what keeps the prize from being picked up and put down every time an enemy
+    /// steps behind a crate.
+    private var lastThreatSeen: [Squad: Double] = [:]
+
+    /// The squads in a fight this frame: one that can see a threat, or saw one no
+    /// longer ago than the bot configuration's alarm interval (FR-BOT-690, FR-BOT-700).
+    private mutating func alarmedSquads() -> Set<Squad> {
+        for squad in Execution.squadsSeeingAThreat(among: bots, now: elapsed) {
+            lastThreatSeen[squad] = elapsed
+        }
+        let linger = world.configurations.bot.alarmAfterLastSighting
+        return Set(lastThreatSeen.filter { elapsed - $0.value <= linger }.keys)
+    }
+
     /// Reads the two counts and clears them: a frame marks what happened in it once.
     mutating func takeCommanderTraffic() -> (calls: Int, answers: Int, misses: Int) {
         defer { commanderCalls = 0; commanderAnswers = 0; commanderMisses = 0 }
@@ -153,10 +169,21 @@ struct Game {
     private mutating func carryTreasure() {
         guard var prize = treasure else { return }
         let size = world.configurations.tuning.navigationGraphCellSize
+        // Who may have the prize in its hands this frame: anybody whose squad is not in
+        // a fight, and in a fight the bots whose greed outweighs their own fear
+        // (FR-BOT-700, FR-BOT-720) — which is what a standing order holds down
+        // (FR-BOT-710), so a squad that has lost its commander loots.
+        let alarmed = alarmedSquads()
+        let standing = commands
+        let mayHold = { (bot: Bot) in
+            !alarmed.contains(bot.squad)
+                || Deliberation.keepsThePrize(bot, underOrders: standing.of(bot.squad) != nil)
+        }
         let reached = prize.step(among: bots,
                                  cell: { Execution.cell(of: $0, world: world) },
                                  cellOf: { Deliberation.cell(of: $0, graph: world.graph, cellSize: size,
                                                              floorHeight: world.kit.floorHeight) },
+                                 mayHold: mayHold,
                                  held: &carriedAt)
         treasure = prize
         if reached { outcome = .treasureTaken }
@@ -469,10 +496,11 @@ struct Game {
             let deciding = clock.now
             let known = stealth
             let standing = commands
+            let alarmed = alarmedSquads()
             let volley = Execution.deliberate(&bots, slots: holders, world: world, now: elapsed, interrupted: served,
                                               awareness: { known.of($0) },
                                               command: { standing.of($0) },
-                                              treasure: treasure)
+                                              treasure: treasure, alarmed: alarmed)
             report.deliberationTime += clock.now - deciding
             report.deliberations += holders.count
             rounds += volley.rounds
@@ -497,7 +525,7 @@ struct Game {
         Execution.walk(&bots, seconds: seconds, world: world,
                        routeOrder: slots.order(among: bots, snake: body,
                                                configuration: world.configurations.bot),
-                       holding: eating?.prey ?? coil?.prey, now: elapsed)
+                       holding: eating?.prey ?? coil?.prey, carrying: treasure?.carrier, now: elapsed)
         // Found after the frame's shots and meals, and served in the next frame. Each
         // is also something to tell the squad's commander when it is next called
         // (IF-CMD-010), whether or not the bot is still waiting for an earlier slot.

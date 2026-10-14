@@ -9,7 +9,7 @@
 // plate and a bold rounded typeface. Words rather than an icon here, because which
 // end it was is the one thing no icon in this style says unambiguously.
 //
-// file implements: FR-VIEW-190, FR-VIEW-120, FR-VIEW-200
+// file implements: FR-VIEW-190, FR-VIEW-120, FR-VIEW-200, FR-SCORE-160
 import SwiftUI
 
 struct MatchEnd: View {

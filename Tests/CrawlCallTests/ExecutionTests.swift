@@ -166,7 +166,8 @@ final class ExecutionTests: XCTestCase {
         bots[try checkedIndex(0, of: bots)].knowledge.snake = [0: .init(point: .zero, time: 0)]
         bots[try checkedIndex(0, of: bots)].health = 5  // frightened enough to run
         bots[try checkedIndex(0, of: bots)].weights = BotConfiguration.Weights(panic: 0.9, discipline: 0.5,
-                                                   aggression: 0.1, selfSacrifice: 0.5, courage: 0.5)
+                                                   aggression: 0.1, selfSacrifice: 0.5, courage: 0.5,
+                                                   greed: 0.5)
         let where0 = try element(0, of: bots).position
         let snake = [try element(0, of: bots).position + SIMD3(1, 0, 0)]
 

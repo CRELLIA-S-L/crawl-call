@@ -31,7 +31,7 @@ The convention of this project:
 | **squad** | One of the two bot teams. Both share the same six archetypes; they differ by colour and commander. |
 | **archetype** | One of six bot roles — assault, heavy, sapper, scout, sniper, medic — binding a silhouette, base personality weights and the ability the snake gains from eating it. |
 | **commander** | The LLM-driven layer of a squad: every 5–10 s it receives a compressed world state and returns threat priority, an order, roles and personality weights. One per squad. |
-| **personality weights** | Per-bot multipliers set by the commander — aggression, courage, discipline, panic, self-sacrifice — that enter the utility formula. The commander's only channel into per-frame behaviour. |
+| **personality weights** | Per-bot multipliers from the bot's archetype — aggression, courage, discipline, greed, panic, self-sacrifice — that enter the utility formula. The commander no longer sets them and reaches them only through the order its squad is under. |
 | **deliberation** | The utility-AI layer: scores every possible action of one bot and picks the maximum. Runs on the deliberation period of the bot configuration (FR-BOT-150), with a priority queue and interrupts (FR-BOT-160, FR-BOT-170). |
 | **execution** | The per-frame layer: aiming, movement, animation, collisions. Runs for every bot on every frame; never throttled. |
 | **interrupt** | An event that gives a bot a deliberation slot immediately: took damage, snake in view within threshold, ally died in view, magazine empty, own cover destroyed, saw an eating or a snake-marked body, new order. |

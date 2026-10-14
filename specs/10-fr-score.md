@@ -338,10 +338,14 @@ tests: [Tests/CrawlCallTests/TreasureTests.swift]
 created: 2026-10-14
 ```
 
-When the bot carrying the treasure reaches the evacuation point the map names, the system **shall** end the match with the score accumulated so far as its result.
+While the bot carrying the treasure stands at the evacuation point the map names and no bot of the other squad is alive, the system **shall** end the match with the score accumulated so far as its result.
 
 **Rationale.** Concept §6.4: the third of three ends, beside the snake dying (FR-SCORE-140) and nothing being left alive (FR-SCORE-150). Without it a match that one squad has won hangs on survivors with nowhere to go — measured on 2026-10-13 on the shipped arena, four of them spent a hundred and ten seconds between three points a metre apart — and that is a game with no goal rather than a defect in the behaviour.
 The snake is not obliged to defend the treasure and never loses points for it; what it loses is a multiplier over the whole match (FR-SCORE-170).
+Amended on 2026-10-14 on the maintainer's rule: carrying the prize to the point is not enough, and a squad leaves with it only once the other crew is gone. It is the end of the second act rather than the whole of it — the prize can be taken and carried in the middle of a firefight (FR-BOT-620), with hands full (FR-BOT-670) and at a walk (FR-BOT-680), but getting out with it is what a squad has to win the war for.
+Measured against the arena, not against what anybody believes (FR-BOT-220): the end of a match is the game's own fact, where a bot's motives are its own reading. A carrier standing at the point with an enemy still up simply waits there, and the match ends in the frame the last of them falls.
+The carrier that waits is also the carrier that can be killed on the spot, and the treasure then lies at the evacuation point for whoever reaches it next (FR-BOT-650).
+Nothing on screen yet says why a carrier is standing on the point and the match has not ended; that is a question for the interface and is not built.
 
 **Partial, and how.** The same half as FR-SCORE-140 and FR-SCORE-150: the end is built — a carrier that reaches the cell stops the match where it stands and the plate says which end it was (FR-VIEW-190) — and the result is not, for want of a score (FR-SCORE-010).
 

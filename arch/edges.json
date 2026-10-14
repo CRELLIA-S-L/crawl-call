@@ -7,7 +7,7 @@
   {
     "from": "Sources/CrawlCall/Bot/Arms.swift",
     "to": "Sources/CrawlCall/Config/Configurations.swift",
-    "via": "BotConfiguration:31 — one witness of 127 reference(s) from 12 file(s)"
+    "via": "BotConfiguration:31 — one witness of 129 reference(s) from 12 file(s)"
   },
   {
     "from": "Sources/CrawlCall/CrawlCallApp.swift",
@@ -47,17 +47,17 @@
   {
     "from": "Sources/CrawlCall/Game.swift",
     "to": "Sources/CrawlCall/Bot/Bot.swift",
-    "via": "Bot:30 — one witness of 34 reference(s) from 1 file(s)"
+    "via": "Bot:30 — one witness of 39 reference(s) from 1 file(s)"
   },
   {
     "from": "Sources/CrawlCall/Game.swift",
     "to": "Sources/CrawlCall/Config/Motion.swift",
-    "via": "Motion:136 — one witness of 49 reference(s) from 4 file(s)"
+    "via": "Motion:152 — one witness of 49 reference(s) from 4 file(s)"
   },
   {
     "from": "Sources/CrawlCall/Game.swift",
     "to": "Sources/CrawlCall/Input/Intent.swift",
-    "via": "Intent:166 — one witness of 2 reference(s) from 2 file(s)"
+    "via": "Intent:193 — one witness of 2 reference(s) from 2 file(s)"
   },
   {
     "from": "Sources/CrawlCall/Game.swift",

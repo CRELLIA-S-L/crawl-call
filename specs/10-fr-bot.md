@@ -80,11 +80,12 @@ tests: [Tests/CrawlCallTests/BotTests.swift]
 created: 2026-09-21
 ```
 
-When a bot is spawned, the system **shall** initialise its personality weights — aggression, courage, discipline, panic, self-sacrifice — from its archetype's base weights in the bot configuration.
+When a bot is spawned, the system **shall** initialise its personality weights — aggression, courage, discipline, greed, panic, self-sacrifice — from its archetype's base weights in the bot configuration.
 
 **Rationale.** Concept §8 table: assault aggression up; heavy discipline up, panic down; scout panic up; sniper discipline up; medic self-sacrifice up; sapper average.
 The commander later adjusts these (FR-CMD-060); the archetype is where they start.
 Courage joined the weights on 2026-09-25 (FR-BOT-090); the concept's table predates it, so each archetype's base courage is tuning, chosen when it was built on 2026-10-11 from the table's behaviour column instead — the heavy guarded and slow holds at 0.8, the scout that runs stands at 0.3, the medic behind the others at 0.4, the assault that presses at 0.7, the sapper and the sniper average (ADR-0074).
+Greed joined them on 2026-10-14 on the maintainer's word and is tuning in the same way, chosen from what each archetype does rather than from the table: the scout that goes out alone is the greediest at 0.8, the sapper 0.6, the assault 0.5, the sniper 0.4, and the heavy and the medic the least tempted at 0.3 (ADR-0100).
 
 ### FR-BOT-040 — One bot per squad holds the commander role
 
@@ -642,6 +643,7 @@ created: 2026-09-21
 When computing a bot's utility scores, the system **shall** apply the bot's personality weights as multipliers:
 
 - panic, scaling threat terms up;
+- greed, scaling the terms for the treasure — going to where it lies, carrying it — up while the bot's squad counts itself in a fight;
 - courage, scaling the terms for facing danger — firing at it, holding ground under it — up, and the term for stepping out of it to reload down;
 - discipline, scaling hold-position terms up;
 - aggression, scaling attack terms up;
@@ -652,6 +654,7 @@ This is the only channel through which the commander's LLM output reaches per-fr
 Courage was added by the maintainer on 2026-09-25 as a weight of its own, not as the other side of panic: a bot can be frightened and stand its ground anyway, and the two pull on different terms — panic on the fear that sends it away, courage on the terms that keep it facing the danger.
 It multiplies firing, every target a bot has being something that can kill it, and the order's term by how near the danger has come — with nothing near, holding a position is obedience and discipline's alone (ADR-0074).
 The maintainer added the reload on 2026-10-13, asking that the choice between hiding to fill a magazine and drawing what is left to run in should turn on how brave a bot is: it is the one term courage pulls *down*, and a share of it rather than the whole, so that a bot of whole courage still reloads when there is nothing better to do (FR-BOT-540, ADR-0090).
+Greed is the maintainer's of 2026-10-14, asked for as a weight that crosses fear, courage and obedience: it is what makes a bot now and then leave a fight to drag the prize away, which is why it is read only where the squad is in one — with nobody in sight the prize is already on every bot's list at its full worth (FR-BOT-620) and greed would be a second courage. What it is weighed against is in FR-BOT-690 and FR-BOT-700, and what holds it down in FR-BOT-710 (ADR-0100).
 
 ### FR-BOT-100 — Cover is valued by what is left of it
 
@@ -1449,25 +1452,26 @@ While a bot stands with every other action scoring nothing, the system **shall**
 The maintainer added on 2026-09-29 that a bot looking round gives its attention to where, by what it knows, a threat may come from.
 It keeps to the ways with open ground before it, as FR-BOT-340 has a standing bot do (ADR-0059).
 
-### FR-BOT-620 — Only a bot that believes the enemy gone goes for the treasure
+### FR-BOT-620 — Every bot is offered the treasure, fight or no fight
 
 ```yaml
 status: implemented
 verification: T
 derives_from: [FR-BOT-080]
-depends_on: [FR-BOT-220, FR-BOT-240, FR-BOT-250, FR-MAP-290]
+depends_on: [FR-BOT-220, FR-MAP-290]
 refines: [FR-BOT-200]
 conflicts_with: []
-code: [Sources/CrawlCall/Bot/Deliberation.swift, Sources/CrawlCall/Bot/Execution.swift, Sources/CrawlCall/Bot/Action.swift, Sources/CrawlCall/Bot/Knowledge.swift, Sources/CrawlCall/Config/Configurations.swift, config/bot.json]
+code: [Sources/CrawlCall/Bot/Deliberation.swift, Sources/CrawlCall/Bot/Execution.swift, Sources/CrawlCall/Bot/Action.swift, Sources/CrawlCall/Config/Configurations.swift, config/bot.json]
 tests: [Tests/CrawlCallTests/TreasureTests.swift]
 created: 2026-10-14
 ```
 
-When scoring the actions open to a bot, the system **shall** offer going to where the treasure lies only to a bot that knows of no enemy left alive, and only while no bot is carrying it.
+When scoring the actions open to a bot, the system **shall** offer going to where the treasure lies to every bot while nobody carries it, whatever that bot believes of the enemy.
 
-**Rationale.** Concept §6.4: the treasure cannot be taken while any enemy is alive, so nobody races for it from the first second — it is the prize for a won war, and the first act is unchanged by it. §9.2 adds that the second act is two motives and not a new layer: taking and carrying are scored by the same formula and the same weights as everything else.
-Checked against what the bot knows and not against the arena (FR-BOT-220), which is what lets a squad be wrong: one that has not found the last survivor goes for the treasure and gets it in the back, and one whose commander is gone may never learn that it won.
-Knowing of no enemy left alive needs no new mechanism. A bot believes the enemy somewhere while it holds a sighting it has not been to, or has not yet been to the enemy's starting area (FR-BOT-250, FR-BOT-360); when both are spent it has nowhere left to believe they are, and that is this condition — the same reading that leaves it with nothing to advance on.
+**Rationale.** The maintainer's rule of 2026-10-14: the treasure is what a squad is there for, and it goes for it whatever else is happening, a firefight included. The enemy squad — and the snake, once a squad knows of it — is what stands between the squad and the prize, which is why they are fought. The fight is for the treasure rather than before it.
+This replaces the gate the requirement was born with the same day, under which only a bot that believed the enemy gone was offered the treasure. That gate came from concept §6.4, which says the treasure cannot be taken while an enemy lives; the concept is to be amended to the rule above, and until it is, this requirement and §6.4 disagree — deliberately, and on the maintainer's word.
+What the gate cost is what was seen on the phone the same day: a squad that had wiped the other out stood under `hold west side` and never went near the prize, because believing the enemy gone also needed walking to the enemy's starting area, which an order kept it from doing.
+§9.2 is unchanged and is what keeps this cheap: the second act is two motives and not a new layer, scored by the same formula and the same weights as everything else, so fear, an order and the snake go on being weighed against the prize rather than overridden by it.
 
 ### FR-BOT-630 — A bot that reaches the treasure carries it
 
@@ -1483,10 +1487,10 @@ tests: [Tests/CrawlCallTests/TreasureTests.swift]
 created: 2026-10-14
 ```
 
-When a bot that knows of no enemy left alive stands in the cell the treasure lies in and no bot is carrying it, the system **shall** make that bot the treasure's carrier.
+When a bot stands in the cell the treasure lies in and no bot is carrying it, the system **shall** make that bot the treasure's carrier.
 
 **Rationale.** Concept §6.4: one carries, and the carrier is the natural first target for the snake and for whatever enemy is left. The treasure is picked up where it lies rather than asked for: a bot that walks over it on its way somewhere else and may take it, takes it.
-The condition is the same one FR-BOT-620 puts on wanting it, because the deliberation and the picking up must not disagree: a bot that crosses the cell while it still believes an enemy alive leaves the treasure where it is.
+It asks what FR-BOT-620 asks and no more, because the deliberation and the picking up must not disagree: since 2026-10-14 neither waits on a belief about the enemy, so a bot that crosses the cell in the middle of a firefight picks the treasure up.
 
 ### FR-BOT-640 — The carrier makes for the evacuation point
 
@@ -1545,3 +1549,129 @@ While a bot stands in the part of the arena its squad's standing order names, th
 **Rationale.** A commander can point a squad at the ground it is already standing on, and nothing stops it: an order is a word from a model, and the game is obliged to survive whatever comes back (CON-CMD-020). Obeyed literally, such an order is the end of the match. Measured on the shipped arena on 2026-10-14, with every call answered "press the part you are in": in a hundred and fifty seconds neither squad lost a bot, not one shot was fired, four bots moved less than two metres from where they began, and the two squads never came within two and a half metres of each other. The squads were pinned twice over — the ordered move outscored everything else, so a bot never had nothing to do and never advanced on the enemy (FR-BOT-360); and an order that names the enemy's part told bots with no sighting of their own that the enemy was where they stood (FR-BOT-116, FR-CMD-040).
 The same rule answers both, because both read the order's part and neither has anything to read once it is taken away. The order itself stands — the squad is still under it, and a bot that leaves the named part is drawn back to it.
 Where the bot is and not where the squad is: a squad spread over two parts has some of its bots obeying and some of them free, which is what being spread means.
+
+### FR-BOT-670 — A bot carrying the treasure has its hands full
+
+```yaml
+status: implemented
+verification: T
+derives_from: [FR-BOT-630]
+depends_on: [FR-BOT-640, FR-BOT-460]
+refines: [FR-BOT-200]
+conflicts_with: []
+code: [Sources/CrawlCall/Bot/Deliberation.swift, Sources/CrawlCall/Bot/Action.swift]
+tests: [Tests/CrawlCallTests/TreasureTests.swift]
+created: 2026-10-14
+```
+
+While a bot carries the treasure, the system **shall** offer it no action that uses a weapon.
+
+**Rationale.** The second half of the maintainer's rule of 2026-10-14, the first being FR-BOT-620: the other squad is what stands between a squad and the prize, and has to be removed before the prize can be carried off. Nothing in the game said so. Measured on the shipped arena with nobody steering, a carrier walked 142.9 m over thirty-four seconds, was in an enemy's view for 1155 frames of it and was fired at in 1305, and still carried the treasure off with seven of eight bots alive: the enemy was already shooting the carrier, and the carrier was shooting back.
+A carrier with its hands full cannot shoot its way out, so the squad that wants to keep the prize has to cover it and the squad that wants it has a target that cannot answer. That is the fight the rule asks for, and it costs one condition rather than a new motive.
+What counts as a weapon action is `Action.usesAWeapon`: firing, a grenade, a thrown knife, a strike, a reload, and closing on a target to use one of them (FR-BOT-570). Healing is not one of them, and neither is anything that moves.
+
+### FR-BOT-680 — The treasure is heavy and its carrier walks
+
+```yaml
+status: implemented
+verification: T
+derives_from: [FR-BOT-630]
+depends_on: [FR-BOT-290, FR-BOT-640, IF-BOT-010]
+refines: []
+conflicts_with: []
+code: [Sources/CrawlCall/Bot/Execution.swift, Sources/CrawlCall/Game.swift, Sources/CrawlCall/Config/Configurations.swift, config/bot.json]
+tests: [Tests/CrawlCallTests/TreasureTests.swift]
+created: 2026-10-14
+```
+
+While a bot carries the treasure, the system **shall** hold its speed to its archetype's run speed divided by the carrying slowdown of the bot configuration.
+
+**Rationale.** The maintainer, 2026-10-14: the treasure is very heavy and a bot carries it with difficulty, at a third of its speed. It is the third of the rules that make the prize what the fight is about — FR-BOT-620 puts it on every bot's list, FR-BOT-670 fills the carrier's hands, and this takes its legs.
+The measurement it answers: with the first two in place, a carrier on the shipped arena crossed the whole route under fire, was in an enemy's view for 1155 frames, was fired at in 1305, came out at two per cent of its health and still carried the prize off. A carrier that cannot run has to be covered by its own squad or it does not get out.
+The slowdown is a named value in `config/bot.json` rather than a number in the code (ART-070), and it divides rather than scales so that the configuration says what the maintainer said: three times slower.
+
+### FR-BOT-690 — A threat the squad can see leaves the prize worth no more than greed
+
+```yaml
+status: implemented
+verification: T
+derives_from: [FR-BOT-620]
+depends_on: [FR-BOT-050, FR-BOT-060, FR-BOT-220]
+refines: [FR-BOT-200]
+conflicts_with: []
+code: [Sources/CrawlCall/Bot/Deliberation.swift]
+tests: [Tests/CrawlCallTests/TreasureTests.swift]
+created: 2026-10-14
+```
+
+While any living bot of a squad sees an enemy bot or a part of the snake, or saw one no longer ago than the alarm interval of the bot configuration, the system **shall** scale what going to where the treasure lies and carrying it are worth to each bot of that squad by that bot's greed weight.
+
+**Rationale.** The maintainer, 2026-10-14: on finding a threat of any kind, everything moves off the prize and onto removing the threat. It is the counterweight to FR-BOT-620, which put the prize on every bot's list from the first second: the prize is what a squad is there for, and a threat in front of it is what it has to clear first.
+What it reads is what the squad sees **now** — an enemy bot in view (FR-BOT-060) or a part of the snake in view (FR-BOT-050) — and not what anybody believes of the war. A sighting nobody has been to leaves the treasure on the list, which is the whole difference between this and the gate ADR-0097 removed: that one waited on a squad believing every enemy gone, this one on nobody standing in front of it right now.
+An interval and not a frame, measured the same day: with the condition read frame by frame the prize was picked up and put down 108 times in five minutes on the shipped arena and spent 21 of those 266 seconds off the ground, because an enemy stepping behind a crate ends a sighting and starting to walk again begins one. A squad counts itself in a fight for the alarm interval after the last thing any of it saw, which is a named value in `config/bot.json` (ART-070) and is four seconds.
+The squad's eyes and not the bot's own, amended the same day on the maintainer's reading of the phone: a carrier walked the prize out of an arena where the rest of its crew was in a firefight, because it had seen nobody itself. A squadmate's sighting reaches the others as news only after a delay (FR-BOT-330), which is too late for this.
+A carrier is not spared: while it sees a threat it stops making for the evacuation point and takes cover or runs with the prize still in its arms, which it cannot put down (FR-BOT-650). Seeing a threat is the one thing it can act on, since it has no hand for a weapon (FR-BOT-670) and no speed to outrun anything (FR-BOT-680).
+A weighing and not a ban, since 2026-10-14: the rule was born taking the prize off the list altogether, and with eight bots and a snake on the shipped arena somebody is nearly always looking at something — measured over five minutes, the prize was picked up once, carried for a tenth of a second and the match never ended. What is left of the prize in a fight is the bot's greed (FR-BOT-090), held in check by whatever its commander last told the squad (FR-BOT-710), so a greedy bot now and then leaves the fighting to drag the box away and a dutiful one does not (ADR-0100).
+This is where greed meets the bot's fear: what it is left with is scored against taking cover and running, which panic pays for (FR-BOT-090), so a frightened bot is tempted and still hides.
+
+### FR-BOT-700 — A threat the squad can see takes the prize out of all but greedy hands
+
+```yaml
+status: implemented
+verification: T
+derives_from: [FR-BOT-690]
+depends_on: [FR-BOT-630, FR-BOT-650, FR-BOT-670]
+refines: []
+conflicts_with: []
+code: [Sources/CrawlCall/Bot/Treasure.swift, Sources/CrawlCall/Game.swift, Sources/CrawlCall/Bot/Execution.swift]
+tests: [Tests/CrawlCallTests/TreasureTests.swift]
+created: 2026-10-14
+```
+
+When any living bot of the squad carrying the treasure sees an enemy bot or a part of the snake, or saw one no longer ago than the alarm interval of the bot configuration, the system **shall** put the treasure down where its carrier stands unless the carrier's greed weight is above its discipline weight.
+
+**Rationale.** The maintainer, 2026-10-14, watching a carrier pace back and forth with the prize while its crew fought: a bot that cannot let go of the box is not a bot whose priority has moved. FR-BOT-690 holds what the prize is worth down to the bot's greed; this takes it out of all but greedy hands, and the two together are the whole of "everything moves onto removing the threat" — hands free, it is a soldier again in the same frame (FR-BOT-670).
+Putting it down is the match's rule and not a decision of the deliberation's, exactly as picking it up is (FR-BOT-630): a carrier whose crew has found somebody to fight has already let go, and nothing has to be scored for it.
+It lands where the carrier stood, as it does when a carrier falls (FR-BOT-650), and only a bot whose greed holds picks it up again while the fighting lasts (FR-BOT-720) — otherwise the frame that put it down would take it back.
+Greed against discipline, added on 2026-10-14 with the weight itself: a bot that keeps the box while its crew fights is one whose wish for it outweighs its sense of the job, and discipline is the weight that carrying the prize is scored by in the first place (FR-BOT-640).
+Not against panic, which was tried first and reverses the effect the maintainer asked for: the commander's death raises the whole squad's panic by the collapse increment (FR-CMD-130), so a squad that lost its commander would be the one squad that never loots. Held in check by a standing order like every other reading of greed (FR-BOT-710), which is why a commanded squad puts the prize down and a squad that has lost its commander carries it off in the middle of a firefight (ADR-0100).
+
+### FR-BOT-710 — A standing order holds greed in check
+
+```yaml
+status: implemented
+verification: T
+derives_from: [FR-BOT-090]
+depends_on: [FR-CMD-040, FR-CMD-125]
+refines: []
+conflicts_with: []
+code: [Sources/CrawlCall/Bot/Deliberation.swift, Sources/CrawlCall/Bot/Execution.swift]
+tests: [Tests/CrawlCallTests/TreasureTests.swift]
+created: 2026-10-14
+```
+
+While a bot's squad has a standing order from its commander, the system **shall** scale that bot's greed weight by one minus its discipline weight.
+
+**Rationale.** The maintainer, 2026-10-14: a commander should put a stop to a bot wandering off after the box, and a squad that loses its commander may turn to looting. Both are this one scaling.
+The commander has no other way in. Since FR-CMD-060 was withdrawn (ADR-0085) it sets no weights and reaches a bot only through the order the squad is under, and the weight that says how much of an order survives a bot's own reading is its discipline (FR-BOT-130) — so greed under an order is what that bot's indiscipline leaves of it, and the two sides of discipline go on moving against each other as one number.
+The looting follows from FR-CMD-125 without a rule of its own: the role-holder's death clears the squad's order, the squad is under none, and every reading of greed goes back to the whole of the weight that frame. At the shipped weights that is the difference between a sapper of greed 0.6 being worth 0.3 of the prize in a fight and being worth 0.6 of it, and between nobody of either squad keeping the box under fire and the scout and the sapper both keeping it, their greed standing above their discipline once nothing scales it down (FR-BOT-700, ADR-0100).
+Where greed is read is FR-BOT-690 and FR-BOT-700: what the prize is worth in a fight, and whether a carrier holds on to it.
+
+### FR-BOT-720 — Only a greedy bot picks the prize up in a fight
+
+```yaml
+status: implemented
+verification: T
+derives_from: [FR-BOT-700]
+depends_on: [FR-BOT-630, FR-BOT-710]
+refines: [FR-BOT-630]
+conflicts_with: []
+code: [Sources/CrawlCall/Bot/Treasure.swift, Sources/CrawlCall/Game.swift]
+tests: [Tests/CrawlCallTests/TreasureTests.swift]
+created: 2026-10-14
+```
+
+While any living bot of a squad sees an enemy bot or a part of the snake, or saw one no longer ago than the alarm interval of the bot configuration, the system **shall** make a bot of that squad the treasure's carrier only where its greed weight is above its discipline weight.
+
+**Rationale.** The other half of FR-BOT-700, and the same test: the bot that may keep the prize in a fight is the bot that may take it in one. Without this the greed FR-BOT-690 pays a bot to walk to the box buys nothing — it arrives and the box stays on the ground — and with the plain rule of FR-BOT-630 instead, a bot whose sense of the job outweighs its greed would pick up in one frame what the next frame makes it put down (FR-BOT-700).
+It is the one condition on picking up that is the bot's own, which is why it refines FR-BOT-630 rather than replacing it: with nobody in sight any bot that stands on the prize takes it, as it has since the second act was built.

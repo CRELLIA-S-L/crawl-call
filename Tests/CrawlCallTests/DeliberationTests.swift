@@ -37,10 +37,10 @@ final class DeliberationTests: XCTestCase {
 
     private func weights(panic: Double = 0.5, discipline: Double = 0.5,
                          aggression: Double = 0.5, selfSacrifice: Double = 0.5,
-                         courage: Double = 0.5) -> BotConfiguration.Weights {
+                         courage: Double = 0.5, greed: Double = 0.5) -> BotConfiguration.Weights {
         BotConfiguration.Weights(panic: panic, discipline: discipline,
                                  aggression: aggression, selfSacrifice: selfSacrifice,
-                                 courage: courage)
+                                 courage: courage, greed: greed)
     }
 
     private func utility(of match: (Action) -> Bool, for bot: Bot,

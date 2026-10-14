@@ -64,7 +64,7 @@ final class SquadCommandTests: XCTestCase {
         // the bot's, and an answer moves only what its squad is trying to do.
         var soldier = try bot(.assault)
         soldier.weights = BotConfiguration.Weights(panic: 0.1, discipline: 0.2, aggression: 0.3,
-                                                   selfSacrifice: 0.4, courage: 0.5)
+                                                   selfSacrifice: 0.4, courage: 0.5, greed: 0.6)
         let before = soldier
         var commands = SquadCommands()
         commands.apply(decision(), to: .red)
@@ -194,10 +194,10 @@ final class OrderedDeliberationTests: XCTestCase {
 
     private func weights(panic: Double = 0.5, discipline: Double = 0.5,
                          aggression: Double = 0.5, selfSacrifice: Double = 0.5,
-                         courage: Double = 0.5) -> BotConfiguration.Weights {
+                         courage: Double = 0.5, greed: Double = 0.5) -> BotConfiguration.Weights {
         BotConfiguration.Weights(panic: panic, discipline: discipline,
                                  aggression: aggression, selfSacrifice: selfSacrifice,
-                                 courage: courage)
+                                 courage: courage, greed: greed)
     }
 
     private func utility(of match: (Action) -> Bool, for bot: Bot,
@@ -500,8 +500,10 @@ final class OrderAlreadyObeyedTests: XCTestCase {
         // What the rule is for, measured end to end: a commander that keeps pointing
         // each squad at the ground it already holds used to stop the match dead — no
         // shot fired in a hundred and fifty seconds (ADR-0095). The squads have to
-        // find each other anyway.
-        let world = try Launch.world().get()
+        // find each other anyway. No treasure in the arena: what is measured here is
+        // the war, and since 2026-10-14 a prize ends a match long before one is won
+        // (FR-BOT-620).
+        let world = withoutTreasure(try Launch.world().get())
         var game = Game(world: world, start: try XCTUnwrap(Game.firstStart(in: world)),
                         commander: HomeCommander())
         let frame = 1.0 / 60

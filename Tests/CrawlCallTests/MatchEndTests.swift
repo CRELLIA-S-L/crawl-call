@@ -211,8 +211,9 @@ final class RestartOnScreenTests: XCTestCase {
         // and with both squads in the arena the snake is shot to pieces before it has
         // eaten anybody — a firefight is decided inside half a minute (ADR-0086), and
         // since the weapons wait out their own time (FR-BOT-600) the bots spend the
-        // slots they used to stand in firing.
-        let world = try world(map: "room", squadSize: 1)
+        // slots they used to stand in firing. And with no treasure in it, so that the
+        // match does not end under the snake's nose the moment the bot picks one up.
+        let world = withoutTreasure(try world(map: "room", squadSize: 1))
         let game = Game(world: world, start: try XCTUnwrap(Game.firstStart(in: world)))
         let built = SceneBuilder.scene(for: world.plan, view: world.configurations.view)
         let camera = try XCTUnwrap(built.root.children.first { $0.name == "camera" })

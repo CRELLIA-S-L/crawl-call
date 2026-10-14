@@ -377,7 +377,7 @@ derives_from: []
 depends_on: [IF-VIEW-010]
 refines: []
 conflicts_with: []
-code: [Sources/CrawlCall/View/Controls.swift, Sources/CrawlCall/View/MatchEnd.swift, Sources/CrawlCall/Config/Interface.swift, Sources/CrawlCall/View/ChoicePlate.swift]
+code: [Sources/CrawlCall/View/Controls.swift, Sources/CrawlCall/View/MatchEnd.swift, Sources/CrawlCall/Config/Interface.swift, Sources/CrawlCall/View/ChoicePlate.swift, Sources/CrawlCall/View/SquadOrders.swift]
 tests: []
 created: 2026-09-21
 ```
@@ -441,7 +441,7 @@ derives_from: []
 depends_on: []
 refines: []
 conflicts_with: []
-code: [Sources/CrawlCall/Config/TextKey.swift, Sources/CrawlCall/View/Localizable.xcstrings, Sources/CrawlCall/View/MatchEnd.swift, Sources/CrawlCall/View/Controls.swift, Sources/CrawlCall/View/ChoicePlate.swift]
+code: [Sources/CrawlCall/Config/TextKey.swift, Sources/CrawlCall/View/Localizable.xcstrings, Sources/CrawlCall/View/MatchEnd.swift, Sources/CrawlCall/View/Controls.swift, Sources/CrawlCall/View/ChoicePlate.swift, Sources/CrawlCall/View/SquadOrders.swift]
 tests: [Tests/CrawlCallTests/TextCatalogTests.swift]
 created: 2026-09-24
 ```
@@ -521,7 +521,7 @@ derives_from: []
 depends_on: [FR-VIEW-170, FR-GREENHOLM-030]
 refines: []
 conflicts_with: []
-code: [Sources/CrawlCall/View/SceneBuilder.swift, Sources/CrawlCall/View/ShotEntity.swift, Sources/CrawlCall/Setting/SceneryBuilder.swift, Sources/CrawlCall/Config/Drawing.swift, Sources/CrawlCall/View/Figure.swift]
+code: [Sources/CrawlCall/View/SceneBuilder.swift, Sources/CrawlCall/View/ShotEntity.swift, Sources/CrawlCall/Setting/SceneryBuilder.swift, Sources/CrawlCall/Config/Drawing.swift, Sources/CrawlCall/View/Figure.swift, Sources/CrawlCall/View/TreasureEntity.swift]
 tests: [Tests/CrawlCallTests/RoundedBoxTests.swift, Tests/CrawlCallTests/FigureTests.swift]
 created: 2026-09-25
 ```

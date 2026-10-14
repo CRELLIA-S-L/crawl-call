@@ -39,6 +39,18 @@ func world(map: String, squadSize: Int,
                  kit: base.kit, map: base.map, setting: base.setting, graph: base.graph, plan: base.plan)
 }
 
+/// The same world with no treasure lying in it, for a test whose match must not end
+/// the moment somebody picks one up (FR-BOT-620, FR-SCORE-160): since the prize is on
+/// every bot's list from the first second, a fixture that waits for a meal or for a
+/// squad to lose somebody would otherwise be over before either happened.
+func withoutTreasure(_ world: World) -> World {
+    var map = world.map
+    map.treasure = nil
+    map.evacuation = nil
+    return World(configurations: world.configurations, kit: world.kit, map: map,
+                 setting: world.setting, graph: world.graph, plan: world.plan)
+}
+
 /// The index `offset` places from the start of a collection, for a test that changes
 /// the element there, or the test's failure naming the offset and the count.
 func checkedIndex<C: Collection>(_ offset: Int, of collection: C,

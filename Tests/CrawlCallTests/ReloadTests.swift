@@ -43,7 +43,7 @@ final class ReloadTests: XCTestCase {
     private func courage(_ value: Double, of bot: Bot) -> BotConfiguration.Weights {
         BotConfiguration.Weights(panic: bot.weights.panic, discipline: bot.weights.discipline,
                                  aggression: bot.weights.aggression, selfSacrifice: bot.weights.selfSacrifice,
-                                 courage: value)
+                                 courage: value, greed: bot.weights.greed)
     }
 
     private func situation(_ allies: [Bot] = []) -> Deliberation.Situation {

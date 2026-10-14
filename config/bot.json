@@ -6,7 +6,8 @@
         "discipline": 0.5,
         "aggression": 0.7,
         "selfSacrifice": 0.5,
-        "courage": 0.7
+        "courage": 0.7,
+        "greed": 0.5
       },
       "allowedRanges": {
         "panic": {
@@ -26,6 +27,10 @@
           "highest": 1.0
         },
         "courage": {
+          "lowest": 0.0,
+          "highest": 1.0
+        },
+        "greed": {
           "lowest": 0.0,
           "highest": 1.0
         }
@@ -47,7 +52,8 @@
         "discipline": 0.7,
         "aggression": 0.5,
         "selfSacrifice": 0.5,
-        "courage": 0.8
+        "courage": 0.8,
+        "greed": 0.3
       },
       "allowedRanges": {
         "panic": {
@@ -67,6 +73,10 @@
           "highest": 1.0
         },
         "courage": {
+          "lowest": 0.0,
+          "highest": 1.0
+        },
+        "greed": {
           "lowest": 0.0,
           "highest": 1.0
         }
@@ -88,7 +98,8 @@
         "discipline": 0.5,
         "aggression": 0.5,
         "selfSacrifice": 0.5,
-        "courage": 0.5
+        "courage": 0.5,
+        "greed": 0.6
       },
       "allowedRanges": {
         "panic": {
@@ -108,6 +119,10 @@
           "highest": 1.0
         },
         "courage": {
+          "lowest": 0.0,
+          "highest": 1.0
+        },
+        "greed": {
           "lowest": 0.0,
           "highest": 1.0
         }
@@ -129,7 +144,8 @@
         "discipline": 0.5,
         "aggression": 0.5,
         "selfSacrifice": 0.5,
-        "courage": 0.3
+        "courage": 0.3,
+        "greed": 0.8
       },
       "allowedRanges": {
         "panic": {
@@ -149,6 +165,10 @@
           "highest": 1.0
         },
         "courage": {
+          "lowest": 0.0,
+          "highest": 1.0
+        },
+        "greed": {
           "lowest": 0.0,
           "highest": 1.0
         }
@@ -170,7 +190,8 @@
         "discipline": 0.7,
         "aggression": 0.5,
         "selfSacrifice": 0.5,
-        "courage": 0.5
+        "courage": 0.5,
+        "greed": 0.4
       },
       "allowedRanges": {
         "panic": {
@@ -190,6 +211,10 @@
           "highest": 1.0
         },
         "courage": {
+          "lowest": 0.0,
+          "highest": 1.0
+        },
+        "greed": {
           "lowest": 0.0,
           "highest": 1.0
         }
@@ -211,7 +236,8 @@
         "discipline": 0.5,
         "aggression": 0.5,
         "selfSacrifice": 0.7,
-        "courage": 0.4
+        "courage": 0.4,
+        "greed": 0.3
       },
       "allowedRanges": {
         "panic": {
@@ -231,6 +257,10 @@
           "highest": 1.0
         },
         "courage": {
+          "lowest": 0.0,
+          "highest": 1.0
+        },
+        "greed": {
           "lowest": 0.0,
           "highest": 1.0
         }
@@ -346,7 +376,7 @@
     "ordered": 1.0,
     "blast": 1.2,
     "thrown": 1.0,
-    "treasure": 2.0
+    "treasure": 1.0
   },
   "figureHeight": 1.12,
   "eyeHeight": 0.875,
@@ -357,6 +387,8 @@
   "roundRange": 20.0,
   "strafingSpeed": 2.0,
   "strafingInterval": 1.0,
+  "carryingSlowdown": 3.0,
+  "alarmAfterLastSighting": 4.0,
   "acceleration": 16,
   "snakeForgottenAfter": 0,
   "enemyForgottenAfter": 0,

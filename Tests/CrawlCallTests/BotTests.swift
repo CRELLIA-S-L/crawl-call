@@ -175,6 +175,14 @@ final class SquadSpawnTests: XCTestCase {
         // guarded and holds, the scout runs; the medic keeps behind the others.
         XCTAssertGreaterThan(try weights(.heavy).courage, try weights(.scout).courage)
         XCTAssertGreaterThan(try weights(.assault).courage, try weights(.medic).courage)
+        // Greed joined them on 2026-10-14 and is not in the table either: the scout
+        // that goes out alone is the greediest, the heavy that holds the least tempted,
+        // and the two that may keep the prize in a fight are the ones whose greed stands
+        // above their discipline (FR-BOT-700, FR-BOT-720).
+        XCTAssertGreaterThan(try weights(.scout).greed, try weights(.heavy).greed)
+        XCTAssertGreaterThan(try weights(.sapper).greed, try weights(.sniper).greed)
+        XCTAssertEqual(try Archetype.allCases.filter { try weights($0).greed > weights($0).discipline }.count, 2,
+                       "a looter is meant to be the exception, not what every archetype is")
     }
 
     // MARK: who speaks for a squad (FR-BOT-040)

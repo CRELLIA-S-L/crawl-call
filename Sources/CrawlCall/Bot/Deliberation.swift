@@ -16,7 +16,7 @@
 // configuration (IF-BOT-010), as is how much an unhurt bot fears the snake
 // (FR-BOT-210). What shapes each term — a share, a whole — is in `Utility`.
 //
-// file implements: FR-BOT-530, FR-BOT-540, FR-BOT-570, FR-BOT-600, FR-BOT-167, FR-BOT-116, FR-BOT-460, FR-BOT-450, FR-BOT-470, FR-BOT-500, FR-BOT-510, FR-BOT-520, FR-BOT-080, FR-BOT-090, FR-BOT-110, FR-BOT-115, FR-BOT-118, FR-BOT-119, FR-BOT-360, FR-BOT-370, FR-BOT-120, FR-BOT-180, FR-BOT-190, FR-BOT-200, FR-BOT-210, FR-MAP-150, FR-BOT-220, FR-BOT-060, FR-BOT-140, FR-BOT-330, FR-BOT-410, FR-BOT-420, FR-BOT-425, FR-BOT-130, FR-BOT-620, FR-BOT-640, FR-CMD-030
+// file implements: FR-BOT-530, FR-BOT-540, FR-BOT-570, FR-BOT-600, FR-BOT-167, FR-BOT-116, FR-BOT-460, FR-BOT-450, FR-BOT-470, FR-BOT-500, FR-BOT-510, FR-BOT-520, FR-BOT-080, FR-BOT-090, FR-BOT-110, FR-BOT-115, FR-BOT-118, FR-BOT-119, FR-BOT-360, FR-BOT-370, FR-BOT-120, FR-BOT-180, FR-BOT-190, FR-BOT-200, FR-BOT-210, FR-MAP-150, FR-BOT-220, FR-BOT-060, FR-BOT-140, FR-BOT-330, FR-BOT-410, FR-BOT-420, FR-BOT-425, FR-BOT-130, FR-BOT-620, FR-BOT-640, FR-CMD-030, FR-BOT-670, FR-BOT-690, FR-BOT-710
 import Foundation
 
 enum Deliberation {
@@ -80,10 +80,15 @@ enum Deliberation {
         var evacuation: NavigationGraph.Node?
         /// Whether this bot is the one carrying the treasure (FR-BOT-640).
         var carriesTreasure = false
-        /// Whether the bot has nowhere left to believe an enemy is (FR-BOT-620): what
-        /// the treasure may be taken on, checked against what it knows and not against
-        /// the arena, so that a squad can be wrong.
-        var believesEnemyGone = false
+        /// Whether anybody of the bot's squad has an enemy or a part of the snake in
+        /// view this frame (FR-BOT-690): what leaves the prize worth no more than the
+        /// bot's greed.
+        var squadSeesAThreat = false
+        /// Whether the bot's squad is under a standing order from its commander
+        /// (FR-BOT-710): what holds its greed down to what its indiscipline leaves of
+        /// it. A squad with no commander, or one whose commander has fallen
+        /// (FR-CMD-125), is under none and goes looting.
+        var underOrders = false
         /// The second of the match this slot is being deliberated at (FR-BOT-600):
         /// what a weapon's own time between uses is measured against, so that a use
         /// which cannot be taken now is not offered. A situation built without it
@@ -325,11 +330,40 @@ enum Deliberation {
         //
         // What the courage and the discipline are doing here: a bot that is afraid does
         // not pick the treasure up first, and a disciplined one carries it under fire.
-        if situation.carriesTreasure, let out = situation.evacuation {
-            scored.append((.carryTreasure(to: out), term.treasure * bot.weights.discipline))
-        } else if situation.believesEnemyGone, let lying = situation.treasure,
-                  !situation.carriesTreasure {
-            scored.append((.takeTreasure(at: lying), term.treasure * bot.weights.courage))
+        // Nothing else stands in front of them: the prize is what the squad is there for
+        // and is offered in the middle of a firefight (FR-BOT-620), which is the whole
+        // of what the maintainer's rule of 2026-10-14 changed.
+        // A threat the squad can see leaves the prize worth no more than the bot's
+        // greed (FR-BOT-690): the maintainer's rule of 2026-10-14, and the counterweight
+        // to the prize being on every bot's list. It is what the squad sees now and not
+        // what anybody believes of the war — a sighting nobody has been to leaves the
+        // treasure at its full worth, which is what separates this from the gate
+        // ADR-0097 removed — and it is the squad's eyes and not the bot's own, so that a
+        // carrier does not walk out of a firefight the rest of its crew is in.
+        //
+        // Greed and not a ban, since the ban killed the second act: with eight bots and
+        // a snake somebody is nearly always looking at something, so the box never
+        // moved. What the bot is left with is its greed, and what holds that down is the
+        // order its squad is under (FR-BOT-710, ADR-0100).
+        let tempted = situation.squadSeesAThreat
+            ? greed(of: bot, underOrders: situation.underOrders)
+            : Fraction.whole
+        if tempted <= .zero {
+            // A bot of no greed at all in a fight: it fights, hides or runs, and a
+            // carrier does those with the prize still in its arms.
+        } else if situation.carriesTreasure, let out = situation.evacuation {
+            scored.append((.carryTreasure(to: out), term.treasure * bot.weights.discipline * tempted))
+        } else if let lying = situation.treasure, situation.arenaSpan > .zero {
+            // Scaled by how far the prize lies, against the arena's own span, as the
+            // ordered part is (FR-BOT-116): every other motive on this list decays with
+            // distance — a target is scored within the bot's sight — and a flat one
+            // beats all of them from the first frame wherever the box is. Measured on
+            // 2026-10-14: flat, the shipped arena was a footrace, the treasure gone at
+            // 3.15 s and the match over at 8.48 s with nobody hurt.
+            let metres = Perception.metres(bot.position, centre(of: lying, in: situation))
+            scored.append((.takeTreasure(at: lying),
+                           term.treasure * bot.weights.courage * tempted
+                               * nearness(metres, within: situation.arenaSpan)))
         }
 
         // Only a medic heals, and only somebody who needs it and is within the
@@ -376,7 +410,13 @@ enum Deliberation {
         // An action whose goal the graph had no route to is left out of this slot and
         // of this slot only (FR-BOT-167): the tail that cut the passage may be gone a
         // second later, so the exclusion is one slot wide and the bot asks again.
-        return ranked.map { (action: $0.0, utility: $0.1) }.filter { $0.action != bot.unreachable }
+        //
+        // And a bot with the treasure in its arms has no hand for a weapon (FR-BOT-670),
+        // which is what makes the prize worth fighting over: it has to be covered by the
+        // squad that wants to keep it, and it cannot shoot its own way out.
+        return ranked.map { (action: $0.0, utility: $0.1) }
+            .filter { $0.action != bot.unreachable }
+            .filter { !situation.carriesTreasure || !$0.action.usesAWeapon }
     }
 
     /// What the bot fires at, and what firing at it is worth: the best of the nearest
@@ -1002,6 +1042,30 @@ enum Deliberation {
         guard let danger else { return Fraction.whole }
         let closeness = nearness(danger, within: limit)
         return Fraction.whole - closeness * (Fraction.whole - bot.weights.courage)
+    }
+
+    /// What a bot's greed is worth where it stands (FR-BOT-710): the whole of the
+    /// weight with nobody commanding its squad, and what its indiscipline leaves of it
+    /// under a standing order. The commander sets no weights (ADR-0085) and this is
+    /// the only way it reaches one, which is why a squad whose commander falls
+    /// (FR-CMD-125) is twice as tempted by the box the next frame.
+    static func greed(of bot: Bot, underOrders: Bool) -> Double {
+        underOrders
+            ? bot.weights.greed * (Fraction.whole - bot.weights.discipline)
+            : bot.weights.greed
+    }
+
+    /// Whether a bot's greed outweighs its sense of the job: what decides, while its
+    /// squad is in a fight, whether it picks the prize up (FR-BOT-720) and whether it
+    /// holds on to one it is already carrying (FR-BOT-700). Discipline is the weight
+    /// carrying the prize is scored by (FR-BOT-640), so these are the two sides of one
+    /// bot's mind and not a number from the configuration.
+    ///
+    /// Not against its panic, which reverses what the rule is for: a squad that loses
+    /// its commander has its panic raised (FR-CMD-130), and would be the one squad that
+    /// never loots.
+    static func keepsThePrize(_ bot: Bot, underOrders: Bool) -> Bool {
+        greed(of: bot, underOrders: underOrders) > bot.weights.discipline
     }
 
     /// One at arm's length, nothing at the edge of the world.

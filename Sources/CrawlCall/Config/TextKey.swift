@@ -6,7 +6,7 @@
 // Text shown only in the debug build is not here: the player never reads it, so it is
 // a named constant in `DebugText` and is not translated.
 //
-// file implements: IF-VIEW-030, FR-VIEW-200
+// file implements: IF-VIEW-030, FR-VIEW-200, FR-VIEW-380
 import SwiftUI
 
 enum TextKey: String, CaseIterable {

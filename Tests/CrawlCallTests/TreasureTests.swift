@@ -8,27 +8,66 @@
 // bots put where the test wants them. The end of a match is asked of a real match, so
 // that the outcome is one a match reaches and not a flag nothing sets.
 //
-// file verifies: FR-MAP-290, FR-MAP-300, FR-BOT-620, FR-BOT-630, FR-BOT-640, FR-BOT-650, FR-SCORE-160, FR-VIEW-370
+// file verifies: FR-MAP-290, FR-MAP-300, FR-BOT-620, FR-BOT-630, FR-BOT-640, FR-BOT-650, FR-SCORE-160, FR-VIEW-370, FR-BOT-670, FR-BOT-680, FR-BOT-690, FR-BOT-700, FR-BOT-710, FR-BOT-720
 import RealityKit
 import XCTest
 @testable import CrawlCall
 
-/// The enemy a test puts in a bot's knowledge to make it believe one is still out
-/// there: an id no bot of a one-a-side match has, so nothing else answers to it.
+/// The enemy a test puts in a bot's knowledge so that it holds an enemy it believes
+/// alive: an id no bot of a one-a-side match has, so nothing else answers to it.
 private let sightedEnemy = 99
 
 /// A bot of the shipped configuration standing at a point, knowing what the test says
 /// it knows.
 private func soldier(id: Int, squad: Squad = .red, at position: SIMD3<Double>,
-                     believesEnemyGone: Bool, in world: World,
+                     sightingAnEnemy: Bool = false, in world: World,
                      file: StaticString = #filePath, line: UInt = #line) throws -> Bot {
     var bot = try XCTUnwrap(Bot(id: id, squad: squad, archetype: .assault, at: position, floor: 0,
                                 configuration: world.configurations.bot),
                             "the configuration carries no assault archetype", file: file, line: line)
-    if !believesEnemyGone {
+    if sightingAnEnemy {
         bot.knowledge.enemies = [sightedEnemy: Knowledge.Sighting(point: SIMD3(1, 0, 1), time: .zero)]
     }
     return bot
+}
+
+/// The shipped assault's weights with greed and discipline said out loud: the two the
+/// prize is weighed between while a squad is in a fight (FR-BOT-700, FR-BOT-720).
+private func minded(_ bot: Bot, greed: Double, discipline: Double) -> Bot {
+    var minded = bot
+    minded.weights = BotConfiguration.Weights(panic: bot.weights.panic, discipline: discipline,
+                                              aggression: bot.weights.aggression,
+                                              selfSacrifice: bot.weights.selfSacrifice,
+                                              courage: bot.weights.courage, greed: greed)
+    return minded
+}
+
+/// What the match asks of every bot each frame: who may have the prize in its hands
+/// (FR-BOT-700, FR-BOT-720), built exactly as `Game` builds it.
+private func mayHold(alarmed: Set<Squad>, underOrders: Bool = false) -> (Bot) -> Bool {
+    { bot in
+        !alarmed.contains(bot.squad) || Deliberation.keepsThePrize(bot, underOrders: underOrders)
+    }
+}
+
+/// The cell a bot stands in, as the match reads it.
+private func cell(_ world: World) -> (Bot) -> NavigationGraph.Node {
+    { Execution.cell(of: $0, world: world) }
+}
+
+private func cellOf(_ world: World) -> (SIMD3<Double>) -> NavigationGraph.Node? {
+    { Deliberation.cell(of: $0, graph: world.graph,
+                        cellSize: world.configurations.tuning.navigationGraphCellSize,
+                        floorHeight: world.kit.floorHeight) }
+}
+
+/// A treasure lying in a cell of the room, with the evacuation point elsewhere.
+private func treasure(in world: World, at node: NavigationGraph.Node) -> Treasure {
+    Treasure(place: .lying(at: world.graph.centre(of: node,
+                                                  cellSize: world.configurations.tuning.navigationGraphCellSize,
+                                                  floorHeight: world.kit.floorHeight),
+                           floor: node.floor),
+             evacuation: NavigationGraph.Node(floor: 0, x: 21, z: 14))
 }
 
 final class TreasureOnTheMapTests: XCTestCase {
@@ -126,54 +165,35 @@ final class TreasureOnTheMapTests: XCTestCase {
 }
 
 final class TakingTheTreasureTests: XCTestCase {
-    /// The cell a bot stands in, as the match reads it.
-    private func cell(_ world: World) -> (Bot) -> NavigationGraph.Node {
-        { Execution.cell(of: $0, world: world) }
-    }
-    private func cellOf(_ world: World) -> (SIMD3<Double>) -> NavigationGraph.Node? {
-        { Deliberation.cell(of: $0, graph: world.graph,
-                            cellSize: world.configurations.tuning.navigationGraphCellSize,
-                            floorHeight: world.kit.floorHeight) }
-    }
-
-    /// A treasure lying in a cell of the room, with the evacuation point elsewhere.
-    private func treasure(in world: World, at node: NavigationGraph.Node) -> Treasure {
-        Treasure(place: .lying(at: world.graph.centre(of: node,
-                                                      cellSize: world.configurations.tuning.navigationGraphCellSize,
-                                                      floorHeight: world.kit.floorHeight),
-                               floor: node.floor),
-                 evacuation: NavigationGraph.Node(floor: 0, x: 21, z: 14))
-    }
-
     func testABotStandingOnItThatBelievesTheEnemyGoneCarriesIt() throws {
         // FR-BOT-630.
         let world = try world(map: "room", squadSize: 1)
         let node = NavigationGraph.Node(floor: 0, x: 12, z: 7)
         var prize = treasure(in: world, at: node)
         let lying = try XCTUnwrap(prize.lying)
-        let bot = try soldier(id: 3, at: lying.point, believesEnemyGone: true, in: world)
+        let bot = try soldier(id: 3, at: lying.point, in: world)
         var held: (point: SIMD3<Double>, floor: Int)?
         XCTAssertFalse(prize.step(among: [bot], cell: cell(world), cellOf: cellOf(world), held: &held))
         XCTAssertEqual(prize.carrier, 3)
     }
 
-    func testABotThatStillBelievesAnEnemyAliveLeavesItWhereItLies() throws {
-        // The negation of FR-BOT-630's condition, which is FR-BOT-620's: the treasure
-        // is the prize for a won war, and a bot that walks over it in the middle of one
-        // leaves it alone.
+    func testABotThatStillBelievesAnEnemyAliveTakesItAllTheSame() throws {
+        // FR-BOT-630 asks nothing about the enemy since the maintainer's rule of
+        // 2026-10-14: the treasure is what the fight is for, so a bot that walks over it
+        // in the middle of one picks it up.
         let world = try world(map: "room", squadSize: 1)
         var prize = treasure(in: world, at: NavigationGraph.Node(floor: 0, x: 12, z: 7))
         let lying = try XCTUnwrap(prize.lying)
-        let bot = try soldier(id: 3, at: lying.point, believesEnemyGone: false, in: world)
+        let bot = try soldier(id: 3, at: lying.point, sightingAnEnemy: true, in: world)
         var held: (point: SIMD3<Double>, floor: Int)?
         XCTAssertFalse(prize.step(among: [bot], cell: cell(world), cellOf: cellOf(world), held: &held))
-        XCTAssertNil(prize.carrier)
+        XCTAssertEqual(prize.carrier, 3, "a bot standing on the treasure left it lying")
     }
 
     func testABotStandingElsewhereDoesNotReachIt() throws {
         let world = try world(map: "room", squadSize: 1)
         var prize = treasure(in: world, at: NavigationGraph.Node(floor: 0, x: 12, z: 7))
-        let bot = try soldier(id: 3, at: SIMD3(1, 0, 1), believesEnemyGone: true, in: world)
+        let bot = try soldier(id: 3, at: SIMD3(1, 0, 1), in: world)
         var held: (point: SIMD3<Double>, floor: Int)?
         XCTAssertFalse(prize.step(among: [bot], cell: cell(world), cellOf: cellOf(world), held: &held))
         XCTAssertNil(prize.carrier)
@@ -185,8 +205,8 @@ final class TakingTheTreasureTests: XCTestCase {
         let world = try world(map: "room", squadSize: 1)
         var prize = treasure(in: world, at: NavigationGraph.Node(floor: 0, x: 12, z: 7))
         let lying = try XCTUnwrap(prize.lying)
-        let bots = [try soldier(id: 5, at: lying.point, believesEnemyGone: true, in: world),
-                    try soldier(id: 2, at: lying.point, believesEnemyGone: true, in: world)]
+        let bots = [try soldier(id: 5, at: lying.point, in: world),
+                    try soldier(id: 2, at: lying.point, in: world)]
         var held: (point: SIMD3<Double>, floor: Int)?
         _ = prize.step(among: bots, cell: cell(world), cellOf: cellOf(world), held: &held)
         XCTAssertEqual(prize.carrier, 2)
@@ -197,7 +217,7 @@ final class TakingTheTreasureTests: XCTestCase {
         let world = try world(map: "room", squadSize: 1)
         var prize = treasure(in: world, at: NavigationGraph.Node(floor: 0, x: 12, z: 7))
         let lying = try XCTUnwrap(prize.lying)
-        var bot = try soldier(id: 3, at: lying.point, believesEnemyGone: true, in: world)
+        var bot = try soldier(id: 3, at: lying.point, in: world)
         var held: (point: SIMD3<Double>, floor: Int)?
         _ = prize.step(among: [bot], cell: cell(world), cellOf: cellOf(world), held: &held)
         XCTAssertEqual(prize.carrier, 3)
@@ -218,7 +238,7 @@ final class TakingTheTreasureTests: XCTestCase {
         let world = try world(map: "room", squadSize: 1)
         var prize = treasure(in: world, at: NavigationGraph.Node(floor: 0, x: 12, z: 7))
         let lying = try XCTUnwrap(prize.lying)
-        let bot = try soldier(id: 3, at: lying.point, believesEnemyGone: true, in: world)
+        let bot = try soldier(id: 3, at: lying.point, in: world)
         var held: (point: SIMD3<Double>, floor: Int)?
         _ = prize.step(among: [bot], cell: cell(world), cellOf: cellOf(world), held: &held)
         _ = prize.step(among: [], cell: cell(world), cellOf: cellOf(world), held: &held)
@@ -231,7 +251,7 @@ final class TakingTheTreasureTests: XCTestCase {
         let world = try world(map: "room", squadSize: 1)
         var prize = treasure(in: world, at: NavigationGraph.Node(floor: 0, x: 12, z: 7))
         let lying = try XCTUnwrap(prize.lying)
-        var carrier = try soldier(id: 3, at: lying.point, believesEnemyGone: true, in: world)
+        var carrier = try soldier(id: 3, at: lying.point, in: world)
         var held: (point: SIMD3<Double>, floor: Int)?
         _ = prize.step(among: [carrier], cell: cell(world), cellOf: cellOf(world), held: &held)
         carrier.position = SIMD3(2.5, 0, 3.5)
@@ -239,7 +259,7 @@ final class TakingTheTreasureTests: XCTestCase {
         carrier.health = .zero
         _ = prize.step(among: [carrier], cell: cell(world), cellOf: cellOf(world), held: &held)
 
-        let next = try soldier(id: 4, at: SIMD3(2.5, 0, 3.5), believesEnemyGone: true, in: world)
+        let next = try soldier(id: 4, at: SIMD3(2.5, 0, 3.5), in: world)
         _ = prize.step(among: [carrier, next], cell: cell(world), cellOf: cellOf(world), held: &held)
         XCTAssertEqual(prize.carrier, 4)
     }
@@ -249,7 +269,7 @@ final class TakingTheTreasureTests: XCTestCase {
         let world = try world(map: "room", squadSize: 1)
         var prize = treasure(in: world, at: NavigationGraph.Node(floor: 0, x: 12, z: 7))
         let lying = try XCTUnwrap(prize.lying)
-        var bot = try soldier(id: 3, at: lying.point, believesEnemyGone: true, in: world)
+        var bot = try soldier(id: 3, at: lying.point, in: world)
         var held: (point: SIMD3<Double>, floor: Int)?
         _ = prize.step(among: [bot], cell: cell(world), cellOf: cellOf(world), held: &held)
 
@@ -258,6 +278,55 @@ final class TakingTheTreasureTests: XCTestCase {
                                      floorHeight: world.kit.floorHeight)
         bot.position = out
         XCTAssertTrue(prize.step(among: [bot], cell: cell(world), cellOf: cellOf(world), held: &held))
+        XCTAssertEqual(prize.place, .carriedOff)
+    }
+
+    func testAThreatTheSquadSeesPutsTheTreasureDown() throws {
+        // FR-BOT-700: the crew finds somebody to fight, the prize goes down where the
+        // carrier stands, and that bot does not pick it up again while it lasts. The
+        // shipped assault is the ordinary case — greed 0.5 against discipline 0.5, so
+        // its greed does not outweigh its sense of the job (FR-BOT-720).
+        let world = try world(map: "room", squadSize: 1)
+        var prize = treasure(in: world, at: NavigationGraph.Node(floor: 0, x: 12, z: 7))
+        let lying = try XCTUnwrap(prize.lying)
+        let bot = try soldier(id: 3, at: lying.point, in: world)
+        var held: (point: SIMD3<Double>, floor: Int)?
+        _ = prize.step(among: [bot], cell: cell(world), cellOf: cellOf(world), held: &held)
+        XCTAssertEqual(prize.carrier, bot.id, "it never picked the prize up, so this proves nothing")
+
+        _ = prize.step(among: [bot], cell: cell(world), cellOf: cellOf(world),
+                       mayHold: mayHold(alarmed: [bot.squad]), held: &held)
+        XCTAssertNil(prize.carrier, "it held on to the prize while its crew had a fight on")
+        XCTAssertEqual(prize.lying?.point, bot.position, "the prize did not land where the carrier stood")
+
+        _ = prize.step(among: [bot], cell: cell(world), cellOf: cellOf(world),
+                       mayHold: mayHold(alarmed: [bot.squad]), held: &held)
+        XCTAssertNil(prize.carrier, "it picked the prize straight back up in the middle of a fight")
+
+        _ = prize.step(among: [bot], cell: cell(world), cellOf: cellOf(world), held: &held)
+        XCTAssertEqual(prize.carrier, bot.id, "the fighting was over and nobody picked the prize up")
+    }
+
+    func testACarrierOnThePointWaitsWhileOneOfTheOtherCrewIsUp() throws {
+        // FR-SCORE-160 since 2026-10-14: reaching the point is not leaving with it.
+        let world = try world(map: "room", squadSize: 1)
+        var prize = treasure(in: world, at: NavigationGraph.Node(floor: 0, x: 12, z: 7))
+        let lying = try XCTUnwrap(prize.lying)
+        var bot = try soldier(id: 3, at: lying.point, in: world)
+        var rival = try soldier(id: 4, squad: .blue, at: SIMD3(1, 0, 1), in: world)
+        var held: (point: SIMD3<Double>, floor: Int)?
+        _ = prize.step(among: [bot, rival], cell: cell(world), cellOf: cellOf(world), held: &held)
+        bot.position = world.graph.centre(of: prize.evacuation,
+                                          cellSize: world.configurations.tuning.navigationGraphCellSize,
+                                          floorHeight: world.kit.floorHeight)
+
+        XCTAssertFalse(prize.step(among: [bot, rival], cell: cell(world), cellOf: cellOf(world), held: &held),
+                       "it left with the prize while one of the other crew was still up")
+        XCTAssertEqual(prize.carrier, bot.id, "it stopped carrying the prize while it waited")
+
+        rival.health = .zero
+        XCTAssertTrue(prize.step(among: [bot, rival], cell: cell(world), cellOf: cellOf(world), held: &held),
+                      "the last of the other crew was down and it still did not leave")
         XCTAssertEqual(prize.place, .carriedOff)
     }
 
@@ -273,47 +342,51 @@ final class TakingTheTreasureTests: XCTestCase {
 
 final class TreasureMotiveTests: XCTestCase {
     private func situation(in world: World) -> Deliberation.Situation {
-        Deliberation.Situation(plan: world.plan, graph: world.graph,
-                               configuration: world.configurations.bot,
-                               cellSize: world.configurations.tuning.navigationGraphCellSize)
+        var facts = Deliberation.Situation(plan: world.plan, graph: world.graph,
+                                           configuration: world.configurations.bot,
+                                           cellSize: world.configurations.tuning.navigationGraphCellSize)
+        // What the nearness of the prize is measured against (FR-BOT-620), as the match
+        // sets it for every bot.
+        facts.arenaSpan = Perception.metres(world.plan.bounds.lowest, world.plan.bounds.highest)
+        return facts
     }
 
-    func testABotThatBelievesTheEnemyGoneIsOfferedTheTreasure() throws {
+    func testABotIsOfferedTheTreasureWhileItLies() throws {
         // FR-BOT-620.
         let world = try world(map: "room", squadSize: 1)
-        let bot = try soldier(id: 1, at: SIMD3(1, 0, 1), believesEnemyGone: true, in: world)
+        let bot = try soldier(id: 1, at: SIMD3(1, 0, 1), in: world)
         var facts = situation(in: world)
-        facts.believesEnemyGone = true
         facts.treasure = NavigationGraph.Node(floor: 0, x: 12, z: 7)
         facts.evacuation = NavigationGraph.Node(floor: 0, x: 21, z: 14)
         let scored = Deliberation.scores(for: bot, in: facts)
         let take = scored.first { $0.action == .takeTreasure(at: NavigationGraph.Node(floor: 0, x: 12, z: 7)) }
-        XCTAssertNotNil(take, "a bot with nobody left to fight was not offered the treasure")
+        XCTAssertNotNil(take, "a bot was not offered the treasure lying in front of it")
         XCTAssertGreaterThan(try XCTUnwrap(take).utility, .zero,
                              "going for the treasure scored nothing, so the quiet motives win")
     }
 
-    func testABotThatBelievesAnEnemyAliveIsNotOfferedTheTreasure() throws {
-        // The condition of FR-BOT-620, which is what keeps the first act unchanged.
+    func testABotThatBelievesAnEnemyAliveIsOfferedItAllTheSame() throws {
+        // The rule of 2026-10-14 in one test: the first act is no longer kept clear of
+        // the prize, so a bot that holds a sighting it has not been to is offered it.
         let world = try world(map: "room", squadSize: 1)
-        let bot = try soldier(id: 1, at: SIMD3(1, 0, 1), believesEnemyGone: false, in: world)
+        let bot = try soldier(id: 1, at: SIMD3(1, 0, 1), sightingAnEnemy: true, in: world)
         var facts = situation(in: world)
-        facts.believesEnemyGone = false
         facts.treasure = NavigationGraph.Node(floor: 0, x: 12, z: 7)
         facts.evacuation = NavigationGraph.Node(floor: 0, x: 21, z: 14)
-        XCTAssertNil(Deliberation.scores(for: bot, in: facts).first {
+        let take = Deliberation.scores(for: bot, in: facts).first {
             if case .takeTreasure = $0.action { return true }
             return false
-        })
+        }
+        XCTAssertNotNil(take, "an enemy it believes alive kept the treasure off its list")
+        XCTAssertGreaterThan(try XCTUnwrap(take).utility, .zero)
     }
 
     func testATreasureSomebodyElseCarriesIsNotOffered() throws {
         // There is one treasure and one carrier: a bot that is not it has nothing to
         // take, which the situation says by holding no cell it lies in.
         let world = try world(map: "room", squadSize: 1)
-        let bot = try soldier(id: 1, at: SIMD3(1, 0, 1), believesEnemyGone: true, in: world)
+        let bot = try soldier(id: 1, at: SIMD3(1, 0, 1), in: world)
         var facts = situation(in: world)
-        facts.believesEnemyGone = true
         facts.evacuation = NavigationGraph.Node(floor: 0, x: 21, z: 14)
         let scored = Deliberation.scores(for: bot, in: facts)
         XCTAssertNil(scored.first {
@@ -326,9 +399,8 @@ final class TreasureMotiveTests: XCTestCase {
     func testTheCarrierIsOfferedTheEvacuationPointAndNotTheTreasure() throws {
         // FR-BOT-640: the one motive a bot holding it has.
         let world = try world(map: "room", squadSize: 1)
-        let bot = try soldier(id: 1, at: SIMD3(1, 0, 1), believesEnemyGone: true, in: world)
+        let bot = try soldier(id: 1, at: SIMD3(1, 0, 1), in: world)
         var facts = situation(in: world)
-        facts.believesEnemyGone = true
         facts.carriesTreasure = true
         facts.treasure = nil
         facts.evacuation = NavigationGraph.Node(floor: 0, x: 21, z: 14)
@@ -348,14 +420,13 @@ final class TreasureMotiveTests: XCTestCase {
         // pull off the job by anything else that scores.
         let world = try world(map: "room", squadSize: 1)
         var facts = situation(in: world)
-        facts.believesEnemyGone = true
         facts.carriesTreasure = true
         facts.evacuation = NavigationGraph.Node(floor: 0, x: 21, z: 14)
         func weights(discipline: Double) -> BotConfiguration.Weights {
             BotConfiguration.Weights(panic: 0.5, discipline: discipline, aggression: 0.5,
-                                     selfSacrifice: 0.5, courage: 0.5)
+                                     selfSacrifice: 0.5, courage: 0.5, greed: 0.5)
         }
-        var keen = try soldier(id: 1, at: SIMD3(1, 0, 1), believesEnemyGone: true, in: world)
+        var keen = try soldier(id: 1, at: SIMD3(1, 0, 1), in: world)
         keen.weights = weights(discipline: 0.9)
         var slack = keen
         slack.weights = weights(discipline: 0.1)
@@ -366,20 +437,6 @@ final class TreasureMotiveTests: XCTestCase {
             }).utility
         }
         XCTAssertGreaterThan(try worth(keen), try worth(slack))
-    }
-
-    func testABotThatKnowsOfNoEnemyAndHasSweptTheirGroundBelievesThemGone() throws {
-        // What FR-BOT-620 is checked against: the knowledge a bot already keeps, so
-        // that a squad can believe it and be wrong.
-        var knowledge = Knowledge()
-        knowledge.enemyStart = Knowledge.Area(centre: SIMD3(1, 0, 1), radius: 2)
-        XCTAssertFalse(knowledge.believesEnemyGone, "a squad that has not been to the enemy's ground believes it won")
-        knowledge.enemyStart = nil
-        XCTAssertTrue(knowledge.believesEnemyGone)
-        knowledge.enemies = [sightedEnemy: Knowledge.Sighting(point: SIMD3(3, 0, 3), time: .zero)]
-        XCTAssertFalse(knowledge.believesEnemyGone, "a sighting it has not been to is an enemy it believes alive")
-        knowledge.notFound(enemy: sightedEnemy, at: 1)
-        XCTAssertTrue(knowledge.believesEnemyGone, "a sighting gone to and found empty still counts as an enemy")
     }
 }
 
@@ -399,7 +456,7 @@ final class TreasureOnScreenTests: XCTestCase {
 
     func testTheTreasureIsDrawnAtTheBotCarryingIt() throws {
         let world = try world(map: "room", squadSize: 1)
-        var bot = try soldier(id: 6, at: SIMD3(4, 0, 5), believesEnemyGone: true, in: world)
+        var bot = try soldier(id: 6, at: SIMD3(4, 0, 5), in: world)
         bot.facing = .zero
         let prize = Treasure(place: .carried(by: 6),
                              evacuation: NavigationGraph.Node(floor: 0, x: 21, z: 14))
@@ -435,22 +492,215 @@ final class TreasureOnScreenTests: XCTestCase {
     }
 }
 
-final class SecondActTests: XCTestCase {
-    func testASquadThatBelievesItHasWonCarriesTheTreasureOffAndEndsTheMatch() throws {
-        // The whole slice through a real match, with nobody steering the snake: one bot
-        // a side fight, the survivor sweeps the ground it believed the enemy held, goes
-        // for the treasure (FR-BOT-620, FR-BOT-630) and carries it to the evacuation
-        // point (FR-BOT-640), which ends the match (FR-SCORE-160).
-        //
-        // One a side, because what this asks is whether the second act happens at all,
-        // and the first act of a full match is decided by numbers this test is not
-        // about. Three minutes of match time: longer than it takes, and short of the
-        // run being a measurement.
+/// What a fight does to the prize: what it is worth to a bot while its crew can see
+/// something (FR-BOT-690), what a standing order leaves of that (FR-BOT-710), who may
+/// hold it (FR-BOT-700, FR-BOT-720), and what carrying it costs a bot's hands
+/// (FR-BOT-670) and legs (FR-BOT-680).
+final class TreasureUnderFireTests: XCTestCase {
+    /// A bot standing a little way off the prize, with the view clear.
+    private func facts(in world: World) -> Deliberation.Situation {
+        var facts = Deliberation.Situation(plan: world.plan, graph: world.graph,
+                                           configuration: world.configurations.bot,
+                                           cellSize: world.configurations.tuning.navigationGraphCellSize)
+        facts.arenaSpan = Perception.metres(world.plan.bounds.lowest, world.plan.bounds.highest)
+        facts.treasure = NavigationGraph.Node(floor: 0, x: 12, z: 7)
+        facts.evacuation = NavigationGraph.Node(floor: 0, x: 21, z: 14)
+        return facts
+    }
+
+    /// What going for the prize, or carrying it, is worth to a bot in a situation —
+    /// nil where it is not offered at all.
+    private func prize(for bot: Bot, in facts: Deliberation.Situation) -> Double? {
+        Deliberation.scores(for: bot, in: facts).first {
+            if case .takeTreasure = $0.action { return true }
+            if case .carryTreasure = $0.action { return true }
+            return false
+        }?.utility
+    }
+
+    func testAThreatTheSquadSeesLeavesThePrizeWorthNoMoreThanGreed() throws {
+        // FR-BOT-690, both motives: the one that would go for it and the one that
+        // carries it, with the crew's view clear and then with a threat in it. The
+        // prize is not taken off the list any more — what is left of it is the bot's
+        // greed, which is a share of what it was worth and not nothing.
         let world = try world(map: "room", squadSize: 1)
+        let greed = 0.6
+        let bot = minded(try soldier(id: 1, at: SIMD3(1, 0, 1), in: world), greed: greed, discipline: 0.5)
+        let clear = facts(in: world)
+        var seen = clear
+        seen.squadSeesAThreat = true
+
+        let calm = try XCTUnwrap(prize(for: bot, in: clear),
+                                 "nothing was offered with the view clear, so this proves nothing")
+        let fighting = try XCTUnwrap(prize(for: bot, in: seen),
+                                     "a threat its crew could see took the prize off the list")
+        XCTAssertEqual(fighting, calm * greed, accuracy: 1e-9,
+                       "the prize in a fight was not worth the bot's greed of what it was worth")
+
+        var carrying = clear
+        carrying.carriesTreasure = true
+        var carryingSeen = carrying
+        carryingSeen.squadSeesAThreat = true
+        let carried = try XCTUnwrap(prize(for: bot, in: carrying),
+                                    "a carrier with the view clear was not offered the way out")
+        XCTAssertEqual(try XCTUnwrap(prize(for: bot, in: carryingSeen)), carried * greed, accuracy: 1e-9,
+                       "a carrier in a fight was not held to its greed")
+    }
+
+    func testABotOfNoGreedIsOfferedNothingInAFight() throws {
+        // The negation of FR-BOT-690: at greed nothing the rule is the ban it replaced,
+        // so the weighing has something to be read against.
+        let world = try world(map: "room", squadSize: 1)
+        let bot = minded(try soldier(id: 1, at: SIMD3(1, 0, 1), in: world), greed: .zero, discipline: 0.5)
+        var seen = facts(in: world)
+        seen.squadSeesAThreat = true
+        XCTAssertNil(prize(for: bot, in: seen), "a bot of no greed was still offered the prize in a fight")
+        XCTAssertNotNil(prize(for: bot, in: facts(in: world)),
+                        "it was offered nothing with the view clear either, so this proves nothing")
+    }
+
+    func testAStandingOrderHoldsGreedInCheck() throws {
+        // FR-BOT-710: the commander has no other way in, so what it buys is this
+        // scaling — the bot's indiscipline is all that is left of its greed.
+        let world = try world(map: "room", squadSize: 1)
+        let discipline = 0.75
+        let bot = minded(try soldier(id: 1, at: SIMD3(1, 0, 1), in: world), greed: 0.8, discipline: discipline)
+        var free = facts(in: world)
+        free.squadSeesAThreat = true
+        var ordered = free
+        ordered.underOrders = true
+
+        let loose = try XCTUnwrap(prize(for: bot, in: free))
+        XCTAssertEqual(try XCTUnwrap(prize(for: bot, in: ordered)), loose * (1 - discipline), accuracy: 1e-9,
+                       "an order left the prize worth as much as it was to an uncommanded bot")
+    }
+
+    func testACarrierIsOfferedNothingThatUsesAWeapon() throws {
+        // FR-BOT-670: hands full. The enemy in front of it would otherwise be a target,
+        // and the empty magazine a reload.
+        let world = try world(map: "room", squadSize: 1)
+        var facts = Deliberation.Situation(plan: world.plan, graph: world.graph,
+                                           configuration: world.configurations.bot,
+                                           cellSize: world.configurations.tuning.navigationGraphCellSize)
+        facts.arenaSpan = Perception.metres(world.plan.bounds.lowest, world.plan.bounds.highest)
+        facts.evacuation = NavigationGraph.Node(floor: 0, x: 21, z: 14)
+        var carrier = try XCTUnwrap(Bot(id: 1, squad: .red, archetype: .assault, at: SIMD3(1, 0, 1),
+                                        floor: 0, configuration: world.configurations.bot))
+        carrier.knowledge.ways = Set(world.graph.nodes)
+        var enemy = try XCTUnwrap(Bot(id: 2, squad: .blue, archetype: .assault, at: SIMD3(2, 0, 1),
+                                      floor: 0, configuration: world.configurations.bot))
+        enemy.knowledge.ways = carrier.knowledge.ways
+        facts.allies = [carrier, enemy]
+        facts.enemies = [enemy.position]
+        facts.enemiesInView = [(id: enemy.id, point: enemy.position)]
+
+        facts.carriesTreasure = false
+        XCTAssertTrue(Deliberation.scores(for: carrier, in: facts).contains { $0.action.usesAWeapon },
+                      "a bot with its hands free was offered no weapon at all, so this proves nothing")
+
+        facts.carriesTreasure = true
+        XCTAssertFalse(Deliberation.scores(for: carrier, in: facts).contains { $0.action.usesAWeapon },
+                       "a bot carrying the treasure was offered a weapon")
+    }
+    func testAGreedyCarrierKeepsThePrizeWhileItsCrewFights() throws {
+        // FR-BOT-700: the exception the drop is written with. Greed 0.8 over discipline
+        // 0.5 and nobody commanding, so this one walks on with the box while the
+        // shooting goes on behind it.
+        let world = try world(map: "room", squadSize: 1)
+        var prize = treasure(in: world, at: NavigationGraph.Node(floor: 0, x: 12, z: 7))
+        let lying = try XCTUnwrap(prize.lying)
+        let looter = minded(try soldier(id: 3, at: lying.point, in: world), greed: 0.8, discipline: 0.5)
+        var held: (point: SIMD3<Double>, floor: Int)?
+        _ = prize.step(among: [looter], cell: cell(world), cellOf: cellOf(world),
+                       mayHold: mayHold(alarmed: [looter.squad]), held: &held)
+        XCTAssertEqual(prize.carrier, looter.id, "a greedy bot did not pick the prize up in a fight")
+        _ = prize.step(among: [looter], cell: cell(world), cellOf: cellOf(world),
+                       mayHold: mayHold(alarmed: [looter.squad]), held: &held)
+        XCTAssertEqual(prize.carrier, looter.id, "a greedy bot put the prize down in a fight")
+    }
+
+    func testASquadThatLosesItsCommanderGoesLooting() throws {
+        // FR-BOT-710 through the two rules that read it: the same bot in the same fight,
+        // under an order and then under none, which is what the role-holder's death
+        // leaves behind (FR-CMD-125).
+        let world = try world(map: "room", squadSize: 1)
+        let looter = minded(try soldier(id: 3, at: SIMD3(2.5, 0, 3.5), in: world), greed: 0.8, discipline: 0.5)
+        XCTAssertFalse(Deliberation.keepsThePrize(looter, underOrders: true),
+                       "a commanded bot kept the prize while its crew fought")
+        XCTAssertTrue(Deliberation.keepsThePrize(looter, underOrders: false),
+                      "a squad with no commander did not go looting")
+
+        var prize = treasure(in: world, at: NavigationGraph.Node(floor: 0, x: 12, z: 7))
+        let lying = try XCTUnwrap(prize.lying)
+        let onIt = minded(try soldier(id: 4, at: lying.point, in: world), greed: 0.8, discipline: 0.5)
+        var held: (point: SIMD3<Double>, floor: Int)?
+        _ = prize.step(among: [onIt], cell: cell(world), cellOf: cellOf(world),
+                       mayHold: mayHold(alarmed: [onIt.squad], underOrders: true), held: &held)
+        XCTAssertNil(prize.carrier, "a commanded bot picked the prize up in the middle of a fight")
+        _ = prize.step(among: [onIt], cell: cell(world), cellOf: cellOf(world),
+                       mayHold: mayHold(alarmed: [onIt.squad]), held: &held)
+        XCTAssertEqual(prize.carrier, onIt.id, "with its commander gone it still would not take the prize")
+    }
+
+    func testABotWhoseDutyOutweighsItsGreedTakesNothingInAFight() throws {
+        // FR-BOT-720: the ordinary bot, so that the exception above has a rule to be
+        // an exception to.
+        let world = try world(map: "room", squadSize: 1)
+        var prize = treasure(in: world, at: NavigationGraph.Node(floor: 0, x: 12, z: 7))
+        let lying = try XCTUnwrap(prize.lying)
+        let dutiful = minded(try soldier(id: 3, at: lying.point, in: world), greed: 0.3, discipline: 0.7)
+        var held: (point: SIMD3<Double>, floor: Int)?
+        _ = prize.step(among: [dutiful], cell: cell(world), cellOf: cellOf(world),
+                       mayHold: mayHold(alarmed: [dutiful.squad]), held: &held)
+        XCTAssertNil(prize.carrier, "a dutiful bot picked the prize up in the middle of a fight")
+        _ = prize.step(among: [dutiful], cell: cell(world), cellOf: cellOf(world), held: &held)
+        XCTAssertEqual(prize.carrier, dutiful.id, "the fighting was over and it still did not take the prize")
+    }
+
+    func testACarrierWalksAtAThirdOfItsSpeed() throws {
+        // FR-BOT-680: the prize is heavy. Two bots of one archetype on one straight
+        // route, one of them carrying, half a second in — long enough for both to be up
+        // to speed (FR-BOT-290) and far enough from the route's end that neither is
+        // braking, which is why this reads the speeds and not the ground covered.
+        let world = try world(map: "room", squadSize: 1)
+        let running = try XCTUnwrap(world.configurations.bot.archetypes["assault"]?.runSpeed)
+        let slowdown = world.configurations.bot.carryingSlowdown
+        var bots: [Bot] = []
+        for id in [1, 2] {
+            var bot = try XCTUnwrap(Bot(id: id, squad: .red, archetype: .assault,
+                                        at: SIMD3(1.5, 0, 2.5 + Double(id)), floor: 0,
+                                        configuration: world.configurations.bot))
+            bot.knowledge.ways = Set(world.graph.nodes)
+            bot.action = .advance(to: NavigationGraph.Node(floor: 0, x: 20, z: 5 + id))
+            bots.append(bot)
+        }
+        for _ in 0..<30 {
+            Execution.walk(&bots, seconds: 1.0 / 60, world: world, carrying: 2)
+        }
+        let free = bots[try checkedIndex(0, of: bots)].speed
+        let laden = bots[try checkedIndex(1, of: bots)].speed
+        XCTAssertEqual(free, running, accuracy: 1e-9, "the bot with free hands was not up to its run speed")
+        XCTAssertEqual(laden, running / slowdown, accuracy: 1e-9,
+                       "the carrier moved at \(laden) m/s, not a third of \(running)")
+    }
+}
+
+final class SecondActTests: XCTestCase {
+    func testAMatchIsWonByCarryingTheTreasureOff() throws {
+        // The whole slice through a real match, with nobody steering the snake: two bots
+        // a side, and whoever reaches the treasure (FR-BOT-620, FR-BOT-630) carries it
+        // to the evacuation point (FR-BOT-640) and leaves with it once the other crew
+        // is gone, which ends the match (FR-SCORE-160).
+        //
+        // Two a side and not one, since 2026-10-14: a carrier has no hand for a weapon
+        // (FR-BOT-670), so a squad of one that picks the prize up can never clear the
+        // way for itself and the second act cannot finish. Five minutes of match time:
+        // longer than it takes, and short of the run being a measurement.
+        let world = try world(map: "room", squadSize: 2)
         var game = Game(world: world, start: try XCTUnwrap(Game.firstStart(in: world)))
         let frame = 1.0 / 60
         var carried = false
-        for _ in 0..<10_800 where game.outcome == nil {
+        for _ in 0..<18_000 where game.outcome == nil {
             _ = game.advance(seconds: frame)
             if game.treasure?.carrier != nil { carried = true }
         }

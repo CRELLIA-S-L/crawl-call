@@ -39,7 +39,7 @@ final class IdleTests: XCTestCase {
                                     configuration: configuration))
         bot.weights = BotConfiguration.Weights(panic: bot.weights.panic, discipline: bot.weights.discipline,
                                                aggression: aggression, selfSacrifice: bot.weights.selfSacrifice,
-                                               courage: bot.weights.courage)
+                                               courage: bot.weights.courage, greed: bot.weights.greed)
         return bot
     }
 

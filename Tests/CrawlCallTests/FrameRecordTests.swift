@@ -266,7 +266,7 @@ final class MatchRecordTests: XCTestCase {
         // with both squads in the arena the snake is shot to pieces first, the more so
         // since the weapons wait out their own time (FR-BOT-600) and the bots spend
         // the slots they used to stand in firing.
-        let world = try room(squadSize: 1)
+        let world = withoutTreasure(try room(squadSize: 1))
         let (session, recorder) = try session(in: world, recording: file)
         let game = session.game
         let prey = try XCTUnwrap(game.bots.filter { $0.floor == 0 }.first)

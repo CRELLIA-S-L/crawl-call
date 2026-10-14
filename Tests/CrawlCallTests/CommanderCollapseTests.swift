@@ -88,7 +88,7 @@ final class SquadCollapseTests: XCTestCase {
     func testPanicIsNotRaisedPastWhatTheArchetypeAllows() throws {
         var soldier = try bot(.heavy, id: 1)
         soldier.weights = BotConfiguration.Weights(panic: 0.9, discipline: 0.5, aggression: 0.5,
-                                                   selfSacrifice: 0.5, courage: 0.5)
+                                                   selfSacrifice: 0.5, courage: 0.5, greed: 0.5)
         let highest = try XCTUnwrap(configuration.archetypes[Archetype.heavy.rawValue]?
             .allowedRanges["panic"]?.highest)
         XCTAssertGreaterThan(0.9 + configuration.collapsePanicIncrement, highest,
