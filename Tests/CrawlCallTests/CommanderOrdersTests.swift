@@ -10,7 +10,7 @@
 // seam is for (ADR-0077): the shape of IF-CMD-020 is the contract, and a decision made
 // up by hand exercises what it causes exactly as one from the model would.
 //
-// file verifies: FR-CMD-030, FR-CMD-040, FR-BOT-116, FR-BOT-120, FR-BOT-130
+// file verifies: FR-CMD-030, FR-CMD-040, FR-BOT-116, FR-BOT-120, FR-BOT-130, FR-BOT-660
 import XCTest
 @testable import CrawlCall
 
@@ -431,5 +431,105 @@ final class CommandedMatchTests: XCTestCase {
         _ = game.advance(seconds: 1)
         XCTAssertNil(game.commands.of(.red))
         XCTAssertNil(game.commands.of(.blue))
+    }
+}
+
+/// An order that names the ground a bot is already standing on (FR-BOT-660).
+final class OrderAlreadyObeyedTests: XCTestCase {
+    /// One bot of the shipped arena, alone in it, having looked at the map round it:
+    /// with no enemy, no snake and a full magazine the only thing it can score is the
+    /// order (FR-BOT-116), and a bot that has seen no cell has nowhere to be sent
+    /// (FR-BOT-220, FR-BOT-230).
+    private func alone(in world: World) throws -> [Bot] {
+        let game = Game(world: world, start: try XCTUnwrap(Game.firstStart(in: world)))
+        var soldier = try XCTUnwrap(game.bots.first(where: { $0.squad == .red }),
+                                    "the arena spawned no red squad")
+        Perception.lookAtMap(&soldier, world: world, modules: Perception.modules(of: world.map), now: .zero)
+        return [soldier]
+    }
+
+    private func command(_ part: Places.Part) -> SquadCommand {
+        SquadCommand(threat: .enemy, order: .press, place: part)
+    }
+
+    func testThePartABotStandsInIsTheOneItsCommanderIsTold() throws {
+        // The two readings are one reading: what `Places.part` answers is the word
+        // `SquadView.place` puts in front of the model (IF-CMD-010).
+        let world = try Launch.world().get()
+        for part in Places.Part.allCases {
+            let middle = Places.middle(of: part, in: world.plan.bounds)
+            XCTAssertEqual(Places.part(of: middle, in: world.plan.bounds), part,
+                           "the middle of \(part.rawValue) reads as another part")
+        }
+    }
+
+    func testABotOrderedIntoThePartItStandsInIsGivenNoCellToMoveTo() throws {
+        // FR-BOT-660. Told to be where it already is, the bot has nothing to obey and
+        // goes looking instead (FR-BOT-360, FR-BOT-370).
+        let world = try Launch.world().get()
+        var bots = try alone(in: world)
+        let soldier = try element(.zero, of: bots)
+        let here = try XCTUnwrap(Places.part(of: soldier.position, in: world.plan.bounds))
+        _ = Execution.deliberate(&bots, slots: [soldier.id], world: world,
+                                 command: { _ in self.command(here) })
+        if case .moveToOrderedZone = try element(.zero, of: bots).action {
+            XCTFail("the bot was sent to the part it was already standing in")
+        }
+    }
+
+    func testABotOrderedIntoAnotherPartIsGivenACellToMoveTo() throws {
+        // The negation of the rule: the same bot, the same order, a part it is not in.
+        let world = try Launch.world().get()
+        var bots = try alone(in: world)
+        let soldier = try element(.zero, of: bots)
+        let here = try XCTUnwrap(Places.part(of: soldier.position, in: world.plan.bounds))
+        let away = try XCTUnwrap(Places.Part.allCases.first { part in
+            guard part != here else { return false }
+            let middle = Places.middle(of: part, in: world.plan.bounds)
+            return Perception.metres(middle, soldier.position) > world.configurations.bot.groupingDistance
+        }, "every part of this arena is within a squad's grouping distance of the other")
+        _ = Execution.deliberate(&bots, slots: [soldier.id], world: world,
+                                 command: { _ in self.command(away) })
+        guard case .moveToOrderedZone = try element(.zero, of: bots).action else {
+            XCTFail("a bot ordered across the arena chose \(String(describing: try element(.zero, of: bots).action))")
+            return
+        }
+    }
+
+    func testTwoSquadsEachOrderedOntoItsOwnGroundStillFightEachOther() throws {
+        // What the rule is for, measured end to end: a commander that keeps pointing
+        // each squad at the ground it already holds used to stop the match dead — no
+        // shot fired in a hundred and fifty seconds (ADR-0095). The squads have to
+        // find each other anyway.
+        let world = try Launch.world().get()
+        var game = Game(world: world, start: try XCTUnwrap(Game.firstStart(in: world)),
+                        commander: HomeCommander())
+        let frame = 1.0 / 60
+        var gone: Double?
+        for step in 0..<9_000 where game.outcome == nil {
+            _ = game.advance(seconds: frame)
+            if gone == nil, Squad.allCases.contains(where: { squad in
+                !game.bots.contains { $0.squad == squad && $0.isAlive }
+            }) {
+                gone = Double(step) * frame
+            }
+        }
+        let when = try XCTUnwrap(gone, "in a hundred and fifty seconds neither squad lost a bot")
+        XCTAssertLessThan(when, 150, "the war took the whole match")
+    }
+}
+
+/// A commander that tells a squad to press into the part it is already standing in —
+/// the answer a model gives when it has seen nobody, and the one FR-BOT-660 is about.
+/// Which squad it is asked about it reads from where that squad's own crew stands,
+/// since a call never names the squad (IF-CMD-010).
+private final class HomeCommander: Commander, @unchecked Sendable {
+    var isAvailable: Bool { true }
+
+    func decide(from state: CommanderInput) async -> Result<CommanderDecision, CommanderFailure> {
+        let said = state.crew.first?.place ?? ""
+        let part = Places.Part.allCases.first { $0.rawValue == said } ?? .middle
+        return .success(CommanderDecision(threat: .enemy, order: .press, place: part,
+                                          truce: .none, line: nil))
     }
 }

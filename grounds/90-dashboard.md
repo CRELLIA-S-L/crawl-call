@@ -121,11 +121,11 @@ Counted by quarter, which is what `period` says in the register's configuration.
 | quarter | arrived unclaimed | areas |
 |---|---|---|
 | 2026-Q3 | 190 | BOT 45, GREENHOLM 7, MAP 25, PERF 4, PUB 12, SCORE 7, SNAKE 29, TOOL 25, VIEW 36 |
-| 2026-Q4 | 35 | BOT 25, MAP 2, SCORE 2, TOOL 2, VIEW 4 |
+| 2026-Q4 | 36 | BOT 26, MAP 2, SCORE 2, TOOL 2, VIEW 4 |
 
 ## Requirements resting on no hypothesis
 
-225 of 293 requirements. Weight is what stands on them: how many
+226 of 294 requirements. Weight is what stands on them: how many
 requirements link to them, plus how many files their `code` field names.
 
 | Requirement | Incoming | Code files | Weight |
@@ -213,6 +213,7 @@ requirements link to them, plus how many files their `code` field names.
 | FR-BOT-290 | 1 | 4 | 5 |
 | FR-BOT-310 | 0 | 5 | 5 |
 | FR-BOT-330 | 2 | 3 | 5 |
+| FR-BOT-360 | 1 | 4 | 5 |
 | FR-BOT-520 | 0 | 5 | 5 |
 | FR-BOT-630 | 3 | 2 | 5 |
 | FR-MAP-130 | 1 | 4 | 5 |
@@ -241,7 +242,6 @@ requirements link to them, plus how many files their `code` field names.
 | FR-BOT-260 | 0 | 4 | 4 |
 | FR-BOT-270 | 2 | 2 | 4 |
 | FR-BOT-340 | 1 | 3 | 4 |
-| FR-BOT-360 | 0 | 4 | 4 |
 | FR-BOT-405 | 1 | 3 | 4 |
 | FR-BOT-425 | 1 | 3 | 4 |
 | FR-BOT-430 | 0 | 4 | 4 |
@@ -255,6 +255,7 @@ requirements link to them, plus how many files their `code` field names.
 | FR-VIEW-310 | 0 | 4 | 4 |
 | IF-GREENHOLM-010 | 0 | 4 | 4 |
 | NFR-PERF-050 | 4 | 0 | 4 |
+| FR-BOT-116 | 2 | 1 | 3 |
 | FR-BOT-165 | 1 | 2 | 3 |
 | FR-BOT-370 | 0 | 3 | 3 |
 | FR-BOT-380 | 0 | 3 | 3 |
@@ -281,6 +282,7 @@ requirements link to them, plus how many files their `code` field names.
 | FR-BOT-300 | 1 | 1 | 2 |
 | FR-BOT-490 | 0 | 2 | 2 |
 | FR-BOT-530 | 1 | 1 | 2 |
+| FR-BOT-660 | 0 | 2 | 2 |
 | FR-MAP-190 | 0 | 2 | 2 |
 | FR-MAP-300 | 0 | 2 | 2 |
 | FR-SCORE-140 | 1 | 1 | 2 |
@@ -298,7 +300,6 @@ requirements link to them, plus how many files their `code` field names.
 | CON-PUB-040 | 1 | 0 | 1 |
 | CON-PUB-050 | 1 | 0 | 1 |
 | FR-BOT-070 | 1 | 0 | 1 |
-| FR-BOT-116 | 0 | 1 | 1 |
 | FR-BOT-119 | 0 | 1 | 1 |
 | FR-BOT-130 | 0 | 1 | 1 |
 | FR-BOT-140 | 0 | 1 | 1 |

@@ -15,7 +15,7 @@
 // is the one act a slot holds it to (FR-BOT-170). Until 2026-10-13 both were one field,
 // and firing pushed the knife's next strike away.
 //
-// file implements: FR-BOT-550, FR-BOT-560, FR-BOT-570, FR-BOT-580, FR-BOT-600, FR-BOT-610, FR-BOT-450, FR-BOT-470, FR-BOT-510, FR-BOT-520, FR-BOT-167, FR-BOT-060, FR-BOT-110, FR-BOT-115, FR-BOT-170, FR-BOT-360, FR-BOT-370, FR-BOT-380, FR-BOT-180, FR-BOT-190, INV-BOT-020, INV-BOT-010, FR-BOT-165, FR-MAP-150, FR-BOT-270, FR-BOT-280, FR-BOT-290, FR-BOT-300, FR-BOT-220, FR-BOT-310, FR-BOT-320, FR-BOT-330, FR-BOT-340, FR-BOT-420, FR-BOT-425, FR-BOT-430, FR-BOT-620, FR-BOT-640, FR-CMD-030, FR-CMD-040
+// file implements: FR-BOT-550, FR-BOT-560, FR-BOT-570, FR-BOT-580, FR-BOT-600, FR-BOT-610, FR-BOT-450, FR-BOT-470, FR-BOT-510, FR-BOT-520, FR-BOT-167, FR-BOT-060, FR-BOT-110, FR-BOT-115, FR-BOT-170, FR-BOT-360, FR-BOT-370, FR-BOT-380, FR-BOT-180, FR-BOT-190, INV-BOT-020, INV-BOT-010, FR-BOT-165, FR-MAP-150, FR-BOT-270, FR-BOT-280, FR-BOT-290, FR-BOT-300, FR-BOT-220, FR-BOT-310, FR-BOT-320, FR-BOT-330, FR-BOT-340, FR-BOT-420, FR-BOT-425, FR-BOT-430, FR-BOT-620, FR-BOT-640, FR-BOT-660, FR-CMD-030, FR-CMD-040
 import Foundation
 
 enum Execution {
@@ -141,7 +141,8 @@ enum Execution {
             if let standing = command(bots[index].squad) {
                 situation.priority = standing.threat
                 situation.arenaSpan = Perception.metres(world.plan.bounds.lowest, world.plan.bounds.highest)
-                if let part = standing.place {
+                if let part = standing.place,
+                   Places.part(of: bots[index].position, in: world.plan.bounds) != part {
                     let middle = Places.middle(of: part, in: world.plan.bounds)
                     situation.orderedPart = middle
                     if standing.order.namesTheEnemy, knowledge.enemies.isEmpty {

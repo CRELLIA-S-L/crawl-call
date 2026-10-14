@@ -9,7 +9,7 @@
 // purpose, because a commander that could name a cell would be taking the bots'
 // decisions for them, which is the whole of the rule this file serves.
 //
-// file implements: FR-CMD-040
+// file implements: FR-CMD-040, FR-BOT-660
 import Foundation
 
 enum Places {
@@ -24,6 +24,13 @@ enum Places {
         case northWest = "north-west"
         case southEast = "south-east"
         case southWest = "south-west"
+    }
+
+    /// Which part a point stands in, by the same reading the commander is told in
+    /// (`SquadView.place`): nil where the words do not name a part of this arena.
+    static func part(of point: SIMD3<Double>, in bounds: ScenePlan.Bounds) -> Part? {
+        let said = SquadView.place(of: point, floor: .zero, in: bounds)
+        return Part.allCases.first { $0.rawValue == said }
     }
 
     /// The middle of a part, in the arena's own coordinates: the centre of the box

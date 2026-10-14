@@ -1525,3 +1525,23 @@ When the bot carrying the treasure dies or is consumed, the system **shall** lea
 
 **Rationale.** Concept §6.4: the carrier's death does not end the match — were it to, the snake would need to eat one bot and there would be no second act — and the treasure drops on the spot for the next bot that may take it (FR-BOT-630) to pick up.
 Where it stood when it fell, and not where it was going: the drop is what makes killing the carrier worth doing to both the snake and the last enemy, and a treasure that went back to its cell would make it worth nothing.
+
+### FR-BOT-660 — An order to be where the bot already is names no part
+
+```yaml
+status: implemented
+verification: T
+derives_from: []
+depends_on: [FR-BOT-116, FR-BOT-360, FR-CMD-040]
+refines: [FR-BOT-116]
+conflicts_with: []
+code: [Sources/CrawlCall/Bot/Execution.swift, Sources/CrawlCall/Commander/Places.swift]
+tests: [Tests/CrawlCallTests/CommanderOrdersTests.swift]
+created: 2026-10-14
+```
+
+While a bot stands in the part of the arena its squad's standing order names, the system **shall** score that bot's actions as if the order named no part.
+
+**Rationale.** A commander can point a squad at the ground it is already standing on, and nothing stops it: an order is a word from a model, and the game is obliged to survive whatever comes back (CON-CMD-020). Obeyed literally, such an order is the end of the match. Measured on the shipped arena on 2026-10-14, with every call answered "press the part you are in": in a hundred and fifty seconds neither squad lost a bot, not one shot was fired, four bots moved less than two metres from where they began, and the two squads never came within two and a half metres of each other. The squads were pinned twice over — the ordered move outscored everything else, so a bot never had nothing to do and never advanced on the enemy (FR-BOT-360); and an order that names the enemy's part told bots with no sighting of their own that the enemy was where they stood (FR-BOT-116, FR-CMD-040).
+The same rule answers both, because both read the order's part and neither has anything to read once it is taken away. The order itself stands — the squad is still under it, and a bot that leaves the named part is drawn back to it.
+Where the bot is and not where the squad is: a squad spread over two parts has some of its bots obeying and some of them free, which is what being spread means.
