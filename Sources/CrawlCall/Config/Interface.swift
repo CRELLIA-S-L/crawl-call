@@ -2,7 +2,7 @@
 // and gestures (ART-070). Part of how the interface looks rather than of the world it
 // shows, so named here and not in the configuration (ADR-0026).
 //
-// file implements: FR-VIEW-050, FR-VIEW-120, FR-VIEW-160, FR-VIEW-190, FR-TOOL-070, FR-VIEW-210, FR-MAP-140, FR-TOOL-260, FR-TOOL-270, FR-VIEW-155
+// file implements: FR-VIEW-050, FR-VIEW-120, FR-VIEW-160, FR-VIEW-190, FR-VIEW-380, FR-TOOL-070, FR-VIEW-210, FR-MAP-140, FR-TOOL-260, FR-TOOL-270, FR-VIEW-155
 import Foundation
 
 /// The look every plate and mark shares (FR-VIEW-120): a light, translucent plate and
@@ -52,6 +52,23 @@ enum MatchEndPlate {
     static let horizontalPadding = 40.0
     static let verticalPadding = 32.0
     static let cornerRadius = 36.0
+}
+
+/// The line along the top that says what each squad was ordered (FR-VIEW-380).
+enum OrdersBar {
+    /// How far each squad's own colour (FR-VIEW-060) is carried towards white for the
+    /// plate it is written on: a light plate is what the interface is made of
+    /// (FR-VIEW-120), and these two have to stay pink and pale blue.
+    static let towardsWhite = 0.62
+    static let plateOpacity = 0.85
+    static let orderTextSize = 15.0
+    static let threatTextSize = 13.0
+    static let cornerRadius = 14.0
+    static let horizontalPadding = 12.0
+    static let verticalPadding = 6.0
+    /// Points between the two plates, and between a plate and the edge of the screen.
+    static let spacing = 8.0
+    static let margin = 10.0
 }
 
 /// Debug mode's button back to the snake and its gestures (FR-TOOL-070, ADR-0023).

@@ -37,7 +37,7 @@
   {
     "from": "Sources/CrawlCall/CrawlCallApp.swift",
     "to": "Sources/CrawlCall/View/MatchHost.swift",
-    "via": "MatchHost:61 — one witness of 7 reference(s) from 1 file(s)"
+    "via": "MatchHost:61 — one witness of 8 reference(s) from 1 file(s)"
   },
   {
     "from": "Sources/CrawlCall/CrawlCallApp.swift",
@@ -127,7 +127,7 @@
   {
     "from": "Sources/CrawlCall/View/ChoicePlate.swift",
     "to": "Sources/CrawlCall/Config/TextKey.swift",
-    "via": "TextKey:12 — one witness of 59 reference(s) from 6 file(s)"
+    "via": "TextKey:12 — one witness of 74 reference(s) from 7 file(s)"
   },
   {
     "from": "Sources/CrawlCall/View/Controls.swift",
@@ -148,6 +148,16 @@
     "from": "Sources/CrawlCall/View/LungePose.swift",
     "to": "Sources/CrawlCall/Snake/Lunge.swift",
     "via": "Lunge:20 — one witness of 2 reference(s) from 2 file(s)"
+  },
+  {
+    "from": "Sources/CrawlCall/View/SquadOrders.swift",
+    "to": "Sources/CrawlCall/Bot/Bot.swift",
+    "via": "Squad:37 — one witness of 2 reference(s) from 1 file(s)"
+  },
+  {
+    "from": "Sources/CrawlCall/View/SquadOrders.swift",
+    "to": "Sources/CrawlCall/View/BotEntity.swift",
+    "via": "BotEntity:77 — one witness of 1 reference(s) from 1 file(s)"
   },
   {
     "from": "Sources/PromptBench/PromptVariants.swift",

@@ -13,6 +13,8 @@ enum TextKey: String, CaseIterable {
     case matchEndSnakeDied = "matchEnd.snakeDied"
     case matchEndArenaEmpty = "matchEnd.arenaEmpty"
     case matchEndTreasureTaken = "matchEnd.treasureTaken"
+    case ordersNone = "orders.none"
+    case ordersThreat = "orders.threat"
     case matchEndAgain = "matchEnd.again"
     case controlsEat = "controls.eat"
     case pauseHeadline = "pause.headline"

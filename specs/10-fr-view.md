@@ -794,3 +794,24 @@ While a match is running, the system **shall** draw the treasure at the place it
 **Rationale.** The treasure is what the second act is about, and a prize nobody can see is a cell on a map the player has to be told about. Drawn where it lies, so that the player can be waiting there when the war ends; drawn at the carrier, so that the one bot worth eating out of the survivors can be picked out at a glance (concept §6.4).
 Its own thing on screen rather than a mark on the floor, because it moves: it travels with a bot and falls where that bot falls (FR-BOT-650).
 Painted a colour the kit does not use: gold was tried on the phone on 2026-10-14 and was a crate among crates, the kit's crate being orange and its partition yellow-tan.
+
+### FR-VIEW-380 — The screen says what each squad was ordered
+
+```yaml
+status: implemented
+verification: T
+derives_from: [FR-CMD-030, FR-CMD-040]
+depends_on: [FR-VIEW-120, FR-VIEW-060, IF-VIEW-030]
+refines: []
+conflicts_with: []
+code: [Sources/CrawlCall/View/SquadOrders.swift, Sources/CrawlCall/CrawlCallApp.swift, Sources/CrawlCall/Config/Interface.swift, Sources/CrawlCall/Config/TextKey.swift, Sources/CrawlCall/View/Localizable.xcstrings]
+tests: [Tests/CrawlCallTests/SquadOrdersTests.swift]
+created: 2026-10-14
+```
+
+While a match is being played, the system **shall** draw along the top of the screen what each squad stands under — the red squad's on the left and the blue squad's on the right, each on a plate in its own squad's colour — naming the order, the part of the arena that order names and the threat the squad was given, or saying that the squad stands under no order yet.
+
+**Rationale.** The maintainer, 2026-10-14, after a match on the phone in which both squads stood still for two minutes: what a squad was told is the one thing that explains what it is doing, and it was invisible — not on screen, not in the frame record, not in any log (Q-700). A line at the top of the screen is the cheapest reading there is, and it is on while the game is being played rather than in a tool nobody opens.
+Each squad's own colour, because the two orders are told apart by whose they are before they are read at all: the same colours the bots are drawn in (FR-VIEW-060), lightened into the plates the interface is made of (FR-VIEW-120).
+The order's own words — `press`, `north-east`, `snake` — are the commander's and are not translated: what the fighters say is outside FR-VIEW-200 by its own rationale, and an order is of that kind. The words the game puts around them are in the catalog (IF-VIEW-030).
+Both halves are always there, so that a squad under no order reads as one nobody has spoken to rather than as a missing plate.

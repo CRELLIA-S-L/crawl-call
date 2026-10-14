@@ -242,10 +242,10 @@ The runners keep `scripts` as a directory; the two files here are claimed by the
 
 ```yaml
 status: built
-carries: [Sources/CrawlCall/View/ChoicePlate.swift, Sources/CrawlCall/View/Controls.swift, Sources/CrawlCall/View/FreeCameraControls.swift, Sources/CrawlCall/View/GameHostingController.swift, Sources/CrawlCall/View/MatchEnd.swift, Sources/CrawlCall/View/SeeThroughSwitches.swift, Sources/CrawlCall/View/MatchHost.swift]
-requirements: [FR-VIEW-120, FR-VIEW-160, FR-VIEW-190, FR-VIEW-200]
-depends_on: [E-020, E-030, E-050, E-070]
-interface: a match and the window it is played in, in; the thumbs, the readings and the words the player is given, out — entered by `ChoicePlate`, `Controls`, `GameHostingController`, `MatchEnd`, `MatchHost`, `SeeThroughSwitches`
+carries: [Sources/CrawlCall/View/ChoicePlate.swift, Sources/CrawlCall/View/Controls.swift, Sources/CrawlCall/View/FreeCameraControls.swift, Sources/CrawlCall/View/GameHostingController.swift, Sources/CrawlCall/View/MatchEnd.swift, Sources/CrawlCall/View/SeeThroughSwitches.swift, Sources/CrawlCall/View/SquadOrders.swift, Sources/CrawlCall/View/MatchHost.swift]
+requirements: [FR-VIEW-120, FR-VIEW-160, FR-VIEW-190, FR-VIEW-200, FR-VIEW-380]
+depends_on: [E-020, E-030, E-050, E-070, E-090]
+interface: a match and the window it is played in, in; the thumbs, the readings and the words the player is given, out — entered by `ChoicePlate`, `Controls`, `GameHostingController`, `MatchEnd`, `MatchHost`, `SeeThroughSwitches`, `SquadOrders`
 protects: [FR-VIEW-200]
 units: [crawlcall]
 ```
@@ -255,7 +255,7 @@ What the player touches and reads: the stick and the buttons, the plate a choice
 **Rationale.** Split from the view on 2026-10-11 (ADR-0073) because the two answer different questions and change for different reasons: the view changes when the game's look does, the screens when what the player is asked to do does, and a part holding both invited a camera decision to be made while editing a button.
 The split is also what the cut needed: the screens are what drives a match — a press restarts it, a switch changes what it draws, the window's orientation lock pauses it — and while they sat in the view, that driving ran upward against the order, since the match stands above the view and must not be reached into from below. In a group of their own above the match it is no longer a crossing but the ordinary direction: the screens hold the match, the match holds the drawing.
 It answers for the words and the readings rather than for the pictures: FR-VIEW-200 and FR-VIEW-120 are realized nowhere outside these files but in the configuration types that name their strings and numbers, FR-VIEW-160 is a button that must say what it can do, and FR-VIEW-190 was claimed by both the view and the match until this split settled it — the match owns the two ends of a game (FR-SCORE-140, FR-SCORE-150), and the screen that announces one and offers another is this part.
-It leans on the match for what to show, on the input contract for the intents a thumb makes, on the view for the scene it hosts, and on the configuration contract for the strings and the geometry of a control.
+It leans on the match for what to show, on the input contract for the intents a thumb makes, on the view for the scene it hosts, and on the configuration contract for the strings and the geometry of a control. Since FR-VIEW-380 it also leans on the squads, for the two sides themselves: the line that says what each was ordered is written in that squad's own colour.
 `MatchHost.swift` is not a screen but the bridge the window hands the match, and it belongs here for the same reason the screens do: what only the window knows — the orientation lock, the widest frame this device can give — is not the view's business.
 
 ### E-150 — The commanders

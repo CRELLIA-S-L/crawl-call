@@ -121,11 +121,11 @@ Counted by quarter, which is what `period` says in the register's configuration.
 | quarter | arrived unclaimed | areas |
 |---|---|---|
 | 2026-Q3 | 190 | BOT 45, GREENHOLM 7, MAP 25, PERF 4, PUB 12, SCORE 7, SNAKE 29, TOOL 25, VIEW 36 |
-| 2026-Q4 | 36 | BOT 26, MAP 2, SCORE 2, TOOL 2, VIEW 4 |
+| 2026-Q4 | 37 | BOT 26, MAP 2, SCORE 2, TOOL 2, VIEW 5 |
 
 ## Requirements resting on no hypothesis
 
-226 of 294 requirements. Weight is what stands on them: how many
+227 of 295 requirements. Weight is what stands on them: how many
 requirements link to them, plus how many files their `code` field names.
 
 | Requirement | Incoming | Code files | Weight |
@@ -184,6 +184,7 @@ requirements link to them, plus how many files their `code` field names.
 | FR-TOOL-240 | 1 | 6 | 7 |
 | FR-VIEW-020 | 3 | 4 | 7 |
 | FR-VIEW-050 | 2 | 5 | 7 |
+| FR-VIEW-060 | 3 | 4 | 7 |
 | FR-VIEW-155 | 2 | 5 | 7 |
 | FR-VIEW-260 | 2 | 5 | 7 |
 | FR-VIEW-320 | 0 | 7 | 7 |
@@ -204,8 +205,8 @@ requirements link to them, plus how many files their `code` field names.
 | FR-SNAKE-060 | 4 | 2 | 6 |
 | FR-SNAKE-070 | 4 | 2 | 6 |
 | FR-VIEW-030 | 2 | 4 | 6 |
-| FR-VIEW-060 | 2 | 4 | 6 |
 | FR-VIEW-100 | 2 | 4 | 6 |
+| FR-VIEW-120 | 2 | 4 | 6 |
 | FR-VIEW-200 | 1 | 5 | 6 |
 | FR-VIEW-210 | 2 | 4 | 6 |
 | FR-VIEW-290 | 0 | 6 | 6 |
@@ -225,7 +226,6 @@ requirements link to them, plus how many files their `code` field names.
 | FR-TOOL-260 | 0 | 5 | 5 |
 | FR-TOOL-270 | 0 | 5 | 5 |
 | FR-VIEW-070 | 3 | 2 | 5 |
-| FR-VIEW-120 | 1 | 4 | 5 |
 | FR-VIEW-160 | 0 | 5 | 5 |
 | FR-VIEW-230 | 0 | 5 | 5 |
 | FR-VIEW-240 | 0 | 5 | 5 |
@@ -234,6 +234,7 @@ requirements link to them, plus how many files their `code` field names.
 | FR-VIEW-330 | 0 | 5 | 5 |
 | FR-VIEW-350 | 0 | 5 | 5 |
 | FR-VIEW-370 | 0 | 5 | 5 |
+| FR-VIEW-380 | 0 | 5 | 5 |
 | NFR-PERF-010 | 5 | 0 | 5 |
 | CON-PUB-010 | 4 | 0 | 4 |
 | FR-BOT-040 | 2 | 2 | 4 |
@@ -271,6 +272,7 @@ requirements link to them, plus how many files their `code` field names.
 | FR-VIEW-140 | 0 | 3 | 3 |
 | FR-VIEW-220 | 1 | 2 | 3 |
 | FR-VIEW-340 | 0 | 3 | 3 |
+| IF-VIEW-030 | 1 | 2 | 3 |
 | CON-PUB-020 | 2 | 0 | 2 |
 | CON-PUB-060 | 2 | 0 | 2 |
 | CON-PUB-070 | 2 | 0 | 2 |
@@ -294,7 +296,6 @@ requirements link to them, plus how many files their `code` field names.
 | FR-TOOL-330 | 1 | 1 | 2 |
 | FR-TOOL-340 | 0 | 2 | 2 |
 | FR-VIEW-300 | 0 | 2 | 2 |
-| IF-VIEW-030 | 0 | 2 | 2 |
 | INV-BOT-010 | 0 | 2 | 2 |
 | NFR-PERF-080 | 1 | 1 | 2 |
 | CON-PUB-040 | 1 | 0 | 1 |

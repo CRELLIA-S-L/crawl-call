@@ -61,6 +61,30 @@
         }
       }
     },
+    "orders.none" : {
+      "comment" : "The orders line, where a squad's commander has not spoken to it yet.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "no orders"
+          }
+        }
+      }
+    },
+    "orders.threat" : {
+      "comment" : "The orders line: what the squad was told to worry about. %@ is the commander's own word for it.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "watch the %@"
+          }
+        }
+      }
+    },
     "pause.headline" : {
       "comment" : "Headline of the plate while the match is paused.",
       "extractionState" : "manual",
