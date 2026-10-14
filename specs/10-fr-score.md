@@ -327,14 +327,14 @@ Today the only way a bot leaves the arena is being eaten, so the two readings of
 ### FR-SCORE-160 — The match ends when the treasure is carried off
 
 ```yaml
-status: deferred
+status: partial
 verification: T
 derives_from: []
 depends_on: [FR-BOT-640, FR-MAP-290]
 refines: []
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Game.swift, Sources/CrawlCall/Bot/Treasure.swift, Sources/CrawlCall/View/MatchEnd.swift]
+tests: [Tests/CrawlCallTests/TreasureTests.swift]
 created: 2026-10-14
 ```
 
@@ -342,6 +342,8 @@ When the bot carrying the treasure reaches the evacuation point the map names, t
 
 **Rationale.** Concept §6.4: the third of three ends, beside the snake dying (FR-SCORE-140) and nothing being left alive (FR-SCORE-150). Without it a match that one squad has won hangs on survivors with nowhere to go — measured on 2026-10-13 on the shipped arena, four of them spent a hundred and ten seconds between three points a metre apart — and that is a game with no goal rather than a defect in the behaviour.
 The snake is not obliged to defend the treasure and never loses points for it; what it loses is a multiplier over the whole match (FR-SCORE-170).
+
+**Partial, and how.** The same half as FR-SCORE-140 and FR-SCORE-150: the end is built — a carrier that reaches the cell stops the match where it stands and the plate says which end it was (FR-VIEW-190) — and the result is not, for want of a score (FR-SCORE-010).
 
 ### FR-SCORE-170 — A treasure carried off costs the match its multiplier
 

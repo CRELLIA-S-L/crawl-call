@@ -5,7 +5,7 @@
 // measured with — `specs/50-verification.md` says why, and the two are different
 // questions asked of the same number.
 //
-// file implements: FR-VIEW-350, FR-VIEW-360, FR-TOOL-070, FR-VIEW-020, FR-VIEW-030, FR-VIEW-060, FR-VIEW-100, FR-VIEW-140, FR-VIEW-150, FR-VIEW-155, FR-VIEW-160, FR-VIEW-170, FR-VIEW-250, FR-VIEW-190, FR-VIEW-230, FR-VIEW-210, FR-TOOL-230, FR-TOOL-240, FR-GREENHOLM-030, FR-TOOL-260, FR-TOOL-270, FR-SNAKE-220, FR-VIEW-280, FR-VIEW-290, FR-VIEW-310, FR-VIEW-320, FR-VIEW-330
+// file implements: FR-VIEW-350, FR-VIEW-360, FR-VIEW-370, FR-TOOL-070, FR-VIEW-020, FR-VIEW-030, FR-VIEW-060, FR-VIEW-100, FR-VIEW-140, FR-VIEW-150, FR-VIEW-155, FR-VIEW-160, FR-VIEW-170, FR-VIEW-250, FR-VIEW-190, FR-VIEW-230, FR-VIEW-210, FR-TOOL-230, FR-TOOL-240, FR-GREENHOLM-030, FR-TOOL-260, FR-TOOL-270, FR-SNAKE-220, FR-VIEW-280, FR-VIEW-290, FR-VIEW-310, FR-VIEW-320, FR-VIEW-330
 import Foundation
 import Observation
 import RealityKit
@@ -21,6 +21,9 @@ final class GameSession {
     private let botEntities: Entity
     private let shotEntities: Entity
     private let blastEntities: Entity
+    /// The treasure's box (FR-VIEW-370). Nil where nothing draws it — a test of the
+    /// logic alone, which makes no scene.
+    private let treasureEntity: Entity?
     private let camera: Entity
     private var seeThrough: SeeThrough
     /// Where the match camera looks (FR-VIEW-020); read by the scenery, whose birds
@@ -43,12 +46,13 @@ final class GameSession {
 
     init(game: Game, snakeEntity: Entity, botEntities: Entity, shotEntities: Entity,
          blastEntities: Entity, camera: Entity, seeThrough: SeeThrough, distance: Double,
-         fieldOfView: Double) {
+         fieldOfView: Double, treasureEntity: Entity? = nil) {
         self.game = game
         self.snakeEntity = snakeEntity
         self.botEntities = botEntities
         self.shotEntities = shotEntities
         self.blastEntities = blastEntities
+        self.treasureEntity = treasureEntity
         self.camera = camera
         self.seeThrough = seeThrough
         self.distance = distance
@@ -260,6 +264,11 @@ final class GameSession {
         // for the moment it is drawn for (FR-VIEW-360).
         ShotEntity.update(shotEntities, from: game.rounds)
         BlastEntity.update(blastEntities, grenades: game.grenades, blasts: game.blasts)
+        // And the treasure where it is: on the ground, or in the hands of whoever is
+        // carrying it (FR-VIEW-370).
+        if let treasureEntity {
+            TreasureEntity.update(treasureEntity, treasure: game.treasure, bots: game.bots)
+        }
         // A meal under way is drawn going in (FR-VIEW-100). What is left of the prey
         // is measured by whatever ends that meal: live prey by the health it has
         // left, a body by the time it has left. Live prey is cut away at the mouth of the

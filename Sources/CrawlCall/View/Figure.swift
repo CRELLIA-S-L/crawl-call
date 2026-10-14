@@ -256,7 +256,8 @@ enum Figure {
         case .fire(_, .sidearm), .reload(.sidearm): return .sidearm
         case .throwGrenade: return .grenade
         case .strike, .throwKnife: return .knife
-        case .fire, .reload, .close, .takeCover, .moveToOrderedZone, .flee, .heal, .advance, .explore, .none:
+        case .fire, .reload, .close, .takeCover, .moveToOrderedZone, .flee, .heal, .advance, .explore,
+             .takeTreasure, .carryTreasure, .none:
             return .primary
         }
     }

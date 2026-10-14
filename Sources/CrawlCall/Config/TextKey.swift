@@ -12,6 +12,7 @@ import SwiftUI
 enum TextKey: String, CaseIterable {
     case matchEndSnakeDied = "matchEnd.snakeDied"
     case matchEndArenaEmpty = "matchEnd.arenaEmpty"
+    case matchEndTreasureTaken = "matchEnd.treasureTaken"
     case matchEndAgain = "matchEnd.again"
     case controlsEat = "controls.eat"
     case pauseHeadline = "pause.headline"

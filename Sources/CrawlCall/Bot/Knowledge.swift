@@ -3,7 +3,7 @@
 // A bot acts on this and on nothing else (FR-BOT-220): the truth is the world's, the
 // record is the bot's.
 //
-// file implements: FR-BOT-050, FR-BOT-360, FR-BOT-220, FR-BOT-230, FR-BOT-240, FR-BOT-250, FR-BOT-260, FR-BOT-310, FR-BOT-320, FR-BOT-330
+// file implements: FR-BOT-050, FR-BOT-360, FR-BOT-220, FR-BOT-230, FR-BOT-240, FR-BOT-250, FR-BOT-260, FR-BOT-310, FR-BOT-320, FR-BOT-330, FR-BOT-620
 import Foundation
 
 struct Knowledge: Equatable {
@@ -49,6 +49,15 @@ struct Knowledge: Equatable {
 
     /// Whether any part of the snake is in the record.
     var knowsSnake: Bool { !snake.isEmpty }
+
+    /// Whether the bot has nowhere left to believe an enemy is: no sighting it has not
+    /// been to, and the enemy's starting area already visited (FR-BOT-620).
+    ///
+    /// It is the same reading that leaves a bot with nothing to advance on
+    /// (FR-BOT-360), and it is a belief and not the truth: an enemy that nobody has
+    /// seen, or one seen where it no longer is, leaves this true while that enemy is
+    /// alive — which is what lets a squad go for the treasure and be wrong about it.
+    var believesEnemyGone: Bool { enemies.isEmpty && enemyStart == nil }
 
     /// Where the snake's parts were last seen, as far as the record goes.
     var snakePoints: [SIMD3<Double>] {

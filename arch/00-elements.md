@@ -72,7 +72,7 @@ It leans on the configuration contract for the stick's geometry and the names th
 ```yaml
 status: built
 carries: [Sources/CrawlCall/Map, maps, config/kit, ATTRIBUTION.md]
-requirements: [IF-MAP-010, FR-TOOL-010, FR-TOOL-020, FR-TOOL-030, FR-MAP-010, FR-MAP-020, FR-MAP-120, FR-MAP-200, FR-MAP-100, FR-MAP-090, FR-MAP-150, FR-MAP-160, FR-MAP-170, FR-MAP-180, FR-MAP-190, FR-MAP-210, FR-MAP-220, FR-MAP-260]
+requirements: [IF-MAP-010, FR-TOOL-010, FR-TOOL-020, FR-TOOL-030, FR-MAP-010, FR-MAP-020, FR-MAP-120, FR-MAP-200, FR-MAP-100, FR-MAP-090, FR-MAP-150, FR-MAP-160, FR-MAP-170, FR-MAP-180, FR-MAP-190, FR-MAP-210, FR-MAP-220, FR-MAP-260, FR-MAP-290, FR-MAP-300]
 depends_on: [E-020]
 interface: a map file and its kit in; the placements, the navigation graph, the scene geometry, the value a match is handed and where the ground ends out — entered by `DistanceField`, `GroundRect`, `Kit`, `MapSpecification`, `NavigationGraph`, `Outline`, `Passages`, `PieceIndex`, `SampleGrid`, `ScenePlan`, `Setting`, `Sight`, `World`
 protects: [FR-MAP-020]
@@ -94,9 +94,9 @@ Four files joined it on 2026-10-11 from the surroundings, and the reason is the 
 ```yaml
 status: built
 carries: [Sources/CrawlCall/View]
-requirements: [FR-VIEW-010, FR-VIEW-130, FR-VIEW-020, FR-VIEW-060, FR-VIEW-070, FR-TOOL-070, FR-VIEW-100, FR-VIEW-350, FR-VIEW-360, FR-VIEW-140, FR-VIEW-150, FR-VIEW-155, FR-VIEW-170, IF-VIEW-030, FR-TOOL-260, FR-TOOL-270, FR-VIEW-240, FR-VIEW-250, FR-VIEW-260, FR-VIEW-270, FR-VIEW-280, FR-VIEW-290, FR-VIEW-300, FR-VIEW-310, FR-VIEW-320, FR-VIEW-330, FR-VIEW-340]
+requirements: [FR-VIEW-010, FR-VIEW-130, FR-VIEW-020, FR-VIEW-060, FR-VIEW-070, FR-TOOL-070, FR-VIEW-100, FR-VIEW-350, FR-VIEW-360, FR-VIEW-140, FR-VIEW-150, FR-VIEW-155, FR-VIEW-170, IF-VIEW-030, FR-TOOL-260, FR-TOOL-270, FR-VIEW-240, FR-VIEW-250, FR-VIEW-260, FR-VIEW-270, FR-VIEW-280, FR-VIEW-290, FR-VIEW-300, FR-VIEW-310, FR-VIEW-320, FR-VIEW-330, FR-VIEW-340, FR-VIEW-370]
 depends_on: [E-020, E-030, E-040, E-060, E-090]
-interface: a scene plan in; the camera it is seen through and the light it is read by, out — entered by `BotEntity`, `ChoicePlate`, `Controls`, `Digestion`, `FreeCamera`, `Gait`, `GameHostingController`, `LowPolySphere`, `LungePose`, `MatchEnd`, `MatchHost`, `SceneView`, `SeeThrough`, `ShotEntity`, `SnakeBody`, `SnakeEntity`, `SwallowPose`
+interface: a scene plan in; the camera it is seen through and the light it is read by, out — entered by `BotEntity`, `ChoicePlate`, `Controls`, `Digestion`, `FreeCamera`, `Gait`, `GameHostingController`, `LowPolySphere`, `LungePose`, `MatchEnd`, `MatchHost`, `SceneView`, `SeeThrough`, `ShotEntity`, `SnakeBody`, `SnakeEntity`, `SwallowPose`, `TreasureEntity`
 protects: [FR-VIEW-010]
 units: [crawlcall]
 ```
@@ -149,7 +149,7 @@ It also leans on the configuration contract for its tuning, and on two parts it 
 ```yaml
 status: built
 carries: [Sources/CrawlCall/Game.swift, Sources/CrawlCall/GameSession.swift, Sources/CrawlCall/Record]
-requirements: [FR-VIEW-030, FR-SCORE-140, FR-SCORE-150, FR-TOOL-230, FR-TOOL-240]
+requirements: [FR-VIEW-030, FR-SCORE-140, FR-SCORE-150, FR-SCORE-160, FR-TOOL-230, FR-TOOL-240]
 depends_on: [E-020, E-030, E-040, E-050, E-060, E-090]
 interface: intents in, a frame advanced, the scene and the camera moved to follow — entered by `FrameRecorder`, `Game`, `GameSession`, `TerminationRecord`
 protects: [FR-VIEW-030, FR-SCORE-140, FR-SCORE-150]
@@ -168,9 +168,9 @@ It reads `World` from start-up, which is the one dependency here that runs upwar
 ```yaml
 status: built
 carries: [Sources/CrawlCall/Bot]
-requirements: [FR-BOT-010, FR-BOT-020, FR-BOT-530, FR-BOT-540, FR-BOT-550, FR-BOT-560, FR-BOT-570, FR-BOT-580, FR-BOT-590, FR-BOT-600, FR-BOT-610, FR-BOT-030, FR-BOT-040, FR-BOT-050, FR-BOT-060, FR-BOT-080, FR-BOT-440, FR-BOT-450, FR-BOT-460, FR-BOT-470, FR-BOT-480, FR-BOT-490, FR-BOT-500, FR-BOT-510, FR-BOT-520, INV-BOT-040, FR-BOT-090, FR-BOT-110, FR-BOT-115, FR-BOT-116, FR-BOT-118, FR-BOT-119, FR-BOT-150, FR-BOT-160, FR-BOT-165, FR-BOT-167, FR-BOT-170, FR-BOT-200, FR-BOT-210, FR-BOT-140, FR-BOT-220, FR-BOT-230, FR-BOT-240, FR-BOT-250, FR-BOT-260, FR-BOT-270, FR-BOT-280, FR-BOT-290, FR-BOT-300, FR-BOT-310, FR-BOT-320, FR-BOT-330, FR-BOT-340, FR-BOT-350, FR-BOT-360, FR-BOT-370, FR-BOT-380, FR-BOT-400, FR-BOT-405, FR-BOT-410, FR-BOT-420, FR-BOT-425, FR-BOT-430, INV-BOT-010, INV-BOT-020, INV-BOT-030, FR-BOT-120, FR-BOT-130, FR-BOT-180, FR-BOT-190, FR-SCORE-070, FR-SCORE-080, FR-SCORE-090, FR-SCORE-100, FR-SCORE-125, FR-SCORE-130]
+requirements: [FR-BOT-010, FR-BOT-020, FR-BOT-530, FR-BOT-540, FR-BOT-550, FR-BOT-560, FR-BOT-570, FR-BOT-580, FR-BOT-590, FR-BOT-600, FR-BOT-610, FR-BOT-030, FR-BOT-040, FR-BOT-050, FR-BOT-060, FR-BOT-080, FR-BOT-440, FR-BOT-450, FR-BOT-460, FR-BOT-470, FR-BOT-480, FR-BOT-490, FR-BOT-500, FR-BOT-510, FR-BOT-520, INV-BOT-040, FR-BOT-090, FR-BOT-110, FR-BOT-115, FR-BOT-116, FR-BOT-118, FR-BOT-119, FR-BOT-150, FR-BOT-160, FR-BOT-165, FR-BOT-167, FR-BOT-170, FR-BOT-200, FR-BOT-210, FR-BOT-140, FR-BOT-220, FR-BOT-230, FR-BOT-240, FR-BOT-250, FR-BOT-260, FR-BOT-270, FR-BOT-280, FR-BOT-290, FR-BOT-300, FR-BOT-310, FR-BOT-320, FR-BOT-330, FR-BOT-340, FR-BOT-350, FR-BOT-360, FR-BOT-370, FR-BOT-380, FR-BOT-400, FR-BOT-405, FR-BOT-410, FR-BOT-420, FR-BOT-425, FR-BOT-430, INV-BOT-010, INV-BOT-020, INV-BOT-030, FR-BOT-120, FR-BOT-130, FR-BOT-180, FR-BOT-190, FR-SCORE-070, FR-SCORE-080, FR-SCORE-090, FR-SCORE-100, FR-SCORE-125, FR-SCORE-130, FR-BOT-620, FR-BOT-630, FR-BOT-640, FR-BOT-650]
 depends_on: [E-020, E-040]
-interface: a world, where the snake is and a frame's time in; squads that see, decide, walk and fire out — entered by `Archetype`, `Arms`, `Awareness`, `Blast`, `Bot`, `Execution`, `Flight`, `Interrupts`, `Perception`, `Round`, `Slots`, `Squads`
+interface: a world, where the snake is and a frame's time in; squads that see, decide, walk and fire out — entered by `Archetype`, `Arms`, `Awareness`, `Blast`, `Bot`, `Execution`, `Flight`, `Interrupts`, `Perception`, `Round`, `Slots`, `Squads`, `Treasure`
 protects: [INV-BOT-010, INV-BOT-020, INV-BOT-030]
 units: [crawlcall]
 ```

@@ -15,7 +15,7 @@
 // is the one act a slot holds it to (FR-BOT-170). Until 2026-10-13 both were one field,
 // and firing pushed the knife's next strike away.
 //
-// file implements: FR-BOT-550, FR-BOT-560, FR-BOT-570, FR-BOT-580, FR-BOT-600, FR-BOT-610, FR-BOT-450, FR-BOT-470, FR-BOT-510, FR-BOT-520, FR-BOT-167, FR-BOT-060, FR-BOT-110, FR-BOT-115, FR-BOT-170, FR-BOT-360, FR-BOT-370, FR-BOT-380, FR-BOT-180, FR-BOT-190, INV-BOT-020, INV-BOT-010, FR-BOT-165, FR-MAP-150, FR-BOT-270, FR-BOT-280, FR-BOT-290, FR-BOT-300, FR-BOT-220, FR-BOT-310, FR-BOT-320, FR-BOT-330, FR-BOT-340, FR-BOT-420, FR-BOT-425, FR-BOT-430, FR-CMD-030, FR-CMD-040
+// file implements: FR-BOT-550, FR-BOT-560, FR-BOT-570, FR-BOT-580, FR-BOT-600, FR-BOT-610, FR-BOT-450, FR-BOT-470, FR-BOT-510, FR-BOT-520, FR-BOT-167, FR-BOT-060, FR-BOT-110, FR-BOT-115, FR-BOT-170, FR-BOT-360, FR-BOT-370, FR-BOT-380, FR-BOT-180, FR-BOT-190, INV-BOT-020, INV-BOT-010, FR-BOT-165, FR-MAP-150, FR-BOT-270, FR-BOT-280, FR-BOT-290, FR-BOT-300, FR-BOT-220, FR-BOT-310, FR-BOT-320, FR-BOT-330, FR-BOT-340, FR-BOT-420, FR-BOT-425, FR-BOT-430, FR-BOT-620, FR-BOT-640, FR-CMD-030, FR-CMD-040
 import Foundation
 
 enum Execution {
@@ -46,7 +46,8 @@ enum Execution {
     static func deliberate(_ bots: inout [Bot], slots: [Int], world: World, now: Double = .zero,
                            interrupted: Set<Int> = [],
                            awareness: (Squad) -> Awareness = { _ in .confirmed },
-                           command: (Squad) -> SquadCommand? = { _ in nil }) -> Volley {
+                           command: (Squad) -> SquadCommand? = { _ in nil },
+                           treasure: Treasure? = nil) -> Volley {
         var volley = Volley()
         // The snake's paths from where each bot takes its head to be, walked once a
         // step for every bot that takes it to be in the same cell (FR-BOT-115).
@@ -87,6 +88,20 @@ enum Execution {
             situation.enemiesInView = knowledge.enemies(seenAt: now)
             situation.allies = bots.filter { $0.squad == bots[index].squad && $0.isAlive }
             situation.awareness = awareness(bots[index].squad)
+            // The second act (FR-BOT-620, FR-BOT-640): where the treasure lies while it
+            // lies anywhere, where it has to be carried, whether this bot is the one
+            // carrying it, and whether it has anywhere left to believe an enemy is —
+            // which is what it may take the treasure on, and may be wrong.
+            situation.believesEnemyGone = knowledge.believesEnemyGone
+            if let treasure {
+                situation.evacuation = treasure.evacuation
+                situation.carriesTreasure = treasure.carrier == bots[index].id
+                if let lying = treasure.lying {
+                    situation.treasure = Deliberation.cell(of: lying.point, graph: world.graph,
+                                                          cellSize: cellSize,
+                                                          floorHeight: world.kit.floorHeight)
+                }
+            }
             // For a calm squad the snake does not exist beyond the override distance: not
             // as something to fire at, nor as something to hide or run from (FR-BOT-180,
             // FR-BOT-120).
@@ -292,7 +307,8 @@ enum Execution {
                     bots[index].refuge = nil
                     bots[index].postTarget = nil
                 }
-            case .takeCover, .flee, .moveToOrderedZone, .advance, .explore, .close:
+            case .takeCover, .flee, .moveToOrderedZone, .advance, .explore, .close,
+                 .takeTreasure, .carryTreasure:
                 // The route is the frame's business, and only one is computed per
                 // frame (FR-BOT-165).
                 bots[index].path = []
@@ -514,6 +530,7 @@ enum Execution {
     /// to the hidden cell (FR-BOT-425).
     static func destination(of bot: Bot) -> NavigationGraph.Node? {
         switch bot.action {
+        case .takeTreasure(let node), .carryTreasure(let node): return node
         case .takeCover(let node), .moveToOrderedZone(let node), .flee(let node),
              .advance(let node), .explore(let node), .close(_, let node): return node
         case .fire: return bot.post
@@ -526,7 +543,8 @@ enum Execution {
     /// firing from somewhere and reloading behind cover are not.
     static func travels(_ action: Action?) -> Bool {
         switch action {
-        case .takeCover, .moveToOrderedZone, .flee, .advance, .explore, .close: return true
+        case .takeCover, .moveToOrderedZone, .flee, .advance, .explore, .close,
+             .takeTreasure, .carryTreasure: return true
         case .fire, .throwGrenade, .strike, .throwKnife, .reload, .heal, .none: return false
         }
     }

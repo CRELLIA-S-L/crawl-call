@@ -2,7 +2,7 @@
 // rather than the look (ART-070). What the models themselves look like — sizes,
 // colours, materials — waits for their rework (Q-280).
 //
-// file implements: FR-VIEW-350, FR-VIEW-360, FR-VIEW-170, FR-MAP-210, FR-VIEW-240, FR-VIEW-250, FR-VIEW-260, FR-VIEW-270, FR-VIEW-280, FR-VIEW-290, FR-VIEW-300, FR-VIEW-310, FR-VIEW-320
+// file implements: FR-VIEW-350, FR-VIEW-360, FR-VIEW-370, FR-VIEW-170, FR-MAP-210, FR-VIEW-240, FR-VIEW-250, FR-VIEW-260, FR-VIEW-270, FR-VIEW-280, FR-VIEW-290, FR-VIEW-300, FR-VIEW-310, FR-VIEW-320
 import Foundation
 
 /// How a module drawn as a figure fills its box (ADR-0034). Only the drawing: for sight
@@ -166,6 +166,29 @@ enum SnakeEyes {
     static let white = SIMD3<Double>(0.98, 0.98, 0.95)
     static let pupil = SIMD3<Double>(0.07, 0.07, 0.09)
     static let roughness: Float = 0.35
+}
+
+/// How the treasure is drawn (FR-VIEW-370).
+enum Prize {
+    /// How big it is drawn, in metres: a chest that can be picked out across the room
+    /// and still be carried in front of a bot 1.12 m tall. Half a metre and not a third
+    /// of one, which on the phone on 2026-10-14 was a dozen pixels across the arena.
+    static let size = SIMD3<Float>(0.5, 0.36, 0.36)
+    /// How far above the ground its middle rests while it lies there: half its height,
+    /// so that it sits on the floor rather than in it.
+    static let lift = 0.18
+    /// Where a carrier holds it: at the height of the hands, this far in front of the
+    /// chest, so that the figure does not swallow it.
+    static let heldAt = 0.62
+    static let heldAhead = 0.28
+    /// What it is painted. Gold was tried on the phone on 2026-10-14 and taken back:
+    /// the kit's crate is (0.85, 0.55, 0.25) and its partition (0.8, 0.72, 0.35), so a
+    /// gold box in a room full of crates is a crate. This violet is in nothing the kit
+    /// draws and in nothing the setting draws, which is the whole of what is asked of
+    /// it — the player has to find the thing across the room.
+    static let colour = SIMD3(0.62, 0.28, 0.85)
+    static let roughness: Float = 0.3
+    static let metallic: Float = 0.9
 }
 
 /// The pool of tracer bars the rounds are drawn with (FR-VIEW-170).

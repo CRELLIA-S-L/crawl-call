@@ -1452,14 +1452,14 @@ It keeps to the ways with open ground before it, as FR-BOT-340 has a standing bo
 ### FR-BOT-620 — Only a bot that believes the enemy gone goes for the treasure
 
 ```yaml
-status: deferred
+status: implemented
 verification: T
 derives_from: [FR-BOT-080]
 depends_on: [FR-BOT-220, FR-BOT-240, FR-BOT-250, FR-MAP-290]
 refines: [FR-BOT-200]
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Bot/Deliberation.swift, Sources/CrawlCall/Bot/Execution.swift, Sources/CrawlCall/Bot/Action.swift, Sources/CrawlCall/Bot/Knowledge.swift, Sources/CrawlCall/Config/Configurations.swift, config/bot.json]
+tests: [Tests/CrawlCallTests/TreasureTests.swift]
 created: 2026-10-14
 ```
 
@@ -1472,14 +1472,14 @@ Knowing of no enemy left alive needs no new mechanism. A bot believes the enemy 
 ### FR-BOT-630 — A bot that reaches the treasure carries it
 
 ```yaml
-status: deferred
+status: implemented
 verification: T
 derives_from: []
 depends_on: [FR-BOT-620, FR-MAP-290]
 refines: []
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Bot/Treasure.swift, Sources/CrawlCall/Game.swift]
+tests: [Tests/CrawlCallTests/TreasureTests.swift]
 created: 2026-10-14
 ```
 
@@ -1491,14 +1491,14 @@ The condition is the same one FR-BOT-620 puts on wanting it, because the deliber
 ### FR-BOT-640 — The carrier makes for the evacuation point
 
 ```yaml
-status: deferred
+status: implemented
 verification: T
 derives_from: [FR-BOT-080]
 depends_on: [FR-BOT-630, FR-MAP-290]
 refines: [FR-BOT-200]
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Bot/Deliberation.swift, Sources/CrawlCall/Bot/Execution.swift, Sources/CrawlCall/Bot/Action.swift, Sources/CrawlCall/Config/Configurations.swift, config/bot.json]
+tests: [Tests/CrawlCallTests/TreasureTests.swift]
 created: 2026-10-14
 ```
 
@@ -1510,14 +1510,14 @@ Only the carrier, because there is nothing for anybody else to carry.
 ### FR-BOT-650 — The treasure falls where its carrier falls
 
 ```yaml
-status: deferred
+status: implemented
 verification: T
 derives_from: []
 depends_on: [FR-BOT-630, FR-BOT-320]
 refines: []
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Bot/Treasure.swift, Sources/CrawlCall/Game.swift]
+tests: [Tests/CrawlCallTests/TreasureTests.swift]
 created: 2026-10-14
 ```
 

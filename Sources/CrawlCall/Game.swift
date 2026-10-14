@@ -5,17 +5,20 @@
 // or a key: the schemes produce intents (FR-VIEW-050), the logic consumes them, and
 // neither knows about the other.
 //
-// file implements: IF-CMD-010, FR-BOT-550, FR-BOT-580, FR-BOT-590, FR-VIEW-360, FR-BOT-470, FR-BOT-510, FR-BOT-480, FR-BOT-490, FR-BOT-167, FR-CMD-010, FR-CMD-020, FR-SNAKE-270, FR-SNAKE-280, FR-SNAKE-285, FR-SNAKE-055, FR-SNAKE-056, FR-SNAKE-016, FR-VIEW-160, FR-BOT-060, FR-BOT-320, FR-BOT-050, FR-BOT-220, FR-BOT-230, FR-BOT-240, FR-BOT-260, FR-BOT-310, FR-VIEW-030, FR-VIEW-170, FR-VIEW-190, FR-SNAKE-010, FR-SNAKE-030, FR-SNAKE-290, FR-BOT-020, FR-BOT-150, FR-BOT-170, FR-BOT-380, FR-SCORE-130, FR-SCORE-070, FR-BOT-180, FR-SNAKE-060, FR-SNAKE-070, FR-SNAKE-090, FR-SCORE-140, FR-SCORE-150, INV-BOT-010, FR-VIEW-230, FR-TOOL-230, FR-MAP-150, FR-MAP-180, FR-MAP-170, FR-SNAKE-220, FR-BOT-400, FR-CMD-030, FR-CMD-040, FR-CMD-120, FR-CMD-125, FR-CMD-130
+// file implements: IF-CMD-010, FR-BOT-550, FR-BOT-580, FR-BOT-590, FR-VIEW-360, FR-BOT-470, FR-BOT-510, FR-BOT-480, FR-BOT-490, FR-BOT-167, FR-CMD-010, FR-CMD-020, FR-SNAKE-270, FR-SNAKE-280, FR-SNAKE-285, FR-SNAKE-055, FR-SNAKE-056, FR-SNAKE-016, FR-VIEW-160, FR-BOT-060, FR-BOT-320, FR-BOT-050, FR-BOT-220, FR-BOT-230, FR-BOT-240, FR-BOT-260, FR-BOT-310, FR-VIEW-030, FR-VIEW-170, FR-VIEW-190, FR-SNAKE-010, FR-SNAKE-030, FR-SNAKE-290, FR-BOT-020, FR-BOT-150, FR-BOT-170, FR-BOT-380, FR-SCORE-130, FR-SCORE-070, FR-BOT-180, FR-SNAKE-060, FR-SNAKE-070, FR-SNAKE-090, FR-SCORE-140, FR-SCORE-150, INV-BOT-010, FR-VIEW-230, FR-TOOL-230, FR-MAP-150, FR-MAP-180, FR-MAP-170, FR-SNAKE-220, FR-BOT-400, FR-CMD-030, FR-CMD-040, FR-CMD-120, FR-CMD-125, FR-CMD-130, FR-MAP-290, FR-BOT-630, FR-BOT-650, FR-SCORE-160
 import Foundation
 
 struct Game {
-    /// The two ways a match can be over, and the only two there are: no timer and no
-    /// score threshold ends one (FR-SCORE-140, FR-SCORE-150).
+    /// The three ways a match can be over, and the only three there are: no timer and
+    /// no score threshold ends one (FR-SCORE-140, FR-SCORE-150, FR-SCORE-160).
     enum Outcome: Equatable {
         /// The snake was shot with nothing left to lose (FR-SNAKE-210).
         case snakeDied
         /// Nothing is left alive to hunt.
         case arenaEmpty
+        /// A squad carried the treasure to the evacuation point and left with it
+        /// (FR-SCORE-160).
+        case treasureTaken
     }
 
     let world: World
@@ -83,6 +86,14 @@ struct Game {
     /// a function of the match and the view keeps no clock of its own.
     private(set) var blasts: [Flash] = []
 
+    /// Where the treasure is (FR-MAP-290), or nil on a map that names none — which a
+    /// map to be played never is (FR-MAP-300), and a fixture read for something else
+    /// may well be.
+    private(set) var treasure: Treasure?
+    /// Where the bot carrying the treasure stood as this frame began: where the
+    /// treasure is left when that bot falls in it (FR-BOT-650), since a bot the snake
+    /// finishes eating is gone from `bots` before the frame ends.
+    private var carriedAt: (point: SIMD3<Double>, floor: Int)?
     /// How the match ended, or nil while it is still being played.
     private(set) var outcome: Outcome?
     /// Every call that came back with nothing, in the order the frames found them —
@@ -124,6 +135,31 @@ struct Game {
                            segments: world.configurations.snake.startingSegmentCount,
                            segmentSpacing: world.configurations.tuning.bodyRadius * Motion.widthInRadii)
         self.bots = Squads.spawn(in: world, snakeStart: start)
+        // The treasure lies where the map says and is carried to where the map says
+        // (FR-MAP-290). A map that names neither has no second act, which is what
+        // FR-MAP-300 refuses at launch and a fixture is allowed.
+        if let lies = world.map.treasure, let out = world.map.evacuation {
+            let node = NavigationGraph.Node(floor: lies.floor, x: lies.x, z: lies.z)
+            self.treasure = Treasure(place: .lying(at: world.graph.centre(of: node, cellSize: cell,
+                                                                         floorHeight: world.kit.floorHeight),
+                                                   floor: lies.floor),
+                                     evacuation: .init(floor: out.floor, x: out.x, z: out.z))
+        }
+    }
+
+    /// What the second act does each frame: the rule is the treasure's (FR-BOT-630,
+    /// FR-BOT-650, FR-SCORE-160) and what the match adds is which cell each bot stands
+    /// in and the end it reaches.
+    private mutating func carryTreasure() {
+        guard var prize = treasure else { return }
+        let size = world.configurations.tuning.navigationGraphCellSize
+        let reached = prize.step(among: bots,
+                                 cell: { Execution.cell(of: $0, world: world) },
+                                 cellOf: { Deliberation.cell(of: $0, graph: world.graph, cellSize: size,
+                                                             floorHeight: world.kit.floorHeight) },
+                                 held: &carriedAt)
+        treasure = prize
+        if reached { outcome = .treasureTaken }
     }
 
     /// Everything the player can ask for arrives here, and only here.
@@ -435,7 +471,8 @@ struct Game {
             let standing = commands
             let volley = Execution.deliberate(&bots, slots: holders, world: world, now: elapsed, interrupted: served,
                                               awareness: { known.of($0) },
-                                              command: { standing.of($0) })
+                                              command: { standing.of($0) },
+                                              treasure: treasure)
             report.deliberationTime += clock.now - deciding
             report.deliberations += holders.count
             rounds += volley.rounds
@@ -491,6 +528,7 @@ struct Game {
         // is only removed when the snake has finished eating it, and the day bodies
         // stay behind (INV-SCORE-020) the match must still end when the last one that
         // could shoot back is gone.
+        carryTreasure()
         if !bots.contains(where: { $0.health > .zero }) { outcome = .arenaEmpty }
         return report
     }

@@ -1,7 +1,7 @@
 // The words, separators and positions of the map file format (IF-MAP-010) and of a
 // kit's legend (ADR-0012), named once for the parser and for its messages (ART-070).
 //
-// file implements: IF-MAP-010, FR-MAP-120, FR-MAP-150, FR-MAP-180, FR-TOOL-010, FR-TOOL-020, FR-TOOL-030, FR-MAP-100, FR-SNAKE-220
+// file implements: IF-MAP-010, FR-MAP-120, FR-MAP-150, FR-MAP-180, FR-MAP-290, FR-TOOL-010, FR-TOOL-020, FR-TOOL-030, FR-MAP-100, FR-SNAKE-220
 import Foundation
 
 enum MapFormat {
@@ -9,6 +9,9 @@ enum MapFormat {
     static let kitDirective = "kit"
     static let settingDirective = "setting"
     static let spawnDirective = "spawn"
+    /// Where the treasure lies and where it has to be carried (FR-MAP-290).
+    static let treasureDirective = "treasure"
+    static let evacuationDirective = "evacuation"
     static let transitionDirective = "transition"
     static let floorDirective = "floor"
     /// A whole line beginning with this is a comment.
@@ -53,6 +56,11 @@ enum MapFormat {
     static let spawnWords = 3
     static let spawnCellWord = 1
     static let spawnFloorWord = 2
+    /// `treasure <x>,<z> <floor>` and `evacuation <x>,<z> <floor>`: the two cells the
+    /// second act is played between (FR-MAP-290), written as a spawn point is.
+    static let placeWords = 3
+    static let placeCellWord = 1
+    static let placeFloorWord = 2
     static let floorWords = 2
     static let floorLevelWord = 1
     static let transitionWords = 4

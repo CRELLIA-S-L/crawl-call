@@ -16,7 +16,7 @@
 // configuration (IF-BOT-010), as is how much an unhurt bot fears the snake
 // (FR-BOT-210). What shapes each term — a share, a whole — is in `Utility`.
 //
-// file implements: FR-BOT-530, FR-BOT-540, FR-BOT-570, FR-BOT-600, FR-BOT-167, FR-BOT-116, FR-BOT-460, FR-BOT-450, FR-BOT-470, FR-BOT-500, FR-BOT-510, FR-BOT-520, FR-BOT-080, FR-BOT-090, FR-BOT-110, FR-BOT-115, FR-BOT-118, FR-BOT-119, FR-BOT-360, FR-BOT-370, FR-BOT-120, FR-BOT-180, FR-BOT-190, FR-BOT-200, FR-BOT-210, FR-MAP-150, FR-BOT-220, FR-BOT-060, FR-BOT-140, FR-BOT-330, FR-BOT-410, FR-BOT-420, FR-BOT-425, FR-BOT-130, FR-CMD-030
+// file implements: FR-BOT-530, FR-BOT-540, FR-BOT-570, FR-BOT-600, FR-BOT-167, FR-BOT-116, FR-BOT-460, FR-BOT-450, FR-BOT-470, FR-BOT-500, FR-BOT-510, FR-BOT-520, FR-BOT-080, FR-BOT-090, FR-BOT-110, FR-BOT-115, FR-BOT-118, FR-BOT-119, FR-BOT-360, FR-BOT-370, FR-BOT-120, FR-BOT-180, FR-BOT-190, FR-BOT-200, FR-BOT-210, FR-MAP-150, FR-BOT-220, FR-BOT-060, FR-BOT-140, FR-BOT-330, FR-BOT-410, FR-BOT-420, FR-BOT-425, FR-BOT-130, FR-BOT-620, FR-BOT-640, FR-CMD-030
 import Foundation
 
 enum Deliberation {
@@ -73,6 +73,17 @@ enum Deliberation {
         /// The radius of a bot's body (the tuning's): how near a line of fire a
         /// squadmate stands in it (FR-BOT-410).
         var bodyRadius: Double = .zero
+        /// Where the treasure lies, as a cell, while it lies anywhere (FR-BOT-620).
+        /// Nil once a bot has picked it up, and on a map that names none.
+        var treasure: NavigationGraph.Node?
+        /// The cell the map names as the evacuation point (FR-BOT-640).
+        var evacuation: NavigationGraph.Node?
+        /// Whether this bot is the one carrying the treasure (FR-BOT-640).
+        var carriesTreasure = false
+        /// Whether the bot has nowhere left to believe an enemy is (FR-BOT-620): what
+        /// the treasure may be taken on, checked against what it knows and not against
+        /// the arena, so that a squad can be wrong.
+        var believesEnemyGone = false
         /// The second of the match this slot is being deliberated at (FR-BOT-600):
         /// what a weapon's own time between uses is measured against, so that a use
         /// which cannot be taken now is not offered. A situation built without it
@@ -307,6 +318,20 @@ enum Deliberation {
             scored.append((.reload(slot), term.empty * spent * spent * bot.arms.strength(of: slot) * daring))
         }
 
+        // The second act, which concept §9.2 says is two motives and not a new layer:
+        // both are scored by this formula and these weights, beside everything else a
+        // bot could be doing, so that fear and an order go on being weighed against
+        // them. Carrying first, because a bot holding the treasure has nothing to take.
+        //
+        // What the courage and the discipline are doing here: a bot that is afraid does
+        // not pick the treasure up first, and a disciplined one carries it under fire.
+        if situation.carriesTreasure, let out = situation.evacuation {
+            scored.append((.carryTreasure(to: out), term.treasure * bot.weights.discipline))
+        } else if situation.believesEnemyGone, let lying = situation.treasure,
+                  !situation.carriesTreasure {
+            scored.append((.takeTreasure(at: lying), term.treasure * bot.weights.courage))
+        }
+
         // Only a medic heals, and only somebody who needs it and is within the
         // distance at which a squad is still together.
         if bot.archetype == .medic {
@@ -482,7 +507,8 @@ enum Deliberation {
         case .fire(let target, _), .throwGrenade(let target),
              .strike(let target), .throwKnife(let target): return target
         case .close(let target, _): return target
-        case .takeCover, .moveToOrderedZone, .flee, .reload, .heal, .advance, .explore: return nil
+        case .takeCover, .moveToOrderedZone, .flee, .reload, .heal, .advance, .explore,
+             .takeTreasure, .carryTreasure: return nil
         }
     }
 

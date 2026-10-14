@@ -8,9 +8,9 @@ Total requirements: 301.
 | Status | Requirements |
 |---|---|
 | `draft` | 4 |
-| `deferred` | 93 |
-| `partial` | 9 |
-| `implemented` | 187 |
+| `deferred` | 85 |
+| `partial` | 10 |
+| `implemented` | 194 |
 | `superseded` | 6 |
 | `withdrawn` | 2 |
 
@@ -102,10 +102,10 @@ Total requirements: 301.
 | **FR-BOT-590** A thrown grenade bounces off what it meets | `implemented` | T | `Sources/CrawlCall/Bot/Blast.swift`<br>`Sources/CrawlCall/Game.swift`<br>`config/bot.json` | `Tests/CrawlCallTests/FlightOfAGrenadeTests.swift` |
 | **FR-BOT-600** A weapon whose time has not come is not an action | `implemented` | T | `Sources/CrawlCall/Bot/Deliberation.swift`<br>`Sources/CrawlCall/Bot/Arms.swift`<br>`Sources/CrawlCall/Bot/Execution.swift` | `Tests/CrawlCallTests/WeaponTimeTests.swift`<br>`Tests/CrawlCallTests/KnifeTests.swift` |
 | **FR-BOT-610** Each weapon's time between uses is its own | `implemented` | T | `Sources/CrawlCall/Bot/Arms.swift`<br>`Sources/CrawlCall/Bot/Execution.swift`<br>`config/bot.json` | `Tests/CrawlCallTests/WeaponTimeTests.swift`<br>`Tests/CrawlCallTests/KnifeTests.swift` |
-| **FR-BOT-620** Only a bot that believes the enemy gone goes for the treasure | `deferred` | T | — | — |
-| **FR-BOT-630** A bot that reaches the treasure carries it | `deferred` | T | — | — |
-| **FR-BOT-640** The carrier makes for the evacuation point | `deferred` | T | — | — |
-| **FR-BOT-650** The treasure falls where its carrier falls | `deferred` | T | — | — |
+| **FR-BOT-620** Only a bot that believes the enemy gone goes for the treasure | `implemented` | T | `Sources/CrawlCall/Bot/Deliberation.swift`<br>`Sources/CrawlCall/Bot/Execution.swift`<br>`Sources/CrawlCall/Bot/Action.swift`<br>`Sources/CrawlCall/Bot/Knowledge.swift`<br>`Sources/CrawlCall/Config/Configurations.swift`<br>`config/bot.json` | `Tests/CrawlCallTests/TreasureTests.swift` |
+| **FR-BOT-630** A bot that reaches the treasure carries it | `implemented` | T | `Sources/CrawlCall/Bot/Treasure.swift`<br>`Sources/CrawlCall/Game.swift` | `Tests/CrawlCallTests/TreasureTests.swift` |
+| **FR-BOT-640** The carrier makes for the evacuation point | `implemented` | T | `Sources/CrawlCall/Bot/Deliberation.swift`<br>`Sources/CrawlCall/Bot/Execution.swift`<br>`Sources/CrawlCall/Bot/Action.swift`<br>`Sources/CrawlCall/Config/Configurations.swift`<br>`config/bot.json` | `Tests/CrawlCallTests/TreasureTests.swift` |
+| **FR-BOT-650** The treasure falls where its carrier falls | `implemented` | T | `Sources/CrawlCall/Bot/Treasure.swift`<br>`Sources/CrawlCall/Game.swift` | `Tests/CrawlCallTests/TreasureTests.swift` |
 | **FR-CMD-010** One commander per squad | `implemented` | T | `Sources/CrawlCall/Commander/CommanderDesk.swift`<br>`Sources/CrawlCall/Game.swift`<br>`Sources/CrawlCall/CrawlCallApp.swift` | `Tests/CrawlCallTests/CommanderCallTests.swift` |
 | **FR-CMD-020** The commander is called on an interval | `implemented` | T | `Sources/CrawlCall/Commander/CommanderDesk.swift`<br>`Sources/CrawlCall/Game.swift`<br>`Sources/CrawlCall/Commander/SquadView.swift` | `Tests/CrawlCallTests/CommanderCallTests.swift` |
 | **FR-CMD-025** Each commander call is its own session | `implemented` | T | `Sources/CrawlCall/Commander/SystemModelCommander.swift`<br>`Sources/CrawlCall/Commander/CommanderDesk.swift` | `Tests/CrawlCallTests/CommanderCallTests.swift` |
@@ -163,8 +163,8 @@ Total requirements: 301.
 | **FR-MAP-260** A map shows no way the snake cannot take | `implemented` | T | `Sources/CrawlCall/Map/Passages.swift`<br>`Sources/CrawlCall/Map/Setting.swift`<br>`Sources/CrawlCall/Setting/Greenholm.swift`<br>`Sources/CrawlCall/Map/MapSpecification.swift`<br>`Sources/CrawlCall/Launch.swift`<br>`maps/blockout.map` | `Tests/CrawlCallTests/PassageTests.swift` |
 | **FR-MAP-270** The ground goes on under the water | `implemented` | D | `Sources/CrawlCall/Map/Outline.swift`<br>`Sources/CrawlCall/Setting/Greenholm.swift`<br>`Sources/CrawlCall/Setting/SceneryBuilder.swift`<br>`Sources/CrawlCall/Setting/Scenery.swift`<br>`Sources/CrawlCall/Setting/SeaFloor.metal`<br>`Sources/CrawlCall/Config/GreenholmConfiguration.swift`<br>`Sources/CrawlCall/Config/Surroundings.swift`<br>`Sources/CrawlCall/Config/Geometry.swift`<br>`Sources/CrawlCall/Config/Resource.swift`<br>`config/setting/greenholm.json` | `Tests/CrawlCallTests/SeaFloorTests.swift`<br>`Tests/CrawlCallTests/IslandMapTests.swift` |
 | **FR-MAP-280** The water can be partly seen through | `implemented` | D | `Sources/CrawlCall/Setting/SceneryBuilder.swift`<br>`Sources/CrawlCall/Setting/WaterRipple.metal`<br>`Sources/CrawlCall/Setting/Greenholm.swift`<br>`Sources/CrawlCall/Setting/Scenery.swift`<br>`Sources/CrawlCall/Config/GreenholmConfiguration.swift`<br>`config/setting/greenholm.json` | `Tests/CrawlCallTests/IslandMapTests.swift` |
-| **FR-MAP-290** The treasure lies where the map says | `deferred` | T | — | — |
-| **FR-MAP-300** A map that does not name a treasure and an evacuation point is refused | `deferred` | T | — | — |
+| **FR-MAP-290** The treasure lies where the map says | `implemented` | T | `Sources/CrawlCall/Map/MapSpecification.swift`<br>`Sources/CrawlCall/Config/MapFormat.swift`<br>`Sources/CrawlCall/Game.swift`<br>`Sources/CrawlCall/Bot/Treasure.swift`<br>`maps/blockout.map`<br>`maps/room.map` | `Tests/CrawlCallTests/TreasureTests.swift` |
+| **FR-MAP-300** A map that does not name a treasure and an evacuation point is refused | `implemented` | T | `Sources/CrawlCall/Map/MapSpecification.swift`<br>`Sources/CrawlCall/Launch.swift` | `Tests/CrawlCallTests/TreasureTests.swift` |
 | **FR-SCORE-010** Consuming a bot awards points | `deferred` | T | — | — |
 | **FR-SCORE-020** Live prey has the higher base value | `deferred` | T | — | — |
 | **FR-SCORE-030** Stealth multiplier by who saw | `deferred` | T | — | — |
@@ -181,7 +181,7 @@ Total requirements: 301.
 | **FR-SCORE-130** Each squad has an awareness state | `implemented` | T | `Sources/CrawlCall/Bot/Awareness.swift`<br>`Sources/CrawlCall/Game.swift` | `Tests/CrawlCallTests/AwarenessTests.swift` |
 | **FR-SCORE-140** The match ends when the snake dies | `partial` | T | `Sources/CrawlCall/Game.swift` | `Tests/CrawlCallTests/MatchEndTests.swift` |
 | **FR-SCORE-150** The match ends when no bot is left | `partial` | T | `Sources/CrawlCall/Game.swift` | `Tests/CrawlCallTests/MatchEndTests.swift` |
-| **FR-SCORE-160** The match ends when the treasure is carried off | `deferred` | T | — | — |
+| **FR-SCORE-160** The match ends when the treasure is carried off | `partial` | T | `Sources/CrawlCall/Game.swift`<br>`Sources/CrawlCall/Bot/Treasure.swift`<br>`Sources/CrawlCall/View/MatchEnd.swift` | `Tests/CrawlCallTests/TreasureTests.swift` |
 | **FR-SCORE-170** A treasure carried off costs the match its multiplier | `deferred` | T | — | — |
 | **FR-SNAKE-010** Head stays on the map's walkable surfaces | `implemented` | D | `Sources/CrawlCall/Snake/Snake.swift`<br>`Sources/CrawlCall/Snake/Surfaces.swift`<br>`Sources/CrawlCall/Game.swift`<br>`Sources/CrawlCall/View/SnakeEntity.swift`<br>`Sources/CrawlCall/Config/Motion.swift`<br>`Sources/CrawlCall/Config/Geometry.swift` | `Tests/CrawlCallTests/SnakeTests.swift`<br>`Tests/CrawlCallTests/GameTests.swift` |
 | **FR-SNAKE-015** A blocked head slides along what stopped it | `implemented` | T | `Sources/CrawlCall/Snake/Snake.swift`<br>`Sources/CrawlCall/Config/Motion.swift` | `Tests/CrawlCallTests/SnakeTests.swift`<br>`Tests/CrawlCallTests/OwnBodyTests.swift` |
@@ -284,7 +284,7 @@ Total requirements: 301.
 | **FR-VIEW-340** A bot holds the weapon it is using | `implemented` | T | `Sources/CrawlCall/View/Figure.swift`<br>`Sources/CrawlCall/View/BotEntity.swift`<br>`Sources/CrawlCall/Config/EntityName.swift` | `Tests/CrawlCallTests/FigureTests.swift` |
 | **FR-VIEW-350** A thrown grenade is drawn where it is | `implemented` | T | `Sources/CrawlCall/View/BlastEntity.swift`<br>`Sources/CrawlCall/GameSession.swift`<br>`Sources/CrawlCall/CrawlCallApp.swift`<br>`Sources/CrawlCall/Config/Drawing.swift`<br>`Sources/CrawlCall/Config/EntityName.swift` | `Tests/CrawlCallTests/FlightOfAGrenadeTests.swift` |
 | **FR-VIEW-360** A blast is drawn where it went off | `implemented` | T | `Sources/CrawlCall/View/BlastEntity.swift`<br>`Sources/CrawlCall/GameSession.swift`<br>`Sources/CrawlCall/CrawlCallApp.swift`<br>`Sources/CrawlCall/Bot/Blast.swift`<br>`Sources/CrawlCall/Game.swift`<br>`Sources/CrawlCall/Config/Drawing.swift`<br>`Sources/CrawlCall/Config/EntityName.swift`<br>`config/view.json` | `Tests/CrawlCallTests/FlightOfAGrenadeTests.swift` |
-| **FR-VIEW-370** The treasure is drawn where it is | `deferred` | T | — | — |
+| **FR-VIEW-370** The treasure is drawn where it is | `implemented` | T | `Sources/CrawlCall/View/TreasureEntity.swift`<br>`Sources/CrawlCall/GameSession.swift`<br>`Sources/CrawlCall/CrawlCallApp.swift`<br>`Sources/CrawlCall/Config/Drawing.swift`<br>`Sources/CrawlCall/Config/EntityName.swift` | `Tests/CrawlCallTests/TreasureTests.swift` |
 | **IF-BOT-010** Bot and match configuration | `implemented` | T | `Sources/CrawlCall/Config/Configurations.swift`<br>`Sources/CrawlCall/Config/Configurations+Load.swift`<br>`Sources/CrawlCall/Config/Schema.swift`<br>`Sources/CrawlCall/Launch.swift`<br>`Sources/CrawlCall/CrawlCallApp.swift`<br>`Sources/CrawlCall/Config/Resource.swift` | `Tests/CrawlCallTests/ArmsTests.swift`<br>`Tests/CrawlCallTests/ConfigurationTests.swift`<br>`Tests/CrawlCallTests/LaunchTests.swift`<br>`Tests/CrawlCallTests/SchemaTests.swift`<br>`Tests/CrawlCallTests/DeliberationTests.swift`<br>`Tests/CrawlCallTests/KnowledgeTests.swift` |
 | **IF-CMD-010** Commander input | `implemented` | T | `Sources/CrawlCall/Commander/CommanderInput.swift`<br>`Sources/CrawlCall/Commander/SquadView.swift`<br>`Sources/CrawlCall/Commander/SquadHappenings.swift`<br>`Sources/CrawlCall/Game.swift` | `Tests/CrawlCallTests/CommanderContractTests.swift` |
 | **IF-CMD-020** Commander output | `implemented` | T | `Sources/CrawlCall/Commander/CommanderDecision.swift`<br>`Sources/CrawlCall/Commander/SystemModelCommander.swift`<br>`Sources/CrawlCall/Commander/Commander.swift` | `Tests/CrawlCallTests/CommanderContractTests.swift` |
@@ -503,7 +503,7 @@ Verified by means other than testing — or the check has not been set up yet.
 
 ## Code files outside the specification
 
-No requirement references them: 4 of 114.
+No requirement references them: 4 of 116.
 
 - `scripts/arch-edges-selftest.sh`
 - `scripts/prompt-bench-selftest.sh`

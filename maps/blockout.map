@@ -11,12 +11,20 @@
 ; rows lie between the flight and the south wall. Each of those would be a way the map shows and
 ; the snake cannot take, which is refused (FR-MAP-260).
 ; The arena stands on Greenholm, an island (FR-MAP-120, FR-GREENHOLM-010).
+; The treasure lies in the open north-east of the room and the evacuation point is on the
+; grass north of the building, which has no door on that side (FR-MAP-290): the second act
+; is a walk out of the room and round it. It stood in the middle of the room until
+; 2026-10-14, where the flight of stairs hid it from the camera on the phone. Every spawn
+; point is between ten and sixteen cells from it — the snake's own ground, and not a coil
+; it can lie in from the first second (concept §6.4).
 
 kit blockout
 setting greenholm
 spawn 5,5 0
 spawn 15,21 0
 spawn 29,10 0
+treasure 20,6 0
+evacuation 16,1 0
 
 floor 0
        ,,,,,,,,,,,,,,,,,,       

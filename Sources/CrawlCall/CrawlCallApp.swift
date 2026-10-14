@@ -6,7 +6,7 @@
 // the window no smaller than the controls (FR-VIEW-210) and hears when the lock comes
 // or goes (FR-VIEW-230), and SwiftUI's own `App` offers none of the three (ADR-0027).
 //
-// file implements: FR-VIEW-350, FR-VIEW-360, FR-CMD-010, FR-CMD-027, IF-SNAKE-010, IF-MAP-020, IF-VIEW-020, IF-BOT-010, FR-TOOL-070, FR-VIEW-050, FR-VIEW-060, FR-VIEW-160, FR-VIEW-190, FR-VIEW-210, FR-VIEW-220, FR-VIEW-230, FR-TOOL-230, FR-TOOL-240, FR-MAP-140, FR-GREENHOLM-010, FR-GREENHOLM-020, FR-GREENHOLM-030, FR-VIEW-170
+// file implements: FR-VIEW-350, FR-VIEW-360, FR-VIEW-370, FR-CMD-010, FR-CMD-027, IF-SNAKE-010, IF-MAP-020, IF-VIEW-020, IF-BOT-010, FR-TOOL-070, FR-VIEW-050, FR-VIEW-060, FR-VIEW-160, FR-VIEW-190, FR-VIEW-210, FR-VIEW-220, FR-VIEW-230, FR-TOOL-230, FR-TOOL-240, FR-MAP-140, FR-GREENHOLM-010, FR-GREENHOLM-020, FR-GREENHOLM-030, FR-VIEW-170
 import RealityKit
 import SwiftUI
 import UIKit
@@ -180,12 +180,18 @@ struct MatchView: View {
             }
             map.addChild(blasts)
 
+            // And the treasure, lit the same way (FR-VIEW-370).
+            let treasure = TreasureEntity.make()
+            treasure.components.set(ImageBasedLightReceiverComponent(imageBasedLight: ambient))
+            map.addChild(treasure)
+
             let session = GameSession(game: game, snakeEntity: snake, botEntities: squads,
                                       shotEntities: shots, blastEntities: blasts,
                                       camera: camera, seeThrough: seeThrough,
                                       distance: SceneView.distance(framing: world.plan,
                                                                    view: world.configurations.view),
-                                      fieldOfView: world.configurations.view.cameraFieldOfView)
+                                      fieldOfView: world.configurations.view.cameraFieldOfView,
+                                      treasureEntity: treasure)
             session.aspect = aspect
             session.recorder = host.recorder
             self.session = session

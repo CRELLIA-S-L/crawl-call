@@ -2,7 +2,7 @@
 // catalogue: an archetype may add to it, and nothing may quietly drop out of it
 // (FR-BOT-200).
 //
-// file implements: FR-BOT-200, FR-BOT-540, FR-BOT-570, FR-BOT-460, FR-BOT-470, FR-BOT-510, FR-BOT-520, FR-BOT-360, FR-BOT-370
+// file implements: FR-BOT-200, FR-BOT-540, FR-BOT-570, FR-BOT-460, FR-BOT-470, FR-BOT-510, FR-BOT-520, FR-BOT-360, FR-BOT-370, FR-BOT-620, FR-BOT-640
 import Foundation
 
 /// What a shot is aimed at. The snake is named by the point that is being shot at —
@@ -39,4 +39,9 @@ enum Action: Equatable {
     /// is (FR-BOT-360), or to a cell it has not seen (FR-BOT-370).
     case advance(to: NavigationGraph.Node)
     case explore(to: NavigationGraph.Node)
+    /// The second act, which is two motives and not a mode (concept §9.2): going to
+    /// where the treasure lies, open only to a bot that believes the enemy gone
+    /// (FR-BOT-620), and carrying it to the evacuation point (FR-BOT-640).
+    case takeTreasure(at: NavigationGraph.Node)
+    case carryTreasure(to: NavigationGraph.Node)
 }

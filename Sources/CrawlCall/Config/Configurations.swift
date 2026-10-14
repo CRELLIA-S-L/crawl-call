@@ -340,6 +340,17 @@ struct BotConfiguration: Decodable, Equatable {
         /// `attack` as well, and for the same reason doubled: a throw costs the knife,
         /// and what it is worth has to carry that.
         let thrown: Double
+        /// Going for the treasure and carrying it to the evacuation point
+        /// (FR-BOT-620, FR-BOT-640). The second act's two motives are scored by this
+        /// one weight against the bot's courage and its discipline, which is what
+        /// makes the pair a motive rather than a mode.
+        ///
+        /// Above `threat`, because a disciplined bot carries the treasure under fire
+        /// (concept §9.2): at the same weight as the threat, carrying and fleeing come
+        /// out at about the same number five metres from a snake, and the carrier spent
+        /// two hundred and fifty seconds of a measured match alternating between them
+        /// and losing ground (ADR-0094).
+        let treasure: Double
     }
     let utilityTermWeights: UtilityTermWeights
     /// How tall a bot's figure is drawn, in metres, at its tallest (FR-VIEW-070).
@@ -418,7 +429,7 @@ struct BotConfiguration: Decodable, Equatable {
             "attack": .value, "threat": .value, "wounded": .value,
             "obedience": .value, "mercy": .value, "empty": .value,
             "height": .value, "snakePath": .value, "together": .value, "ordered": .value,
-            "blast": .value, "thrown": .value,
+            "blast": .value, "thrown": .value, "treasure": .value,
         ]),
         "figureHeight": .value,
         "eyeHeight": .value,

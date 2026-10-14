@@ -7,7 +7,7 @@
 // is not something the specification settles yet; what it must not do — carry on with
 // defaults — it does settle, by ADR-0012's rule that a typo is an error.
 //
-// file implements: IF-SNAKE-010, IF-MAP-020, IF-VIEW-020, IF-BOT-010, FR-MAP-020, FR-MAP-160, FR-TOOL-200, FR-MAP-120, FR-MAP-140, IF-GREENHOLM-010, FR-MAP-190, FR-MAP-260
+// file implements: IF-SNAKE-010, IF-MAP-020, IF-VIEW-020, IF-BOT-010, FR-MAP-020, FR-MAP-160, FR-TOOL-200, FR-MAP-120, FR-MAP-140, IF-GREENHOLM-010, FR-MAP-190, FR-MAP-260, FR-MAP-300
 import Foundation
 
 enum Launch {
@@ -29,8 +29,10 @@ enum Launch {
             let header = try MapParser.kitName(in: text)
             let kit = try Kit.load(named: header, from: bundle)
             let map = try MapParser.parse(text, kit: kit, stepHeight: configurations.tuning.stepHeight)
-            // A map to be played names where the snake is born (FR-MAP-190).
+            // A map to be played names where the snake is born (FR-MAP-190), where the
+            // treasure lies and where it is carried (FR-MAP-300).
             try MapParser.requireSpawns(map)
+            try MapParser.requirePlaces(map)
             let setting = try Setting.load(named: map.setting, from: bundle)
             // A camera that could see the horizon could see past any world a setting
             // builds (FR-MAP-140); that is a configuration no match can run on.

@@ -23,6 +23,8 @@ final class ErrorIdentifierTests: XCTestCase {
             .raggedGrid(floor: 0, line: 10, expected: 4, found: 3),
             .unknownCharacter("?", floor: 0, line: 11, column: 2), .emptyFloor(2, line: 12),
             .flightLeadsNowhere(floor: 0, line: 13, column: 4), .flightTooSteep(line: 14, rise: 0.5, allowed: 0.4),
+            .noTreasure, .noEvacuation, .badPlace("treasure 1", line: 15),
+            .placeNotWalkable("treasure", line: 16),
         ]
         let kit: [Kit.KitError] = [
             .missing(name: "blockout"), .legendKeyIsNotOneCharacter("##"),

@@ -1,5 +1,5 @@
-// What the player sees when the match is over: one plate saying which of the two ends
-// it was, and one control that starts another (FR-VIEW-190).
+// What the player sees when the match is over: one plate saying which of the ends it
+// was, and one control that starts another (FR-VIEW-190).
 //
 // It stands where the stick and the eat button stood, and they are gone while it is
 // up: a control that still answered after the snake was dead would say the match was
@@ -17,13 +17,15 @@ struct MatchEnd: View {
     /// What the one control asks for: another match in the same arena.
     let again: () -> Void
 
-    /// The line on the plate. One per end, and they say opposite things: the snake
-    /// was shot down, or the snake ate everything there was. The words are in the
-    /// string catalog, in the player's language (FR-VIEW-200).
+    /// The line on the plate. One per end, and they say different things: the snake
+    /// was shot down, the snake ate everything there was, or a squad carried the
+    /// treasure off (FR-SCORE-160). The words are in the string catalog, in the
+    /// player's language (FR-VIEW-200).
     static func headline(for outcome: Game.Outcome) -> TextKey {
         switch outcome {
         case .snakeDied: return .matchEndSnakeDied
         case .arenaEmpty: return .matchEndArenaEmpty
+        case .treasureTaken: return .matchEndTreasureTaken
         }
     }
 

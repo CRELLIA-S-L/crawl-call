@@ -49,6 +49,18 @@
         }
       }
     },
+    "matchEnd.treasureTaken" : {
+      "comment" : "Headline of the plate when a squad has carried the treasure to the evacuation point.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "They got away with it"
+          }
+        }
+      }
+    },
     "pause.headline" : {
       "comment" : "Headline of the plate while the match is paused.",
       "extractionState" : "manual",

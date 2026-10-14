@@ -56,6 +56,10 @@ enum ErrorIdentifier: String, CaseIterable {
     case mapNoSpawn = "MAP_NO_SPAWN"
     case mapSpawnNotWalkable = "MAP_SPAWN_NOT_WALKABLE"
     case mapWayNotTaken = "MAP_WAY_NOT_TAKEN"
+    case mapBadPlace = "MAP_BAD_PLACE"
+    case mapNoTreasure = "MAP_NO_TREASURE"
+    case mapNoEvacuation = "MAP_NO_EVACUATION"
+    case mapPlaceNotWalkable = "MAP_PLACE_NOT_WALKABLE"
 
     // The setting a map names (FR-MAP-120, FR-MAP-140).
     case settingUnknown = "SETTING_UNKNOWN"

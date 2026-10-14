@@ -778,14 +778,14 @@ For a moment after it, because the going off is one instant of the match and not
 ### FR-VIEW-370 — The treasure is drawn where it is
 
 ```yaml
-status: deferred
+status: implemented
 verification: T
 derives_from: [FR-MAP-290]
 depends_on: [FR-BOT-630, FR-BOT-650, IF-VIEW-020]
 refines: []
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/View/TreasureEntity.swift, Sources/CrawlCall/GameSession.swift, Sources/CrawlCall/CrawlCallApp.swift, Sources/CrawlCall/Config/Drawing.swift, Sources/CrawlCall/Config/EntityName.swift]
+tests: [Tests/CrawlCallTests/TreasureTests.swift]
 created: 2026-10-14
 ```
 
@@ -793,3 +793,4 @@ While a match is running, the system **shall** draw the treasure at the place it
 
 **Rationale.** The treasure is what the second act is about, and a prize nobody can see is a cell on a map the player has to be told about. Drawn where it lies, so that the player can be waiting there when the war ends; drawn at the carrier, so that the one bot worth eating out of the survivors can be picked out at a glance (concept §6.4).
 Its own thing on screen rather than a mark on the floor, because it moves: it travels with a bot and falls where that bot falls (FR-BOT-650).
+Painted a colour the kit does not use: gold was tried on the phone on 2026-10-14 and was a crate among crates, the kit's crate being orange and its partition yellow-tan.

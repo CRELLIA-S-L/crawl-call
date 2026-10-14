@@ -604,14 +604,14 @@ The water beyond the island's grid, laid out as slabs, is drawn by its tops alon
 ### FR-MAP-290 — The treasure lies where the map says
 
 ```yaml
-status: deferred
+status: implemented
 verification: T
 derives_from: []
 depends_on: [IF-MAP-010]
 refines: []
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Map/MapSpecification.swift, Sources/CrawlCall/Config/MapFormat.swift, Sources/CrawlCall/Game.swift, Sources/CrawlCall/Bot/Treasure.swift, maps/blockout.map, maps/room.map]
+tests: [Tests/CrawlCallTests/TreasureTests.swift]
 created: 2026-10-14
 ```
 
@@ -623,14 +623,14 @@ Where the snake is born needs nothing new for the same reason: FR-MAP-180 alread
 ### FR-MAP-300 — A map that does not name a treasure and an evacuation point is refused
 
 ```yaml
-status: deferred
+status: implemented
 verification: T
 derives_from: []
 depends_on: [FR-MAP-290]
 refines: []
 conflicts_with: []
-code: []
-tests: []
+code: [Sources/CrawlCall/Map/MapSpecification.swift, Sources/CrawlCall/Launch.swift]
+tests: [Tests/CrawlCallTests/TreasureTests.swift]
 created: 2026-10-14
 ```
 

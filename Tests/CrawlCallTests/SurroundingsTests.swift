@@ -225,18 +225,21 @@ final class GreenholmTests: XCTestCase {
     }
 
     func testTheLaunchRefusesAMapOnASettingTheGameDoesNotProvide() throws {
-        let b = try bundle(map: "atlantis", text: "kit blockout\nsetting atlantis\nspawn 0,0 0\nfloor 0\n..\n")
+        let b = try bundle(map: "atlantis",
+                           text: "kit blockout\nsetting atlantis\nspawn 0,0 0\ntreasure 0,0 0\nevacuation 1,0 0\nfloor 0\n..\n")
         switch Launch.world(from: b, map: "atlantis") {
         case .success: XCTFail("a map on a setting nobody provides must not start")
         case .failure(let error): XCTAssertEqual(error as? SettingError, .unknown(name: "atlantis"))
         }
         // And the same bundle starts a map on Greenholm, so the refusal is the setting's.
-        let good = try bundle(map: "small", text: "kit blockout\nsetting greenholm\nspawn 0,0 0\nfloor 0\n..\n")
+        let good = try bundle(map: "small",
+                              text: "kit blockout\nsetting greenholm\nspawn 0,0 0\ntreasure 0,0 0\nevacuation 1,0 0\nfloor 0\n..\n")
         XCTAssertNoThrow(try Launch.world(from: good, map: "small").get())
     }
 
     func testTheLaunchRefusesACameraThatSeesTheHorizon() throws {
-        let b = try bundle(map: "small", text: "kit blockout\nsetting greenholm\nspawn 0,0 0\nfloor 0\n..\n") {
+        let b = try bundle(map: "small",
+                           text: "kit blockout\nsetting greenholm\nspawn 0,0 0\ntreasure 0,0 0\nevacuation 1,0 0\nfloor 0\n..\n") {
             $0["cameraFieldOfView"] = 110
         }
         switch Launch.world(from: b, map: "small") {

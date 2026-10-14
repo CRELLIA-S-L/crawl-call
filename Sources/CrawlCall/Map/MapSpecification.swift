@@ -10,7 +10,7 @@
 // arrows point to the floor above (FR-MAP-150); one too steep to climb is refused
 // here, where the map is read (FR-MAP-160, ADR-0033).
 //
-// file implements: IF-MAP-010, FR-MAP-120, FR-MAP-150, FR-MAP-160, FR-MAP-180, FR-MAP-190, FR-TOOL-010, FR-TOOL-200, FR-MAP-220, FR-MAP-260
+// file implements: IF-MAP-010, FR-MAP-120, FR-MAP-150, FR-MAP-160, FR-MAP-180, FR-MAP-190, FR-MAP-290, FR-MAP-300, FR-TOOL-010, FR-TOOL-200, FR-MAP-220, FR-MAP-260
 import Foundation
 
 struct MapSpecification: Equatable {
@@ -46,6 +46,17 @@ struct MapSpecification: Equatable {
         let line: Int
     }
 
+    /// A cell the map names for one thing: where the treasure lies, and where it has
+    /// to be carried (FR-MAP-290). The same shape as a spawn point, and kept apart
+    /// from it because each of the three is named by its own directive and refused by
+    /// its own message (FR-MAP-300).
+    struct Place: Equatable {
+        let x: Int
+        let z: Int
+        let floor: Int
+        let line: Int
+    }
+
     /// A step of a flight: the `index`th from the bottom, counted from one, of `count`.
     struct Step: Equatable {
         let index: Int
@@ -64,6 +75,11 @@ struct MapSpecification: Equatable {
     let placements: [Placement]
     /// Where the snake may be born, in the order the file names them.
     var spawns: [Spawn] = []
+    /// Where the treasure lies at the start of a match, and where carrying it off ends
+    /// one (FR-MAP-290, FR-SCORE-160). Nil in a map that names neither, which only a
+    /// map read for something other than playing may be (FR-MAP-300).
+    var treasure: Place?
+    var evacuation: Place?
     /// The line of the file each grid row of each floor is on, by floor: where a
     /// message about a cell points. Where in the file, not what the map is, so not
     /// part of what makes two maps equal.
@@ -76,7 +92,9 @@ struct MapSpecification: Equatable {
     }
 
     static func == (a: MapSpecification, b: MapSpecification) -> Bool {
-        a.kit == b.kit && a.floorHeight == b.floorHeight && a.setting == b.setting && a.spawns == b.spawns && a.transitions == b.transitions && a.placements == b.placements
+        a.kit == b.kit && a.floorHeight == b.floorHeight && a.setting == b.setting && a.spawns == b.spawns
+            && a.treasure == b.treasure && a.evacuation == b.evacuation
+            && a.transitions == b.transitions && a.placements == b.placements
             && a.floors.map(\.level) == b.floors.map(\.level)
             && a.floors.map(\.rows) == b.floors.map(\.rows)
     }
@@ -110,6 +128,10 @@ enum MapParseError: IdentifiedError, Equatable {
     case badSpawn(String, line: Int)
     case noSpawn
     case spawnNotWalkable(line: Int)
+    case badPlace(String, line: Int)
+    case noTreasure
+    case noEvacuation
+    case placeNotWalkable(String, line: Int)
     case wayNotTaken(line: Int, column: Int)
 
     var identifier: ErrorIdentifier {
@@ -133,6 +155,10 @@ enum MapParseError: IdentifiedError, Equatable {
         case .badSpawn:                 return .mapBadSpawn
         case .noSpawn:                  return .mapNoSpawn
         case .spawnNotWalkable:         return .mapSpawnNotWalkable
+        case .badPlace:                 return .mapBadPlace
+        case .noTreasure:               return .mapNoTreasure
+        case .noEvacuation:             return .mapNoEvacuation
+        case .placeNotWalkable:         return .mapPlaceNotWalkable
         case .wayNotTaken:              return .mapWayNotTaken
         }
     }
@@ -150,7 +176,7 @@ enum MapParseError: IdentifiedError, Equatable {
         case .repeatedSetting(let l):
             return "line \(l): the setting is named twice; an arena stands in one setting"
         case .unknownDirective(let d, let l):
-            return "line \(l): '\(d)' is not `kit`, `setting`, `spawn`, `transition` or `floor`"
+            return "line \(l): '\(d)' is not `kit`, `setting`, `spawn`, `treasure`, `evacuation`, `transition` or `floor`"
         case .gridBeforeAnyFloor(let l):
             return "line \(l): a grid row before any `floor` line"
         case .repeatedFloor(let f, let l):
@@ -177,6 +203,14 @@ enum MapParseError: IdentifiedError, Equatable {
             return "the file names no spawn point; a map needs at least one `spawn <x>,<z> <floor>`"
         case .spawnNotWalkable(let l):
             return "line \(l): the spawn point is on a cell nothing can stand in"
+        case .badPlace(let t, let l):
+            return "line \(l): '\(t)' is not `<x>,<z> <floor>` after `treasure` or `evacuation`"
+        case .noTreasure:
+            return "the file names no cell for the treasure; a map needs `treasure <x>,<z> <floor>`"
+        case .noEvacuation:
+            return "the file names no evacuation point; a map needs `evacuation <x>,<z> <floor>`"
+        case .placeNotWalkable(let what, let l):
+            return "line \(l): the \(what) is on a cell nothing can stand in"
         case .wayNotTaken(let l, let c):
             return "line \(l), column \(c): the map shows the snake a way here that its body cannot take"
         }
@@ -213,6 +247,8 @@ enum MapParser {
         var rowLines: [Int: [Int]] = [:]
         var transitions: [(MapSpecification.Transition, Int)] = []
         var spawns: [MapSpecification.Spawn] = []
+        var treasure: MapSpecification.Place?
+        var evacuation: MapSpecification.Place?
         var current: Int?
 
         for (index, raw) in lines(of: text).enumerated() {
@@ -245,6 +281,19 @@ enum MapParser {
                     throw MapParseError.badSpawn(trimmed, line: line)
                 }
                 spawns.append(.init(x: cell.x, z: cell.z, floor: floor, line: line))
+            case MapFormat.treasureDirective, MapFormat.evacuationDirective:
+                // The two cells the second act is played between (FR-MAP-290), each
+                // written as a spawn point is. Named twice, the later line wins; the
+                // parser says nothing about it, because a map with two treasures is a
+                // map with one, and which one is the file's last word on it.
+                guard words.count == MapFormat.placeWords,
+                      let cell = Self.cell(String(words[MapFormat.placeCellWord])),
+                      let floor = Int(words[MapFormat.placeFloorWord]) else {
+                    throw MapParseError.badPlace(trimmed, line: line)
+                }
+                let place = MapSpecification.Place(x: cell.x, z: cell.z, floor: floor, line: line)
+                if words.first.map(String.init) == MapFormat.treasureDirective { treasure = place }
+                else { evacuation = place }
             case MapFormat.transitionDirective:
                 guard words.count == MapFormat.transitionWords,
                       let cell = Self.cell(String(words[MapFormat.transitionCellWord])),
@@ -331,6 +380,7 @@ enum MapParser {
 
         return MapSpecification(kit: name, floorHeight: kit.floorHeight, setting: setting, floors: floors,
                                 transitions: transitions.map(\.0), placements: placements, spawns: spawns,
+                                treasure: treasure, evacuation: evacuation,
                                 rowLines: rowLines)
     }
 
@@ -343,6 +393,22 @@ enum MapParser {
             $0.floor == spawn.floor && $0.x == spawn.x && $0.z == spawn.z && $0.isPassable
         }) {
             throw MapParseError.spawnNotWalkable(line: spawn.line)
+        }
+    }
+
+    /// Refuses a map whose second act cannot be played: one that names no cell for
+    /// the treasure or none for the evacuation point, or one that names a cell nothing
+    /// can stand in (FR-MAP-300). Asked of a map to be played, at launch, as the spawn
+    /// points are.
+    static func requirePlaces(_ map: MapSpecification) throws {
+        guard let treasure = map.treasure else { throw MapParseError.noTreasure }
+        guard let evacuation = map.evacuation else { throw MapParseError.noEvacuation }
+        for (what, place) in [(MapFormat.treasureDirective, treasure),
+                              (MapFormat.evacuationDirective, evacuation)]
+        where !map.placements.contains(where: {
+            $0.floor == place.floor && $0.x == place.x && $0.z == place.z && $0.isPassable
+        }) {
+            throw MapParseError.placeNotWalkable(what, line: place.line)
         }
     }
 

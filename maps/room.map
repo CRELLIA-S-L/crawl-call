@@ -7,10 +7,14 @@
 ; with the one below it made a slot 0.4 m wide, narrower than the snake (FR-MAP-260).
 ; The row under the flight's taller steps is wall: a single row of floor between the flight's
 ; side and the south wall was a gap narrower than the snake (FR-MAP-260).
+; The treasure lies in the middle of the room and the evacuation point in its south-east
+; corner (FR-MAP-290), sixteen steps apart: a fixture short enough for a test to play out.
 
 kit blockout
 setting greenholm
 spawn 1,1 0
+treasure 12,7 0
+evacuation 21,14 0
 
 floor 0
 ########################
