@@ -1,4 +1,4 @@
-<!-- Version 0.11 was a text export of https://claude.ai/artifact/JaHE6W4wZXCXgp5L4jdTPP (exported 2026-09-21). Version 0.12 was written in the repository on 2026-10-13 and the artifact does not hold it: the artifact is behind until somebody carries this change back into it. -->
+<!-- Version 0.12, written in the repository on 2026-10-13. The concept document lives here and nowhere else. -->
 
 # Chomp Company
 *Рабочее название. Змейка-хищник в шутерной арене.*
@@ -88,7 +88,7 @@
 
 ### 2.2 Концепт-арт
 
-Пробные рендеры, собранные скриптом из `materials/render/`. Они фиксируют направление — камеру, свет, пропорции, плотность мира и эстетику интерфейса, — а не финальную графику. Интерактивные версии с переключаемым интерфейсом — [на холсте](https://claude.ai/artifact/7TmR7eBewc8kwmAdqBLr8N).
+Пробные рендеры, собранные скриптом из `materials/render/`. Они фиксируют направление — камеру, свет, пропорции, плотность мира и эстетику интерфейса, — а не финальную графику.
 
 ![Общий план базы при свете дня](render-01.jpg)
 

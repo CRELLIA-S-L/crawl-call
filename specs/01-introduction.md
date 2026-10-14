@@ -7,7 +7,7 @@ The player steers a snake that crawls over the map geometry and hunts two warrin
 The bots are not scenery — they fight each other, see the snake, react to it, retreat, coordinate and deal damage.
 
 This specification records what the game does, so that every behavior in the code can be traced to a numbered requirement, and every requirement to the hypothesis it rests on.
-The design intent behind it lives in the concept document, `materials/concept/concept-v0.11.md`; the specification is derived from it and, per ART-010 of `constitution.md`, stands above it wherever the two disagree.
+The design intent behind it lives in the concept document, `materials/concept/concept-v0.12.md`; the specification is derived from it and, per ART-010 of `constitution.md`, stands above it wherever the two disagree.
 
 ## 1.2 Scope
 

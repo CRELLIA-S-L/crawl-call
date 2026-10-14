@@ -6,7 +6,7 @@ iOS 27+ / macOS 27+ on devices with Apple Intelligence (iPhone 15 Pro and later,
 
 | Where | What |
 |---|---|
-| `materials/concept/` | The concept document (v0.11) and concept renders |
+| `materials/concept/` | The concept document (v0.12) and concept renders |
 | `specs/` | The requirements specification — SRS-DD, ISO/IEC/IEEE 29148 |
 | `grounds/` | The hypotheses the requirements rest on |
 | `arch/` | Architecture parts and what each carries |
